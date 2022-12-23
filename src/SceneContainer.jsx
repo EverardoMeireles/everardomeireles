@@ -8,54 +8,150 @@ import { useFrame, useThree, useStore } from '@react-three/fiber'
 import { Vector3 } from "three";
 import { useTimer } from 'use-timer';
 import { smoothstep } from "three/src/math/MathUtils";
+import { path_points, path_points_lookat } from "./PathPoints";
+import { Decimal } from "decimal.js";
 
+THREE.Vector3.prototype.round = function( digits ) {
+
+    var e = Math.pow( 10, digits || 0 );
+
+    this.x = Math.round( this.x * e ) / e;
+    this.y = Math.round( this.y * e ) / e;
+    this.z = Math.round( this.z * e ) / e;
+        
+    return this;
+
+}
 
 
 export function SceneContainer() {
+   const CoordinateFindDebug = () => {
+    var useMoveCube = useRef();
 
-    // const path = new THREE.CatmullRomCurve3( [
-    //     new THREE.Vector3( 0, 0, 0 ),
-    //     new THREE.Vector3( 500, 200, 400 ),
-    //     new THREE.Vector3( 150, 50, 100 ),
-    //     new THREE.Vector3( 250, 25, 45 ),
-    //     new THREE.Vector3( 58, 2, 36 )
-    // ] );
+    useEffect(() => {
+        console.log(useMoveCube);
 
-    const path = new THREE.CatmullRomCurve3( [
-        // new THREE.Vector3( 50, 0, 0 ),
-        // new THREE.Vector3( 0, 0, 0 ),
-        // new THREE.Vector3( 0, 0, 50 ),
+      }, [])
 
-        new THREE.Vector3( 15, 0, 0 ),
-        new THREE.Vector3( 15, 10, -15 ),
-        new THREE.Vector3( 15, 10, -30 ),
+    return(
+        <>  
+            <mesh
+                // args = {[1, 1, 1]}
+                position = {[0, 0, 0]}
+                onClick={() => console.log("d")}
+                ref={useMoveCube}               
+                >
+                <boxGeometry/>
+                <meshStandardMaterial attach="material" color={0x00ff00}/>
+            </mesh>
+
+            <mesh
+                // args = {[1, 1, 1]}
+                position = {[0, 8, 8]}
+                onClick={() =>{
+                    useMoveCube.current.position.x -= 1
+                    console.log(useMoveCube.current.position)
+
+                }}                
+                >
+                <boxGeometry/>
+                <meshStandardMaterial attach="material" color={0x00ff00}/>
+            </mesh>
+            <mesh
+                 
+                // args = {[1, 1, 1]}
+                position = {[4, 8, 8]}
+                onClick={() => {
+                    useMoveCube.current.position.x += 1
+                    console.log(useMoveCube.current.position)
+                }}                
+                // useMoveCube.current.position.x += 1
+                >
+                <boxGeometry/>
+                <meshStandardMaterial attach="material" color={0x00ff00}/>
+            </mesh>
+
+            <mesh
+                 
+                 // args = {[1, 1, 1]}
+                 position = {[2, 12, 8]}
+                 onClick={() =>{
+                    useMoveCube.current.position.y += 1
+                    console.log(useMoveCube.current.position)
+                }}                
+                 // useMoveCube.current.position.x += 1
+                 >
+                 <boxGeometry/>
+                 <meshStandardMaterial attach="material" color={0x00ff00}/>
+             </mesh>
+
+             <mesh
+                 
+                 // args = {[1, 1, 1]}
+                 position = {[2, 4, 8]}
+                 onClick={() =>{
+                    useMoveCube.current.position.y -= 1
+                    console.log(useMoveCube.current.position)
+
+                }}            
+                 // useMoveCube.current.position.x += 1
+                 >
+                 <boxGeometry/>
+                 <meshStandardMaterial attach="material" color={0x00ff00}/>
+             </mesh>
+
+             <mesh
+                 
+                 // args = {[1, 1, 1]}
+                 position = {[2, 8, 4]}
+                 onClick={() =>{
+                    useMoveCube.current.position.z -= 1
+                    console.log(useMoveCube.current.position)
+                }}              
+                 // useMoveCube.current.position.x += 1
+                 >
+                 <boxGeometry/>
+                 <meshStandardMaterial attach="material" color={0x00ff00}/>
+             </mesh>
+
+             <mesh
+                 
+                 // args = {[1, 1, 1]}
+                 position = {[2, 8, 12]}
+                 onClick={() =>{
+                    useMoveCube.current.position.z += 1
+                    console.log(useMoveCube.current.position)
+                    
+                }}           
+                 // useMoveCube.current.position.x += 1
+                 >
+                 <boxGeometry/>
+                 <meshStandardMaterial attach="material" color={0x00ff00}/>
+             </mesh>
+        </>
+    )
+   }
 
 
-
-        // new THREE.Vector3( 10, 24, 14 ),
-        // new THREE.Vector3( 30, 36, 16 ),
-        // new THREE.Vector3( 40, 60, 30 ),
-
-        // new THREE.Vector3( 10, 24, 14 ),
-        // new THREE.Vector3( 25, 42, 22 ),
-        // new THREE.Vector3( 40, 60, 30 ),
-
-        
+    const path = new THREE.CatmullRomCurve3( [                
+            new THREE.Vector3( 15, 10, -30 ),
+            new THREE.Vector3( 15, 10, -15 ),
+            new THREE.Vector3( 15, 10, 0 ),
     ] );
 
-    const [active, setActive] = useState(false)
+    const [desiredPoint, setDesiredPoint] = useState("index-reverse")
 
     var p0 = path.getPointAt(0);
     var p1 = path.getPointAt(1);
-    const props = useSpring({
-        scale : active ? [25, 25, 25] : [1, 1, 1],
-        position: active ? [p1.x,p1.y,p1.z] : [p0.x,p0.y,p0.z]
+//     const props = useSpring({
+//         scale : active ? [25, 25, 25] : [1, 1, 1],
+//         position: active ? [p1.x,p1.y,p1.z] : [p0.x,p0.y,p0.z]
     
-})
+// })
     const Tube = () => {
         const aaa = useRef()
         useEffect(() => {
-            console.log(aaa);
+            // console.log(aaa);
             aaa.current.wireframe = true;
             aaa.current.visible = true;
             aaa.current.position = new THREE.Vector3(12, 10.85, 30);
@@ -65,7 +161,7 @@ export function SceneContainer() {
         
         return(
             <mesh
-                onClick={() => setActive(!active)}
+
                 // position={props.position}
             >
                 <tubeGeometry args={[path, 40, 1, 70, false]} />
@@ -78,8 +174,8 @@ export function SceneContainer() {
     const Box = () => {
         return(
             <a.mesh
-                onClick={() => setActive(!active)}
-                position={props.position}
+            onClick={() => desiredPoint === "index" ? setDesiredPoint("index-reverse") : setDesiredPoint("index")}                
+            position = {[12, 0, 0]}
             >
                 <boxGeometry />
                 <meshStandardMaterial attach="material" color={0x00ff00}/>
@@ -88,46 +184,56 @@ export function SceneContainer() {
     }
 
     function smoothStep(x) { //Normal smoothstep
-        return -2 * Math.pow(x, 3) + 3 * Math.pow(x, 2);
+        let Sn = -2 * Math.pow(x, 3) + 3 * Math.pow(x, 2);
+        // console.log(x);
+        if(x >= 1){
+            Sn = 1;
+        }
+        return Sn
       }
 
+    function decimal_point_stop(vCurrent, Vdesired){
+        if(vCurrent.x != Vdesired.x && vCurrent.y != Vdesired.y && vCurrent.z != Vdesired.z){
+            return true
+        }
+    }
+
     const Camera1 = () => {
-        var current_path = "index";
-        const cam = useRef();
-        const { time, start, pause, reset, status } = useTimer();
-        const [clicked, setCount] = useState("dsq");
-
-        useEffect(() => {
-            console.log(cam);
-            cam.current.zoom = 1
-            
-          }, [])
-          
-        // useFrame( () => (camPos.x += 0.3));
-
-        // useFrame( () => (cam.current.position.x += 0.1, cam.current.position.y += 0.1));
         var posInit = path.getPointAt(0);
         var tick = 0;
         var sub_points;
-        var vector = new THREE.Vector3( 0, 0, -1 );
-        var vector_look_at = new THREE.Vector3( -24, 65, -43 );
+        var current_point = useRef(path_points["index"].getPointAt(0));
+        var desired_point = path_points[desiredPoint]
+        var current_lookat = useRef(path_points_lookat["index"]);
+        var desired_lookat = path_points_lookat[desiredPoint];
+        // var vector_look_at = path_points["projects"];
         var smooth;
-        // make sure to use a timer to tick the animation
-        // implement buttonclick
-        // add support for multiple paths
-        useFrame((state) => (tick <= 1 ?(
-            console.log("IS RUNNING"),
-            vector.lerp(vector_look_at, 0.01),
-            state.camera.lookAt(vector),
+        var lol = 0;
+          
+        // useframe
+        // somewhere in the code => usestate desired point
+        // if current point = desired point jump to else
+        //
+
+        useFrame((state) => (tick <= 1 /*decimal_point_stop(current_point.current, desired_point)*/?(
+            // console.log(current_lookat),
+            current_lookat.current.lerp(desired_lookat, 0.01),
+            // current_point.current.lerp(desired_point, 0.01),
+
+            state.camera.lookAt(current_lookat.current),
             tick += 0.005,
-            //  tick+=0.005 : tick = 1,
-            smooth = smoothStep(tick) <= 1 ? smoothStep(tick) : 1,
-            sub_points = path.getPointAt(smooth),
+
+            // smooth = smoothStep(tick) <= 1 ? smoothStep(tick) : 1,
+            smooth = smoothStep(tick),
+            // state.camera.lookAt(path_points[desiredPoint].getPointAt(smooth)),
+
+            sub_points = desired_point.getPointAt(smooth),
+            current_point.current = sub_points,
             // (tick) => (sub_points != tick) ? console.log("d") : console.log("s"),
             state.camera.position.x = sub_points.x,
             state.camera.position.y = sub_points.y,
             state.camera.position.z = sub_points.z)
-            : state.camera.lookAt(vector)
+            : lol = 1/*current_path = path_points[desiredPoint]*/ /*state.camera.lookAt(vector)*/
         ));
 
         // useFrame(() => {
@@ -139,12 +245,17 @@ export function SceneContainer() {
 
         // useFrame(()=>(console.log(path.getPointAt(tt))))
         // useFrame( () => (
-        //     console.log(smooth)
-        //     // console.log(tick)
+        //     console.log(current_point),
+        //     console.log(path_points[desiredPoint])
         //     ));
         
         return(
-            <PerspectiveCamera ref={cam} makeDefault fov={75} position={posInit} />
+            <>
+            {/* TO AVOID SUDDEN CAMERA SNAP, TRY LATER TO MAKE THE ORBIT CONTROL'S TARGET THE SAME AS 
+            PATHPOINTS'S path_points_lookat's VALUE */}
+                <PerspectiveCamera makeDefault fov={75} position={posInit} />
+                <OrbitControls />
+            </>
         )
     }
 
@@ -160,15 +271,15 @@ export function SceneContainer() {
             {/* <PerspectiveCamera makeDefault fov={50} position={props.position} /> */}
             {/* <PerspectiveCamera makeDefault fov={50} position={[12, 10.85, 30]} /> */}
             <Camera1></Camera1>
-            <OrbitControls target={[1, 5, 0]} maxPolarAngle={Math.PI * 0.5}/>
-            <Test_scene/>
+            {/* <Test_scene/> */}
             <Tube
             // scale = {props.scale}
             ></Tube>
+            <CoordinateFindDebug></CoordinateFindDebug>
             {/* <Tube
                 onClick={() => setActive(!active)}
             >
-
+            
             </Tube> */}
         </Suspense>
     );
