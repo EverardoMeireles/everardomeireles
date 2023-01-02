@@ -164,6 +164,7 @@ export function SceneContainer() {
         var desired_lookat = path_points_lookat[desired_path];
         var smooth;
         var cam = useRef();
+        var controls = useRef();
         var tick = 0;
 
         useEffect(() => {
@@ -177,9 +178,9 @@ export function SceneContainer() {
         // if current point = desired point jump to else
         useFrame((state) => (tick <= 1 /*decimal_point_stop(current_point.current, desired_point)*/?(
             state.events.enabled = false ,
+            controls.current.enabled = false,
             tick += 0.005,
             smooth = smoothStep(tick),
-
             current_lookat.current.lerp(desired_lookat, 0.03),
             state.camera.lookAt(current_lookat.current),
 
@@ -188,9 +189,8 @@ export function SceneContainer() {
 
             state.camera.position.x = sub_points.x,
             state.camera.position.y = sub_points.y,
-            state.camera.position.z = sub_points.z,
-            console.log(current_lookat.current))
-            : (current_path.current = desired_path, state.events.enabled = true, console.log(current_path.current))
+            state.camera.position.z = sub_points.z)
+            : (current_path.current = desired_path, state.events.enabled = true, controls.current.enabled = true, console.log(current_path.current))
         ));
 
         // useFrame( () => (
@@ -201,7 +201,7 @@ export function SceneContainer() {
         return(
             <>
                 <PerspectiveCamera ref={cam} makeDefault fov={75} /*position={[0,0,0]}*/ />
-                <OrbitControls target={desired_lookat}/>
+                <OrbitControls ref={controls} target={desired_lookat}/>
                 <IndexMenu {...{useStore}}/>
                 <ProjectsMenu {...{useStore}}/>
             </>
