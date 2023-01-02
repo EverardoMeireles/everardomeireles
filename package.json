@@ -18,7 +18,8 @@
     "smoothstep": "^1.0.1",
     "three": "0.142.0",
     "use-timer": "^2.0.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "zustand": "^4.1.5"
   },
   "scripts": {
     "start": "react-scripts start",
