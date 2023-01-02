@@ -176,6 +176,7 @@ export function SceneContainer() {
         // somewhere in the code => usestate desired point
         // if current point = desired point jump to else
         useFrame((state) => (tick <= 1 /*decimal_point_stop(current_point.current, desired_point)*/?(
+            state.events.enabled = false ,
             tick += 0.005,
             smooth = smoothStep(tick),
 
@@ -189,7 +190,7 @@ export function SceneContainer() {
             state.camera.position.y = sub_points.y,
             state.camera.position.z = sub_points.z,
             console.log(current_lookat.current))
-            : (current_path.current = desired_path, console.log(current_path.current))
+            : (current_path.current = desired_path, state.events.enabled = true, console.log(current_path.current))
         ));
 
         // useFrame( () => (
