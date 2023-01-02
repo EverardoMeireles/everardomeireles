@@ -187,7 +187,8 @@ export function SceneContainer() {
 
             state.camera.position.x = sub_points.x,
             state.camera.position.y = sub_points.y,
-            state.camera.position.z = sub_points.z)
+            state.camera.position.z = sub_points.z,
+            console.log(current_lookat.current))
             : (current_path.current = desired_path, console.log(current_path.current))
         ));
 
@@ -199,7 +200,7 @@ export function SceneContainer() {
         return(
             <>
                 <PerspectiveCamera ref={cam} makeDefault fov={75} /*position={[0,0,0]}*/ />
-                {/* <OrbitControls /> */}
+                <OrbitControls target={desired_lookat}/>
                 <IndexMenu {...{useStore}}/>
                 <ProjectsMenu {...{useStore}}/>
             </>
