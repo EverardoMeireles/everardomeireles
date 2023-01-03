@@ -1,13 +1,13 @@
 import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
 import { Suspense, useState, useRef, useEffect } from "react";
 import { Test_scene } from "./Test_scene";
-import {useSpring, a} from '@react-spring/three'
+import {useSpring, a} from '@react-spring/three';
 import * as THREE from "three";
-import { useFrame } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber';
 import { path_points, path_points_lookat } from "./PathPoints";
-import { IndexMenu } from "./IndexMenu"
-import { ProjectsMenu } from "./ProjectsMenu"
-import create from 'zustand'
+import { IndexMenu } from "./IndexMenu";
+import { ProjectsMenu } from "./ProjectsMenu";
+import create from 'zustand';
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -42,9 +42,8 @@ export function SceneContainer() {
             <mesh
                 position = {[0, 8, 8]}
                 onClick={() =>{
-                    pivotCube.current.position.x -= 1
-                    console.log(pivotCube.current.position)
-
+                    pivotCube.current.position.x -= 1;
+                    console.log(pivotCube.current.position);
                 }}                
                 >
                 <boxGeometry/>
@@ -54,8 +53,8 @@ export function SceneContainer() {
             <mesh
                 position = {[4, 8, 8]}
                 onClick={() => {
-                    pivotCube.current.position.x += 1
-                    console.log(pivotCube.current.position)
+                    pivotCube.current.position.x += 1;
+                    console.log(pivotCube.current.position);
                 }}                
                 >
                 <boxGeometry/>
@@ -65,8 +64,8 @@ export function SceneContainer() {
             <mesh
                 position = {[2, 12, 8]}
                 onClick={() =>{
-                    pivotCube.current.position.y += 1
-                    console.log(pivotCube.current.position)
+                    pivotCube.current.position.y += 1;
+                    console.log(pivotCube.current.position);
                 }}                
                 >
                 <boxGeometry/>
@@ -76,9 +75,8 @@ export function SceneContainer() {
             <mesh
                 position = {[2, 4, 8]}
                 onClick={() =>{
-                    pivotCube.current.position.y -= 1
-                    console.log(pivotCube.current.position)
-
+                    pivotCube.current.position.y -= 1;
+                    console.log(pivotCube.current.position);
                 }}            
                 >
                 <boxGeometry/>
@@ -88,8 +86,8 @@ export function SceneContainer() {
             <mesh
                 position = {[2, 8, 4]}
                 onClick={() =>{
-                    pivotCube.current.position.z -= 1
-                    console.log(pivotCube.current.position)
+                    pivotCube.current.position.z -= 1;
+                    console.log(pivotCube.current.position);
                 }}              
                 >
                 <boxGeometry/>
@@ -99,9 +97,8 @@ export function SceneContainer() {
             <mesh
                 position = {[2, 8, 12]}
                 onClick={() =>{
-                    pivotCube.current.position.z += 1
-                    console.log(pivotCube.current.position)
-                    
+                    pivotCube.current.position.z += 1;
+                    console.log(pivotCube.current.position);
                 }}           
                 >
                 <boxGeometry/>
@@ -116,7 +113,7 @@ export function SceneContainer() {
             new THREE.Vector3( 15, 10, -30 ),
             new THREE.Vector3( 15, 10, -15 ),
             new THREE.Vector3( 15, 10, 0 ),
-    ] );
+    ]);
 
         const meshMaterial = useRef()
         useEffect(() => {
@@ -124,7 +121,7 @@ export function SceneContainer() {
             meshMaterial.current.wireframe = true;
             meshMaterial.current.visible = true;
             meshMaterial.current.position = new THREE.Vector3(12, 10.85, 30);
-        }, [])
+        }, []);
 
         return(
             <mesh>
@@ -150,16 +147,16 @@ export function SceneContainer() {
         if(x >= 1){
             Sn = 1;
         }
-        return Sn
+        return Sn;
     }
 
     const Camera = () => {
-        const { desired_path } = useStore()
+        const { desired_path } = useStore();
         var sub_points;
-        var current_path = useRef("projects")
+        var current_path = useRef("projects");
         var current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
-        var concat_paths = current_path.current + "-" + desired_path
-        var desired_point = path_points[concat_paths]
+        var concat_paths = current_path.current + "-" + desired_path;
+        var desired_point = path_points[concat_paths];
         var current_lookat = useRef(path_points_lookat["index"]);
         var desired_lookat = path_points_lookat[desired_path];
         var smooth;
@@ -177,7 +174,7 @@ export function SceneContainer() {
         // somewhere in the code => usestate desired point
         // if current point = desired point jump to else
         useFrame((state) => (tick <= 1 /*decimal_point_stop(current_point.current, desired_point)*/?(
-            state.events.enabled = false ,
+            state.events.enabled = false,
             controls.current.enabled = false,
             tick += 0.005,
             smooth = smoothStep(tick),
