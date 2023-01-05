@@ -15,7 +15,7 @@ const useStore = create((set) => ({
     }))
 
 export function SceneContainer() {
-    
+
     const props = useSpring({
         // scale : active ? [25, 25, 25] : [1, 1, 1],
         // position: active ? [p1.x,p1.y,p1.z] : [p0.x,p0.y,p0.z]
@@ -180,14 +180,13 @@ export function SceneContainer() {
             smooth = smoothStep(tick),
             current_lookat.current.lerp(desired_lookat, 0.03),
             state.camera.lookAt(current_lookat.current),
-
             sub_points = desired_point.getPointAt(smooth),
             current_point.current = sub_points,
 
             state.camera.position.x = sub_points.x,
             state.camera.position.y = sub_points.y,
             state.camera.position.z = sub_points.z)
-            : (current_path.current = desired_path, state.events.enabled = true, controls.current.enabled = true, console.log(current_path.current))
+            : (current_path.current = desired_path, state.events.enabled = true, controls.current.enabled = true/*, console.log(current_path.current)*/)
         ));
 
         // useFrame( () => (
@@ -198,7 +197,7 @@ export function SceneContainer() {
         return(
             <>
                 <PerspectiveCamera ref={cam} makeDefault fov={75} /*position={[0,0,0]}*/ />
-                <OrbitControls ref={controls} target={desired_lookat}/>
+                <OrbitControls ref={controls} target={[desired_lookat.x-4,desired_lookat.y,desired_lookat.z]}/>
                 <IndexMenu {...{useStore}}/>
                 <ProjectsMenu {...{useStore}}/>
             </>
