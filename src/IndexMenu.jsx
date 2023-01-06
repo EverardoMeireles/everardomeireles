@@ -1,27 +1,34 @@
 import { BaseCube } from "./BaseCube"
 import { Text3D, Text } from "@react-three/drei";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
+import {useSpring, a} from '@react-spring/three';
 
 export function IndexMenu(props) {
+    const [ hovered, setHover ] = useState(false);
     const { setPath } = props.useStore()
     const text3DD = useRef()
 
+    const springColor = useSpring({
+        color:hovered?"rgb(120,120,120)":"rgb(255,255,255)"
+    })
+
     useEffect(() => {
-        console.log(text3DD);
         text3DD.current.rotateOnAxis(new THREE.Vector3(0, 1, 0) , Math.PI/2)
 
     }, [])
     return(
     <>
-        {/* <mesh><BaseCube position={[0,0,0]} /></mesh> */}
-        
-        <mesh onClick= {() => setPath("projects")} position={[0,0,2]}>
+        <a.mesh
+        onClick= {() => setPath("projects")} position={[0,0,2]}
+        onPointerOver={() => setHover(true)}
+        onPointerOut={() => setHover(false)}
+        >
             <boxGeometry args={[1, 1, 5]} />
-            
+            <a.meshStandardMaterial color={springColor.color} />
+
             <Text3D
             position={[0.5,-0.25,1.5]}//Use a more standardised approach
-            // rotation={[0,1,0]}
             ref={text3DD}
             font={process.env.PUBLIC_URL + "roboto.json"}
             size={0.575}
@@ -31,8 +38,9 @@ export function IndexMenu(props) {
                 Projects
                 <meshStandardMaterial color={[1, 0.15, 0.1]} emissive={[1, 0.1, 0]} />
             </Text3D>
-        </mesh>
-        <BaseCube position={[0,1,0]} />
+        </a.mesh>
+        
+        <BaseCube position={[0,1,0]} movementVector={[0.1, 0, 0]} />
         <BaseCube position={[0,2,0]} />
         <BaseCube position={[0,3,0]} />
         <BaseCube position={[0,4,0]} />
@@ -64,7 +72,5 @@ export function IndexMenu(props) {
         <BaseCube position={[0,6,4]} />
         
     </>
-
-    /* onClick={() => setActive(!active)} */
     );
 }

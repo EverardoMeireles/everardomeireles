@@ -8,6 +8,7 @@ import { path_points, path_points_lookat } from "./PathPoints";
 import { IndexMenu } from "./IndexMenu";
 import { ProjectsMenu } from "./ProjectsMenu";
 import create from 'zustand';
+import { FadingTextModel } from "./FadingTextModel";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -25,7 +26,7 @@ export function SceneContainer() {
     var pivotCube = useRef();
 
     useEffect(() => {
-        console.log(pivotCube);
+        // console.log(pivotCube);
 
     }, [])
 
@@ -117,7 +118,6 @@ export function SceneContainer() {
 
         const meshMaterial = useRef()
         useEffect(() => {
-            // console.log(meshMaterial);
             meshMaterial.current.wireframe = true;
             meshMaterial.current.visible = true;
             meshMaterial.current.position = new THREE.Vector3(12, 10.85, 30);
@@ -168,7 +168,6 @@ export function SceneContainer() {
             cam.current.rotation.x = 0;
             cam.current.rotation.y = 0;
             cam.current.rotation.z = 0;
-            console.log(cam);
         }, [])
 
         // somewhere in the code => usestate desired point
@@ -186,7 +185,7 @@ export function SceneContainer() {
             state.camera.position.x = sub_points.x,
             state.camera.position.y = sub_points.y,
             state.camera.position.z = sub_points.z)
-            : (current_path.current = desired_path, state.events.enabled = true, controls.current.enabled = true/*, console.log(current_path.current)*/)
+            : (current_path.current = desired_path, state.events.enabled = true, controls.current.enabled = true)
         ));
 
         // useFrame( () => (
@@ -206,6 +205,7 @@ export function SceneContainer() {
 
     return(
         <Suspense fallback={null}>
+            <FadingTextModel />
             <ambientLight/>
             <Environment background={"only"} files={process.env.PUBLIC_URL + "/textures/bg.hdr"} />
             <Environment background={false} files={process.env.PUBLIC_URL + "/textures/envmap.hdr"} />
