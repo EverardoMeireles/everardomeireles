@@ -6,11 +6,11 @@ import {useSpring, a} from '@react-spring/three';
 
 export function IndexMenu(props) {
     const [ hovered, setHover ] = useState(false);
-    const { setPath } = props.useStore()
+    const { setPath, setTransitionEnded } = props.useStore()
     const text3DD = useRef()
 
     const springColor = useSpring({
-        color:hovered?"rgb(120,120,120)":"rgb(255,255,255)"
+        color:hovered ? "rgb(120,120,120)" : "rgb(255,255,255)"
     })
 
     useEffect(() => {
@@ -20,7 +20,7 @@ export function IndexMenu(props) {
     return(
     <>
         <a.mesh
-        onClick= {() => setPath("projects")} position={[0,0,2]}
+        onClick= {() => (setPath("projects"), setTransitionEnded(false))} position={[0,0,2]}
         onPointerOver={() => setHover(true)}
         onPointerOut={() => setHover(false)}
         >

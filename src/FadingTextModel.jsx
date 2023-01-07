@@ -3,71 +3,65 @@ import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text3D } from "@react-three/drei";
 
-export function FadingTextModel() {
-    // default prop values:
-    const [ fade, setFade ] = useState(false);
-    const text3DD = useRef();
-    const thePlane = useRef();
-
-    useEffect(() => {
-        console.log(text3DD);
-        console.log(thePlane);
-        var textFieldPadding = 0.5
-        var textFieldArray = [(thePlane.current.parameters.height) - textFieldPadding, (thePlane.current.parameters.depth) - textFieldPadding]
-        console.log(textFieldArray)
-
-    }, [])
+export function FadingTextModel(props) {
+    const { textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien in condimentum consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien.Integer facilisis semper libero, id aliquam justo suscipit." } = props;
+    const { textModelMenu = "MainMenu" } = props;
+    const { textColor = "#000000" } = props;
+    const { transitionDuration = 1000 } = props;
+    const { initialPosition = [0,0,-4] } = props;
+    const { PlaneSize = [0.2, 7, 6.7] } = props;
+    const { fontFileName = "roboto.json" } = props; // put the json font file in the public folder
+    const { lettersPerUnit = 8 } = props; // how many letters should fit inside a spacial unit(a [1,1,1] cube)
+    const { transitionEnded, desired_path } = props.useStore()
 
     const springFade = useSpring({
-        opacity:fade? 1 : 0
+        opacity: (transitionEnded && desired_path == textModelMenu) ? 1 : 0,
+        config: {
+            duration:transitionDuration
+          }
     })
-
     const TextRows = (text) => {
-        const lettersPerUnit = 8
-        const cubesPerRow = 5
-        const rows = [];
-        var replace = '.{1,'+(lettersPerUnit * cubesPerRow)+'}'
+        const textPositionOffset = [0,-0.5,-0.2]
+        const unitsPerRow = Math.floor(PlaneSize[2]) //number of spacial units (a [1,1,1] cube) that a fit with the z axis of the plane 
+        const replace = '.{1,'+(Math.floor(lettersPerUnit) * unitsPerRow)+'}'
         const reg = (new RegExp(replace,"g"))
         const textChunksArray = text.match(reg);
-        const Text3DD = useRef([]);
+        const TextRef = useRef([]);
+        const rows = [];
+
         for (let i = 0; i < textChunksArray.length; i++) {
             rows.push(<Text3D
-                ref={el => Text3DD.current[i] = el} 
+                ref={el => TextRef.current[i] = el}
                 key={i}
-                position={[0,6-i,-2.5]}//Use a more standardised approach
-                font={process.env.PUBLIC_URL + "roboto.json"}
+                position={[0.1, (PlaneSize[1]/2) + textPositionOffset[1] - i, (PlaneSize[2]/2)+ textPositionOffset[2] + 0]}//Use a more standardised approach
+                font={process.env.PUBLIC_URL + fontFileName}
                 size={0.200}
                 height={0.065}
                 curveSegments={12}
                 >
                     {textChunksArray[i]}
-                    <meshStandardMaterial color={[1, 0.15, 0.1]} emissive={[1, 0.1, 0]} />
+                    <a.meshStandardMaterial opacity = {springFade.opacity} transparent color={textColor} />
                 </Text3D>
                 );
         }
 
         useEffect(() => {
             for (let i = 0; i < textChunksArray.length; i++) {
-                Text3DD.current[i].rotateOnAxis(new THREE.Vector3(0, 1, 0) , Math.PI/2)
+                TextRef.current[i].rotateOnAxis(new THREE.Vector3(0, 1, 0) , Math.PI/2)
             }
         }, [])
 
         return {rows};
     }
 
-    var loremIpsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien in condimentum consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien.";
-    const textPresentation = TextRows(loremIpsum)
-    console.log(textPresentation)
-    
-    return(
-    <>
-        {textPresentation.rows}
-        <a.mesh
-        position = {[-0.1,3,-5]}
+    const text3DArray = TextRows(textToFade)
+    return(  
+        <mesh
+            position = {initialPosition}
         >
-            <boxGeometry args={[0.2, 7, 6]} ref={thePlane} />
-            <a.meshStandardMaterial />            
-        </a.mesh>
-    </>
+            <boxGeometry args={PlaneSize} />
+            <a.meshStandardMaterial />
+            {text3DArray.rows}
+        </mesh>
     );
 }

@@ -1,10 +1,10 @@
 import { BaseCube } from "./BaseCube"
 
 export function ProjectsMenu(props) {
-    const { setPath } = props.useStore()
+    const { setPath, setTransitionEnded } = props.useStore()
     return(
     <>
-        <mesh onClick= {() => setPath("MainMenu")} /*? setClicked(true) : setClicked(false)*/><BaseCube position={[0,23,-21]} /></mesh>
+        <mesh onClick= {() => (setPath("MainMenu"), setTransitionEnded(false))} /*? setClicked(true) : setClicked(false)*/><BaseCube position={[0,23,-21]} /></mesh>
         
         <BaseCube position={[0,24,-21]} />
         <BaseCube position={[0,25,-21]} />

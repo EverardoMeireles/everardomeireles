@@ -13,6 +13,8 @@ import { FadingTextModel } from "./FadingTextModel";
 const useStore = create((set) => ({
     desired_path: "MainMenu",
     setPath: (desired) => set(() => ({ desired_path: desired })),
+    transitionEnded: false,
+    setTransitionEnded: (ended) => set(() => ({ transitionEnded: ended })),
     }))
 
 export function SceneContainer() {
@@ -151,7 +153,9 @@ export function SceneContainer() {
     }
 
     const Camera = () => {
-        const { desired_path } = useStore();
+        const desired_path = useStore((state) => state.desired_path);
+        const setTransitionEnded = useStore((state) => state.setTransitionEnded);
+
         var sub_points;
         var current_path = useRef("projects");
         var current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
@@ -163,6 +167,7 @@ export function SceneContainer() {
         var cam = useRef();
         var controls = useRef();
         var tick = 0;
+        var updateCallNow = useRef(false);
 
         useEffect(() => {
             cam.current.rotation.x = 0;
@@ -170,22 +175,35 @@ export function SceneContainer() {
             cam.current.rotation.z = 0;
         }, [])
 
+        function updateCall(state){
+            if(updateCallNow.current){
+                setTransitionEnded(true)
+                updateCallNow.current = false;
+                current_path.current = desired_path;
+                controls.current.enabled = true
+                state.events.enabled = true
+            }
+        }
+
         // somewhere in the code => usestate desired point
         // if current point = desired point jump to else
         useFrame((state) => (tick <= 1 /*decimal_point_stop(current_point.current, desired_point)*/?(
+            updateCallNow.current = true,
             state.events.enabled = false,
             controls.current.enabled = false,
-            tick += 0.005,
-            smooth = smoothStep(tick),
+
             current_lookat.current.lerp(desired_lookat, 0.03),
             state.camera.lookAt(current_lookat.current),
+            
+            tick += 0.005,
+            smooth = smoothStep(tick),
             sub_points = desired_point.getPointAt(smooth),
             current_point.current = sub_points,
 
             state.camera.position.x = sub_points.x,
             state.camera.position.y = sub_points.y,
             state.camera.position.z = sub_points.z)
-            : (current_path.current = desired_path, state.events.enabled = true, controls.current.enabled = true)
+            : (updateCall(state))
         ));
 
         // useFrame( () => (
@@ -199,13 +217,15 @@ export function SceneContainer() {
                 <OrbitControls ref={controls} target={[desired_lookat.x-4,desired_lookat.y,desired_lookat.z]}/>
                 <IndexMenu {...{useStore}}/>
                 <ProjectsMenu {...{useStore}}/>
+                <FadingTextModel {...{useStore}} textModelMenu="MainMenu" />
+
+
             </>
         )
     }
 
     return(
         <Suspense fallback={null}>
-            <FadingTextModel />
             <ambientLight/>
             <Environment background={"only"} files={process.env.PUBLIC_URL + "/textures/bg.hdr"} />
             <Environment background={false} files={process.env.PUBLIC_URL + "/textures/envmap.hdr"} />
