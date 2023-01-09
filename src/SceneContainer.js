@@ -1,6 +1,5 @@
 import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
-import { Suspense, useState, useRef, useEffect } from "react";
-import { Test_scene } from "./Test_scene";
+import { Suspense, useRef, useEffect } from "react";
 import {useSpring, a} from '@react-spring/three';
 import * as THREE from "three";
 import { useFrame } from '@react-three/fiber';
@@ -191,7 +190,6 @@ export function SceneContainer() {
             updateCallNow.current = true,
             state.events.enabled = false,
             controls.current.enabled = false,
-
             current_lookat.current.lerp(desired_lookat, 0.03),
             state.camera.lookAt(current_lookat.current),
             
@@ -219,22 +217,22 @@ export function SceneContainer() {
                 <ProjectsMenu {...{useStore}}/>
                 <FadingTextModel {...{useStore}} textModelMenu="MainMenu" />
 
-
             </>
         )
     }
 
     return(
-        <Suspense fallback={null}>
+        <>
             <ambientLight/>
-            <Environment background={"only"} files={process.env.PUBLIC_URL + "/textures/bg.hdr"} />
-            <Environment background={false} files={process.env.PUBLIC_URL + "/textures/envmap.hdr"} />
             <Box
             ></Box>
             <Tube/>
-            <Camera/>
-            {/* <Test_scene/> */}
             <CoordinateFindDebug></CoordinateFindDebug>
-        </Suspense>
+            <Camera/>
+            <Suspense fallback={null}>
+                <Environment background={"only"} files={process.env.PUBLIC_URL + "/textures/bg.hdr"} />
+                <Environment background={false} files={process.env.PUBLIC_URL + "/textures/envmap.hdr"} />
+            </Suspense>
+        </>
     );
 }

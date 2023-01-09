@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useState, Suspense, useCallback } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text3D } from "@react-three/drei";
@@ -20,24 +20,24 @@ export function FadingTextModel(props) {
             duration:transitionDuration
           }
     })
+
     const TextRows = (text) => {
-        const textPositionOffset = [0,-0.5,-0.2]
+        const textPositionOffset = [0,-0.5,0.2]
         const unitsPerRow = Math.floor(PlaneSize[2]) //number of spacial units (a [1,1,1] cube) that a fit with the z axis of the plane 
         const replace = '.{1,'+(Math.floor(lettersPerUnit) * unitsPerRow)+'}'
         const reg = (new RegExp(replace,"g"))
         const textChunksArray = text.match(reg);
-        const TextRef = useRef([]);
         const rows = [];
 
         for (let i = 0; i < textChunksArray.length; i++) {
-            rows.push(<Text3D
-                ref={el => TextRef.current[i] = el}
-                key={i}
-                position={[0.1, (PlaneSize[1]/2) + textPositionOffset[1] - i, (PlaneSize[2]/2)+ textPositionOffset[2] + 0]}//Use a more standardised approach
-                font={process.env.PUBLIC_URL + fontFileName}
-                size={0.200}
-                height={0.065}
-                curveSegments={12}
+            rows.push(
+                <Text3D
+                    key={i}
+                    position={[-(PlaneSize[2]/2)+ textPositionOffset[2], (PlaneSize[1]/2) + textPositionOffset[1] - i,  0.1]}//Use a more standardised approach
+                    font={process.env.PUBLIC_URL + fontFileName}
+                    size={0.200}
+                    height={0.065}
+                    curveSegments={12}
                 >
                     {textChunksArray[i]}
                     <a.meshStandardMaterial opacity = {springFade.opacity} transparent color={textColor} />
@@ -45,23 +45,27 @@ export function FadingTextModel(props) {
                 );
         }
 
-        useEffect(() => {
-            for (let i = 0; i < textChunksArray.length; i++) {
-                TextRef.current[i].rotateOnAxis(new THREE.Vector3(0, 1, 0) , Math.PI/2)
-            }
-        }, [])
-
         return {rows};
     }
 
     const text3DArray = TextRows(textToFade)
+    const callbackRef = useCallback(
+        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log("skip render")
+        )
+        
     return(  
         <mesh
             position = {initialPosition}
         >
             <boxGeometry args={PlaneSize} />
             <a.meshStandardMaterial />
-            {text3DArray.rows}
+            <Suspense fallback={null}>
+            <mesh
+                ref={callbackRef}
+            >
+                {text3DArray.rows}
+            </mesh>
+            </Suspense>
         </mesh>
     );
 }
