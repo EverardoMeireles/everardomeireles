@@ -17,7 +17,7 @@ const useStore = create((set) => ({
 
 export function SceneContainer() {
     const CoordinateFindDebug = () => {
-    var pivotCube = useRef();
+    const pivotCube = useRef();
 
     return(
         <>  
@@ -111,24 +111,19 @@ export function SceneContainer() {
         const desired_path = useStore((state) => state.desired_path);
         const setTransitionEnded = useStore((state) => state.setTransitionEnded);
 
-        var sub_points;
-        var current_path = useRef("projects");
-        var current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
-        var concat_paths = current_path.current + "-" + desired_path;
-        var desired_point = path_points[concat_paths];
-        var current_lookat = useRef(path_points_lookat["index"]);
-        var desired_lookat = path_points_lookat[desired_path];
-        var smooth;
-        var cam = useRef();
-        var controls = useRef();
-        var tick = 0;
-        var updateCallNow = useRef(false);
+        const updateCallNow = useRef(false);
+        const cam = useRef();
+        const controls = useRef();
+        const current_path = useRef("projects");
+        const current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
+        const current_lookat = useRef(path_points_lookat["index"]);
+        const desired_lookat = path_points_lookat[desired_path];
+        const concat_paths = current_path.current + "-" + desired_path;
+        const desired_point = path_points[concat_paths];
 
-        useEffect(() => {
-            cam.current.rotation.x = 0;
-            cam.current.rotation.y = 0;
-            cam.current.rotation.z = 0;
-        }, [])
+        let smooth;
+        let sub_points;
+        let tick = 0;
 
         function updateCall(state){
             if(updateCallNow.current){

@@ -9,11 +9,11 @@ export function BaseCube(props) {
     const {maxMovementDelay = 500} = props;
     const {animationDelay = Math.floor(Math.random() * (maxMovementDelay - minMovementDelay) + maxMovementDelay)} = props;
 
-    var minColorValue = 200;//180 180 180 light grey
-    var maxColorValue = 255;//255 255 255 white
+    const minColorValue = 200;//180 180 180 light grey
+    const maxColorValue = 255;//255 255 255 white
     const [hovered, setHover] = useState(false);
 
-    var randcolor = Math.floor(Math.random() * (maxColorValue - minColorValue) + minColorValue);
+    const randcolor = Math.floor(Math.random() * (maxColorValue - minColorValue) + minColorValue);
         const springPosition = useSpring({
             loop: {reverse: true},
             from: {position: props.position},
