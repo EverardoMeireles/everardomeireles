@@ -15,18 +15,18 @@ export function BaseCube(props) {
 
     var randcolor = Math.floor(Math.random() * (maxColorValue - minColorValue) + minColorValue);
         const springPosition = useSpring({
-            loop: {reverse:true},
-            from: {position:props.position},
-            to: {position:[props.position[0] + movementVector[0], props.position[1] + movementVector[1], props.position[2] + movementVector[2]]},
-            cancel:false,
+            loop: {reverse: true},
+            from: {position: props.position},
+            to: {position: [props.position[0] + movementVector[0], props.position[1] + movementVector[1], props.position[2] + movementVector[2]]},
+            cancel: false,
             config: {
                 duration: animationDelay
             }
         })
 
         const springColor = useSpring({
-            color:hovered?"rgb("+rgbHover[0]+","+ rgbHover[1]+","+ rgbHover[2]+")":"rgb("+randcolor+","+ randcolor+","+ randcolor+")"
-        })
+            color: hovered ? "rgb(" + rgbHover[0] + "," + rgbHover[1] + "," + rgbHover[2] + ")" : "rgb(" + randcolor + "," + randcolor + "," + randcolor + ")"
+        });
         
     return(
     <a.mesh

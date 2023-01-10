@@ -1,21 +1,24 @@
-import {CustomSinCurve} from "./CustomSinCurve";
 import * as THREE from "three";
-import {useState} from "react";
-export function Tube() {
-    const [active, setActive] = useState(false)
+import { useRef, useEffect } from "react";
 
-    // const path = new CustomSinCurve( 6 );
-    const path = new THREE.CatmullRomCurve3( [
-        new THREE.Vector3( 0, 0, 0 ),
-        new THREE.Vector3( 5, -5, 5 ),
-        new THREE.Vector3( 10, 0, 10 )
-    ] );
+export function Tube() {
+    const path = new THREE.CatmullRomCurve3( [                
+        new THREE.Vector3( 15, 10, -30 ),
+        new THREE.Vector3( 15, 10, -15 ),
+        new THREE.Vector3( 15, 10, 0 ),
+]);
+
+    const meshMaterial = useRef()
+    useEffect(() => {
+        meshMaterial.current.wireframe = true;
+        meshMaterial.current.visible = true;
+        meshMaterial.current.position = new THREE.Vector3(12, 10.85, 30);
+    }, []);
 
     return(
-    <mesh>
-        onClick={() => setActive(!active)}
-        <tubeGeometry args={[path, 70, 2, 50, false]} />
-        <meshStandardMaterial attach="material" color={0x00ff00}/>;
-    </mesh>
-    );
+        <mesh>
+            <tubeGeometry args = {[path, 40, 1, 70, false]} />
+            <meshStandardMaterial wireframe = "true" ref = {meshMaterial}  attach = "material"/>
+        </mesh>
+    )
 }

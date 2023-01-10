@@ -1,41 +1,29 @@
 import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
 import { Suspense, useRef, useEffect } from "react";
-import {useSpring, a} from '@react-spring/three';
-import * as THREE from "three";
 import { useFrame } from '@react-three/fiber';
 import { path_points, path_points_lookat } from "./PathPoints";
 import { IndexMenu } from "./IndexMenu";
 import { ProjectsMenu } from "./ProjectsMenu";
-import create from 'zustand';
 import { FadingTextModel } from "./FadingTextModel";
+import create from 'zustand';
+import * as THREE from "three";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
-    setPath: (desired) => set(() => ({ desired_path: desired })),
+    setPath: (desired) => set(() => ({desired_path: desired})),
     transitionEnded: false,
-    setTransitionEnded: (ended) => set(() => ({ transitionEnded: ended })),
+    setTransitionEnded: (ended) => set(() => ({transitionEnded: ended})),
     }))
 
 export function SceneContainer() {
-
-    const props = useSpring({
-        // scale : active ? [25, 25, 25] : [1, 1, 1],
-        // position: active ? [p1.x,p1.y,p1.z] : [p0.x,p0.y,p0.z]
-    })
-
     const CoordinateFindDebug = () => {
     var pivotCube = useRef();
-
-    useEffect(() => {
-        // console.log(pivotCube);
-
-    }, [])
 
     return(
         <>  
             <mesh
                 position = {[0, 0, -3]}
-                ref={pivotCube}
+                ref = {pivotCube}
                 >
                 <boxGeometry/>
                 <meshStandardMaterial attach="material" color={0x00ff00}/>
@@ -43,51 +31,51 @@ export function SceneContainer() {
 
             <mesh
                 position = {[0, 8, 8]}
-                onClick={() =>{
+                onClick = {() => {
                     pivotCube.current.position.x -= 1;
                     console.log(pivotCube.current.position);
                 }}                
                 >
                 <boxGeometry/>
-                <meshStandardMaterial attach="material" color={0x00ff00}/>
+                <meshStandardMaterial attach = "material" color = {0x00ff00}/>
             </mesh>
 
             <mesh
                 position = {[4, 8, 8]}
-                onClick={() => {
+                onClick = {() => {
                     pivotCube.current.position.x += 1;
                     console.log(pivotCube.current.position);
                 }}                
                 >
                 <boxGeometry/>
-                <meshStandardMaterial attach="material" color={0x00ff00}/>
+                <meshStandardMaterial attach = "material" color = {0x00ff00}/>
             </mesh>
 
             <mesh
                 position = {[2, 12, 8]}
-                onClick={() =>{
+                onClick = {() => {
                     pivotCube.current.position.y += 1;
                     console.log(pivotCube.current.position);
                 }}                
                 >
                 <boxGeometry/>
-                <meshStandardMaterial attach="material" color={0x00ff00}/>
+                <meshStandardMaterial attach = "material" color = {0x00ff00}/>
             </mesh>
 
             <mesh
                 position = {[2, 4, 8]}
-                onClick={() =>{
+                onClick = {() => {
                     pivotCube.current.position.y -= 1;
                     console.log(pivotCube.current.position);
                 }}            
                 >
                 <boxGeometry/>
-                <meshStandardMaterial attach="material" color={0x00ff00}/>
+                <meshStandardMaterial attach = "material" color = {0x00ff00}/>
             </mesh>
 
             <mesh
                 position = {[2, 8, 4]}
-                onClick={() =>{
+                onClick = {() => {
                     pivotCube.current.position.z -= 1;
                     console.log(pivotCube.current.position);
                 }}              
@@ -98,50 +86,18 @@ export function SceneContainer() {
 
             <mesh
                 position = {[2, 8, 12]}
-                onClick={() =>{
+                onClick = {() => {
                     pivotCube.current.position.z += 1;
                     console.log(pivotCube.current.position);
                 }}           
                 >
                 <boxGeometry/>
                 <meshStandardMaterial attach="material" color={0x00ff00}/>
-                </mesh>
+            </mesh>
         </>
     )
 }
 
-    const Tube = () => {
-        const path = new THREE.CatmullRomCurve3( [                
-            new THREE.Vector3( 15, 10, -30 ),
-            new THREE.Vector3( 15, 10, -15 ),
-            new THREE.Vector3( 15, 10, 0 ),
-    ]);
-
-        const meshMaterial = useRef()
-        useEffect(() => {
-            meshMaterial.current.wireframe = true;
-            meshMaterial.current.visible = true;
-            meshMaterial.current.position = new THREE.Vector3(12, 10.85, 30);
-        }, []);
-
-        return(
-            <mesh>
-                <tubeGeometry args={[path, 40, 1, 70, false]} />
-                <meshStandardMaterial wireframe="true" ref={meshMaterial}  attach="material"/>
-            </mesh>
-        )
-    }
-
-    const Box = () => {
-        return(
-            <a.mesh
-            position = {[12, 0, 0]}
-            >
-                <boxGeometry />
-                <meshStandardMaterial attach="material" color={0x00ff00}/>
-            </a.mesh>
-        )
-    }
 
     function smoothStep(x) { //Normal smoothstep
         let Sn = -2 * Math.pow(x, 3) + 3 * Math.pow(x, 2);
@@ -176,17 +132,15 @@ export function SceneContainer() {
 
         function updateCall(state){
             if(updateCallNow.current){
-                setTransitionEnded(true)
+                setTransitionEnded(true);
                 updateCallNow.current = false;
                 current_path.current = desired_path;
-                controls.current.enabled = true
-                state.events.enabled = true
+                controls.current.enabled = true;
+                state.events.enabled = true;
             }
         }
 
-        // somewhere in the code => usestate desired point
-        // if current point = desired point jump to else
-        useFrame((state) => (tick <= 1 /*decimal_point_stop(current_point.current, desired_point)*/?(
+        useFrame((state) => (tick <= 1 ? (
             updateCallNow.current = true,
             state.events.enabled = false,
             controls.current.enabled = false,
@@ -203,20 +157,14 @@ export function SceneContainer() {
             state.camera.position.z = sub_points.z)
             : (updateCall(state))
         ));
-
-        // useFrame( () => (
-        //     console.log(path_points_lookat),
-        //     console.log(current_lookat.current)
-        //     ));
         
         return(
             <>
-                <PerspectiveCamera ref={cam} makeDefault fov={75} /*position={[0,0,0]}*/ />
-                <OrbitControls ref={controls} target={[desired_lookat.x-4,desired_lookat.y,desired_lookat.z]}/>
+                <PerspectiveCamera ref = {cam} makeDefault fov = {75} /*position={[0,0,0]}*/ />
+                <OrbitControls ref = {controls} target = {[desired_lookat.x-4, desired_lookat.y, desired_lookat.z]}/>
                 <IndexMenu {...{useStore}}/>
                 <ProjectsMenu {...{useStore}}/>
-                <FadingTextModel {...{useStore}} textModelMenu="MainMenu" />
-
+                <FadingTextModel {...{useStore}} textModelMenu = "MainMenu" />
             </>
         )
     }
@@ -224,14 +172,11 @@ export function SceneContainer() {
     return(
         <>
             <ambientLight/>
-            <Box
-            ></Box>
-            <Tube/>
             <CoordinateFindDebug></CoordinateFindDebug>
             <Camera/>
-            <Suspense fallback={null}>
-                <Environment background={"only"} files={process.env.PUBLIC_URL + "/textures/bg.hdr"} />
-                <Environment background={false} files={process.env.PUBLIC_URL + "/textures/envmap.hdr"} />
+            <Suspense fallback = {null}>
+                <Environment background = {"only"} files = {process.env.PUBLIC_URL + "/textures/bg.hdr"} />
+                <Environment background = {false} files = {process.env.PUBLIC_URL + "/textures/envmap.hdr"} />
             </Suspense>
         </>
     );
