@@ -23,12 +23,12 @@ export const path_points = {
 export const path_points_lookat_dict = {
     //index: first page when entering site
     "MainMenu-projects": {
-        // 0: new THREE.Vector3(-2, 4, -3),
-        0: new THREE.Vector3(0, 26, -19)
+        0: new THREE.Vector3(-2, 4, -3),
+        0.5: new THREE.Vector3(0, 26, -19)
     },
     "projects-MainMenu": {
-        // 0: new THREE.Vector3(9, 3, 2),
-        0: new THREE.Vector3(0, 3, 2)
+        0: new THREE.Vector3(9, 3, 2),
+        0.5: new THREE.Vector3(0, 3, 2)
     },
     // "projects-MainMenu": {
     //     0:new THREE.Vector3(9, 3, 2),
