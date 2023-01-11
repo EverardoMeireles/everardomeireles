@@ -20,11 +20,20 @@ export const path_points = {
         new THREE.Vector3(15, 10, 30)]),
 }
 
-export const path_points_lookat = {
+export const path_points_lookat_dict = {
     //index: first page when entering site
-    "index": new THREE.Vector3(0, 3, 2),
-    "MainMenu": new THREE.Vector3(0, 3, 2),
-    "projects": new THREE.Vector3(0, 26, -19),
+    "MainMenu-projects": {
+        // 0: new THREE.Vector3(-2, 4, -3),
+        0: new THREE.Vector3(0, 26, -19)
+    },
+    "projects-MainMenu": {
+        // 0: new THREE.Vector3(9, 3, 2),
+        0: new THREE.Vector3(0, 3, 2)
+    },
+    // "projects-MainMenu": {
+    //     0:new THREE.Vector3(9, 3, 2),
+    //     0.5: new THREE.Vector3(0, 3, 2)
+    // }
+    
     
 }
-

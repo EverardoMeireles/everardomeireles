@@ -1,7 +1,7 @@
 import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
 import { Suspense, useRef, useEffect } from "react";
 import { useFrame } from '@react-three/fiber';
-import { path_points, path_points_lookat } from "./PathPoints";
+import { path_points, path_points_lookat_dict } from "./PathPoints";
 import { IndexMenu } from "./IndexMenu";
 import { ProjectsMenu } from "./ProjectsMenu";
 import { FadingTextModel } from "./FadingTextModel";
@@ -116,9 +116,21 @@ export function SceneContainer() {
         const controls = useRef();
         const current_path = useRef("projects");
         const current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
-        const current_lookat = useRef(path_points_lookat["index"]);
-        const desired_lookat = path_points_lookat[desired_path];
+        const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
         const concat_paths = current_path.current + "-" + desired_path;
+
+        // control target is the last element of path_points_lookat_dict
+        const constrolTargetX = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].x
+        const constrolTargetY = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].y
+        const constrolTargetZ = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].z
+
+        // used in custom camera lookat
+        const desired_lookat_dict = (time) => {
+            let nextLookat;
+            Object.keys(path_points_lookat_dict[concat_paths]).forEach((time_key) => time >= time_key ? nextLookat = path_points_lookat_dict[concat_paths][time_key] : console.log());
+            return nextLookat;
+        };
+
         const desired_point = path_points[concat_paths];
 
         let smooth;
@@ -139,13 +151,14 @@ export function SceneContainer() {
             updateCallNow.current = true,
             state.events.enabled = false,
             controls.current.enabled = false,
-            current_lookat.current.lerp(desired_lookat, 0.03),
-            state.camera.lookAt(current_lookat.current),
-            
             tick += 0.005,
             smooth = smoothStep(tick),
-            sub_points = desired_point.getPointAt(smooth),
-            current_point.current = sub_points,
+
+            // console.log(Object.keys(path_points_lookat_dict[desired_path])),
+            sub_points = current_point.current = desired_point.getPointAt(smooth),
+            
+            current_lookat.current.lerp(desired_lookat_dict(smooth), 0.03),
+            state.camera.lookAt(current_lookat.current),
 
             state.camera.position.x = sub_points.x,
             state.camera.position.y = sub_points.y,
@@ -156,7 +169,7 @@ export function SceneContainer() {
         return(
             <>
                 <PerspectiveCamera ref = {cam} makeDefault fov = {75} /*position={[0,0,0]}*/ />
-                <OrbitControls ref = {controls} target = {[desired_lookat.x-4, desired_lookat.y, desired_lookat.z]}/>
+                <OrbitControls ref = {controls} target = {[constrolTargetX-4, constrolTargetY, constrolTargetZ]}/>
                 <IndexMenu {...{useStore}}/>
                 <ProjectsMenu {...{useStore}}/>
                 <FadingTextModel {...{useStore}} textModelMenu = "MainMenu" />
