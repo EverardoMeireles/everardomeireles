@@ -8,8 +8,8 @@ export function FadingTextModel(props) {
     const {textModelMenu = "MainMenu"} = props;
     const {textColor = "#000000"} = props;
     const {transitionDuration = 1000} = props;
-    const {initialPosition = [0,0,-4]} = props;
-    const {PlaneSize = [0.2, 7, 6.7]} = props;
+    const {initialPosition = [0,0,0]} = props;
+    const {PlaneSize = [7, 6.7]} = props;
     const {fontFileName = "roboto.json"} = props; // put the json font file in the public folder
     const {lettersPerUnit = 8} = props; // how many letters should fit inside a spacial unit(a [1,1,1] cube)
     const {transitionEnded, desired_path} = props.useStore();
@@ -18,12 +18,12 @@ export function FadingTextModel(props) {
         opacity: (transitionEnded && desired_path == textModelMenu) ? 1 : 0,
         config: {
             duration:transitionDuration
-          }
+        }
     })
 
     const TextRows = (text) => {
         const textPositionOffset = [0,-0.5,0.2];
-        const unitsPerRow = Math.floor(PlaneSize[2]); //number of spacial units (a [1,1,1] cube) that a fit with the z axis of the plane 
+        const unitsPerRow = Math.floor(PlaneSize[1]); //number of spacial units (a [1,1,1] cube) that a fit with the z axis of the plane 
         const replace = '.{1,'+(Math.floor(lettersPerUnit) * unitsPerRow)+'}';
         const reg = (new RegExp(replace,"g"));
         const textChunksArray = text.match(reg);
@@ -33,7 +33,7 @@ export function FadingTextModel(props) {
             rows.push(
                 <Text3D
                     key = {i}
-                    position = {[-(PlaneSize[2]/2) + textPositionOffset[2], (PlaneSize[1]/2) + textPositionOffset[1] - i,  0.1]}
+                    position = {[-(PlaneSize[1]/2) + textPositionOffset[2], (PlaneSize[0]/2) + textPositionOffset[1] - i,  0]}
                     font = {process.env.PUBLIC_URL + fontFileName}
                     size = {0.200}
                     height = {0.065}
@@ -56,15 +56,13 @@ export function FadingTextModel(props) {
     return(  
         <mesh
             position = {initialPosition}
+            ref = {callbackRef}
+
         >
-            <boxGeometry args = {PlaneSize} />
+            <planeGeometry args = {PlaneSize} />
             <a.meshStandardMaterial />
             <Suspense fallback = {null}>
-            <mesh
-                ref = {callbackRef}
-            >
                 {text3DArray.rows}
-            </mesh>
             </Suspense>
         </mesh>
     );
