@@ -19,7 +19,12 @@ export function IndexMenu(props) {
     return(
         <>
             <a.mesh
-            onClick = {() => (setPath("projects"), setTransitionEnded(false))} position = {[0,0,2]}
+            onClick = {(e) => {
+                e.stopPropagation();
+                setPath("projects");
+                setTransitionEnded(false);
+            }}
+            position = {[0,0,2]}
             onPointerOver = {() => setHover(true)}
             onPointerOut = {() => setHover(false)}
             >

@@ -5,7 +5,13 @@ export function ProjectsMenu(props) {
 
     return(
     <>
-        <mesh onClick= {() => (setPath("MainMenu"), setTransitionEnded(false))}>
+        <mesh
+        onClick= {(e) => {
+        e.stopPropagation();
+        setPath("MainMenu");
+        setTransitionEnded(false);
+        }}
+        >
             <BaseCube position={[0,23,-21]} />
         </mesh>
         
@@ -45,7 +51,5 @@ export function ProjectsMenu(props) {
         <BaseCube position={[0,29,-17]} />
         
     </>
-
-    /* onClick={() => setActive(!active)} */
     );
 }

@@ -86,9 +86,9 @@ export function Camera() {
 
     return(
         <>
-        <OrbitingPointLight orbitCenterPosition={[0,3,3]} orbitDistance={10}/>
+            <OrbitingPointLight orbitCenterPosition={[0,3,3]} orbitDistance={10}/>
             <IndexMenu {...{useStore}}/>
-                {/* <ProjectsMenu {...{useStore}}/>  */}
+            <ProjectsMenu {...{useStore}}/> 
             <PerspectiveCamera ref = {cam} makeDefault fov = {75} /*position={[0,0,0]}*/ />
             <OrbitControls ref = {controls} target = {[constrolTargetX-4, constrolTargetY, constrolTargetZ]}/>
 

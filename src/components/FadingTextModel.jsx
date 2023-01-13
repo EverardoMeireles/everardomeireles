@@ -50,14 +50,13 @@ export function FadingTextModel(props) {
 
     const text3DArray = TextRows(textToFade);
     const callbackRef = useCallback(
-        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log("skip render")
+        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (Math.PI/2))) : console.log("skip render")
         )
 
     return(  
         <mesh
             position = {initialPosition}
             ref = {callbackRef}
-
         >
             <planeGeometry args = {PlaneSize} />
             <a.meshStandardMaterial />
