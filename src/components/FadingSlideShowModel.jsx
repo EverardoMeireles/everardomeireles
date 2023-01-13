@@ -31,7 +31,7 @@ export function FadingSlideShowModel(props) {
             ref={callbackRef}
             >
             <planeBufferGeometry attach="geometry" args={PlaneSize} />
-            <a.meshBasicMaterial attach="material" transparent opacity={springFade.opacity}  map={texture} />
+            <a.meshBasicMaterial attach="material" transparent opacity={springFade.opacity} map={texture} side={THREE.DoubleSide} />
         </mesh>
     </Suspense>
     )

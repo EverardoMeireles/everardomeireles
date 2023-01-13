@@ -2,12 +2,13 @@ import { Environment } from "@react-three/drei";
 import { Suspense } from "react";
 import { Camera } from "./components/Camera";
 import { CoordinateFindDebug } from "./components/CoordinateFindDebug";
+import { OrbitingPointLight } from "./components/OrbitingPointLights"
 
 export function SceneContainer() {
     
     return(
         <>
-            <ambientLight/>
+            {/* <pointLight position={[2,4,7]}/> */}
             <CoordinateFindDebug></CoordinateFindDebug>
             <Camera/>
             <Suspense fallback = {null}>

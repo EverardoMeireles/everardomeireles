@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { useRef } from "react";
 import { FadingSlideShowModel } from './FadingSlideShowModel';
+import { OrbitingPointLight } from './OrbitingPointLights';
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -82,16 +83,19 @@ export function Camera() {
         state.camera.position.z = sub_points.z)
         : (updateCall(state))
     ));
-    
+
     return(
         <>
+        <pointLight intensity={0.2} position={[8,7,2]}/>
+        <OrbitingPointLight orbitCenterPosition={[0,3,3]} orbitDistance={10}/>
+            <IndexMenu {...{useStore}}/>
+                {/* <ProjectsMenu {...{useStore}}/>  */}
             <PerspectiveCamera ref = {cam} makeDefault fov = {75} /*position={[0,0,0]}*/ />
             <OrbitControls ref = {controls} target = {[constrolTargetX-4, constrolTargetY, constrolTargetZ]}/>
-            <IndexMenu {...{useStore}}/>
-            <ProjectsMenu {...{useStore}}/>
-            <FadingTextModel {...{useStore}} textModelMenu = "MainMenu" initialPosition={[0,4,-5]} textToFade="Le lycee ort lyon est un lycee technologique, où j'ai fait mon bac+3 3csi spécialisation dev."/> 
+
+            {/* <FadingTextModel {...{useStore}} textModelMenu = "MainMenu" initialPosition={[0,4,-5]} textToFade="Le lycee ort lyon est un lycee technologique, où j'ai fait mon bac+3 3csi spécialisation dev."/> 
             <FadingSlideShowModel {...{useStore}} textModelMenu = "MainMenu" initialPosition={[0,4,5]} imageTexture={'OrtLyon.JPG'}/>
-            <FadingSlideShowModel {...{useStore}} textModelMenu = "MainMenu" initialPosition={[0,-3,-5]} PlaneSize={[5,5]} imageTexture={'OrtInterieur.JPG'}/>
+            <FadingSlideShowModel {...{useStore}} textModelMenu = "MainMenu" initialPosition={[0,-3,-5]} PlaneSize={[5,5]} imageTexture={'OrtInterieur.JPG'}/> */}
         </>
     )
 }
