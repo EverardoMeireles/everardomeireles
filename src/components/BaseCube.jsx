@@ -3,7 +3,10 @@ import {useSpring, a} from '@react-spring/three';
 
 export function BaseCube(props) {
     // default prop values:
-    const {movementVector = [0.1, 0, 0]} = props;
+    const {width = 1} = props;
+    const {height = 1} = props;
+    const {depth = 1} = props;
+    const {movementVector = [0.4, 0, 0]} = props;
     const {rgbHover = [120, 120, 120]} = props; // RGB for mouse hover
     const {minMovementDelay = 150} = props;
     const {maxMovementDelay = 500} = props;
@@ -28,13 +31,19 @@ export function BaseCube(props) {
             color: hovered ? "rgb(" + rgbHover[0] + "," + rgbHover[1] + "," + rgbHover[2] + ")" : "rgb(" + randcolor + "," + randcolor + "," + randcolor + ")"
         });
         
+        const springScale = useSpring({
+            scale: hovered ? 1.5 : 1
+        });
+
     return(
     <a.mesh
     onPointerOver={() => setHover(true)}
     onPointerOut={() => setHover(false)}
     position = {springPosition.position}
+    scale={springScale.scale}
     >
-        <boxGeometry />
+        {props.children}
+        <boxGeometry  args={[width, height, depth]}/>
         <a.meshStandardMaterial attach="material" color={springColor.color}/>;    
     </a.mesh>
     );
