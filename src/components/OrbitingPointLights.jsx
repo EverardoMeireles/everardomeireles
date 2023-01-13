@@ -1,17 +1,18 @@
-import { useEffect, useRef} from "react";
+import { useEffect, useRef, useState} from "react";
 import { useFrame } from '@react-three/fiber'
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 
 export function OrbitingPointLight(props) {
-    const {orbitCenterPosition = [0, 0, 0]} = props
-    const {orbitAxis = 'x'} = props
-    const {orbitDistance = 4} = props
+    const {orbitCenterPosition = [0, 0, 0]} = props;
+    const {orbitAxis = 'x'} = props;
+    const {orbitDistance = 4} = props;
     const {orbitDirection = [0, 1, 0]} = props;
     const {orbitSpeed = 0.01} = props;
     const {lightIntensivity = 2} = props;
     const {bloomIntensivity = 10} = props;
+    const {lightColor = 'white'} = props;
 
-    const orbitRef = useRef()
+    const orbitRef = useRef();
     const axis = axisVectorReplace(orbitAxis);
 
     function axisVectorReplace(axisSring){
@@ -33,14 +34,14 @@ export function OrbitingPointLight(props) {
     }
 
     useEffect(() => {
-        orbitRef.current.geometry.translate(axis[0], axis[1], axis[2])
+        orbitRef.current.geometry.translate(axis[0], axis[1], axis[2]);
 
     })
 
     useFrame(() => {
-        orbitRef.current.rotation.x += orbitSpeed * orbitDirection[0]
-        orbitRef.current.rotation.y += orbitSpeed * orbitDirection[1]
-        orbitRef.current.rotation.z += orbitSpeed * orbitDirection[2]
+        orbitRef.current.rotation.x += orbitSpeed * orbitDirection[0];
+        orbitRef.current.rotation.y += orbitSpeed * orbitDirection[1];
+        orbitRef.current.rotation.z += orbitSpeed * orbitDirection[2];
     });
 
     return (
@@ -50,7 +51,7 @@ export function OrbitingPointLight(props) {
         >
             <pointLight intensity={lightIntensivity} position={axis} />
             <boxGeometry />
-            <meshStandardMaterial emissive="white" emissiveIntensity={bloomIntensivity} toneMapped={false} />
+            <meshStandardMaterial emissive={lightColor} emissiveIntensity={bloomIntensivity} toneMapped={false} />
             <EffectComposer>
                 <Bloom luminanceThreshold={1} mipmapBlur />
             </EffectComposer>
