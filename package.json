@@ -6,7 +6,7 @@
     "@react-spring/three": "^9.6.1",
     "@react-three/drei": "9.14.3",
     "@react-three/fiber": "8.0.26",
-    "@react-three/postprocessing": "2.4.4",
+    "@react-three/postprocessing": "^2.4.4",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",

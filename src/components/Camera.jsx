@@ -86,7 +86,6 @@ export function Camera() {
 
     return(
         <>
-        <pointLight intensity={0.2} position={[8,7,2]}/>
         <OrbitingPointLight orbitCenterPosition={[0,3,3]} orbitDistance={10}/>
             <IndexMenu {...{useStore}}/>
                 {/* <ProjectsMenu {...{useStore}}/>  */}
