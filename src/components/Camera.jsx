@@ -6,7 +6,7 @@ import { ProjectsMenu } from "./ProjectsMenu";
 import { FadingTextModel } from "./FadingTextModel";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { useRef } from "react";
+import { Suspense, useRef, useEffect } from "react";
 import { FadingSlideShowModel } from './FadingSlideShowModel';
 import { OrbitingPointLight } from './OrbitingPointLights';
 
@@ -33,6 +33,8 @@ export function Camera() {
     const constrolTargetX = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].x
     const constrolTargetY = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].y
     const constrolTargetZ = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].z
+
+    const keyboardControlsSpeed = 0.4
 
     // used in custom camera lookat
     const desired_lookat_dict = (time) => {
@@ -83,6 +85,71 @@ export function Camera() {
         state.camera.position.z = sub_points.z)
         : (updateCall(state))
     ));
+
+    useEffect(()=>{
+        window.addEventListener("keydown", (event) => {
+            if(event.code == "KeyP") {
+                console.log([Math.floor(cam.current.position.x), Math.floor(cam.current.position.y), Math.floor(cam.current.position.z) ])
+            }
+        })
+    })
+
+    // orbitcontrols keyboard control is not working, that's a workaround
+    useEffect(()=>{
+        window.addEventListener("keydown", (event) => {
+            switch(event.code) {
+                case "KeyW":
+                cam.current.position.x += -keyboardControlsSpeed
+                controls.current.target.x += -keyboardControlsSpeed
+                break;
+                case "KeyA":
+                    cam.current.position.z += keyboardControlsSpeed
+                    controls.current.target.z += keyboardControlsSpeed
+                break;
+
+                case "KeyS":
+                    cam.current.position.x += keyboardControlsSpeed
+                    controls.current.target.x += keyboardControlsSpeed
+                break;
+                case "KeyD":
+                    cam.current.position.z += -keyboardControlsSpeed
+                    controls.current.target.z += -keyboardControlsSpeed
+                break;
+                case "KeyQ":
+                    cam.current.position.y += keyboardControlsSpeed
+                    controls.current.target.y += keyboardControlsSpeed
+                    cam.current.position.z += keyboardControlsSpeed
+                    controls.current.target.z += keyboardControlsSpeed
+                break;
+                case "KeyE":
+                    cam.current.position.y += keyboardControlsSpeed
+                    controls.current.target.y += keyboardControlsSpeed
+                    cam.current.position.z += -keyboardControlsSpeed
+                    controls.current.target.z += -keyboardControlsSpeed
+                break;
+                case "KeyC":
+                    cam.current.position.y += -keyboardControlsSpeed
+                    controls.current.target.y += -keyboardControlsSpeed
+                    cam.current.position.z += -keyboardControlsSpeed
+                    controls.current.target.z += -keyboardControlsSpeed
+                break;
+                case "KeyZ":
+                    cam.current.position.y += -keyboardControlsSpeed
+                    controls.current.target.y += -keyboardControlsSpeed
+                    cam.current.position.z += keyboardControlsSpeed
+                    controls.current.target.z += keyboardControlsSpeed
+                break;
+                case "KeyR":
+                    cam.current.position.y += keyboardControlsSpeed
+                    controls.current.target.y += keyboardControlsSpeed
+                break;
+                case "KeyF":
+                    cam.current.position.y += -keyboardControlsSpeed
+                    controls.current.target.y += -keyboardControlsSpeed
+                break;
+            }
+        });
+    })
 
     return(
         <>
