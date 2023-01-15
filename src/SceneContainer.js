@@ -8,10 +8,10 @@ export function SceneContainer() {
 
     return(
         <>
-        <SimpleLoader></SimpleLoader>
+            <Suspense fallback = {null}>
+            <SimpleLoader></SimpleLoader>
             {/* <pointLight position={[2,4,7]}/> */}
             <Camera/>
-            <Suspense fallback = {null}>
                 <Environment background = {"only"} files = {process.env.PUBLIC_URL + "/textures/bg.hdr"} />
                 <Environment background = {false} files = {process.env.PUBLIC_URL + "/textures/envmap.hdr"} />
             </Suspense>

@@ -6,15 +6,20 @@ import { ProjectsMenu } from "./ProjectsMenu";
 import { FadingTextModel } from "./FadingTextModel";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { Suspense, useRef, useEffect } from "react";
+import { Suspense, useRef, useEffect, useState } from "react";
 import { FadingSlideShowModel } from './FadingSlideShowModel';
 import { OrbitingPointLight } from './OrbitingPointLights';
+import { GraphicalModeSetter } from './GraphicalModeSetter';
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
     setPath: (desired) => set(() => ({desired_path: desired})),
     transitionEnded: false,
     setTransitionEnded: (ended) => set(() => ({transitionEnded: ended})),
+    graphicalModes: ["potato", "potatoExtra", "potatoPremium", "normal", "masterpiece"],
+    currentGraphicalMode: "potatoPremium",
+    // if graphicalModes wont be out of range, update currentGraphicalMode
+    setGraphicalMode: (mode) => set((state) => state.graphicalModes[state.graphicalModes.indexOf(state.currentGraphicalMode) + mode] != undefined ? ({currentGraphicalMode: state.graphicalModes[state.graphicalModes.indexOf(state.currentGraphicalMode) + mode]}) : ({currentGraphicalMode:state.currentGraphicalMode})),
     }))
 
 export function Camera() {
@@ -27,8 +32,12 @@ export function Camera() {
     const current_path = useRef("projects");
     const current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
     const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
-    const concat_paths = current_path.current + "-" + desired_path;
-
+    var concat_paths = current_path.current + "-" + desired_path;
+    
+    // temporary workaround for rerendering issue
+    if(current_path.current == desired_path){
+        concat_paths = "projects-MainMenu"
+    }
     // control target is the last element of path_points_lookat_dict
     const constrolTargetX = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].x
     const constrolTargetY = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].y
@@ -153,8 +162,9 @@ export function Camera() {
 
     return(
         <>
-            <OrbitingPointLight orbitCenterPosition={[0,3,3]} orbitDistance={10}/>
+            <OrbitingPointLight></OrbitingPointLight>
             <IndexMenu {...{useStore}}/>
+            <GraphicalModeSetter {...{useStore}}/>
             <ProjectsMenu {...{useStore}}/> 
             <PerspectiveCamera ref = {cam} makeDefault fov = {75} /*position={[0,0,0]}*/ />
             <OrbitControls ref = {controls} target = {[constrolTargetX-4, constrolTargetY, constrolTargetZ]}/>
