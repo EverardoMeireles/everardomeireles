@@ -1,31 +1,15 @@
-import create from 'zustand';
 import { useFrame } from '@react-three/fiber';
 import { path_points, path_points_lookat_dict } from "../PathPoints";
-import { IndexMenu } from "./IndexMenu";
-import { ProjectsMenu } from "./ProjectsMenu";
-import { FadingTextModel } from "./FadingTextModel";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { Suspense, useRef, useEffect, useState } from "react";
-import { FadingSlideShowModel } from './FadingSlideShowModel';
-import { OrbitingPointLight } from './OrbitingPointLights';
-import { GraphicalModeSetter } from './GraphicalModeSetter';
+import React, { useRef, useEffect } from "react";
 
-const useStore = create((set) => ({
-    desired_path: "MainMenu",
-    setPath: (desired) => set(() => ({desired_path: desired})),
-    transitionEnded: false,
-    setTransitionEnded: (ended) => set(() => ({transitionEnded: ended})),
-    graphicalModes: ["potato", "potatoExtra", "potatoPremium", "normal", "masterpiece"],
-    currentGraphicalMode: "potatoPremium",
-    // if graphicalModes wont be out of range, update currentGraphicalMode
-    setGraphicalMode: (mode) => set((state) => state.graphicalModes[state.graphicalModes.indexOf(state.currentGraphicalMode) + mode] != undefined ? ({currentGraphicalMode: state.graphicalModes[state.graphicalModes.indexOf(state.currentGraphicalMode) + mode]}) : ({currentGraphicalMode:state.currentGraphicalMode})),
-    }))
-
-export function Camera() {
+export const Camera = React.memo((props) => {
+    const useStore = props.useStore;
     const desired_path = useStore((state) => state.desired_path);
     const setTransitionEnded = useStore((state) => state.setTransitionEnded);
 
+    const keyboardControlsSpeed = 0.4;
     const updateCallNow = useRef(false);
     const cam = useRef();
     const controls = useRef();
@@ -34,16 +18,10 @@ export function Camera() {
     const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
     var concat_paths = current_path.current + "-" + desired_path;
     
-    // temporary workaround for rerendering issue
-    if(current_path.current == desired_path){
-        concat_paths = "projects-MainMenu"
-    }
     // control target is the last element of path_points_lookat_dict
-    const constrolTargetX = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].x
-    const constrolTargetY = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].y
-    const constrolTargetZ = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].z
-
-    const keyboardControlsSpeed = 0.4
+    const constrolTargetX = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].x;
+    const constrolTargetY = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].y;
+    const constrolTargetZ = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].z;
 
     // used in custom camera lookat
     const desired_lookat_dict = (time) => {
@@ -98,7 +76,7 @@ export function Camera() {
     useEffect(()=>{
         window.addEventListener("keydown", (event) => {
             if(event.code == "KeyP") {
-                console.log([Math.floor(cam.current.position.x), Math.floor(cam.current.position.y), Math.floor(cam.current.position.z) ])
+                console.log([Math.floor(cam.current.position.x), Math.floor(cam.current.position.y), Math.floor(cam.current.position.z) ]);
             }
         })
     })
@@ -108,70 +86,62 @@ export function Camera() {
         window.addEventListener("keydown", (event) => {
             switch(event.code) {
                 case "KeyW":
-                cam.current.position.x += -keyboardControlsSpeed
-                controls.current.target.x += -keyboardControlsSpeed
+                cam.current.position.x += -keyboardControlsSpeed;
+                controls.current.target.x += -keyboardControlsSpeed;
                 break;
                 case "KeyA":
-                    cam.current.position.z += keyboardControlsSpeed
-                    controls.current.target.z += keyboardControlsSpeed
+                    cam.current.position.z += keyboardControlsSpeed;
+                    controls.current.target.z += keyboardControlsSpeed;
                 break;
 
                 case "KeyS":
-                    cam.current.position.x += keyboardControlsSpeed
-                    controls.current.target.x += keyboardControlsSpeed
+                    cam.current.position.x += keyboardControlsSpeed;
+                    controls.current.target.x += keyboardControlsSpeed;
                 break;
                 case "KeyD":
-                    cam.current.position.z += -keyboardControlsSpeed
-                    controls.current.target.z += -keyboardControlsSpeed
+                    cam.current.position.z += -keyboardControlsSpeed;
+                    controls.current.target.z += -keyboardControlsSpeed;
                 break;
                 case "KeyQ":
-                    cam.current.position.y += keyboardControlsSpeed
-                    controls.current.target.y += keyboardControlsSpeed
-                    cam.current.position.z += keyboardControlsSpeed
-                    controls.current.target.z += keyboardControlsSpeed
+                    cam.current.position.y += keyboardControlsSpeed;
+                    controls.current.target.y += keyboardControlsSpeed;
+                    cam.current.position.z += keyboardControlsSpeed;
+                    controls.current.target.z += keyboardControlsSpeed;
                 break;
                 case "KeyE":
-                    cam.current.position.y += keyboardControlsSpeed
-                    controls.current.target.y += keyboardControlsSpeed
-                    cam.current.position.z += -keyboardControlsSpeed
-                    controls.current.target.z += -keyboardControlsSpeed
+                    cam.current.position.y += keyboardControlsSpeed;
+                    controls.current.target.y += keyboardControlsSpeed;
+                    cam.current.position.z += -keyboardControlsSpeed;
+                    controls.current.target.z += -keyboardControlsSpeed;
                 break;
                 case "KeyC":
-                    cam.current.position.y += -keyboardControlsSpeed
-                    controls.current.target.y += -keyboardControlsSpeed
-                    cam.current.position.z += -keyboardControlsSpeed
-                    controls.current.target.z += -keyboardControlsSpeed
+                    cam.current.position.y += -keyboardControlsSpeed;
+                    controls.current.target.y += -keyboardControlsSpeed;
+                    cam.current.position.z += -keyboardControlsSpeed;
+                    controls.current.target.z += -keyboardControlsSpeed;
                 break;
                 case "KeyZ":
-                    cam.current.position.y += -keyboardControlsSpeed
-                    controls.current.target.y += -keyboardControlsSpeed
-                    cam.current.position.z += keyboardControlsSpeed
-                    controls.current.target.z += keyboardControlsSpeed
+                    cam.current.position.y += -keyboardControlsSpeed;
+                    controls.current.target.y += -keyboardControlsSpeed;
+                    cam.current.position.z += keyboardControlsSpeed;
+                    controls.current.target.z += keyboardControlsSpeed;
                 break;
                 case "KeyR":
-                    cam.current.position.y += keyboardControlsSpeed
-                    controls.current.target.y += keyboardControlsSpeed
+                    cam.current.position.y += keyboardControlsSpeed;
+                    controls.current.target.y += keyboardControlsSpeed;
                 break;
                 case "KeyF":
-                    cam.current.position.y += -keyboardControlsSpeed
-                    controls.current.target.y += -keyboardControlsSpeed
+                    cam.current.position.y += -keyboardControlsSpeed;
+                    controls.current.target.y += -keyboardControlsSpeed;
                 break;
             }
         });
-    })
+    });
 
     return(
         <>
-            <OrbitingPointLight></OrbitingPointLight>
-            <IndexMenu {...{useStore}}/>
-            <GraphicalModeSetter {...{useStore}}/>
-            <ProjectsMenu {...{useStore}}/> 
-            <PerspectiveCamera ref = {cam} makeDefault fov = {75} /*position={[0,0,0]}*/ />
-            <OrbitControls ref = {controls} target = {[constrolTargetX-4, constrolTargetY, constrolTargetZ]}/>
-
-            {/* <FadingTextModel {...{useStore}} textModelMenu = "MainMenu" initialPosition={[0,4,-5]} textToFade="Le lycee ort lyon est un lycee technologique, où j'ai fait mon bac+3 3csi spécialisation dev."/> 
-            <FadingSlideShowModel {...{useStore}} textModelMenu = "MainMenu" initialPosition={[0,4,5]} imageTexture={'OrtLyon.JPG'}/>
-            <FadingSlideShowModel {...{useStore}} textModelMenu = "MainMenu" initialPosition={[0,-3,-5]} PlaneSize={[5,5]} imageTexture={'OrtInterieur.JPG'}/> */}
+            <PerspectiveCamera ref = {cam} makeDefault fov = {75} />
+            <OrbitControls ref = {controls} target = {[constrolTargetX-4, constrolTargetY, constrolTargetZ]} />
         </>
     )
-}
+})
