@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState} from "react";
+import { useEffect, useRef } from "react";
 import { useFrame } from '@react-three/fiber'
-import { Bloom, EffectComposer } from "@react-three/postprocessing";
 
 export function OrbitingPointLight(props) {
     const {orbitCenterPosition = [0, 0, 0]} = props;
@@ -52,9 +51,6 @@ export function OrbitingPointLight(props) {
             <pointLight intensity={lightIntensivity} position={axis} />
             <boxGeometry />
             <meshStandardMaterial emissive={lightColor} emissiveIntensity={bloomIntensivity} toneMapped={false} />
-            <EffectComposer>
-                <Bloom luminanceThreshold={1} mipmapBlur />
-            </EffectComposer>
         </mesh>
     )
 }
