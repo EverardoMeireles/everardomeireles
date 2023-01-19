@@ -17,14 +17,13 @@ export function SimpleLoader(props) {
 
         let mesh = gltf.scene.children[0];
         console.log(gltf);
-        mesh.material.color = new Color(0.04,0.06,0.1);
 
     }, [gltf]);
 
     return (
     <Suspense fallback={null}>
         <primitive object={gltf.scene} />
-        <meshStandardMaterial side={THREE.DoubleSide}></meshStandardMaterial>
+        {/* <meshStandardMaterial side={THREE.DoubleSide}></meshStandardMaterial> */}
     </Suspense>
     )
   }

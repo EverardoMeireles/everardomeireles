@@ -29,10 +29,11 @@ export function SceneContainer() {
     return(
         <>
             <Suspense fallback = {null}>
-                <Environment background = {"only"} files = {process.env.PUBLIC_URL + "/textures/bg.hdr"} />
-                <Environment background = {false} files = {process.env.PUBLIC_URL + "/textures/envmap.hdr"} />
+                <directionalLight intensity={0.4} position={[63,96,41]}></directionalLight>
+                <Environment files={process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background />
+                <Environment files={process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
+                {/* <ambientLight intensity={0.1}></ambientLight> */}
                 {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} />}
-
             </Suspense>
             <Camera {...{useStore}} />
             
@@ -75,13 +76,13 @@ export function SceneContainer() {
                     <ProjectsMenu {...{useStore}} />
                 </Suspense>
             </group>}
-            {(currentGraphicalMode == "masterpiece")
+            {(currentGraphicalMode == "high")
             && <group>
                 <Suspense fallback = {null}>
+                    <SimpleLoader modelName={"threeJsScene.glb"}></SimpleLoader>
                 <OrbitingPointLight></OrbitingPointLight>
                 <IndexMenu {...{useStore}}></IndexMenu>
                 <ProjectsMenu {...{useStore}} /> 
-                <SimpleLoader></SimpleLoader>
                 {/* <EffectComposer renderPriority={1}>
                     <Bloom luminanceThreshold={1} mipmapBlur />
                 </EffectComposer> */}

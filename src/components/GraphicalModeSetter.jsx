@@ -12,7 +12,7 @@ export function GraphicalModeSetter(props){
     const setFinishedBenchmark = props.useStore((state) => state.setFinishedBenchmark);    
     
     (async () => {
-        const gpuTier = await getGPUTier();
+        const gpuTier = await getGPUTier({benchmarksURL:"benchmarks"});
         let newGraphicalMode;
 
         // because of limitations in the detect-gpu package, the graphical modes are limited to 4 for now.
