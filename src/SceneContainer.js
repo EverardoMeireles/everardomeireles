@@ -79,7 +79,7 @@ export function SceneContainer() {
             {(currentGraphicalMode == "high")
             && <group>
                 <Suspense fallback = {null}>
-                <OrbitingMenu orbitCenterPosition={[15, 1, 0]}></OrbitingMenu>
+                <OrbitingMenu orbitCenterPosition={[15.5, 1.1, 0]}></OrbitingMenu>
 
                     {/* <SimpleLoader modelName={"threeJsScene.glb"}></SimpleLoader> */}
                 {/* <OrbitingPointLight></OrbitingPointLight> */}
