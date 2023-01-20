@@ -8,6 +8,7 @@ import { ProjectsMenu } from "./components/ProjectsMenu";
 import { OrbitingPointLight } from './components/OrbitingPointLights';
 import { GraphicalModeSetter } from './components/GraphicalModeSetter';
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
+import { OrbitingMenu } from "./components/OrbitingMenu";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -29,14 +30,13 @@ export function SceneContainer() {
     return(
         <>
             <Suspense fallback = {null}>
-                <directionalLight intensity={0.4} position={[63,96,41]}></directionalLight>
+                {/* <directionalLight intensity={0.4} position={[63,96,41]}></directionalLight> */}
                 <Environment files={process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background />
                 <Environment files={process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
                 {/* <ambientLight intensity={0.1}></ambientLight> */}
                 {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} />}
+                <Camera {...{useStore}} />
             </Suspense>
-            <Camera {...{useStore}} />
-            
             {(currentGraphicalMode == "potato")
             && 
             <group>
@@ -79,10 +79,12 @@ export function SceneContainer() {
             {(currentGraphicalMode == "high")
             && <group>
                 <Suspense fallback = {null}>
-                    <SimpleLoader modelName={"threeJsScene.glb"}></SimpleLoader>
-                <OrbitingPointLight></OrbitingPointLight>
-                <IndexMenu {...{useStore}}></IndexMenu>
-                <ProjectsMenu {...{useStore}} /> 
+                <OrbitingMenu orbitCenterPosition={[15, 1, 0]}></OrbitingMenu>
+
+                    {/* <SimpleLoader modelName={"threeJsScene.glb"}></SimpleLoader> */}
+                {/* <OrbitingPointLight></OrbitingPointLight> */}
+                {/* <IndexMenu {...{useStore}}></IndexMenu>
+                <ProjectsMenu {...{useStore}} />  */}
                 {/* <EffectComposer renderPriority={1}>
                     <Bloom luminanceThreshold={1} mipmapBlur />
                 </EffectComposer> */}
