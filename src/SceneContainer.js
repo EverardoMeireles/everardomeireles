@@ -9,6 +9,7 @@ import { OrbitingPointLight } from './components/OrbitingPointLights';
 import { GraphicalModeSetter } from './components/GraphicalModeSetter';
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { OrbitingMenu } from "./components/OrbitingMenu";
+import { FloatingTextSkills } from "./components/FloatingTextSkills";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -36,6 +37,8 @@ export function SceneContainer() {
                 {/* <ambientLight intensity={0.1}></ambientLight> */}
                 {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} />}
                 <Camera {...{useStore}} />
+                <FloatingTextSkills></FloatingTextSkills >
+                <OrbitingMenu />
             </Suspense>
             {(currentGraphicalMode == "potato")
             && 
@@ -72,16 +75,14 @@ export function SceneContainer() {
             <group>
                 <Suspense fallback = {null}>
                     <OrbitingPointLight></OrbitingPointLight>
-                    <IndexMenu {...{useStore}}></IndexMenu>
-                    <ProjectsMenu {...{useStore}} />
+                    {/* <IndexMenu {...{useStore}}></IndexMenu>
+                    <ProjectsMenu {...{useStore}} /> */}
                 </Suspense>
             </group>}
             {(currentGraphicalMode == "high")
             && <group>
                 <Suspense fallback = {null}>
                 <OrbitingMenu orbitCenterPosition={[15.5, 1.1, 0]}></OrbitingMenu>
-
-                    {/* <SimpleLoader modelName={"threeJsScene.glb"}></SimpleLoader> */}
                 {/* <OrbitingPointLight></OrbitingPointLight> */}
                 {/* <IndexMenu {...{useStore}}></IndexMenu>
                 <ProjectsMenu {...{useStore}} />  */}
