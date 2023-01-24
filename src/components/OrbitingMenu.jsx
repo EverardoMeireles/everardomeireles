@@ -5,6 +5,7 @@ import * as THREE from "three";
 
 export const OrbitingMenu = React.memo((props) => {
     const {orbitCenterPosition = [15.5, 1.1, 0]} = props;
+    const {planeSize = [5, 5]} = props;
     const {orbitDistance = 1.5} = props;
 
     const [hovered0, setHover0] = useState(false);
@@ -104,6 +105,30 @@ export const OrbitingMenu = React.memo((props) => {
         }
     });
 
+    // THERE ARE PROBLEMS WITH KEYBOARD CONTROLS, THAT IF STATEMENT IS NOT WORKING
+    // useEffect(()=>{
+    //     window.addEventListener("keydown", (event) => {
+    //         if(!clicked){
+    //             switch(event.code) {
+    //                 case "ArrowLeft":
+    //                     setClicked(true)
+    //                     setRotation(0)
+    
+    //                     setOrbitDirection(-1)
+    //                     // console.log("left")
+    //                 break;
+    //                 case "ArrowRight":
+    //                     setClicked(true)
+    //                     setRotation(0)
+    
+    //                     setOrbitDirection(1)
+    //                     // console.log("right")
+    //                 break;
+    //             }
+    //         }
+    //     });
+    // });
+
     return (
         <mesh position = {[orbitCenterPosition[0] + orbitDistance, orbitCenterPosition[1], orbitCenterPosition[2]]}>
             <mesh 
@@ -116,8 +141,8 @@ export const OrbitingMenu = React.memo((props) => {
                 setClicked(true)
                 } : console.log()}
             rotation = {[Math.PI/2, 0, 0]}
-            scale = {0.1}
-            position = {[-2.5, -0.35, 0.35]}>
+            scale = {0.5}
+            position = {[-12.5, -2, 0.35]}>
                 <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
                 <a.meshBasicMaterial color = {springColor.color0} />
             </mesh>
@@ -132,8 +157,8 @@ export const OrbitingMenu = React.memo((props) => {
                 setClicked(true)
                 } : console.log()}
             rotation = {[-Math.PI/2, 0, 0]}
-            scale = {0.1}
-            position = {[-2.5, -0.35, -0.35]}>
+            scale = {0.5}
+            position = {[-12.5, -2, -0.35]}>
                 <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
                 <a.meshBasicMaterial color={springColor.color1} />
             </mesh>
@@ -143,43 +168,43 @@ export const OrbitingMenu = React.memo((props) => {
                     <FadingSlideShowModel imageTexture={"ortAffiche.png"} ></FadingSlideShowModel>
                     </mesh> */}
                     {/* <planeGeometry ref = {planeReff0} attach="geometry"/> */}
-                    <planeBufferGeometry ref = {planeReff0} attach = "geometry"/>
+                    <planeBufferGeometry args={planeSize} ref = {planeReff0} attach = "geometry"/>
                     <meshBasicMaterial map = {planetexture0} attach = "material" side = {THREE.DoubleSide} />
                 </mesh>
             </Suspense>
 
             <mesh scale = {1} ref = {planeRef1}>
-                <planeBufferGeometry ref = {planeReff1} attach = "geometry"/>
+                <planeBufferGeometry args={planeSize} ref = {planeReff1} attach = "geometry"/>
                 <meshBasicMaterial map = {planetexture1} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef2}>
-                <planeBufferGeometry ref = {planeReff2} attach = "geometry"/>
+                <planeBufferGeometry args={planeSize} ref = {planeReff2} attach = "geometry"/>
                 <meshBasicMaterial map = {planetexture2} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef3}>
-                <planeBufferGeometry ref = {planeReff3} attach = "geometry"/>
+                <planeBufferGeometry args={planeSize} ref = {planeReff3} attach = "geometry"/>
                 <meshBasicMaterial map = {planetexture3} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef4}>
-                <planeBufferGeometry ref = {planeReff4} attach = "geometry"/>
+                <planeBufferGeometry args={planeSize} ref = {planeReff4} attach = "geometry"/>
                 <meshBasicMaterial map = {planetexture4} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef5}>
-                <planeBufferGeometry ref = {planeReff5} attach = "geometry"/>
+                <planeBufferGeometry args={planeSize} ref = {planeReff5} attach = "geometry"/>
                 <meshBasicMaterial map = {planetexture5} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef6}>
-                <planeBufferGeometry ref = {planeReff6} attach = "geometry"/>
+                <planeBufferGeometry args={planeSize} ref = {planeReff6} attach = "geometry"/>
                 <meshBasicMaterial map = {planetexture6} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef7}>
-                <planeBufferGeometry ref = {planeReff7} attach = "geometry"/>
+                <planeBufferGeometry args={planeSize} ref = {planeReff7} attach = "geometry"/>
                 <meshBasicMaterial visible={false} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
         </mesh>

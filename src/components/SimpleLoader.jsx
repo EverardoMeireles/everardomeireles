@@ -8,7 +8,7 @@ import { BufferAttribute, Color } from "three";
 
 
 export function SimpleLoader(props) {
-    const {modelName = "rooms.glb"} = props;
+    const {modelName = "threeJsScene.glb"} = props;
 
     const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + './models/' + modelName)
 

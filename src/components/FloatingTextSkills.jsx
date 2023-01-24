@@ -37,8 +37,11 @@ export function FloatingTextSkills(props) {
         scale7: hovered7 ? 1.5 : 1,
         scale8: hovered8 ? 1.5 : 1,
         scale9: hovered9 ? 1.5 : 1,
-
     });
+
+    // const springScale = useSpring({
+    //     scale: [1.5, 1, 1.5, 1, 1.5, 1, 1.5, 1, 1.5, 1]
+    // });
 
     const springColor = useSpring({
         color0: hovered0 ? "white" : textColorCat[0],
