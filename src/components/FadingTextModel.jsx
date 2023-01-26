@@ -2,6 +2,9 @@ import { Suspense, useCallback } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text3D } from "@react-three/drei";
+import { useEffect } from "react";
+import { useFrame } from "@react-three/fiber";
+import { useState } from "react";
 
 export function FadingTextModel(props) {
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien in condimentum consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien.Integer facilisis semper libero, id aliquam justo suscipit."} = props;
@@ -20,6 +23,8 @@ export function FadingTextModel(props) {
             duration:transitionDuration
         }
     })
+
+// useFrame(()=>console.log(springFadePanel.opacity.animation.values[0].lastPosition))
 
     const TextRows = (text) => {
         const textPositionOffset = [0,-0.5,0.2];
@@ -53,13 +58,13 @@ export function FadingTextModel(props) {
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (Math.PI/2))) : console.log("skip render")
         )
 
-    return(  
+    return(
         <mesh
             position = {initialPosition}
             ref = {callbackRef}
         >
             <planeGeometry args = {PlaneSize} />
-            <a.meshStandardMaterial />
+            <a.meshBasicMaterial opacity = {springFade.opacity} transparent/>
             <Suspense fallback = {null}>
                 {text3DArray.rows}
             </Suspense>
