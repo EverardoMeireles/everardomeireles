@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/everardomeireles/static/css/main.2d443f84.css",
-    "main.js": "/everardomeireles/static/js/main.80020a90.js",
+    "main.js": "/everardomeireles/static/js/main.7822d663.js",
     "index.html": "/everardomeireles/index.html",
     "main.2d443f84.css.map": "/everardomeireles/static/css/main.2d443f84.css.map",
-    "main.80020a90.js.map": "/everardomeireles/static/js/main.80020a90.js.map"
+    "main.7822d663.js.map": "/everardomeireles/static/js/main.7822d663.js.map"
   },
   "entrypoints": [
     "static/css/main.2d443f84.css",
-    "static/js/main.80020a90.js"
+    "static/js/main.7822d663.js"
   ]
 }
