@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/everardomeireles.github.io/static/css/main.2d443f84.css",
+    "main.js": "/everardomeireles.github.io/static/js/main.8d64b1a3.js",
+    "index.html": "/everardomeireles.github.io/index.html",
+    "main.2d443f84.css.map": "/everardomeireles.github.io/static/css/main.2d443f84.css.map",
+    "main.8d64b1a3.js.map": "/everardomeireles.github.io/static/js/main.8d64b1a3.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.2d443f84.css",
+    "static/js/main.8d64b1a3.js"
+  ]
+}
