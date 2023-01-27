@@ -44,6 +44,7 @@ export function SceneContainer() {
                 {/* <OrbitingMenu orbitDistance={7.5} orbitCenterPosition={[-17, -34, -4]}/> */}
                 <FadingSlideShowModel {...{useStore}} />
                 <FadingTextModel {...{useStore}} initialPosition={[0, 0, -10]} ></FadingTextModel>
+                <SimpleLoader></SimpleLoader>
             </Suspense>
             {(currentGraphicalMode == "potato")
             &&
@@ -52,7 +53,6 @@ export function SceneContainer() {
                     <ambientLight />
                     {/* <IndexMenu {...{useStore}}></IndexMenu>
                     <ProjectsMenu {...{useStore}} /> */}
-                    <SimpleLoader></SimpleLoader>
                 </Suspense>
             </group>}
             {(currentGraphicalMode == "potatoExtra")
@@ -62,7 +62,7 @@ export function SceneContainer() {
                     <OrbitingPointLight></OrbitingPointLight>
                     {/* <IndexMenu {...{useStore}}></IndexMenu>
                     <ProjectsMenu {...{useStore}} />  */}
-                    <SimpleLoader></SimpleLoader>
+                    {/* <SimpleLoader></SimpleLoader> */}
                 </Suspense>
             </group>}
             {(currentGraphicalMode == "potatoPremium")
@@ -72,7 +72,7 @@ export function SceneContainer() {
                     <OrbitingPointLight></OrbitingPointLight>
                     {/* <IndexMenu {...{useStore}}></IndexMenu>
                     <ProjectsMenu {...{useStore}} /> */}
-                    <SimpleLoader></SimpleLoader>
+                    {/* <SimpleLoader></SimpleLoader> */}
                 </Suspense>
             </group>}
             {(currentGraphicalMode == "normal")
