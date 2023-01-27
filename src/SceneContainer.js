@@ -10,6 +10,8 @@ import { GraphicalModeSetter } from './components/GraphicalModeSetter';
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { OrbitingMenu } from "./components/OrbitingMenu";
 import { FloatingTextSkills } from "./components/FloatingTextSkills";
+import { FadingSlideShowModel } from "./components/FadingSlideShowModel";
+import { FadingTextModel } from "./components/FadingTextModel";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -30,25 +32,26 @@ export function SceneContainer() {
 
     return(
         <>
-            <Suspense fallback = {null}>
-                <SimpleLoader></SimpleLoader>
+            <Suspense fallback = {null} >
+                {/* <SimpleLoader></SimpleLoader> */}
                 {/* <directionalLight intensity={0.4} position={[63,96,41]}></directionalLight> */}
                 <Environment files={process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background />
                 <Environment files={process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
                 {/* <ambientLight intensity={0.1}></ambientLight> */}
                 {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} />}
                 <Camera {...{useStore}} />
-                <FloatingTextSkills></FloatingTextSkills >
-                <OrbitingMenu orbitDistance={7.5} orbitCenterPosition={[-17, -34, -4]}/>
-                <OrbitingMenu orbitDistance={7.5}></OrbitingMenu>
+                {/* <FloatingTextSkills initialPosition={[5, -22, -101]}></FloatingTextSkills > */}
+                {/* <OrbitingMenu orbitDistance={7.5} orbitCenterPosition={[-17, -34, -4]}/> */}
+                <FadingSlideShowModel {...{useStore}} />
+                <FadingTextModel {...{useStore}} initialPosition={[0, 0, -10]} ></FadingTextModel>
             </Suspense>
             {(currentGraphicalMode == "potato")
-            && 
+            &&
             <group>
                 <Suspense fallback = {null}>
                     <ambientLight />
-                    <IndexMenu {...{useStore}}></IndexMenu>
-                    <ProjectsMenu {...{useStore}} />
+                    {/* <IndexMenu {...{useStore}}></IndexMenu>
+                    <ProjectsMenu {...{useStore}} /> */}
                     <SimpleLoader></SimpleLoader>
                 </Suspense>
             </group>}
@@ -57,8 +60,8 @@ export function SceneContainer() {
             <group>
                 <Suspense fallback = {null}>
                     <OrbitingPointLight></OrbitingPointLight>
-                    <IndexMenu {...{useStore}}></IndexMenu>
-                    <ProjectsMenu {...{useStore}} /> 
+                    {/* <IndexMenu {...{useStore}}></IndexMenu>
+                    <ProjectsMenu {...{useStore}} />  */}
                     <SimpleLoader></SimpleLoader>
                 </Suspense>
             </group>}
@@ -67,8 +70,8 @@ export function SceneContainer() {
             <group>
                 <Suspense fallback = {null}>
                     <OrbitingPointLight></OrbitingPointLight>
-                    <IndexMenu {...{useStore}}></IndexMenu>
-                    <ProjectsMenu {...{useStore}} />
+                    {/* <IndexMenu {...{useStore}}></IndexMenu>
+                    <ProjectsMenu {...{useStore}} /> */}
                     <SimpleLoader></SimpleLoader>
                 </Suspense>
             </group>}

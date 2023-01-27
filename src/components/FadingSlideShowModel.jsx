@@ -19,7 +19,7 @@ export function FadingSlideShowModel(props) {
         }
     })
 
-    const texture = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL +'./textures/'+imageTexture)
+    const texture = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL +'/textures/'+imageTexture)
     const callbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log("skip render")
         )

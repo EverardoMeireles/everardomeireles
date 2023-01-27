@@ -18,6 +18,9 @@ export const Camera = React.memo((props) => {
     const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
     var concat_paths = current_path.current + "-" + desired_path;
     
+    if(current_path.current == desired_path){
+        concat_paths = "projects-MainMenu";
+    }
     // control target is the last element of path_points_lookat_dict
     const constrolTargetX = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].x;
     const constrolTargetY = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].y;
