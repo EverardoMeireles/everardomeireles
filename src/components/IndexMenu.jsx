@@ -30,7 +30,7 @@ export function IndexMenu(props) {
                         <Text3D
                         position = {[0.5, -0.25, 1.5]}//Use a more standardised approach
                         ref = {callbackRef}
-                        font = {process.env.PUBLIC_URL + "roboto.json"}
+                        font = {process.env.PUBLIC_URL + "/roboto.json"}
                         size = {0.575}
                         height = {0.065}
                         curveSegments = {12}

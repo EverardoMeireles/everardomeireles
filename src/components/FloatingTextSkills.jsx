@@ -5,7 +5,7 @@ import { Text3D, Float } from "@react-three/drei";
 
 export function FloatingTextSkills(props) {
     const {initialPosition = [0,0,0]} = props;
-    const {fontFileName = "roboto.json"} = props;
+    const {fontFileName = "/roboto.json"} = props;
     const {hitBoxSize = [2, 1]} = props;
     const {rotation = Math.PI/2} = props;
     const {textCurveSergments = 12} = props;

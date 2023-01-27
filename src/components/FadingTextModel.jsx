@@ -13,7 +13,7 @@ export function FadingTextModel(props) {
     const {transitionDuration = 1000} = props;
     const {initialPosition = [0,0,0]} = props;
     const {PlaneSize = [7, 6.7]} = props;
-    const {fontFileName = "roboto.json"} = props; // put the json font file in the public folder
+    const {fontFileName = "/roboto.json"} = props; // put the json font file in the public folder
     const {lettersPerUnit = 8} = props; // how many letters should fit inside a spacial unit(a [1,1,1] cube)
     const {transitionEnded, desired_path} = props.useStore();
 
