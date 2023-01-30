@@ -44,8 +44,8 @@ export function SceneContainer() {
                 {/* <OrbitingMenu orbitDistance={7.5} orbitCenterPosition={[-17, -34, -4]}/> */}
                 <FadingSlideShowModel {...{useStore}} />
                 <FadingTextModel {...{useStore}} initialPosition={[0, 0, -10]} ></FadingTextModel>
-                <SimpleLoader></SimpleLoader> */}
-                {/* <FadingTextModel {...{useStore}} initialPosition={[4, 8.5, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <SimpleLoader></SimpleLoader>
+                <FadingTextModel {...{useStore}} initialPosition={[4, 8.5, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
                 <FadingTextModel {...{useStore}} initialPosition={[4, 30, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
                 <FadingTextModel {...{useStore}} initialPosition={[4, 51.5, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
                 <FadingTextModel {...{useStore}} initialPosition={[11, 8.5, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
@@ -100,7 +100,7 @@ export function SceneContainer() {
             {(currentGraphicalMode == "high")
             && <group>
                 <Suspense fallback = {null}>
-                <OrbitingMenu orbitCenterPosition={[15.5, 1.1, 0]}></OrbitingMenu>
+                {/* <OrbitingMenu orbitCenterPosition={[15.5, 1.1, 0]}></OrbitingMenu> */}
                 {/* <OrbitingPointLight></OrbitingPointLight> */}
                 {/* <IndexMenu {...{useStore}}></IndexMenu>
                 <ProjectsMenu {...{useStore}} />  */}
