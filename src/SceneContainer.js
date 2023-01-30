@@ -40,11 +40,24 @@ export function SceneContainer() {
                 {/* <ambientLight intensity={0.1}></ambientLight> */}
                 {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} />}
                 <Camera {...{useStore}} />
-                {/* <FloatingTextSkills initialPosition={[5, -22, -101]}></FloatingTextSkills > */}
+                {/* <FloatingTextSkills initialPosition={[-41, 0, 68]} rotation={3*(Math.PI/2)}></FloatingTextSkills > */}
                 {/* <OrbitingMenu orbitDistance={7.5} orbitCenterPosition={[-17, -34, -4]}/> */}
                 <FadingSlideShowModel {...{useStore}} />
                 <FadingTextModel {...{useStore}} initialPosition={[0, 0, -10]} ></FadingTextModel>
-                <SimpleLoader></SimpleLoader>
+                <SimpleLoader></SimpleLoader> */}
+                {/* <FadingTextModel {...{useStore}} initialPosition={[4, 8.5, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[4, 30, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[4, 51.5, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[11, 8.5, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[11, 30, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[11, 51.5, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[-4, 8.5, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[-4, 30, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[-4, 51.5, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[-11, 8.5, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[-11, 30, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} initialPosition={[-11, 51.5, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
+
             </Suspense>
             {(currentGraphicalMode == "potato")
             &&
