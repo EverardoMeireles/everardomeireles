@@ -7,7 +7,7 @@ import { useFrame } from "@react-three/fiber";
 import { useState } from "react";
 
 export function FadingTextModel(props) {
-    const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien in condimentum consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien.Integer facilisis semper libero, id aliquam justo suscipit."} = props;
+    const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien in condimentum consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien.Integer facilisis semper libero, id aliquam justo suscipit Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien in condimentum consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien.Integer facilisis semper libero, id aliquam justo suscipit."} = props;
     const {textModelMenu = "MainMenu"} = props;
     const {textColor = "#000000"} = props;
     const {transitionDuration = 1000} = props;
@@ -15,6 +15,9 @@ export function FadingTextModel(props) {
     const {PlaneSize = [7, 6.7]} = props;
     const {fontFileName = "/roboto.json"} = props; // put the json font file in the public folder
     const {lettersPerUnit = 8} = props; // how many letters should fit inside a spacial unit(a [1,1,1] cube)
+    const {rotation = Math.PI/2} = props;
+    const {visible = true} = props;
+
     const {transitionEnded, desired_path} = props.useStore();
 
     const springFade = useSpring({
@@ -42,10 +45,10 @@ export function FadingTextModel(props) {
                     font = {process.env.PUBLIC_URL + fontFileName}
                     size = {0.200}
                     height = {0.065}
-                    curveSegments = {12}
+                    curveSegments = {2}
                 >
                     {textChunksArray[i]}
-                    <a.meshStandardMaterial opacity = {springFade.opacity} transparent color={textColor} />
+                    <a.meshBasicMaterial opacity = {springFade.opacity} transparent color={textColor}/>
                 </Text3D>
                 );
         }
@@ -55,7 +58,7 @@ export function FadingTextModel(props) {
 
     const text3DArray = TextRows(textToFade);
     const callbackRef = useCallback(
-        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (Math.PI/2))) : console.log("skip render")
+        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log("skip render")
         )
 
     return(
@@ -64,7 +67,7 @@ export function FadingTextModel(props) {
             ref = {callbackRef}
         >
             <planeGeometry args = {PlaneSize} />
-            <a.meshBasicMaterial opacity = {springFade.opacity} transparent/>
+            <a.meshBasicMaterial opacity = {springFade.opacity} transparent visible={visible}/>
             <Suspense fallback = {null}>
                 {text3DArray.rows}
             </Suspense>
