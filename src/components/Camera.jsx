@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { path_points, path_points_lookat_dict } from "../PathPoints";
+import { path_points, path_points_simple_lookat_dict, path_points_lookat_dict } from "../PathPoints";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import React, { useRef, useEffect } from "react";
@@ -16,24 +16,37 @@ export const Camera = React.memo((props) => {
     const current_path = useRef("projects");
     const current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
     const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
-    var concat_paths = current_path.current + "-" + desired_path;
+    const simpleLookatMode = true
+
+    var concat_paths /*= current_path.current + "-" + desired_path;*/
     
-    if(current_path.current == desired_path){
-        concat_paths = "projects-MainMenu";
+    // if(current_path.current == desired_path){
+    //     concat_paths = "projects-MainMenu";
+    // }
+
+    let pathPointsLookat
+
+    if(simpleLookatMode){
+        pathPointsLookat = path_points_simple_lookat_dict
+        concat_paths = desired_path;
+    }else{
+        pathPointsLookat = path_points_lookat_dict
+        concat_paths = current_path.current + "-" + desired_path;
     }
+
     // control target is the last element of path_points_lookat_dict
-    const constrolTargetX = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].x;
-    const constrolTargetY = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].y;
-    const constrolTargetZ = path_points_lookat_dict[concat_paths][Object.keys(path_points_lookat_dict[concat_paths]).pop()].z;
+    const constrolTargetX = pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].x;
+    const constrolTargetY = pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].y;
+    const constrolTargetZ = pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].z;
 
     // used in custom camera lookat
     const desired_lookat_dict = (time) => {
         let nextLookat;
-        Object.keys(path_points_lookat_dict[concat_paths]).forEach((time_key) => time >= time_key ? nextLookat = path_points_lookat_dict[concat_paths][time_key] : console.log());
+        Object.keys(pathPointsLookat[concat_paths]).forEach((time_key) => time >= time_key ? nextLookat = pathPointsLookat[concat_paths][time_key] : console.log());
         return nextLookat;
     };
-
-    const desired_point = path_points[concat_paths];
+console.log(current_path.current + "-" + desired_path)
+    const desired_point = path_points[current_path.current + "-" + desired_path];
 
     let smooth;
     let sub_points;
@@ -144,7 +157,7 @@ export const Camera = React.memo((props) => {
     return(
         <>
             <PerspectiveCamera ref = {cam} makeDefault fov = {75} />
-            <OrbitControls ref = {controls} target = {[constrolTargetX-4, constrolTargetY, constrolTargetZ]} />
+            <OrbitControls ref = {controls} target = {[constrolTargetX, constrolTargetY, constrolTargetZ]} />
         </>
     )
 })
