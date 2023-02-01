@@ -12,7 +12,7 @@ export function FloatingTextSkills(props) {
     
     const sizeLarge = 0.600
     const textPosition = [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]
-    const textContents = ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"]// allemand(compris uniquement), API REST, async, arduino, 
+    const textContents = ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"]// allemand(compris uniquement), API REST, async, arduino, flask 
     const textColorCat = ["red", "red", "red", "blue", "blue", "green", "yellow", "yellow", "black", "black"]
 
     const [hovered0, setHover0] = useState(false);
@@ -84,13 +84,13 @@ export function FloatingTextSkills(props) {
 // const components = useMemo(() => createArrayOfText3DsPlacedRandomlyOnAreaOfASphere(["react", "javascript", "python"],10, 10, 1), []) 
 
     const callbackRef = useCallback(
-        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log("skip render")
+        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log()
         )
 
     return(
     <mesh position = {initialPosition} ref = {callbackRef}>
         {/* {components} */}
-         <Float>
+        <Float>
             <a.mesh position = {textPosition[0]} scale = {springScale.scale0} onPointerOver={() => setHover0(true)} onPointerOut={() => setHover0(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />

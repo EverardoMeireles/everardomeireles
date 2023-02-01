@@ -58,7 +58,7 @@ export function FadingTextModel(props) {
 
     const text3DArray = TextRows(textToFade);
     const callbackRef = useCallback(
-        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log("skip render")
+        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log()
         )
 
     return(
