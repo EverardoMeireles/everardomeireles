@@ -4,36 +4,73 @@ import { useCallback, Suspense } from "react";
 import * as THREE from "three";
 
 export function IndexMenu(props) {
-    const {setPath, setTransitionEnded} = props.useStore();
     const {rotation = 2 * Math.PI} = props;
+    const {position = [0, 0, 0]} = props;
     const {scale = 1} = props;
     const {textColor = "#000000"} = props;
+    const {isMainMenu = false} = props;
+
+    const {setPath, setTransitionEnded} = props.useStore();
 
     
     const textCallbackRef = useCallback(
-        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log("skip render")
+        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log()
         )
 
     const wholeCallbackRef = useCallback(
-        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (rotation))):console.log("skip render")
+        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (rotation))):console.log()
         )
 
     return(
         <mesh 
+        position={position}
         scale={scale}
         ref={wholeCallbackRef}>
+            {(!isMainMenu)
+            &&<mesh
+            onClick = {(e) => {
+                e.stopPropagation();
+                setPath("MainMenu");
+                setTransitionEnded(false);
+            }}
+            position = {[0,3,2]}
+            >
+                <BaseCube
+                position={[0,0,0]}
+                width={1}
+                height={1}
+                depth={10}
+                hasMovementAnimation={false}
+                hasScaleAnimation={false}
+                hasChangeColorOnHover={false}
+                >
+                    <Suspense fallback = {null}>
+                        <Text3D
+                        position = {[0.5, -0.25, 2.5]}//Use a more standardised approach
+                        ref = {textCallbackRef}
+                        font = {process.env.PUBLIC_URL + "/roboto.json"}
+                        size = {0.575}
+                        height = {0.065}
+                        curveSegments = {12}
+                        >
+                            Menu Principal
+                            <meshStandardMaterial color = {"red"} />
+                        </Text3D>
+                    </Suspense>
+                </BaseCube>
+            </mesh>}
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("projects");
+                setPath("Education");
                 setTransitionEnded(false);
             }}
-            position = {[0,0,2]}
+            position = {[0,2,2]}
             >
                 <BaseCube
-                position={[0,0,0]} 
-                width={1} 
-                height={1} 
+                position={[0,0,0]}
+                width={1}
+                height={1}
                 depth={10}
                 hasMovementAnimation={false}
                 hasScaleAnimation={false}
@@ -48,7 +85,7 @@ export function IndexMenu(props) {
                         height = {0.065}
                         curveSegments = {12}
                         >
-                            Education
+                            Formation
                             <meshStandardMaterial color = {textColor} />
                         </Text3D>
                     </Suspense>
@@ -57,7 +94,7 @@ export function IndexMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("Competences");
+                setPath("Skills");
                 setTransitionEnded(false);
             }}
             position = {[0,1,2]}
@@ -89,10 +126,10 @@ export function IndexMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("experiencePro");
+                setPath("ProfessionalExpProjects0");
                 setTransitionEnded(false);
             }}
-            position = {[0,2,2]}
+            position = {[0,0,2]}
             >
                 <BaseCube
                 position={[0,0,0]} 
@@ -112,7 +149,7 @@ export function IndexMenu(props) {
                         height = {0.065}
                         curveSegments = {12}
                         >
-                            Éxperience professionnelle
+                            Experience professionnelle
                             <meshStandardMaterial color = {textColor}  />
                         </Text3D>
                     </Suspense>
