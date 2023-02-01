@@ -14,7 +14,7 @@ export function BaseCube(props) {
     const {animationDelay = Math.floor(Math.random() * (maxMovementDelay - minMovementDelay) + maxMovementDelay)} = props;
     const {hasMovementAnimation = true} = props;
     const {hasScaleAnimation = true} = props;
-
+    const {opacity = 1} = props;
 
     const minColorValue = 200;//180 180 180 light grey
     const maxColorValue = 255;//255 255 255 white
@@ -35,9 +35,9 @@ export function BaseCube(props) {
     const springColor = useSpring({
         color: hovered ? "rgb(" + rgbHover[0] + "," + rgbHover[1] + "," + rgbHover[2] + ")" : "rgb(" + randcolor + "," + randcolor + "," + randcolor + ")"
     });
-        
+
     const springScale = useSpring({
-        scale: hovered ? 1.5 : 1
+        scale: hovered ? 1.2 : 1
     });
 
     return(
@@ -49,7 +49,7 @@ export function BaseCube(props) {
     >
         {props.children}
         <boxGeometry  args={[width, height, depth]}/>
-        <a.meshStandardMaterial attach="material" color={springColor.color}/>;    
+        <a.meshStandardMaterial attach="material" color={springColor.color} opacity={opacity}/>;    
     </a.mesh>
     );
 }
