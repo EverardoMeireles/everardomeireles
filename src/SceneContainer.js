@@ -12,6 +12,7 @@ import { OrbitingMenu } from "./components/OrbitingMenu";
 import { FloatingTextSkills } from "./components/FloatingTextSkills";
 import { FadingSlideShowModel } from "./components/FadingSlideShowModel";
 import { FadingTextModel } from "./components/FadingTextModel";
+import { ExperienceMenu } from "./components/ExperienceMenu";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -39,25 +40,29 @@ export function SceneContainer() {
                 <Environment files={process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
                 {/* <ambientLight intensity={0.1}></ambientLight> */}
                 {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} />}
-                <Camera {...{useStore}} />
-                {/* <FloatingTextSkills initialPosition={[-41, 0, 68]} rotation={3*(Math.PI/2)}></FloatingTextSkills > */}
-                {/* <OrbitingMenu orbitDistance={7.5} orbitCenterPosition={[-17, -34, -4]}/> */}
-                <FadingSlideShowModel {...{useStore}} />
-                <FadingTextModel {...{useStore}} initialPosition={[0, 0, -10]} ></FadingTextModel>
+                <Camera {...{useStore}}></Camera>
+                <FloatingTextSkills initialPosition={[-41, 0, 68]} rotation={3*(Math.PI/2)}></FloatingTextSkills >
+                <OrbitingMenu orbitDistance={7.5} orbitCenterPosition={[-17, -34, -4]}/>
+                {/* <FadingSlideShowModel {...{useStore}} />
+                <FadingTextModel {...{useStore}} initialPosition={[0, 0, -10]} ></FadingTextModel> */}
                 <SimpleLoader></SimpleLoader>
-                <FadingTextModel {...{useStore}} initialPosition={[4, 8.5, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[4, 30, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[4, 51.5, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[11, 8.5, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[11, 30, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[11, 51.5, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[-4, 8.5, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[-4, 30, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[-4, 51.5, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[-11, 8.5, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[-11, 30, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} initialPosition={[-11, 51.5, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
-
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects0" initialPosition={[4, 8.5, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects4" initialPosition={[4, 28, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects1" initialPosition={[11.5, 8.5, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects5" initialPosition={[11, 28, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects2" initialPosition={[-4, 8.5, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects3" initialPosition={[-11, 8.5, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
+                <ExperienceMenu {...{useStore}} scale={0.7} /*position={[-7, 0, -81]} rotation={-Math.PI/3}*/></ExperienceMenu>
+                <IndexMenu {...{useStore}} isMainMenu></IndexMenu>
+                <IndexMenu {...{useStore}} position={[-24, -37.6, -0.5]} rotation={2 * Math.PI/12} scale={0.23} ></IndexMenu>
+                <IndexMenu {...{useStore}} position={[-50, -2, 65]} rotation={  Math.PI} scale={0.35} ></IndexMenu>
+                
             </Suspense>
             {(currentGraphicalMode == "potato")
             &&
