@@ -142,7 +142,7 @@ export const OrbitingMenu = React.memo((props) => {
                 } : console.log()}
             rotation = {[Math.PI/2, 0, 0]}
             scale = {0.5}
-            position = {[-12.5, -2, 0.35]}>
+            position = {[-12.5, -2.5, 0.5]}>
                 <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
                 <a.meshBasicMaterial color = {springColor.color0} />
             </mesh>
@@ -158,7 +158,7 @@ export const OrbitingMenu = React.memo((props) => {
                 } : console.log()}
             rotation = {[-Math.PI/2, 0, 0]}
             scale = {0.5}
-            position = {[-12.5, -2, -0.35]}>
+            position = {[-12.5, -2.5, -0.5]}>
                 <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
                 <a.meshBasicMaterial color={springColor.color1} />
             </mesh>
