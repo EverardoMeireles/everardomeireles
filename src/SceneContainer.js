@@ -13,6 +13,8 @@ import { FloatingTextSkills } from "./components/FloatingTextSkills";
 import { FadingSlideShowModel } from "./components/FadingSlideShowModel";
 import { FadingTextModel } from "./components/FadingTextModel";
 import { ExperienceMenu } from "./components/ExperienceMenu";
+import { Title } from "./components/Title";
+import { Text } from "./Text.jsx";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -46,19 +48,20 @@ export function SceneContainer() {
                 {/* <FadingSlideShowModel {...{useStore}} />
                 <FadingTextModel {...{useStore}} initialPosition={[0, 0, -10]} ></FadingTextModel> */}
                 <SimpleLoader></SimpleLoader>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects0" initialPosition={[4, 8.5, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects4" initialPosition={[4, 28, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects1" initialPosition={[11.5, 8.5, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects5" initialPosition={[11, 28, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects2" initialPosition={[-4, 8.5, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects3" initialPosition={[-11, 8.5, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"}/>
-                <ExperienceMenu {...{useStore}} scale={0.7} /*position={[-7, 0, -81]} rotation={-Math.PI/3}*/></ExperienceMenu>
+                <FadingTextModel {...{useStore}} textToFade={Text["PROSPERE-ITB-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects0" scale={2} initialPosition={[1, 4, -82]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                <FadingTextModel {...{useStore}} textToFade={Text["DRIM-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects1" scale={1.8} initialPosition={[11.5, 5.5, -94]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                <FadingTextModel {...{useStore}} textToFade={Text["EVERIAL-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects2" scale={2} initialPosition={[-2, 5.5, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                <FadingTextModel {...{useStore}} textToFade={Text["BRESIL-ECOBUGGY-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects3" lettersPerUnit={10} scale={1.7} initialPosition={[-11, 7.5, -94.5]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                <FadingTextModel {...{useStore}} textToFade={Text["EFN1-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects4" lettersPerUnit={9} scale={1.8} initialPosition={[-0.5, 27, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                <FadingTextModel {...{useStore}} textToFade={Text["EFN2-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects5" scale={2.5} lettersPerUnit={7} initialPosition={[11.5, 23, -96]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                {/* <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
+                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} text3dMode={false}/> */}
+                <ExperienceMenu {...{useStore}} scale={1} /*position={[-7, 0, -81]} rotation={-Math.PI/3}*/></ExperienceMenu>
+                <Title initialPosition={[0, 4, 5.4]}/>
                 <IndexMenu {...{useStore}} isMainMenu></IndexMenu>
                 <IndexMenu {...{useStore}} position={[-24, -37.6, -0.5]} rotation={2 * Math.PI/12} scale={0.23} ></IndexMenu>
                 <IndexMenu {...{useStore}} position={[-50, -2, 65]} rotation={  Math.PI} scale={0.35} ></IndexMenu>

@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { Text3D, Center} from "@react-three/drei";
 import * as THREE from "three";
 
-export function Name(props) {
+export function Title(props) {
     // default prop values:
     const {initialPosition = [0,0,0]} = props;
     const {fontFileName = "/roboto.json"} = props;
