@@ -80,7 +80,7 @@ export function SceneContainer() {
             && 
             <group>
                 <Suspense fallback = {null}>
-                    <OrbitingPointLight></OrbitingPointLight>
+                    {/* <OrbitingPointLight></OrbitingPointLight> */}
                     {/* <IndexMenu {...{useStore}}></IndexMenu>
                     <ProjectsMenu {...{useStore}} />  */}
                     {/* <SimpleLoader></SimpleLoader> */}
@@ -90,7 +90,7 @@ export function SceneContainer() {
             && 
             <group>
                 <Suspense fallback = {null}>
-                    <OrbitingPointLight></OrbitingPointLight>
+                    {/* <OrbitingPointLight></OrbitingPointLight> */}
                     {/* <IndexMenu {...{useStore}}></IndexMenu>
                     <ProjectsMenu {...{useStore}} /> */}
                     {/* <SimpleLoader></SimpleLoader> */}
@@ -100,7 +100,7 @@ export function SceneContainer() {
             && 
             <group>
                 <Suspense fallback = {null}>
-                    <OrbitingPointLight></OrbitingPointLight>
+                    {/* <OrbitingPointLight></OrbitingPointLight> */}
                     {/* <IndexMenu {...{useStore}}></IndexMenu>
                     <ProjectsMenu {...{useStore}} /> */}
                 </Suspense>
