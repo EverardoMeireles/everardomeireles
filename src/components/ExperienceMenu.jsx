@@ -301,14 +301,14 @@ export function ExperienceMenu(props) {
                 >
                     <Suspense fallback = {null}>
                         <Text3D
-                        position = {[0.5, -0.25, 0.8]}//Use a more standardised approach
+                        position = {[0.5, -0.25, 3]}//Use a more standardised approach
                         ref = {textCallbackRef}
                         font = {process.env.PUBLIC_URL + "/roboto.json"}
                         size = {0.575}
                         height = {0.065}
                         curveSegments = {12}
                         >
-                            EFN
+                            EFN projet PPMS
                             <meshBasicMaterial color = {textColor}  />
                         </Text3D>
                     </Suspense>
@@ -333,20 +333,20 @@ export function ExperienceMenu(props) {
                 >
                     <Suspense fallback = {null}>
                         <Text3D
-                        position = {[0.5, -0.25, 0.8]}//Use a more standardised approach
+                        position = {[0.5, -0.25, 2.8]}//Use a more standardised approach
                         ref = {textCallbackRef}
                         font = {process.env.PUBLIC_URL + "/roboto.json"}
                         size = {0.575}
                         height = {0.065}
                         curveSegments = {12}
                         >
-                            1
+                            EFN Professeur 
                             <meshBasicMaterial color = {textColor}  />
                         </Text3D>
                     </Suspense>
                 </BaseCube>
             </mesh>
-            <mesh
+            {/* <mesh
             onClick = {(e) => {
                 e.stopPropagation();
                 setPath("ProfessionalExpProjects6");
@@ -537,7 +537,7 @@ export function ExperienceMenu(props) {
                         </Text3D>
                     </Suspense>
                 </BaseCube>
-            </mesh>
+            </mesh> */}
 
         {/* <BaseCube position = {[0,1,0]} movementVector = {[0.1, 0, 0]} />
         <BaseCube position = {[0,2,0]} />
