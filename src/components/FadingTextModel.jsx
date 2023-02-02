@@ -1,7 +1,7 @@
 import { Suspense, useCallback } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
-import { Text3D } from "@react-three/drei";
+import { Text3D, Text } from "@react-three/drei";
 import { useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useState } from "react";
@@ -17,6 +17,8 @@ export function FadingTextModel(props) {
     const {lettersPerUnit = 8} = props; // how many letters should fit inside a spacial unit(a [1,1,1] cube)
     const {rotation = Math.PI/2} = props;
     const {visible = true} = props;
+    const {scale = 1.5} = props;
+    const {text3dMode = true} = props;
 
     const {transitionEnded, desired_path} = props.useStore();
 
@@ -28,7 +30,6 @@ export function FadingTextModel(props) {
     })
 
 // useFrame(()=>console.log(springFadePanel.opacity.animation.values[0].lastPosition))
-
     const TextRows = (text) => {
         const textPositionOffset = [0,-0.5,0.2];
         const unitsPerRow = Math.floor(PlaneSize[1]); //number of spacial units (a [1,1,1] cube) that a fit with the z axis of the plane 
@@ -39,6 +40,7 @@ export function FadingTextModel(props) {
 
         for (let i = 0; i < textChunksArray.length; i++) {
             rows.push(
+                text3dMode?
                 <Text3D
                     key = {i}
                     position = {[-(PlaneSize[1]/2) + textPositionOffset[2], (PlaneSize[0]/2) + textPositionOffset[1] - i,  0]}
@@ -50,6 +52,18 @@ export function FadingTextModel(props) {
                     {textChunksArray[i]}
                     <a.meshBasicMaterial opacity = {springFade.opacity} transparent color={textColor}/>
                 </Text3D>
+                :
+                <Text
+                    key={i}
+                    scale={[3, 3, 3]}
+                    // color="black" // default
+                    anchorX="left" // default
+                    // anchorY="top" // default
+                    position = {[-(PlaneSize[1]/2) + textPositionOffset[2], (PlaneSize[0]/2) + textPositionOffset[1] - i,  0]}
+                >
+                {textChunksArray[i]}
+                <a.meshBasicMaterial opacity = {springFade.opacity} transparent color={textColor}/>
+                </Text>
                 );
         }
 
@@ -65,6 +79,7 @@ export function FadingTextModel(props) {
         <mesh
             position = {initialPosition}
             ref = {callbackRef}
+            scale={scale}
         >
             <planeGeometry args = {PlaneSize} />
             <a.meshBasicMaterial opacity = {springFade.opacity} transparent visible={visible}/>
