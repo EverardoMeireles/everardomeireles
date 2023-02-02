@@ -1065,7 +1065,7 @@ export const path_points = {
     // "projects-MainMenu": 
     // new THREE.CatmullRomCurve3( [        
     //     new THREE.Vector3(5, 25, -18),
-    //     new THREE.Vector3(-25, 44, -93)])
+    //     new THREE.Vector3(22, 24, -99)])
 
 }
 
@@ -1074,6 +1074,9 @@ export const path_points_simple_lookat_dict = {
     //index: first page when entering site
     "MainMenu": {
         0: new THREE.Vector3(0, 3, 2)},
+
+    // "MainMenu": {
+    //     0: new THREE.Vector3(11, 25, -94)},
 
     "Education": {
         0: new THREE.Vector3(-23, -34.5, -4.5)},
@@ -1091,7 +1094,7 @@ export const path_points_simple_lookat_dict = {
         0: new THREE.Vector3(-1, 5, -108)},
 
     "ProfessionalExpProjects3": {
-        0: new THREE.Vector3(-14, 5, -92)},
+        0: new THREE.Vector3(-14, 5, -93)},
 
     "ProfessionalExpProjects4": {
         0: new THREE.Vector3(0, 25, -82)},
@@ -1265,7 +1268,7 @@ export const path_points_experience_menu_location = {
     },
 
     "ProfessionalExpProjects3": { // First floor 3
-        "position":[-14, 0, -99],
+        "position":[-14, 0, -100],
         "rotation":-3*Math.PI/4
     },
 
