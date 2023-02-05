@@ -25,7 +25,7 @@ export function OrbitingPointLight(props) {
                 axisVector=[0, 1 * orbitDistance, 0];
             break;
 
-            case 'y':
+            case 'z':
                 axisVector=[0, 0, 1 * orbitDistance];
             break;
         }
@@ -51,6 +51,7 @@ export function OrbitingPointLight(props) {
             <pointLight intensity={lightIntensivity} position={axis} />
             <boxGeometry />
             <meshStandardMaterial emissive={lightColor} emissiveIntensity={bloomIntensivity} toneMapped={false} />
+            {/* <meshBasicMaterial  toneMapped={false} /> */}
         </mesh>
     )
 }
