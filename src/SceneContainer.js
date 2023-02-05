@@ -79,7 +79,7 @@ useEffect(()=>{
                 <IndexMenu {...{useStore}} isMainMenu></IndexMenu>
                 <IndexMenu {...{useStore}} position={[-13, -38.5, -1.3]} rotation={2 * Math.PI/12} scale={0.23} ></IndexMenu>
                 <IndexMenu {...{useStore}} position={[-50, -2, 65]} rotation={  Math.PI} scale={0.35} ></IndexMenu>
-                {/* <ambientLight intensity={1}></ambientLight> */}
+                <ambientLight intensity={1}></ambientLight>
 
             </Suspense>
             {(currentGraphicalMode == "potato")
