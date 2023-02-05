@@ -17,23 +17,23 @@ export function GraphicalModeSetter(props){
 
         // because of limitations in the detect-gpu package, the graphical modes are limited to 4 for now.
         switch(gpuTier.tier) {
-            case 3:
-                newGraphicalMode = "high";
-            break;
-
-            case 2:
-                newGraphicalMode = "normal";
+            case 0:
+                newGraphicalMode = "potato";
             break;
 
             case 1:
                 newGraphicalMode = "potatoPremium";
             break;
 
-            case 0:
-                newGraphicalMode = "potato";
+            case 2:
+                newGraphicalMode = "normal";
+            break;
+
+            case 3:
+                newGraphicalMode = "high";
             break;
         }
-    
+            console.log("GRAPHICS: " + newGraphicalMode)
             setGraphicalMode(newGraphicalMode);
     })()
 
@@ -65,6 +65,7 @@ export function GraphicalModeSetter(props){
                 if(averageFps < fpsToDecreaseGraphics){
                     if(!["potato", "high"].includes(currentGraphicalMode)){
                         setGraphicalMode(graphicalModes[graphicalModes.indexOf(currentGraphicalMode) - 1]);
+                        console.log("GRAPHICS: " + graphicalModes[graphicalModes.indexOf(currentGraphicalMode) - 1])
                         setFinishedBenchmark(true);
                     }
                 }
