@@ -18,7 +18,7 @@ export function FadingTextModel(props) {
     const {rotation = Math.PI/2} = props;
     const {visible = true} = props;
     const {scale = 1.5} = props;
-    const {text3dMode = true} = props;
+    const {istext3d = true} = props;
 
     const {transitionEnded, desired_path} = props.useStore();
 
@@ -40,7 +40,7 @@ export function FadingTextModel(props) {
 
         for (let i = 0; i < textChunksArray.length; i++) {
             rows.push(
-                text3dMode?
+                istext3d?
                 <Text3D
                     key = {i}
                     position = {[-(PlaneSize[1]/2) + textPositionOffset[2], (PlaneSize[0]/2) + textPositionOffset[1] - i,  0]}
