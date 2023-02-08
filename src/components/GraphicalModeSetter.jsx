@@ -42,6 +42,10 @@ export function GraphicalModeSetter(props){
     let accuFramesForGraphicModeComparison = 0;
     let accuDeltasForFPS = 0;
     let accuFramesForFPS = 0;
+    let accuDeltasForHardwareAccelerationCheck = 0;
+    let accuFramesForHardwareAccelerationCheck = 0;
+    let skipHardwareAccelerationCheck = false;
+
     let arrayFPS = [];
 
     // calculate framerate to check if the gpu tier check was enough to get acceptable framerate
@@ -49,6 +53,8 @@ export function GraphicalModeSetter(props){
         accuFramesForGraphicModeComparison += 1;
         accuDeltasForFPS += delta;
         accuFramesForFPS += 1;
+        accuDeltasForHardwareAccelerationCheck += delta;
+        accuFramesForHardwareAccelerationCheck += 1;
         // console.log(accuDeltasForFPS)
         if(accuDeltasForFPS >= 1){
             // if the user is getting less than 5 fps, ask them to enable hardware acceleration by redirecting to hardware acceleration page
@@ -59,17 +65,24 @@ export function GraphicalModeSetter(props){
             accuDeltasForFPS = 0;
             accuFramesForFPS = 0;
         }
+        console.log("deltas: " + accuDeltasForHardwareAccelerationCheck)
+        console.log("frames: " + accuFramesForHardwareAccelerationCheck)
+        // if after 10 seconds still, 60 frames have not passed, ask them to enable hardware acceleration by redirecting to hardware acceleration page
+        if(accuDeltasForHardwareAccelerationCheck < 10 && !skipHardwareAccelerationCheck){
+            if(accuFramesForHardwareAccelerationCheck < 60){
+                window.location.href = "HardwareAcceleration.html";
+            }
+            else{
+                skipHardwareAccelerationCheck = true;
+            }
+        }
 
         // Every n frames, calculate the average fps
         if(accuFramesForGraphicModeComparison >= framesForGraphicModeComparison){
             const averageFps = arrayFPS.reduce((a, b) => a + b, 0) / arrayFPS.length;
             console.log(averageFps);
             // skip the first pass, it always shows fewer fps than the system is really capable of
-            if(averageFps < 5){
-                console.log(averageFps)
 
-                window.location.href = "HardwareAcceleration.html";
-            }
             if(pass != 0){
                 // decrease the graphics by one tier
                 if(averageFps < fpsToDecreaseGraphics){
