@@ -2,10 +2,52 @@
 <html>
   <head>
     <meta charset="utf-8" />
-
     <title>Please enable Hardware acceleration</title>
   </head>
   <body>
-    It seems, your pc is having trouble running the site, please enable hardware acceleration in your browser.
+
+    <h1 style="text-align: center;" id="title1"></h1>
+    <div id="div1"></div>
+    <script>
+      const availableLanguages = ["fr-FR"]
+      const LanguageText = {
+        "fr-FR": {
+          "text": "Ceci est un site web en 3D et il semble que votre système ait des difficultés à l'ouvrir. Veuillez activer l'accélération matérielle dans votre navigateur."
+        },
+        "en-US": {
+          "text": "This is a 3D website and it seems that your system is having trouble opening it, Please enable Hardware acceleration in your browser."
+        }
+      }
+
+
+      var browserName = (function (agent) {        switch (true) {
+            case agent.indexOf("edge") > -1: return "MS Edge";
+            case agent.indexOf("edg/") > -1: return "Edge ( chromium based)";
+            case agent.indexOf("opr") > -1 && !!window.opr: return "Opera";
+            case agent.indexOf("chrome") > -1 && !!window.chrome: return "Chrome";
+            case agent.indexOf("trident") > -1: return "MS IE";
+            case agent.indexOf("firefox") > -1: return "Mozilla Firefox";
+            case agent.indexOf("safari") > -1: return "Safari";
+            default: return "other";
+        }
+    })(window.navigator.userAgent.toLowerCase());
+
+    // var usrlang = navigator.language || navigator.userLanguage;
+    var usrlang = availableLanguages.includes(navigator.language || navigator.userLanguage) ? navigator.language || navigator.userLanguage:"en-US";
+    console.log("Language: "+ usrlang);
+
+    console.log(browserName);
+    console.log(usrlang);
+
+    const img = document.createElement("img");
+    img.src = "textures/HardwareAcceleration"+browserName+usrlang+".png";
+    const element = document.getElementById("div1");
+    element.appendChild(img);
+
+    const titleText = document.getElementById("title1");
+    const textNode = document.createTextNode(LanguageText[usrlang].text);
+    titleText.appendChild(textNode);
+
+    </script>
   </body>
 </html>
