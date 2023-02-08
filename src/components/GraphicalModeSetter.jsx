@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { getGPUTier } from 'detect-gpu';
 
-// set graphical mode based on fps
+// set graphical by performing a gpu ier test, a fps check and a hardware acceleration check
 export function GraphicalModeSetter(props){
     const {numberOfPasses = 1} = props;
     const {fpsToDecreaseGraphics = 45} = props;
@@ -57,18 +57,15 @@ export function GraphicalModeSetter(props){
         accuFramesForHardwareAccelerationCheck += 1;
         // console.log(accuDeltasForFPS)
         if(accuDeltasForFPS >= 1){
-            // if the user is getting less than 5 fps, ask them to enable hardware acceleration by redirecting to hardware acceleration page
-            // if(accuFramesForFPS < 3){
-            //     window.location.href = "HardwareAcceleration.html";
-            // }
             arrayFPS.push(accuFramesForFPS);
             accuDeltasForFPS = 0;
             accuFramesForFPS = 0;
         }
         console.log("deltas: " + accuDeltasForHardwareAccelerationCheck)
         console.log("frames: " + accuFramesForHardwareAccelerationCheck)
-        // if after 10 seconds still, 60 frames have not passed, ask them to enable hardware acceleration by redirecting to hardware acceleration page
-        if(accuDeltasForHardwareAccelerationCheck > 10 && !skipHardwareAccelerationCheck){
+        // if after 5 seconds, still less than 60 frames have passed, ask the user to enable hardware acceleration by redirecting them to hardware acceleration page
+        window.location.href = "HardwareAcceleration.html";
+        if(!skipHardwareAccelerationCheck && accuDeltasForHardwareAccelerationCheck > 5){
             if(accuFramesForHardwareAccelerationCheck < 60){
                 window.location.href = "HardwareAcceleration.html";
             }
