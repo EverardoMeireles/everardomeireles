@@ -1,4 +1,4 @@
-import { useLoader } from '@react-three/fiber'
+import { useLoader, useFrame } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { useCallback, Suspense } from "react";
 import * as THREE from "three";
@@ -19,6 +19,19 @@ export function SimpleLoader(props) {
         console.log(gltf);
 
     }, [gltf]);
+
+    let mixer
+    if (gltf.animations.length) {
+        mixer = new THREE.AnimationMixer(gltf.scene);
+        gltf.animations.forEach(clip => {
+            const action = mixer.clipAction(clip)
+            action.play();
+        });
+    }
+
+    useFrame((state, delta) => {
+        mixer?.update(delta)
+    })
 
     return (
     <Suspense fallback={null}>
