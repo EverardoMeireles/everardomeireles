@@ -68,7 +68,7 @@ export function GraphicalModeSetter(props){
         console.log("deltas: " + accuDeltasForHardwareAccelerationCheck)
         console.log("frames: " + accuFramesForHardwareAccelerationCheck)
         // if after 10 seconds still, 60 frames have not passed, ask them to enable hardware acceleration by redirecting to hardware acceleration page
-        if(accuDeltasForHardwareAccelerationCheck < 10 && !skipHardwareAccelerationCheck){
+        if(accuDeltasForHardwareAccelerationCheck > 10 && !skipHardwareAccelerationCheck){
             if(accuFramesForHardwareAccelerationCheck < 60){
                 window.location.href = "HardwareAcceleration.html";
             }
