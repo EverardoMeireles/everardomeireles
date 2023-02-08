@@ -49,12 +49,12 @@ export function GraphicalModeSetter(props){
         accuFramesForGraphicModeComparison += 1;
         accuDeltasForFPS += delta;
         accuFramesForFPS += 1;
-        console.log(accuDeltasForFPS)
+        // console.log(accuDeltasForFPS)
         if(accuDeltasForFPS >= 1){
             // if the user is getting less than 5 fps, ask them to enable hardware acceleration by redirecting to hardware acceleration page
-            if(accuFramesForFPS < 5){
-                window.location.href = "HardwareAcceleration.html";
-            }
+            // if(accuFramesForFPS < 3){
+            //     window.location.href = "HardwareAcceleration.html";
+            // }
             arrayFPS.push(accuFramesForFPS);
             accuDeltasForFPS = 0;
             accuFramesForFPS = 0;
@@ -65,6 +65,11 @@ export function GraphicalModeSetter(props){
             const averageFps = arrayFPS.reduce((a, b) => a + b, 0) / arrayFPS.length;
             console.log(averageFps);
             // skip the first pass, it always shows fewer fps than the system is really capable of
+            if(averageFps < 5){
+                console.log(averageFps)
+
+                window.location.href = "HardwareAcceleration.html";
+            }
             if(pass != 0){
                 // decrease the graphics by one tier
                 if(averageFps < fpsToDecreaseGraphics){
