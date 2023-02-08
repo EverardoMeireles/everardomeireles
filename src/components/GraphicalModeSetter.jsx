@@ -49,7 +49,12 @@ export function GraphicalModeSetter(props){
         accuFramesForGraphicModeComparison += 1;
         accuDeltasForFPS += delta;
         accuFramesForFPS += 1;
+        console.log(accuDeltasForFPS)
         if(accuDeltasForFPS >= 1){
+            // if the user is getting less than 5 fps, ask them to enable hardware acceleration by redirecting to hardware acceleration page
+            if(accuFramesForFPS < 5){
+                window.location.href = "HardwareAcceleration.html";
+            }
             arrayFPS.push(accuFramesForFPS);
             accuDeltasForFPS = 0;
             accuFramesForFPS = 0;
