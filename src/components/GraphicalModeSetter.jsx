@@ -65,10 +65,13 @@ export function GraphicalModeSetter(props){
         console.log("frames: " + accuFramesForHardwareAccelerationCheck)
         // if after 5 seconds, still less than 60 frames have passed, ask the user to enable hardware acceleration by redirecting them to hardware acceleration page
         if(!skipHardwareAccelerationCheck && accuDeltasForHardwareAccelerationCheck > 5){
+            console.log("entered")
             if(accuFramesForHardwareAccelerationCheck < 60){
+                console.log("redirected")
                 window.location.href = "HardwareAcceleration.html";
             }
             else{
+                console.log("skipped")
                 skipHardwareAccelerationCheck = true;
             }
         }
@@ -89,7 +92,7 @@ export function GraphicalModeSetter(props){
                     }
                 }
             }
-            
+
             arrayFPS = [];
             pass += 1;
             accuFramesForGraphicModeComparison = 0;
