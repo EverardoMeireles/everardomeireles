@@ -19,7 +19,6 @@
         }
       }
 
-
       var browserName = (function (agent) {        switch (true) {
             case agent.indexOf("edge") > -1: return "MS Edge";
             case agent.indexOf("edg/") > -1: return "Edge ( chromium based)";
@@ -34,20 +33,17 @@
 
     // var usrlang = navigator.language || navigator.userLanguage;
     var usrlang = availableLanguages.includes(navigator.language || navigator.userLanguage) ? navigator.language || navigator.userLanguage:"en-US";
-    console.log("Language: "+ usrlang);
-
     console.log(browserName);
     console.log(usrlang);
 
     const img = document.createElement("img");
-    img.src = "textures/HardwareAcceleration"+browserName+usrlang+".png";
     const element = document.getElementById("div1");
-    element.appendChild(img);
-
     const titleText = document.getElementById("title1");
     const textNode = document.createTextNode(LanguageText[usrlang].text);
+    img.src = "textures/HardwareAcceleration"+browserName+usrlang+".png";
+    img.style = "width: auto height:auto;";
+    element.appendChild(img);
     titleText.appendChild(textNode);
-
     </script>
   </body>
 </html>
