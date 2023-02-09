@@ -36,7 +36,7 @@ export function Title(props) {
             curveSegments = {2}
             position={[-0.6, -1, 0]}
         >
-            {`Developpeur fullstack`}
+            {`Développeur fullstack`}
             <meshStandardMaterial />
         </Text3D>
     </mesh>

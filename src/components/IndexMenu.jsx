@@ -171,7 +171,7 @@ export function IndexMenu(props) {
                         height = {0.065}
                         curveSegments = {12}
                         >
-                            Experience professionnelle
+                            Expérience professionnelle
                             <meshStandardMaterial color = {textColor}  />
                         </Text3D>
                     </Suspense>
