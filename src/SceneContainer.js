@@ -1,4 +1,4 @@
-import { Environment } from "@react-three/drei";
+import { Environment, Float } from "@react-three/drei";
 import { Suspense, useEffect, useRef } from "react";
 import { Camera } from "./components/Camera";
 import { SimpleLoader } from "./components/SimpleLoader";
@@ -75,6 +75,9 @@ export function SceneContainer() {
             <group>
                 <Suspense fallback = {null}>
                     <SimpleLoader modelName={"threeJsScenePotatoPremium.glb"}></SimpleLoader>
+                    <Float>
+                        <SimpleLoader modelName={"threeJsScenePotatoPremiumFloating.glb"}></SimpleLoader>
+                    </Float>
                 </Suspense>
             </group>}
             {(currentGraphicalMode == "normal")
@@ -82,6 +85,9 @@ export function SceneContainer() {
             <group>
                 <Suspense fallback = {null}>
                     <SimpleLoader modelName={"threeJsSceneNormal.glb"}></SimpleLoader>
+                    <Float>
+                        <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
+                    </Float>
                     <OrbitingPointLight></OrbitingPointLight>
                 </Suspense>
             </group>}
@@ -89,6 +95,9 @@ export function SceneContainer() {
             && <group>
                 <Suspense fallback = {null}>
                 <SimpleLoader modelName={"threeJsSceneNormal.glb"}></SimpleLoader>
+                <Float>
+                    <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
+                </Float>
                 {/* <OrbitingPointLight orbitDirection={[0, 1, 0]} orbitSpeed={0.01} orbitAxis={"x"} orbitDistance={60} orbitCenterPosition={[-40, 30, 0]} lightIntensivity={10}></OrbitingPointLight> */}
                 {/* <EffectComposer renderPriority={1}>
                     <Bloom luminanceThreshold={1} mipmapBlur />
