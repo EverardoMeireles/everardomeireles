@@ -13,6 +13,7 @@ import { FadingTextModel } from "./components/FadingTextModel";
 import { ExperienceMenu } from "./components/ExperienceMenu";
 import { Title } from "./components/Title";
 import { Text } from "./Text.jsx";
+import { RegularFlickeringLight } from "./components/RegularFlickeringLight";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -61,7 +62,7 @@ export function SceneContainer() {
                 <IndexMenu {...{useStore}} position={[-13, -38.5, -1.3]} rotation={2 * Math.PI/12} scale={0.23} ></IndexMenu>
                 <IndexMenu {...{useStore}} position={[-50, -2, 65]} rotation={  Math.PI} scale={0.35} ></IndexMenu>
                 <ambientLight intensity={1}></ambientLight>
-
+                {/* <RegularFlickeringLight></RegularFlickeringLight> */}
             </Suspense>
             {(currentGraphicalMode == "potato")
             &&
@@ -98,7 +99,7 @@ export function SceneContainer() {
                 <Float>
                     <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
                 </Float>
-                {/* <OrbitingPointLight orbitDirection={[0, 1, 0]} orbitSpeed={0.01} orbitAxis={"x"} orbitDistance={60} orbitCenterPosition={[-40, 30, 0]} lightIntensivity={10}></OrbitingPointLight> */}
+                {/* <OrbitingPointLight orbitDirection={[0, 1, 0]} orbitSpeed={0.01} orbitAxis={"x"} orbitDistance={60} orbitCenterPosition={[-40, 30, 0]} lightIntensivity={1}></OrbitingPointLight> */}
                 {/* <EffectComposer renderPriority={1}>
                     <Bloom luminanceThreshold={1} mipmapBlur />
                 </EffectComposer> */}
