@@ -14,6 +14,7 @@ import { ExperienceMenu } from "./components/ExperienceMenu";
 import { Title } from "./components/Title";
 import { Text } from "./Text.jsx";
 import { RegularFlickeringLight } from "./components/RegularFlickeringLight";
+import { useFrame, useThree } from "@react-three/fiber";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -31,6 +32,11 @@ const useStore = create((set) => ({
 export function SceneContainer() {
     const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const finishedBenchmark = useStore((state) => state.finishedBenchmark);
+//     const { gl } = useThree();
+
+// useFrame(()=>{
+//     console.log(gl.info.render.calls)
+// })
 
     return(
         <>
@@ -55,7 +61,7 @@ export function SceneContainer() {
                 <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} text3dMode={false}/> */}
                 
                 <ExperienceMenu {...{useStore}} scale={1} /*position={[-7, 0, -81]} rotation={-Math.PI/3}*/></ExperienceMenu>
-                <FloatingTextSkills initialPosition={[-41, 0, 68]} rotation={3*(Math.PI/2)}></FloatingTextSkills >
+                <FloatingTextSkills initialPosition={[-35, 0, 68]} rotation={3*(Math.PI/2)}></FloatingTextSkills >
                 <OrbitingMenu orbitDistance={7.5} orbitCenterPosition={[-6, -35, -4]}/>
                 <Title initialPosition={[0, 4, 5.4]}/>
                 <IndexMenu {...{useStore}} isMainMenu></IndexMenu>

@@ -1,5 +1,5 @@
 import { BaseCube } from "./BaseCube";
-import { Text3D } from "@react-three/drei";
+import { Text3D, Text } from "@react-three/drei";
 import { useCallback, Suspense, useRef } from "react";
 import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
@@ -73,7 +73,7 @@ export function ExperienceMenu(props) {
 
                 >
                     <Suspense fallback = {null}>
-                        <Text3D
+                        {/* <Text3D
                         position = {[0.5, -0.25, 2.3]}//Use a more standardised approach
                         ref = {textCallbackRef}
                         font = {process.env.PUBLIC_URL + "/roboto.json"}
@@ -83,7 +83,18 @@ export function ExperienceMenu(props) {
                         >
                             Menu Principal
                             <meshBasicMaterial color = {"red"} />
-                        </Text3D>
+                        </Text3D> */}
+                        <Text
+                            ref = {textCallbackRef}
+                            scale={[9, 9, 9]}
+                            // color="black" // default
+                            anchorX="left" // default
+                            // anchorY="top" // default
+                            position = {[0.6, 0, 2.9]}
+                        >
+                            {"Menu Principal"}
+                            <a.meshBasicMaterial color = {"red"}/>
+                        </Text>
                     </Suspense>
                 </BaseCube>
             </mesh>
@@ -106,17 +117,17 @@ export function ExperienceMenu(props) {
 
                 >
                     <Suspense fallback = {null}>
-                        <Text3D
-                        position = {[0.5, -0.25, 2.3]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
+                        <Text
+                            ref = {textCallbackRef}
+                            scale={[9, 9, 9]}
+                            // color="black" // default
+                            anchorX="left" // default
+                            // anchorY="top" // default
+                            position = {[0.6, 0, 2.1]}
                         >
-                            Formation
-                            <meshBasicMaterial color = {"red"} />
-                        </Text3D>
+                            {"Formation"}
+                            <a.meshBasicMaterial color = {"red"}/>
+                        </Text>
                     </Suspense>
                 </BaseCube>
             </mesh>
@@ -139,17 +150,17 @@ export function ExperienceMenu(props) {
 
                 >
                     <Suspense fallback = {null}>
-                        <Text3D
-                        position = {[0.5, -0.25, 2.3]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
+                        <Text
+                            ref = {textCallbackRef}
+                            scale={[9, 9, 9]}
+                            // color="black" // default
+                            anchorX="left" // default
+                            // anchorY="top" // default
+                            position = {[0.6, 0, 2.8]}
                         >
-                            Compétences
-                            <meshBasicMaterial color = {"red"} />
-                        </Text3D>
+                            {"Compétences"}
+                            <a.meshBasicMaterial color = {"red"}/>
+                        </Text>
                     </Suspense>
                 </BaseCube>
             </mesh>
@@ -172,17 +183,17 @@ export function ExperienceMenu(props) {
 
                 >
                     <Suspense fallback = {null}>
-                        <Text3D
-                        position = {[0.5, -0.25, 2.3]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
+                        <Text
+                            ref = {textCallbackRef}
+                            scale={[9, 9, 9]}
+                            // color="black" // default
+                            anchorX="left" // default
+                            // anchorY="top" // default
+                            position = {[0.6, 0, 2.5]}
                         >
-                            Prospere ITB
-                            <meshBasicMaterial color = {textColor} />
-                        </Text3D>
+                            {"Prospere ITB"}
+                            <a.meshBasicMaterial color = {textColor}/>
+                        </Text>
                     </Suspense>
                 </BaseCube>
             </mesh>
@@ -204,17 +215,17 @@ export function ExperienceMenu(props) {
                 hasChangeColorOnHover={false}
                 >
                     <Suspense fallback = {null}>
-                        <Text3D
-                        position = {[0.5, -0.25, 1]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
+                        <Text
+                            ref = {textCallbackRef}
+                            scale={[9, 9, 9]}
+                            // color="black" // default
+                            anchorX="left" // default
+                            // anchorY="top" // default
+                            position = {[0.6, 0, 1]}
                         >
-                            DRIM
-                            <meshBasicMaterial color = {textColor} />
-                        </Text3D>
+                            {"Drim"}
+                            <a.meshBasicMaterial color = {textColor}/>
+                        </Text>
                     </Suspense>
                 </BaseCube>
             </mesh>
@@ -236,17 +247,17 @@ export function ExperienceMenu(props) {
                 hasChangeColorOnHover={false}
                 >
                     <Suspense fallback = {null}>
-                        <Text3D
-                        position = {[0.5, -0.25, 1.2]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
+                        <Text
+                            ref = {textCallbackRef}
+                            scale={[9, 9, 9]}
+                            // color="black" // default
+                            anchorX="left" // default
+                            // anchorY="top" // default
+                            position = {[0.6, 0, 1.3]}
                         >
-                            Everial
-                            <meshBasicMaterial color = {textColor}  />
-                        </Text3D>
+                            {"Everial"}
+                            <a.meshBasicMaterial color = {textColor}/>
+                        </Text>
                     </Suspense>
                 </BaseCube>
             </mesh>
@@ -268,17 +279,17 @@ export function ExperienceMenu(props) {
                 hasChangeColorOnHover={false}
                 >
                     <Suspense fallback = {null}>
-                        <Text3D
-                        position = {[0.5, -0.25, 2.9]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
+                        <Text
+                            ref = {textCallbackRef}
+                            scale={[8, 8, 8]}
+                            // color="black" // default
+                            anchorX="left" // default
+                            // anchorY="top" // default
+                            position = {[0.6, 0, 2.9]}
                         >
-                            Brésil eco-buggy
-                            <meshBasicMaterial color = {textColor}  />
-                        </Text3D>
+                            {"Brésil eco-buggy"}
+                            <a.meshBasicMaterial color = {textColor}/>
+                        </Text>
                     </Suspense>
                 </BaseCube>
             </mesh>
@@ -300,17 +311,17 @@ export function ExperienceMenu(props) {
                 hasChangeColorOnHover={false}
                 >
                     <Suspense fallback = {null}>
-                        <Text3D
-                        position = {[0.5, -0.25, 3]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
+                        <Text
+                            ref = {textCallbackRef}
+                            scale={[8, 8, 8]}
+                            // color="black" // default
+                            anchorX="left" // default
+                            // anchorY="top" // default
+                            position = {[0.6, 0, 3.05]}
                         >
-                            EFN projet PPMS
-                            <meshBasicMaterial color = {textColor}  />
-                        </Text3D>
+                            {"EFN projet PPMS"}
+                            <a.meshBasicMaterial color = {textColor}/>
+                        </Text>
                     </Suspense>
                 </BaseCube>
             </mesh>
@@ -332,17 +343,17 @@ export function ExperienceMenu(props) {
                 hasChangeColorOnHover={false}
                 >
                     <Suspense fallback = {null}>
-                        <Text3D
-                        position = {[0.5, -0.25, 2.8]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
+                        <Text
+                            ref = {textCallbackRef}
+                            scale={[9, 9, 9]}
+                            // color="black" // default
+                            anchorX="left" // default
+                            // anchorY="top" // default
+                            position = {[0.6, 0, 3.1]}
                         >
-                            EFN Professeur 
-                            <meshBasicMaterial color = {textColor}  />
-                        </Text3D>
+                            {"EFN Professeur"}
+                            <a.meshBasicMaterial color = {textColor}/>
+                        </Text>
                     </Suspense>
                 </BaseCube>
             </mesh>

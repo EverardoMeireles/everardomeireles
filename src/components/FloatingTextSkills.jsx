@@ -1,7 +1,7 @@
 import { useCallback, useState, useMemo } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
-import { Text3D, Float } from "@react-three/drei";
+import { Text3D, Float, Text } from "@react-three/drei";
 
 export function FloatingTextSkills(props) {
     const {initialPosition = [0,0,0]} = props;
@@ -94,100 +94,180 @@ export function FloatingTextSkills(props) {
             <a.mesh position = {textPosition[0]} scale = {springScale.scale0} onPointerOver={() => setHover0(true)} onPointerOut={() => setHover0(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />
-                <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
+                {/* <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
                     {textContents[0]}
                     <a.meshStandardMaterial color={springColor.color0}/>
-                </Text3D>
+                </Text3D> */}
+                <Text
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[0]}
+                    <a.meshStandardMaterial color={springColor.color0}/>
+                </Text>
             </a.mesh>
         </Float>
         <Float>
             <a.mesh position = {textPosition[1]} scale = {springScale.scale1} onPointerOver={() => setHover1(true)} onPointerOut={() => setHover1(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />
-                <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
+                {/* <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
                 {textContents[1]}
                     <a.meshStandardMaterial color={springColor.color1}/>
-                </Text3D>
+                </Text3D> */}
+                <Text
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[1]}
+                    <a.meshStandardMaterial color={springColor.color1}/>
+                </Text>
             </a.mesh>
         </Float>
         <Float>
             <a.mesh position = {textPosition[2]} scale = {springScale.scale2} onPointerOver={() => setHover2(true)} onPointerOut={() => setHover2(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />
-                <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
+                {/* <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
                     {textContents[2]}
                     <a.meshStandardMaterial color={springColor.color2}/>
-                </Text3D>
+                </Text3D> */}
+                <Text
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[2]}
+                    <a.meshStandardMaterial color={springColor.color2}/>
+                </Text>
             </a.mesh>
         </Float>
         <Float>
             <a.mesh position = {textPosition[3]} scale = {springScale.scale3} onPointerOver={() => setHover3(true)} onPointerOut={() => setHover3(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />
-                <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
+                {/* <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
                     {textContents[3]}
                     <a.meshStandardMaterial color={springColor.color3}/>
-                </Text3D>
+                </Text3D> */}
+                <Text
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[3]}
+                    <a.meshStandardMaterial color={springColor.color3}/>
+                </Text>
             </a.mesh>
         </Float>
         <Float>
             <a.mesh position = {textPosition[4]} scale = {springScale.scale4} onPointerOver={() => setHover4(true)} onPointerOut={() => setHover4(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />
-                <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
+                {/* <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
                     {textContents[4]}
                     <a.meshStandardMaterial color={springColor.color4}/>
-                </Text3D>
+                </Text3D> */}
+                <Text
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[4]}
+                    <a.meshStandardMaterial color={springColor.color4}/>
+                </Text>
             </a.mesh>
         </Float>
         <Float>
             <a.mesh position = {textPosition[5]} scale = {springScale.scale5} onPointerOver={() => setHover5(true)} onPointerOut={() => setHover5(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />
-                <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
+                {/* <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
                     {textContents[5]}
                     <a.meshStandardMaterial color={springColor.color5}/>
-                </Text3D>
+                </Text3D> */}
+                <Text
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[5]}
+                    <a.meshStandardMaterial color={springColor.color5}/>
+                </Text>
             </a.mesh>
         </Float>
         <Float>
             <a.mesh position = {textPosition[6]} scale = {springScale.scale6} onPointerOver={() => setHover6(true)} onPointerOut={() => setHover6(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />
-                <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
+                {/* <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
                     {textContents[6]}
                     <a.meshStandardMaterial color={springColor.color6}/>
-                </Text3D>
+                </Text3D> */}
+                <Text
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[6]}
+                    <a.meshStandardMaterial color={springColor.color6}/>
+                </Text>
             </a.mesh>
         </Float>
         <Float>
             <a.mesh position = {textPosition[7]} scale = {springScale.scale7} onPointerOver={() => setHover7(true)} onPointerOut={() => setHover7(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />
-                <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
+                {/* <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
                     {textContents[7]}
                     <a.meshStandardMaterial color={springColor.color7}/>
-                </Text3D>
+                </Text3D> */}
+                <Text
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[7]}
+                    <a.meshStandardMaterial color={springColor.color7}/>
+                </Text>
             </a.mesh>
         </Float>
         <Float>
             <a.mesh position = {textPosition[8]} scale = {springScale.scale8} onPointerOver={() => setHover8(true)} onPointerOut={() => setHover8(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />
-                <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
+                {/* <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
                     {textContents[8]}
                     <a.meshStandardMaterial color={springColor.color8}/>
-                </Text3D>
+                </Text3D> */}
+                <Text
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[8]}
+                    <a.meshStandardMaterial color={springColor.color8}/>
+                </Text>
             </a.mesh>
         </Float>
         <Float>
             <a.mesh position = {textPosition[9]} scale = {springScale.scale9} onPointerOver={() => setHover9(true)} onPointerOut={() => setHover9(false)}>
                 <planeGeometry args={hitBoxSize} />
                 <meshBasicMaterial visible={false} />
-                <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
+                {/* <Text3D position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {textCurveSergments}>
                     {textContents[9]}
                     <a.meshStandardMaterial color={springColor.color9}/>
-                </Text3D>
+                </Text3D> */}
+                <Text
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[9]}
+                    <a.meshStandardMaterial color={springColor.color9}/>
+                </Text>
             </a.mesh>
         </Float>
         {/* <Float>

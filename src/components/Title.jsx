@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Text3D, Center} from "@react-three/drei";
+import { Text3D, Center, Text} from "@react-three/drei";
 import * as THREE from "three";
 
 export function Title(props) {
@@ -20,25 +20,28 @@ export function Title(props) {
     position = {initialPosition}
     ref = {callbackRef}
     >
-        <Text3D
-            font = {process.env.PUBLIC_URL + fontFileName}
-            size = {textSize}
-            height = {0.065}
-            curveSegments = {2}
+        <Text
+            // ref = {textCallbackRef}
+            scale={[10, 10, 10]}
+            // color="black" // default
+            anchorX="left" // default
+            // anchorY="top" // default
+            position = {[-0.6, 0.2, 0]}
         >
-            {`Everardo Meireles`}
-            <meshStandardMaterial />
-        </Text3D>
-        <Text3D
-            font = {process.env.PUBLIC_URL + fontFileName}
-            size = {textSize}
-            height = {0.065}
-            curveSegments = {2}
-            position={[-0.6, -1, 0]}
+            {"Everardo Meireles"}
+            <meshStandardMaterial/>
+        </Text>
+        <Text
+            // ref = {textCallbackRef}
+            scale={[10, 10, 10]}
+            // color="black" // default
+            anchorX="left" // default
+            // anchorY="top" // default
+            position = {[-1.4, -0.8, 0]}
         >
-            {`Développeur fullstack`}
-            <meshStandardMaterial />
-        </Text3D>
+            {"Développeur fullstack"}
+            <meshStandardMaterial/>
+        </Text>
     </mesh>
     );
 }
