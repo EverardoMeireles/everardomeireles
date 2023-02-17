@@ -24,8 +24,8 @@ export const path_points = {
     "Education-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(-8, -36, -5),
-        new THREE.Vector3(-50, -1, 44),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(0, -1, 44),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "Education-ProfessionalExpProjects0":
     new THREE.CatmullRomCurve3( [        
@@ -35,27 +35,29 @@ export const path_points = {
 
     "Skills-Education":
     new THREE.CatmullRomCurve3( [        
-        new THREE.Vector3(-58, 2, 71),
-        new THREE.Vector3(-50, -1, 44),
+        new THREE.Vector3(84.5, 2, 56),
+        new THREE.Vector3(0, -1, 44),
         new THREE.Vector3(-8, -36, -5)]),
         
     "MainMenu-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(15, 1, 0),
-        new THREE.Vector3(-4, 5, 34),
-        new THREE.Vector3(-30, 5, 40),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(2, 5, 32),
+        // new THREE.Vector3(40, 5, 40),
+        // new THREE.Vector3(58, 2, 71)]),
+        new THREE.Vector3(84.5, 2, 56)]),
+
     
     "Skills-MainMenu":
     new THREE.CatmullRomCurve3( [        
-        new THREE.Vector3(-58, 2, 71),
-        new THREE.Vector3(-30, 5, 40),
-        new THREE.Vector3(-4, 5, 34),
+        new THREE.Vector3(84.5, 2, 56),
+        // new THREE.Vector3(40, 5, 40),
+        new THREE.Vector3(2, 5, 32),
         new THREE.Vector3(15, 1, 0)]),
         
     "Skills-ProfessionalExpProjects0":
     new THREE.CatmullRomCurve3( [        
-        new THREE.Vector3(-58, 2, 71),
+        new THREE.Vector3(84.5, 2, 56),
         new THREE.Vector3(-3, 21, 21),
         new THREE.Vector3(4, 4, -71)]),
 
@@ -213,73 +215,73 @@ export const path_points = {
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(4, 4, -71),
         new THREE.Vector3(-3, 21, 21),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "ProfessionalExpProjects1-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(22, 4, -99),
         new THREE.Vector3(-3, 21, 21),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "ProfessionalExpProjects2-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(-6, 4, -116),
-        new THREE.Vector3(-72, 5, -33),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(19, 27, -115),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "ProfessionalExpProjects3-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(-23, 4, -89),
         new THREE.Vector3(-3, 21, 21),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "ProfessionalExpProjects4-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(4, 24, -71),
         new THREE.Vector3(-3, 21, 21),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "ProfessionalExpProjects5-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(22, 24, -99),
         new THREE.Vector3(-3, 21, 21),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "ProfessionalExpProjects6-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(-6, 24, -116),
-        new THREE.Vector3(-72, 5, -33),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(19, 27, -115),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "ProfessionalExpProjects7-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(-23, 24, -89),
         new THREE.Vector3(-3, 21, 21),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "ProfessionalExpProjects8-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(4, 44, -71),
         new THREE.Vector3(-3, 21, 21),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(84.5, 2, 56)]),
         
     "ProfessionalExpProjects9-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(22, 44, -99),
         new THREE.Vector3(-3, 21, 21),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "ProfessionalExpProjects10-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(-6, 44, -116),
-        new THREE.Vector3(-72, 5, -33),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(19, 27, -115),
+        new THREE.Vector3(84.5, 2, 56)]),
 
     "ProfessionalExpProjects11-Skills":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(-23, 44, -89),
         new THREE.Vector3(-3, 21, 21),
-        new THREE.Vector3(-58, 2, 71)]),
+        new THREE.Vector3(84.5, 2, 56)]),
 
 
     "ProfessionalExpProjects0-ProfessionalExpProjects1":
@@ -1082,7 +1084,7 @@ export const path_points_simple_lookat_dict = {
         0: new THREE.Vector3(-23, -34.5, -4.5)},
 
     "Skills": {
-        0: new THREE.Vector3(-32, 3, 69)},
+        0: new THREE.Vector3(131, 2, 56)},
 
     "ProfessionalExpProjects0": {
         0: new THREE.Vector3(0, 5, -82)},
