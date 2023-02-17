@@ -41,10 +41,11 @@ export function SceneContainer() {
     return(
         <>
             <Suspense fallback = {null} >
+                {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} />}
+
                 {/* <directionalLight  intensity={.4} position={[63,96,41]}></directionalLight>  */}
                 <Environment files={process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background />
                 <Environment files={process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
-                {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} />}
                 <Camera {...{useStore}}></Camera>
                 {/* <OrbitingPointLight orbitDirection={[0, 0, 1]} orbitAxis={"y"} orbitDistance={8} orbitCenterPosition={[-34, -1, 70]} lightIntensivity={2}></OrbitingPointLight> */}
                 <FadingTextModel {...{useStore}} textToFade={Text["PROSPERE-ITB-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects0" scale={2} initialPosition={[1, 4, -82]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} istext3d={false}/>
@@ -66,41 +67,34 @@ export function SceneContainer() {
                 <Title initialPosition={[0, 4, 5.4]}/>
                 <IndexMenu {...{useStore}} isMainMenu></IndexMenu>
                 <IndexMenu {...{useStore}} position={[-13, -38.5, -1.3]} rotation={2 * Math.PI/12} scale={0.23} ></IndexMenu>
-                <IndexMenu {...{useStore}} position={[-50, -2, 65]} rotation={  Math.PI} scale={0.35} ></IndexMenu>
+                <IndexMenu {...{useStore}} position={[91, -2, 52]} rotation={  Math.PI} scale={0.35} ></IndexMenu>
                 <ambientLight intensity={1}></ambientLight>
                 {/* <RegularFlickeringLight></RegularFlickeringLight> */}
-            </Suspense>
+            
             {(currentGraphicalMode == "potato")
             &&
             <group>
-                <Suspense fallback = {null}>
                     <SimpleLoader modelName={"threeJsScenePotato.glb"}></SimpleLoader>
-                </Suspense>
             </group>}
             {(currentGraphicalMode == "potatoPremium")
             && 
             <group>
-                <Suspense fallback = {null}>
                     <SimpleLoader modelName={"threeJsScenePotatoPremium.glb"}></SimpleLoader>
                     <Float>
                         <SimpleLoader modelName={"threeJsScenePotatoPremiumFloating.glb"}></SimpleLoader>
                     </Float>
-                </Suspense>
             </group>}
             {(currentGraphicalMode == "normal")
             && 
             <group>
-                <Suspense fallback = {null}>
                     <SimpleLoader modelName={"threeJsSceneNormal.glb"}></SimpleLoader>
                     <Float>
                         <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
                     </Float>
                     <OrbitingPointLight></OrbitingPointLight>
-                </Suspense>
             </group>}
             {(currentGraphicalMode == "high")
             && <group>
-                <Suspense fallback = {null}>
                 <SimpleLoader modelName={"threeJsSceneNormal.glb"}></SimpleLoader>
                 <Float>
                     <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
@@ -109,8 +103,8 @@ export function SceneContainer() {
                 {/* <EffectComposer renderPriority={1}>
                     <Bloom luminanceThreshold={1} mipmapBlur />
                 </EffectComposer> */}
-                </Suspense>
             </group>}
+            </Suspense>
         </>
     );
 }
