@@ -10,31 +10,49 @@ export function GraphicalModeSetter(props){
     const currentGraphicalMode = props.useStore((state) => state.currentGraphicalMode);
     const setGraphicalMode = props.useStore((state) => state.setGraphicalMode);
     const setFinishedBenchmark = props.useStore((state) => state.setFinishedBenchmark);    
-    
+
+    const HardwareAccelerationCheckPassed = true;
     (async () => {
         const gpuTier = await getGPUTier({benchmarksURL:"benchmarks"});
-        let newGraphicalMode;
-
-        // because of limitations in the detect-gpu package, the graphical modes are limited to 4 for now.
-        switch(gpuTier.tier) {
-            case 0:
-                newGraphicalMode = "potato";
-            break;
-
-            case 1:
-                newGraphicalMode = "potatoPremium";
-            break;
-
-            case 2:
-                newGraphicalMode = "normal";
-            break;
-
-            case 3:
-                newGraphicalMode = "high";
-            break;
+        // hardware acceleration check, if the user has hardware acceleration disabled, don't set graphical mode
+        if(gpuTier.type=="WEBGL_UNSUPPORTED" || gpuTier.tier == 0){
+            HardwareAccelerationCheckPassed = false;
+        }else{
+            if(gpuTier.isMobile){
+                if(!gpuTier.fps < 25){
+                    HardwareAccelerationCheckPassed = false;
+                }
+            }else{
+                if(!gpuTier.gpu.includes("intel") && !gpuTier.gpu.includes("nvidia") && !gpuTier.gpu.includes("amd") && !gpuTier.gpu.includes("apple m1") && !gpuTier.gpu.includes("apple m2") && !gpuTier.gpu.includes("apple a14")){
+                    HardwareAccelerationCheckPassed = false;
+                }
+            }
         }
-            console.log("GRAPHICS: " + newGraphicalMode)
-            setGraphicalMode(newGraphicalMode);
+
+        if(HardwareAccelerationCheckPassed){
+            let newGraphicalMode;
+
+            // because of limitations in the detect-gpu package, the graphical modes are limited to 4 for now.
+            switch(gpuTier.tier) {
+                // case 0:
+                //     newGraphicalMode = "potato";
+                // break;
+    
+                case 1:
+                    newGraphicalMode = "potatoPremium";
+                break;
+    
+                case 2:
+                    newGraphicalMode = "normal";
+                break;
+    
+                case 3:
+                    newGraphicalMode = "high";
+                break;
+            }
+                console.log("GRAPHICS: " + newGraphicalMode)
+                setGraphicalMode(newGraphicalMode);
+        }
     })()
 
     const framesForGraphicModeComparison = 120;
@@ -63,7 +81,8 @@ export function GraphicalModeSetter(props){
         }
         console.log("deltas: " + accuDeltasForHardwareAccelerationCheck)
         console.log("frames: " + accuFramesForHardwareAccelerationCheck)
-        // if after 5 seconds, still less than 60 frames have passed, ask the user to enable hardware acceleration by redirecting them to hardware acceleration page
+        // if after 5 seconds, still less than 60 frames have passed, the site is unusable, ask the user to enable hardware acceleration 
+        // by redirecting them to the hardware acceleration page
         if(!skipHardwareAccelerationCheck && accuDeltasForHardwareAccelerationCheck > 5){
             console.log("entered")
             if(accuFramesForHardwareAccelerationCheck < 60){
@@ -88,7 +107,7 @@ export function GraphicalModeSetter(props){
                     if(!["potato", "high"].includes(currentGraphicalMode)){
                         setGraphicalMode(graphicalModes[graphicalModes.indexOf(currentGraphicalMode) - 1]);
                         console.log("GRAPHICS: " + graphicalModes[graphicalModes.indexOf(currentGraphicalMode) - 1])
-                        setFinishedBenchmark(true);
+                        pass = -1;
                     }
                 }
             }

@@ -41,8 +41,7 @@ export function SceneContainer() {
     return(
         <>
             <Suspense fallback = {null} >
-                {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} />}
-
+                {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} numberOfPasses={1} fpsToDecreaseGraphics={55} />}
                 {/* <directionalLight  intensity={.4} position={[63,96,41]}></directionalLight>  */}
                 <Environment files={process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background />
                 <Environment files={process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
@@ -62,7 +61,7 @@ export function SceneContainer() {
                 <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} text3dMode={false}/> */}
                 
                 <ExperienceMenu {...{useStore}} scale={1} /*position={[-7, 0, -81]} rotation={-Math.PI/3}*/></ExperienceMenu>
-                <FloatingTextSkills initialPosition={[-35, 0, 68]} rotation={3*(Math.PI/2)}></FloatingTextSkills >
+                <FloatingTextSkills initialPosition={[110, 2, 56]} rotation={3*(Math.PI/2)}></FloatingTextSkills >
                 <OrbitingMenu orbitDistance={7.5} orbitCenterPosition={[-6, -35, -4]}/>
                 <Title initialPosition={[0, 4, 5.4]}/>
                 <IndexMenu {...{useStore}} isMainMenu></IndexMenu>
