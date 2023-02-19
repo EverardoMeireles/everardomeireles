@@ -7,6 +7,7 @@ export const OrbitingMenu = React.memo((props) => {
     const {orbitCenterPosition = [15.5, 1.1, 0]} = props;
     const {planeSize = [5, 5]} = props;
     const {orbitDistance = 1.5} = props;
+    const {visible = false} = props;
 
     const [hovered0, setHover0] = useState(false);
     const [hovered1, setHover1] = useState(false);
@@ -144,7 +145,7 @@ export const OrbitingMenu = React.memo((props) => {
             scale = {0.5}
             position = {[-12.5, -2.5, 0.5]}>
                 <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
-                <a.meshBasicMaterial color = {springColor.color0} />
+                <a.meshBasicMaterial visible={visible} color = {springColor.color0} />
             </mesh>
 
             <mesh
@@ -160,7 +161,7 @@ export const OrbitingMenu = React.memo((props) => {
             scale = {0.5}
             position = {[-12.5, -2.5, -0.5]}>
                 <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
-                <a.meshBasicMaterial color={springColor.color1} />
+                <a.meshBasicMaterial visible={visible} color={springColor.color1} />
             </mesh>
             <Suspense>
                 <mesh  ref = {planeRef0}>
@@ -169,38 +170,38 @@ export const OrbitingMenu = React.memo((props) => {
                     </mesh> */}
                     {/* <planeGeometry ref = {planeReff0} attach="geometry"/> */}
                     <planeBufferGeometry args={planeSize} ref = {planeReff0} attach = "geometry"/>
-                    <meshBasicMaterial map = {planetexture0} attach = "material" side = {THREE.DoubleSide} />
+                    <meshBasicMaterial visible={visible} map = {planetexture0} attach = "material" side = {THREE.DoubleSide} />
                 </mesh>
             </Suspense>
 
             <mesh scale = {1} ref = {planeRef1}>
                 <planeBufferGeometry args={planeSize} ref = {planeReff1} attach = "geometry"/>
-                <meshBasicMaterial map = {planetexture1} attach = "material" side = {THREE.DoubleSide} />
+                <meshBasicMaterial visible={visible} map = {planetexture1} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef2}>
                 <planeBufferGeometry args={planeSize} ref = {planeReff2} attach = "geometry"/>
-                <meshBasicMaterial map = {planetexture2} attach = "material" side = {THREE.DoubleSide} />
+                <meshBasicMaterial visible={visible} map = {planetexture2} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef3}>
                 <planeBufferGeometry args={planeSize} ref = {planeReff3} attach = "geometry"/>
-                <meshBasicMaterial map = {planetexture3} attach = "material" side = {THREE.DoubleSide} />
+                <meshBasicMaterial visible={visible} map = {planetexture3} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef4}>
                 <planeBufferGeometry args={planeSize} ref = {planeReff4} attach = "geometry"/>
-                <meshBasicMaterial map = {planetexture4} attach = "material" side = {THREE.DoubleSide} />
+                <meshBasicMaterial visible={visible} map = {planetexture4} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef5}>
                 <planeBufferGeometry args={planeSize} ref = {planeReff5} attach = "geometry"/>
-                <meshBasicMaterial map = {planetexture5} attach = "material" side = {THREE.DoubleSide} />
+                <meshBasicMaterial visible={visible} map = {planetexture5} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef6}>
                 <planeBufferGeometry args={planeSize} ref = {planeReff6} attach = "geometry"/>
-                <meshBasicMaterial map = {planetexture6} attach = "material" side = {THREE.DoubleSide} />
+                <meshBasicMaterial visible={visible} map = {planetexture6} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
 
             <mesh scale = {1} ref = {planeRef7}>
@@ -208,5 +209,6 @@ export const OrbitingMenu = React.memo((props) => {
                 <meshBasicMaterial visible={false} attach = "material" side = {THREE.DoubleSide} />
             </mesh>
         </mesh>
+        
     )
 })

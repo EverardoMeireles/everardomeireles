@@ -32,11 +32,11 @@ const useStore = create((set) => ({
 export function SceneContainer() {
     const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const finishedBenchmark = useStore((state) => state.finishedBenchmark);
-//     const { gl } = useThree();
+    const { gl } = useThree();
 
-// useFrame(()=>{
-//     console.log(gl.info.render.calls)
-// })
+useFrame(()=>{
+    console.log(gl.info.render.calls)
+})
 
     return(
         <>
@@ -62,10 +62,13 @@ export function SceneContainer() {
                 
                 <ExperienceMenu {...{useStore}} scale={1} /*position={[-7, 0, -81]} rotation={-Math.PI/3}*/></ExperienceMenu>
                 <FloatingTextSkills initialPosition={[110, 2, 56]} rotation={3*(Math.PI/2)}></FloatingTextSkills >
-                <OrbitingMenu orbitDistance={7.5} orbitCenterPosition={[-6, -35, -4]}/>
                 <Title initialPosition={[0, 4, 5.4]}/>
                 <IndexMenu {...{useStore}} isMainMenu></IndexMenu>
-                <IndexMenu {...{useStore}} position={[-13, -38.5, -1.3]} rotation={2 * Math.PI/12} scale={0.23} ></IndexMenu>
+                {/* {finishedBenchmark == true && */}
+                 {/* <group> */}
+                    <OrbitingMenu visible={finishedBenchmark ==true?true:false} orbitDistance={7.5} orbitCenterPosition={[-6, -35, -4]}/>
+                    <IndexMenu visible={finishedBenchmark ==true?true:false} {...{useStore}} position={[-13, -38.5, -1.3]} rotation={2 * Math.PI/12} scale={0.23} ></IndexMenu>
+                {/* </group>} */}
                 <IndexMenu {...{useStore}} position={[91, -2, 52]} rotation={  Math.PI} scale={0.35} ></IndexMenu>
                 <ambientLight intensity={1}></ambientLight>
                 {/* <RegularFlickeringLight></RegularFlickeringLight> */}
@@ -116,6 +119,9 @@ export function SceneContainer() {
                 </EffectComposer> */}
                 <Suspense>
                     {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
+                </Suspense>
+                <Suspense>
+                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneRiverNormal.glb"}></SimpleLoader>}
                 </Suspense>
             </group>}
             {/* </Suspense> */}

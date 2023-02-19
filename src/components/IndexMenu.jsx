@@ -10,7 +10,8 @@ export function IndexMenu(props) {
     const {scale = 1} = props;
     const {textColor = "#000000"} = props;
     const {isMainMenu = false} = props;
-    
+    const {visible = true} = props;
+
     const {setPath, setTransitionEnded} = props.useStore();
     
     const setGraphicalMode = props.useStore((state) => state.setGraphicalMode);
@@ -65,6 +66,7 @@ export function IndexMenu(props) {
                 hasMovementAnimation={false}
                 hasScaleAnimation={false}
                 hasChangeColorOnHover={false}
+                visible={visible}
                 >
                     <Suspense fallback = {null}>
                         {/* <Text3D
@@ -88,7 +90,7 @@ export function IndexMenu(props) {
                             position = {[0.6, 0, 3.1]}
                         >
                             {"Menu Principal"}
-                            <a.meshBasicMaterial color = {"red"}/>
+                            <a.meshBasicMaterial visible={visible} color = {"red"}/>
                         </Text>
                     </Suspense>
                 </BaseCube>
@@ -109,6 +111,7 @@ export function IndexMenu(props) {
                 hasMovementAnimation={false}
                 hasScaleAnimation={false}
                 hasChangeColorOnHover={false}
+                visible={visible}
                 >
                     <Suspense fallback = {null}>
                         <Text
@@ -120,7 +123,7 @@ export function IndexMenu(props) {
                             position = {[0.6, 0, 2]}
                         >
                             {"Formation"}
-                            <a.meshBasicMaterial color = {textColor}/>
+                            <a.meshBasicMaterial visible={visible} color = {textColor}/>
                         </Text>
                     </Suspense>
                 </BaseCube>
@@ -141,19 +144,9 @@ export function IndexMenu(props) {
                 hasMovementAnimation={false}
                 hasScaleAnimation={false}
                 hasChangeColorOnHover={false}
+                visible={visible}
                 >
                     <Suspense fallback = {null}>
-                        {/* <Text3D
-                        position = {[0.5, -0.25, 2.5]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
-                        >
-                            Compétences
-                            <meshStandardMaterial color = {textColor} />
-                        </Text3D> */}
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
@@ -163,7 +156,7 @@ export function IndexMenu(props) {
                             position = {[0.6, 0, 2.75]}
                         >
                             {"Compétences"}
-                            <a.meshBasicMaterial color = {textColor}/>
+                            <a.meshBasicMaterial visible={visible} color = {textColor}/>
                         </Text>
                     </Suspense>
                 </BaseCube>
@@ -184,19 +177,9 @@ export function IndexMenu(props) {
                 hasMovementAnimation={false}
                 hasScaleAnimation={false}
                 hasChangeColorOnHover={false}
+                visible={visible}
                 >
                     <Suspense fallback = {null}>
-                        {/* <Text3D
-                        position = {[0.5, -0.25, 4.7]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
-                        >
-                            Expérience professionnelle
-                            <meshStandardMaterial color = {textColor}  />
-                        </Text3D> */}
                         <Text
                             ref = {textCallbackRef}
                             scale={[8, 8, 8]}
@@ -206,7 +189,7 @@ export function IndexMenu(props) {
                             position = {[0.6, 0, 4.8]}
                         >
                             {"Expérience professionnelle"}
-                            <a.meshBasicMaterial color = {textColor}/>
+                            <a.meshBasicMaterial visible={visible} color = {textColor}/>
                         </Text>
                     </Suspense>
                 </BaseCube>
@@ -227,7 +210,7 @@ export function IndexMenu(props) {
                 position={[0, .5, 0]}
                 >
                     <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
-                    <a.meshBasicMaterial color = {springColor.color0} />
+                    <a.meshBasicMaterial visible={visible} color = {springColor.color0} />
                     
                 </mesh>
 
@@ -243,7 +226,7 @@ export function IndexMenu(props) {
                 position={[0, -.5, 0]}
                 >
                     <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
-                    <a.meshBasicMaterial color = {springColor.color1} />
+                    <a.meshBasicMaterial visible={visible} color = {springColor.color1} />
                     
                 </mesh>
             </mesh>}

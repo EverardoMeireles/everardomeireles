@@ -15,6 +15,7 @@ export function BaseCube(props) {
     const {hasMovementAnimation = true} = props;
     const {hasScaleAnimation = true} = props;
     const {opacity = 1} = props;
+    const {visible = true} = props;
 
     const minColorValue = 200;//180 180 180 light grey
     const maxColorValue = 255;//255 255 255 white
@@ -49,7 +50,7 @@ export function BaseCube(props) {
     >
         {props.children}
         <boxGeometry  args={[width, height, depth]}/>
-        <a.meshStandardMaterial attach="material" color={springColor.color} opacity={opacity}/>;    
+        <a.meshStandardMaterial visible={visible} attach="material" color={springColor.color} opacity={opacity}/>;    
     </a.mesh>
     );
 }
