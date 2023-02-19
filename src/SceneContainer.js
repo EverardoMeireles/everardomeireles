@@ -73,37 +73,45 @@ export function SceneContainer() {
             {(currentGraphicalMode == "potato")
             &&
             <group>
-                    <SimpleLoader modelName={"threeJsScenePotato.glb"}></SimpleLoader>
+                    <SimpleLoader modelName={"threeJsSceneMainMenuEducationNormal.glb"}></SimpleLoader>
+                    <Float>
+                    <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
+                </Float>
+                <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>
             </group>}
             {(currentGraphicalMode == "potatoPremium")
             && 
             <group>
-                    <SimpleLoader modelName={"threeJsScenePotatoPremium.glb"}></SimpleLoader>
+                    <SimpleLoader modelName={"threeJsSceneMainMenuEducationNormal.glb"}></SimpleLoader>
                     <Float>
-                        <SimpleLoader modelName={"threeJsScenePotatoPremiumFloating.glb"}></SimpleLoader>
-                    </Float>
+                    <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
+                </Float>
+                <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>
             </group>}
             {(currentGraphicalMode == "normal")
             && 
             <group>
-                    <SimpleLoader modelName={"threeJsSceneNormal.glb"}></SimpleLoader>
+                    <SimpleLoader modelName={"threeJsSceneMainMenuEducationNormal.glb"}></SimpleLoader>
                     <Float>
-                        <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
-                    </Float>
+                    <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
+                </Float>
+                <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>
                     <OrbitingPointLight></OrbitingPointLight>
             </group>}
             {(currentGraphicalMode == "high")
             && <group>
-                <SimpleLoader modelName={"threeJsSceneNormal.glb"}></SimpleLoader>
+                <SimpleLoader modelName={"threeJsSceneMainMenuEducationNormal.glb"}></SimpleLoader>
                 <Float>
                     <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
                 </Float>
+                <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>
                 {/* <OrbitingPointLight orbitDirection={[0, 1, 0]} orbitSpeed={0.01} orbitAxis={"x"} orbitDistance={60} orbitCenterPosition={[-40, 30, 0]} lightIntensivity={1}></OrbitingPointLight> */}
                 {/* <EffectComposer renderPriority={1}>
                     <Bloom luminanceThreshold={1} mipmapBlur />
                 </EffectComposer> */}
             </group>}
             </Suspense>
+            
         </>
     );
 }
