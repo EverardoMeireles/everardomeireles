@@ -69,7 +69,7 @@ export function SceneContainer() {
                 <IndexMenu {...{useStore}} position={[91, -2, 52]} rotation={  Math.PI} scale={0.35} ></IndexMenu>
                 <ambientLight intensity={1}></ambientLight>
                 {/* <RegularFlickeringLight></RegularFlickeringLight> */}
-            
+            </Suspense>
             {(currentGraphicalMode == "potato")
             &&
             <group>
@@ -77,8 +77,10 @@ export function SceneContainer() {
                     <Float>
                     <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
                 </Float>
-                <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>
-            </group>}
+                <Suspense>
+                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
+                </Suspense>
+                </group>}
             {(currentGraphicalMode == "potatoPremium")
             && 
             <group>
@@ -86,8 +88,10 @@ export function SceneContainer() {
                     <Float>
                     <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
                 </Float>
-                <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>
-            </group>}
+                <Suspense>
+                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
+                </Suspense>
+                            </group>}
             {(currentGraphicalMode == "normal")
             && 
             <group>
@@ -95,8 +99,10 @@ export function SceneContainer() {
                     <Float>
                     <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
                 </Float>
-                <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>
-                    <OrbitingPointLight></OrbitingPointLight>
+                <Suspense>
+                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
+                </Suspense>
+                <OrbitingPointLight></OrbitingPointLight>
             </group>}
             {(currentGraphicalMode == "high")
             && <group>
@@ -104,13 +110,16 @@ export function SceneContainer() {
                 <Float>
                     <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
                 </Float>
-                <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>
                 {/* <OrbitingPointLight orbitDirection={[0, 1, 0]} orbitSpeed={0.01} orbitAxis={"x"} orbitDistance={60} orbitCenterPosition={[-40, 30, 0]} lightIntensivity={1}></OrbitingPointLight> */}
                 {/* <EffectComposer renderPriority={1}>
                     <Bloom luminanceThreshold={1} mipmapBlur />
                 </EffectComposer> */}
+                <Suspense>
+                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
+                </Suspense>
             </group>}
-            </Suspense>
+            {/* </Suspense> */}
+
             
         </>
     );
