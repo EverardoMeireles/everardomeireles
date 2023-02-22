@@ -1090,37 +1090,37 @@ export const path_points_simple_lookat_dict = {
         0: new THREE.Vector3(0, 5, -82)},
 
     "ProfessionalExpProjects1": {
-        0: new THREE.Vector3(11, 5, -94)},
+        0: new THREE.Vector3(11, 6, -95)},
 
     "ProfessionalExpProjects2": {
-        0: new THREE.Vector3(-1, 5, -108)},
+        0: new THREE.Vector3(-3, 6, -108)},
 
     "ProfessionalExpProjects3": {
-        0: new THREE.Vector3(-14, 5, -93)},
+        0: new THREE.Vector3(-14, 6, -93)},
 
     "ProfessionalExpProjects4": {
-        0: new THREE.Vector3(0, 25, -82)},
+        0: new THREE.Vector3(0, 26, -82)},
 
     "ProfessionalExpProjects5": {
-        0: new THREE.Vector3(11, 25, -94)},
+        0: new THREE.Vector3(11, 26, -94)},
 
     "ProfessionalExpProjects6": {
-        0: new THREE.Vector3(-1, 25, -108)},
+        0: new THREE.Vector3(-1, 26, -108)},
 
     "ProfessionalExpProjects7": {
-        0: new THREE.Vector3(-14, 25, -92)},
+        0: new THREE.Vector3(-14, 26, -92)},
 
     "ProfessionalExpProjects8": {
-        0: new THREE.Vector3(0, 45, -82)},
+        0: new THREE.Vector3(0, 46, -82)},
 
     "ProfessionalExpProjects9": {
-        0: new THREE.Vector3(11, 45, -94)},
+        0: new THREE.Vector3(11, 46, -94)},
 
     "ProfessionalExpProjects10": {
-        0: new THREE.Vector3(-1, 45, -108)},
+        0: new THREE.Vector3(-1, 46, -108)},
 
     "ProfessionalExpProjects11": {
-        0: new THREE.Vector3(-14, 45, -92)},
+        0: new THREE.Vector3(-14, 46, -92)},
 }
 
 export const path_points_lookat_dict = {
@@ -1260,12 +1260,12 @@ export const path_points_experience_menu_location = {
     },
 
     "ProfessionalExpProjects1": { // First floor 1
-        "position":[13, 0, -87],
+        "position":[12, 0, -85],
         "rotation":Math.PI/3
     },
 
     "ProfessionalExpProjects2": { // First floor 2
-        "position":[5, 0, -109],
+        "position":[5, 0, -107],
         "rotation":3*Math.PI/4
     },
 
