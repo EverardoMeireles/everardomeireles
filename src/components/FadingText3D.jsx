@@ -6,8 +6,8 @@ import { useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useState } from "react";
 
-export function FadingTextModel(props) {
-    const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien in condimentum consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien.Integer facilisis semper libero, id aliquam justo suscipit Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien in condimentum consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget. Aenean accumsan sapien.Integer facilisis semper libero, id aliquam justo suscipit."} = props;
+export function FadingText3D(props) {
+    const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
     const {textModelMenu = "MainMenu"} = props;
     const {textColor = "#000000"} = props;
     const {transitionDuration = 1000} = props;
@@ -18,10 +18,11 @@ export function FadingTextModel(props) {
     const {rotation = Math.PI/2} = props;
     const {visible = true} = props;
     const {scale = 1.5} = props;
-    const {istext3d = true} = props;
+    const {textPositionOffset = [0, -0.5, 0.2]} = props;
 
     const {transitionEnded, desired_path} = props.useStore();
 
+    // Fade in and out animation
     const springFade = useSpring({
         opacity: (transitionEnded && desired_path == textModelMenu) ? 1 : 0,
         config: {
@@ -29,18 +30,14 @@ export function FadingTextModel(props) {
         }
     })
 
-// useFrame(()=>console.log(springFadePanel.opacity.animation.values[0].lastPosition))
     const TextRows = (text) => {
-        const textPositionOffset = [0,-0.5,0.2];
         const unitsPerRow = Math.floor(PlaneSize[1]); //number of spacial units (a [1,1,1] cube) that a fit with the z axis of the plane 
         const replace = '.{1,'+(Math.floor(lettersPerUnit) * unitsPerRow)+'}';
         const reg = (new RegExp(replace,"g"));
         const textChunksArray = text.match(reg);
         const rows = [];
-
         for (let i = 0; i < textChunksArray.length; i++) {
             rows.push(
-                istext3d?
                 <Text3D
                     key = {i}
                     position = {[-(PlaneSize[1]/2) + textPositionOffset[2], (PlaneSize[0]/2) + textPositionOffset[1] - i,  0]}
@@ -52,21 +49,9 @@ export function FadingTextModel(props) {
                     {textChunksArray[i]}
                     <a.meshBasicMaterial opacity = {springFade.opacity} transparent color={textColor}/>
                 </Text3D>
-                :
-                <Text
-                    key={i}
-                    scale={[3, 3, 3]}
-                    // color="black" // default
-                    anchorX="left" // default
-                    // anchorY="top" // default
-                    position = {[-(PlaneSize[1]/2) + textPositionOffset[2], (PlaneSize[0]/2) + textPositionOffset[1] - i,  0]}
-                >
-                {textChunksArray[i]}
-                <a.meshBasicMaterial opacity = {springFade.opacity} transparent color={textColor}/>
-                </Text>
                 );
         }
-
+        rows.push(textToFade)
         return {rows};
     }
 

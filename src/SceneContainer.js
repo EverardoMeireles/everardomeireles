@@ -9,12 +9,13 @@ import { GraphicalModeSetter } from './components/GraphicalModeSetter';
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { OrbitingMenu } from "./components/OrbitingMenu";
 import { FloatingTextSkills } from "./components/FloatingTextSkills";
-import { FadingTextModel } from "./components/FadingTextModel";
+import { FadingText } from "./components/FadingText";
 import { ExperienceMenu } from "./components/ExperienceMenu";
 import { Title } from "./components/Title";
 import { Text } from "./Text.jsx";
 import { RegularFlickeringLight } from "./components/RegularFlickeringLight";
 import { useFrame, useThree } from "@react-three/fiber";
+import { FadingText3D } from "./components/FadingText3D";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -47,18 +48,18 @@ useFrame(()=>{
                 <Environment files={process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
                 <Camera {...{useStore}}></Camera>
                 {/* <OrbitingPointLight orbitDirection={[0, 0, 1]} orbitAxis={"y"} orbitDistance={8} orbitCenterPosition={[-34, -1, 70]} lightIntensivity={2}></OrbitingPointLight> */}
-                <FadingTextModel {...{useStore}} textToFade={Text["PROSPERE-ITB-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects0" scale={2} initialPosition={[1, 4, -82]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} istext3d={false}/>
-                <FadingTextModel {...{useStore}} textToFade={Text["DRIM-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects1" scale={1.8} initialPosition={[11.5, 5.5, -94]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} istext3d={false}/>
-                <FadingTextModel {...{useStore}} textToFade={Text["EVERIAL-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects2" scale={2} initialPosition={[-2, 5.5, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} istext3d={false}/>
-                <FadingTextModel {...{useStore}} textToFade={Text["BRESIL-ECOBUGGY-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects3" lettersPerUnit={10} scale={1.7} initialPosition={[-11, 7.5, -94.5]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} istext3d={false}/>
-                <FadingTextModel {...{useStore}} textToFade={Text["EFN1-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects4" lettersPerUnit={9} scale={1.8} initialPosition={[-0.5, 27, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} istext3d={false}/>
-                <FadingTextModel {...{useStore}} textToFade={Text["EFN2-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects5" scale={2.5} lettersPerUnit={7} initialPosition={[11.5, 23, -96]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} istext3d={false}/>
-                {/* <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} text3dMode={false}/>
-                <FadingTextModel {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} text3dMode={false}/> */}
+                <FadingText {...{useStore}} textToFade={Text["PROSPERE-ITB-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects0" scale={2} initialPosition={[1, 4, -82]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} />
+                <FadingText {...{useStore}} textToFade={Text["DRIM-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects1" scale={1.8} initialPosition={[11.5, 5.5, -94]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} />
+                <FadingText {...{useStore}} textToFade={Text["EVERIAL-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects2" scale={2} initialPosition={[-2, 5.5, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} />
+                <FadingText {...{useStore}} textToFade={Text["BRESIL-ECOBUGGY-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects3" lettersPerUnit={10} scale={1.7} initialPosition={[-11, 7.5, -94.5]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} />
+                <FadingText {...{useStore}} textToFade={Text["EFN1-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects4" lettersPerUnit={9} scale={1.8} initialPosition={[-0.5, 27, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} />
+                <FadingText {...{useStore}} textToFade={Text["EFN2-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects5" scale={2} lettersPerUnit={7} initialPosition={[11.5, 25, -95]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} />
+                {/* <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} />
+                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} />
+                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} />
+                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} />
+                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} />
+                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} /> */}
                 
                 <ExperienceMenu {...{useStore}} scale={1} /*position={[-7, 0, -81]} rotation={-Math.PI/3}*/></ExperienceMenu>
                 <FloatingTextSkills initialPosition={[110, 2, 56]} rotation={3*(Math.PI/2)}></FloatingTextSkills >
@@ -66,8 +67,8 @@ useFrame(()=>{
                 <IndexMenu {...{useStore}} isMainMenu></IndexMenu>
                 {/* {finishedBenchmark == true && */}
                  {/* <group> */}
-                    <OrbitingMenu visible={finishedBenchmark ==true?true:false} orbitDistance={7.5} orbitCenterPosition={[-6, -35, -4]}/>
-                    <IndexMenu visible={finishedBenchmark ==true?true:false} {...{useStore}} position={[-13, -38.5, -1.3]} rotation={2 * Math.PI/12} scale={0.23} ></IndexMenu>
+                    <OrbitingMenu visible={finishedBenchmark == true ? true : false} orbitDistance={7.5} orbitCenterPosition={[-6, -35, -4]}/>
+                    <IndexMenu visible={finishedBenchmark == true ? true : false} {...{useStore}} position={[-13, -38.5, -1.3]} rotation={2 * Math.PI/12} scale={0.23} ></IndexMenu>
                 {/* </group>} */}
                 <IndexMenu {...{useStore}} position={[91, -2, 52]} rotation={  Math.PI} scale={0.35} ></IndexMenu>
                 <ambientLight intensity={1}></ambientLight>
@@ -76,36 +77,30 @@ useFrame(()=>{
             {(currentGraphicalMode == "potato")
             &&
             <group>
-                    <SimpleLoader modelName={"threeJsSceneMainMenuEducationNormal.glb"}></SimpleLoader>
-                    <Float>
-                    <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
-                </Float>
-                <Suspense>
-                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
-                </Suspense>
-                </group>}
+                <SimpleLoader modelName={"threeJsScenePotato.glb"}></SimpleLoader>
+            </group>}
             {(currentGraphicalMode == "potatoPremium")
-            && 
+            &&
             <group>
-                    <SimpleLoader modelName={"threeJsSceneMainMenuEducationNormal.glb"}></SimpleLoader>
-                    <Float>
-                    <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
+                    <SimpleLoader modelName={"threeJsScenePotatoPremium.glb"}></SimpleLoader>
+                <Float>
+                    <SimpleLoader modelName={"threeJsScenePotatoPremiumFloating.glb"}></SimpleLoader>
                 </Float>
-                <Suspense>
-                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
-                </Suspense>
-                            </group>}
+            </group>}
             {(currentGraphicalMode == "normal")
             && 
             <group>
-                    <SimpleLoader modelName={"threeJsSceneMainMenuEducationNormal.glb"}></SimpleLoader>
-                    <Float>
+                <SimpleLoader modelName={"threeJsSceneMainMenuEducationNormal.glb"}></SimpleLoader>
+                <Float>
                     <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
                 </Float>
                 <Suspense>
                     {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
                 </Suspense>
-                <OrbitingPointLight></OrbitingPointLight>
+                <Suspense>
+                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneRiverNormal.glb"}></SimpleLoader>}
+                </Suspense>
+                {/* <OrbitingPointLight></OrbitingPointLight> */}
             </group>}
             {(currentGraphicalMode == "high")
             && <group>
@@ -125,8 +120,6 @@ useFrame(()=>{
                 </Suspense>
             </group>}
             {/* </Suspense> */}
-
-            
         </>
     );
 }
