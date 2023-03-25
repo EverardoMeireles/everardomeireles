@@ -60,13 +60,10 @@ export function SceneContainer() {
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
                 <FloatingTextSkills initialPosition={[110, 2, 56]} rotation={3*(Math.PI/2)}></FloatingTextSkills >
                 <Title initialPosition={[0, 4, 5.4]}/>
-                <IndexMenu {...{useStore}} isMainMenu></IndexMenu>
                 {/* {finishedBenchmark == true && */}
                  {/* <group> */}
                     <OrbitingMenu visible={finishedBenchmark == true ? true : false} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]}/>
-                    <IndexMenu visible={finishedBenchmark == true ? true : false} {...{useStore}} position={[-13, -38.5, -1.3]} rotation={2 * Math.PI/12} scale={0.23} ></IndexMenu>
                 {/* </group>} */}
-                <IndexMenu {...{useStore}} position={[91, -2, 52]} rotation={  Math.PI} scale={0.35} ></IndexMenu>
                 <ambientLight intensity={1}></ambientLight>
                 {/* <RegularFlickeringLight></RegularFlickeringLight> */}
             </Suspense>
