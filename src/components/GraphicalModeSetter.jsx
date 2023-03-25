@@ -1,8 +1,9 @@
 import { useFrame } from '@react-three/fiber';
 import { getGPUTier } from 'detect-gpu';
+import React,{ useEffect } from "react";
 
 // set graphical by performing a gpu ier test, a fps check and a hardware acceleration check
-export function GraphicalModeSetter(props){
+export const GraphicalModeSetter = React.memo((props) => {
     const {numberOfPasses = 1} = props;
     const {fpsToDecreaseGraphics = 45} = props;
 
@@ -12,7 +13,8 @@ export function GraphicalModeSetter(props){
     const setFinishedBenchmark = props.useStore((state) => state.setFinishedBenchmark);    
 
     const HardwareAccelerationCheckPassed = true;
-    (async () => {
+
+    useEffect(() => {(async () => {
         const gpuTier = await getGPUTier({benchmarksURL:"benchmarks"});
         // hardware acceleration check, if the user has hardware acceleration disabled, don't set graphical mode
         if(gpuTier.type=="WEBGL_UNSUPPORTED" || gpuTier.tier == 0){
@@ -28,7 +30,7 @@ export function GraphicalModeSetter(props){
                 }
             }
         }
-
+        // this method require that in the scene container many different sets of graphics be defined in the potatoPremium, normal and high tiers using conditional rendering
         if(HardwareAccelerationCheckPassed){
             let newGraphicalMode;
 
@@ -53,7 +55,7 @@ export function GraphicalModeSetter(props){
                 console.log("GRAPHICS: " + newGraphicalMode)
                 setGraphicalMode(newGraphicalMode);
         }
-    })()
+    })()},[])
 
     const framesForGraphicModeComparison = 120;
     let pass = 0;
@@ -120,4 +122,4 @@ export function GraphicalModeSetter(props){
             }
         }
     })
-}
+})
