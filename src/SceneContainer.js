@@ -58,7 +58,7 @@ export function SceneContainer() {
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
-                <FloatingTextSkills initialPosition={[110, 2, 56]} rotation={3*(Math.PI/2)}></FloatingTextSkills >
+                <FloatingTextSkills initialPosition={[-9, 30, -15]} /*rotation={3*(Math.PI/2)}*/></FloatingTextSkills >
                 <Title initialPosition={[0, 4, 5.4]}/>
                 {/* {finishedBenchmark == true && */}
                  {/* <group> */}
