@@ -74,8 +74,14 @@ export function SceneContainer() {
                 {/* </group>} */}
                 <ambientLight intensity={1}></ambientLight>
                 {/* <RegularFlickeringLight></RegularFlickeringLight> */}
+                <Suspense>
+                    <SimpleLoader modelName={"NewthreeJsScene.glb"}></SimpleLoader>
+                </Suspense>
+                <VideoLoader videoId="video0" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI/2, 0]} position={[-13.3, 46.5, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
+                <VideoLoader videoId="video1" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
+                <VideoLoader videoId="video2" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader>
             </Suspense>
-            {(currentGraphicalMode == "potato")
+            {/* {(currentGraphicalMode == "potato")
             &&
             <group>
                 <SimpleLoader modelName={"threeJsScenePotato.glb"}></SimpleLoader>
@@ -101,16 +107,10 @@ export function SceneContainer() {
                 <Suspense>
                     {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneRiverNormal.glb"}></SimpleLoader>}
                 </Suspense>
-                {/* <OrbitingPointLight></OrbitingPointLight> */}
             </group>}
             {(currentGraphicalMode == "high")
-            && <group>
-                <Suspense>
-                    <SimpleLoader modelName={"NewthreeJsScene.glb"}></SimpleLoader>
-                </Suspense>
-                <VideoLoader videoId="video0" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI/2, 0]} position={[-13.3, 46.5, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
-                <VideoLoader videoId="video1" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
-                <VideoLoader videoId="video2" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader>
+            && <group> */}
+                
 
                 {/* <OrbitingPointLight orbitDirection={[0, 1, 0]} orbitSpeed={0.01} orbitAxis={"x"} orbitDistance={60} orbitCenterPosition={[-40, 30, 0]} lightIntensivity={1}></OrbitingPointLight> */}
                 {/* <EffectComposer renderPriority={1}>
@@ -119,7 +119,7 @@ export function SceneContainer() {
                 {/* <Suspense>
                     {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
                 </Suspense> */}
-            </group>}
+            {/* </group>} */}
         </>
     );
 }
