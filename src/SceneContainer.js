@@ -29,13 +29,21 @@ const useStore = create((set) => ({
     setGraphicalMode: (mode) => set((state) => ({currentGraphicalMode: mode})),
     finishedBenchmark: false,
     setFinishedBenchmark: (finished) => set(() => ({finishedBenchmark: finished})),
+    skills: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
+    currentSkillHovered: "Python",
+    // if graphicalModes wont be out of range, update currentGraphicalMode
+    setSkillHovered: (skill) => set((state) => ({currentSkillHovered: skill})),
     }))
 
 export function SceneContainer() {
     const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const finishedBenchmark = useStore((state) => state.finishedBenchmark);
+    const currentSkillHovered = useStore((state) => state.currentSkillHovered);
     const { gl } = useThree();
 
+// useFrame(() => {
+//     console.log(currentSkillHovered)
+// });
 
     return(
         <>
@@ -58,7 +66,7 @@ export function SceneContainer() {
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
-                <FloatingTextSkills initialPosition={[-9, 30, -15]} /*rotation={3*(Math.PI/2)}*/></FloatingTextSkills >
+                <FloatingTextSkills {...{useStore}} initialPosition={[-9, 30, -15]} /*rotation={3*(Math.PI/2)}*/></FloatingTextSkills >
                 <Title initialPosition={[0, 4, 5.4]}/>
                 {/* {finishedBenchmark == true && */}
                  {/* <group> */}
@@ -100,9 +108,9 @@ export function SceneContainer() {
                 <Suspense>
                     <SimpleLoader modelName={"NewthreeJsScene.glb"}></SimpleLoader>
                 </Suspense>
-                <VideoLoader videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI/2, 0]} position={[-13.7, 46.5, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
-                <VideoLoader videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.49, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
-                <VideoLoader videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.6, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader>
+                <VideoLoader videoId="video0" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI/2, 0]} position={[-13.3, 46.5, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
+                <VideoLoader videoId="video1" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
+                <VideoLoader videoId="video2" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader>
 
                 {/* <OrbitingPointLight orbitDirection={[0, 1, 0]} orbitSpeed={0.01} orbitAxis={"x"} orbitDistance={60} orbitCenterPosition={[-40, 30, 0]} lightIntensivity={1}></OrbitingPointLight> */}
                 {/* <EffectComposer renderPriority={1}>
