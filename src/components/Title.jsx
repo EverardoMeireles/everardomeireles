@@ -5,9 +5,9 @@ import * as THREE from "three";
 export function Title(props) {
     // default prop values:
     const {initialPosition = [0,0,0]} = props;
-    const {fontFileName = "/roboto.json"} = props;
     const {textSize = 0.600} = props;
     const {rotation = Math.PI/2} = props;
+    const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
     const callbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log("skip render")
@@ -21,6 +21,7 @@ export function Title(props) {
     ref = {callbackRef}
     >
         <Text
+            font={font}
             // ref = {textCallbackRef}
             scale={[10, 10, 10]}
             // color="black" // default
@@ -32,6 +33,7 @@ export function Title(props) {
             <meshStandardMaterial/>
         </Text>
         <Text
+            font={font}
             // ref = {textCallbackRef}
             scale={[10, 10, 10]}
             // color="black" // default

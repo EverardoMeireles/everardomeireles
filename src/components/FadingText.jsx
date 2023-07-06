@@ -18,7 +18,7 @@ export function FadingText(props) {
     const {manualLineBreaks = false} = props;
     // if manualLineBreaks is false, how many characters before a line break on the previous word, default is the length of the plane times the normal length of a roboto font character
     const {maxCharsBeforeLineBreak = PlaneSize[0] * 7} = props;
-    const {font = process.env.PUBLIC_URL + "Roboto-Regular.ttf"} = props;
+    const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
     const {transitionEnded, desired_path} = props.useStore();
     
@@ -72,7 +72,7 @@ export function FadingText(props) {
             <a.meshBasicMaterial opacity = {springFade.opacity} transparent visible={visible}/>
             <Suspense fallback = {null}>
                 <Text
-                font={font}
+                    font={font}
                     scale={[3, 3, 3]}
                     anchorX="left"
                     position = {[-(PlaneSize[1]/2) + textPositionOffset[2], (PlaneSize[0]/2) + textPositionOffset[1],  0]}

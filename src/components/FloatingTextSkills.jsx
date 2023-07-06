@@ -5,11 +5,11 @@ import { Text3D, Float, Text } from "@react-three/drei";
 
 export function FloatingTextSkills(props) {
     const {initialPosition = [0,0,0]} = props;
-    const {fontFileName = "/roboto.json"} = props;
     const {hitBoxSize = [2, 1]} = props;
     const {rotation = Math.PI/2} = props;
     const {textCurveSergments = 12} = props;
-    
+    const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
+
     const skills = props.useStore((state) => state.skills);
     const setSkillHovered = props.useStore((state) => state.setSkillHovered); 
 
@@ -102,6 +102,7 @@ export function FloatingTextSkills(props) {
                     <a.meshStandardMaterial color={springColor.color0}/>
                 </Text3D> */}
                 <Text
+                    font={font}
                     scale={[8, 8, 8]}
                     anchorX="left"
                     position = {[0.6, 0, 4.8]}
@@ -120,6 +121,7 @@ export function FloatingTextSkills(props) {
                     <a.meshStandardMaterial color={springColor.color1}/>
                 </Text3D> */}
                 <Text
+                    font={font}
                     scale={[8, 8, 8]}
                     anchorX="left"
                     position = {[0.6, 0, 4.8]}
@@ -138,6 +140,7 @@ export function FloatingTextSkills(props) {
                     <a.meshStandardMaterial color={springColor.color2}/>
                 </Text3D> */}
                 <Text
+                    font={font}
                     scale={[8, 8, 8]}
                     anchorX="left"
                     position = {[0.6, 0, 4.8]}
@@ -156,6 +159,7 @@ export function FloatingTextSkills(props) {
                     <a.meshStandardMaterial color={springColor.color3}/>
                 </Text3D> */}
                 <Text
+                    font={font}
                     scale={[8, 8, 8]}
                     anchorX="left"
                     position = {[0.6, 0, 4.8]}
@@ -174,6 +178,7 @@ export function FloatingTextSkills(props) {
                     <a.meshStandardMaterial color={springColor.color4}/>
                 </Text3D> */}
                 <Text
+                    font={font}
                     scale={[8, 8, 8]}
                     anchorX="left"
                     position = {[0.6, 0, 4.8]}
@@ -192,6 +197,7 @@ export function FloatingTextSkills(props) {
                     <a.meshStandardMaterial color={springColor.color5}/>
                 </Text3D> */}
                 <Text
+                    font={font}
                     scale={[8, 8, 8]}
                     anchorX="left"
                     position = {[0.6, 0, 4.8]}
@@ -210,6 +216,7 @@ export function FloatingTextSkills(props) {
                     <a.meshStandardMaterial color={springColor.color6}/>
                 </Text3D> */}
                 <Text
+                    font={font}
                     scale={[8, 8, 8]}
                     anchorX="left"
                     position = {[0.6, 0, 4.8]}
@@ -228,6 +235,7 @@ export function FloatingTextSkills(props) {
                     <a.meshStandardMaterial color={springColor.color7}/>
                 </Text3D> */}
                 <Text
+                    font={font}
                     scale={[8, 8, 8]}
                     anchorX="left"
                     position = {[0.6, 0, 4.8]}
@@ -246,6 +254,7 @@ export function FloatingTextSkills(props) {
                     <a.meshStandardMaterial color={springColor.color8}/>
                 </Text3D> */}
                 <Text
+                    font={font}
                     scale={[8, 8, 8]}
                     anchorX="left"
                     position = {[0.6, 0, 4.8]}
@@ -264,6 +273,7 @@ export function FloatingTextSkills(props) {
                     <a.meshStandardMaterial color={springColor.color9}/>
                 </Text3D> */}
                 <Text
+                    font={font}
                     scale={[8, 8, 8]}
                     anchorX="left"
                     position = {[0.6, 0, 4.8]}
