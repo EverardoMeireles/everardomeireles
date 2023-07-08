@@ -77,9 +77,9 @@ export function SceneContainer() {
                 <Suspense>
                     <SimpleLoader modelName={"NewthreeJsScene.glb"}></SimpleLoader>
                 </Suspense>
-                <VideoLoader videoId="video0" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI/2, 0]} position={[-13.3, 46.5, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
-                <VideoLoader videoId="video1" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
-                <VideoLoader videoId="video2" {...{useStore}} videoName = "Example4SecondVideo.mp4" rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader>
+                 <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.3, 46.5, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
+                {/* <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
+                <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader> */}
             </Suspense>
             {/* {(currentGraphicalMode == "potato")
             &&

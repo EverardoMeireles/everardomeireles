@@ -1,82 +1,64 @@
-import { useLoader, useFrame } from '@react-three/fiber'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { useCallback, Suspense } from "react";
 import * as THREE from "three";
-import React, { useEffect, useRef, useState } from "react";
-import { BufferAttribute, Color } from "three";
-// import url from ;
+import React, { useEffect, useState } from "react";
 
-export const VideoLoader = React.memo((props) => {
-    const {videoList = ["JavaScript", "Python"]} = props;
-    const {videoId = "video0"} = props;
-    const {dynamicHoverVideo = false} = props;
-    const {position = [0, 0, 0]} = props;
-    const {rotation = [0, 0, 0]} = props;
-    const {planeDimensions = [0, 0]} = props;
-    const {alternateVideo = false} = props;
-    const {delay = 5000} = props;
-
-    const currentSkillHovered = props.useStore((state) => state.currentSkillHovered);
+export function VideoLoader (props) {
+    const {position = [0, 0, 0]} = props; // position on the scene
+    const {rotation = [0, 0, 0]} = props; // rotation on the scene
+    const {planeDimensions = [0, 0]} = props; // width and height of the video "screen"
+    const {defaultVideo = "Javascript"} = props; //[video name, ""] name of the default video without the extension, or empty string for no default video
+    const {loop = true} = props; // [true, false] - loops video
+    const {muted = true} = props; // [true, false] - loops video
+    const {delay = 10000} = props; // delay in ms before triggered video is removed from memory, this prevents memory leaks
+    const {triggerMode = true} = props; // [true, false] - wether the video being played is triggered
+    const {triggerType = "valueString"} = props; // [valueString, triggerTrue] - valueString will play a video when the value of "trigger" prop is the same as the video name, triggerTrue will play the video the "trigger" prop is a true boolean state
+    const {trigger} = props; // trigger to play video, either a string equal to the video name or a boolean state
     
+    // initialize video state
     const [video, setVideo] = useState(() => {
         const vid = document.createElement("video");
-        vid.id = videoId;
-        vid.src =  /*process.env.PUBLIC_URL + videoName;*/process.env.PUBLIC_URL + currentSkillHovered + ".mp4"
+        if(triggerType != "triggerTrue" && defaultVideo != "")
+            vid.src =  process.env.PUBLIC_URL + defaultVideo + ".mp4";
         vid.crossOrigin = "Anonymous";
-        vid.loop = true;
-        vid.muted = true;
+        vid.loop = loop;
+        vid.muted = muted;
         vid.play();
         return vid;
     });
 
-if(alternateVideo){
-    setTimeout(()=>{
-        setVideo(() => {
-        const vid = document.createElement("video");
-        vid.id = videoId;
-        vid.src =  /*process.env.PUBLIC_URL + videoName;*/process.env.PUBLIC_URL + videoList[Math.floor(Math.random() * videoList.length)] + ".mp4"
-        vid.crossOrigin = "Anonymous";
-        vid.loop = true;
-        vid.muted = true;
-        vid.play();
-        return vid;})
-    }, delay);
-}
-    const obj = useRef();
+    // for trigger mode, play video when trigger value changes or goes from false to true depending on triggerType
+    useEffect(() => {
+        console.log(trigger)
+        if(triggerMode == true && trigger != undefined){
+            setVideo(() => {
+                const vid = document.createElement("video");
+                if(triggerType == "triggerTrue" && trigger == true){
+                    vid.src = process.env.PUBLIC_URL + defaultVideo + ".mp4";
+                }else if(triggerType == "valueString")
+                    vid.src = process.env.PUBLIC_URL + trigger + ".mp4"
 
-// useFrame(() => {
-//     console.log(currentSkillHovered)
-// });
+                vid.crossOrigin = "Anonymous";
+                vid.loop = loop;
+                vid.muted = muted;
+                vid.play();
+                
+                // remove video after delay to prevent memory leak (because of how canvas works, the last frame will
+                // always remain unless the pixels are overwritten in the canvas, maybe do this in the future)
+                setTimeout(()=>{
+                    vid.pause();
+                    vid.src="";
+                    vid.load();
+                }, delay)
+                return vid;
+            });
+    }
+    },[trigger])
 
-    // useEffect(() => {
-    //     if(dynamicHoverVideo == false){
-    //     try {
-    //         setVideo(() => {
-    //             const vid = document.createElement("video");
-    //             vid.id = videoId;
-    //             vid.src =  /*process.env.PUBLIC_URL + videoName;*/process.env.PUBLIC_URL + currentSkillHovered + ".mp4"
-    //             vid.crossOrigin = "Anonymous";
-    //             vid.loop = true;
-    //             vid.muted = true;
-    //             vid.play();
-    //             return vid;
-    //         })
-            
-    //         console.log(video)
-            
-    //     } catch (error) {
-    //         console.error(error);
-    //     }
-    // }
-    // },[currentSkillHovered])
-
-    return (
-    <mesh ref={obj} rotation={rotation} position={position}>
+    return ( 
+    <mesh rotation={rotation} position={position}>
         <planeGeometry args={planeDimensions} />
         <meshBasicMaterial side={THREE.DoubleSide}>
             <videoTexture attach="map" args={[video]} />
-            {/* <videoTexture attach="emissiveMap" args={[video]} /> */}
         </meshBasicMaterial>
     </mesh>
     )
-})
+}
