@@ -11,6 +11,7 @@ export function IndexMenu(props) {
     const {textColor = "#000000"} = props;
     const {isMainMenu = false} = props;
     const {visible = true} = props;
+    const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
     const {setPath, setTransitionEnded} = props.useStore();
     
@@ -45,7 +46,7 @@ export function IndexMenu(props) {
         )
 
     return(
-        <mesh 
+        <mesh
         position={position}
         scale={scale}
         ref={wholeCallbackRef}>
@@ -88,6 +89,7 @@ export function IndexMenu(props) {
                             anchorX="left" // default
                             // anchorY="top" // default
                             position = {[0.6, 0, 3.1]}
+                            font={font}
                         >
                             {"Menu Principal"}
                             <a.meshBasicMaterial visible={visible} color = {"red"}/>
@@ -121,6 +123,7 @@ export function IndexMenu(props) {
                             anchorX="left" // default
                             // anchorY="top" // default
                             position = {[0.6, 0, 2]}
+                            font={font}
                         >
                             {"Formation"}
                             <a.meshBasicMaterial visible={visible} color = {textColor}/>
@@ -154,6 +157,7 @@ export function IndexMenu(props) {
                             anchorX="left" // default
                             // anchorY="top" // default
                             position = {[0.6, 0, 2.75]}
+                            font={font}
                         >
                             {"Compétences"}
                             <a.meshBasicMaterial visible={visible} color = {textColor}/>
@@ -187,6 +191,7 @@ export function IndexMenu(props) {
                             anchorX="left" // default
                             // anchorY="top" // default
                             position = {[0.6, 0, 4.8]}
+                            font={font}
                         >
                             {"Expérience professionnelle"}
                             <a.meshBasicMaterial visible={visible} color = {textColor}/>
