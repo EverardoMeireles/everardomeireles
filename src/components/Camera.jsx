@@ -1,8 +1,9 @@
 import { useFrame } from '@react-three/fiber';
 import { path_points, path_points_simple_lookat_dict, path_points_lookat_dict } from "../PathPoints";
 import * as THREE from "three";
-import { OrbitControls, PerspectiveCamera, Html } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import React, { useRef, useEffect } from "react";
+import { HtmlDreiMenu } from "./HtmlDreiMenu";
 
 export const Camera = React.memo((props) => {
     const useStore = props.useStore;
@@ -17,7 +18,6 @@ export const Camera = React.memo((props) => {
     const current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
     const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
     const simpleLookatMode = true
-    const meshHtmlRef = useRef();
 
     var concat_paths /*= current_path.current + "-" + desired_path;*/
     
@@ -90,27 +90,6 @@ console.log(current_path.current + "-" + desired_path)
         : (updateCall(state))
     ));
 
-    useFrame((state) => {
-        if (meshHtmlRef.current) {
-        meshHtmlRef.current.position.z=state.camera.position.z-1000;
-        // meshHtmlRef.current.position.y=state.camera.position.y;
-        // meshHtmlRef.current.position.x=state.camera.position.x-150;
-        }
-    });
-
-    // useEffect(()=>{
-    //     window.addEventListener("keydown", (event) => {
-    //         if(event.code == "KeyP") {
-    //             console.log([Math.floor(cam.current.position.x), Math.floor(cam.current.position.y), Math.floor(cam.current.position.z) ]);
-    //         }
-    //     })
-    // })
-
-    useEffect(()=>{
-        meshHtmlRef.current.position.x=100;
-        meshHtmlRef.current.position.y=-100;
-    })
-
     // orbitcontrols keyboard control is not working, that's a workaround
     useEffect(()=>{
         window.addEventListener("keydown", (event) => {
@@ -174,24 +153,7 @@ console.log(current_path.current + "-" + desired_path)
     return(
         <>
             <PerspectiveCamera ref = {cam} makeDefault fov = {75}>
-                <mesh position={[0,0,0]} ref={meshHtmlRef}>
-                    <Html position={[-1200,-100,-140]}>
-                        <div id='menu' style={{  top: '6000vw', left: '6000vw'}}>
-                            <p onClick={()=> {setPath("MainMenu"); setTransitionEnded(false)}}  children="Main Menu" />
-                            <p onClick={()=> {setPath("Education"); setTransitionEnded(false)}}  children="Education" />
-                            <p onClick={()=> {setPath("Skills"); setTransitionEnded(false)}}  children="Skills" />
-                            {(desired_path.includes("ProfessionalExpProjects"))
-                        ?   <div>
-                                <p onClick={()=> {setPath("ProfessionalExpProjects0"); setTransitionEnded(false)}}  children="Prospere ITB" />
-                                <p onClick={()=> {setPath("ProfessionalExpProjects1"); setTransitionEnded(false)}}  children="DRIM" />
-                                <p onClick={()=> {setPath("ProfessionalExpProjects2"); setTransitionEnded(false)}}  children="Everial" />
-                                <p onClick={()=> {setPath("ProfessionalExpProjects3"); setTransitionEnded(false)}}  children="Brésil eco-buggy" />
-                                <p onClick={()=> {setPath("ProfessionalExpProjects4"); setTransitionEnded(false)}}  children="EFN projet PPMS" />
-                                <p onClick={()=> {setPath("ProfessionalExpProjects5"); setTransitionEnded(false)}}  children="EFN Professeur" />
-                            </div>: <p onClick={()=> {setPath("ProfessionalExpProjects0"); setTransitionEnded(false)}}  children="Professional experience" />}
-                        </div>
-                    </Html>
-                </mesh>
+                {/* <HtmlDreiMenu {...{useStore}}></HtmlDreiMenu> */}
             </PerspectiveCamera>
             <OrbitControls ref = {controls} target = {[constrolTargetX, constrolTargetY, constrolTargetZ]} />
         </>

@@ -17,6 +17,7 @@ import { RegularFlickeringLight } from "./components/RegularFlickeringLight";
 import { useFrame, useThree } from "@react-three/fiber";
 import { FadingText3D } from "./components/FadingText3D";
 import { VideoLoader } from "./components/VideoLoader";
+import { PathNavigation } from "./components/PathNavigation";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -47,6 +48,7 @@ export function SceneContainer() {
 
     return(
         <>
+            <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} numberOfPasses={1} fpsToDecreaseGraphics={55} />}
                 {/* <directionalLight  intensity={.4} position={[63,96,41]}></directionalLight>  */}

@@ -1,11 +1,15 @@
 import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "./SceneContainer";
+import { HudMenu } from "./components/HudMenu";
+
 function App() {
   return (
-    <Canvas>
-      <SceneContainer/>
-    </Canvas>
-    
+    <>
+      <HudMenu/>
+      <Canvas>
+        <SceneContainer/>
+      </Canvas>
+    </>
   );
 }
 
