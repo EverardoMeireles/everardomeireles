@@ -18,6 +18,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { FadingText3D } from "./components/FadingText3D";
 import { VideoLoader } from "./components/VideoLoader";
 import { PathNavigation } from "./components/PathNavigation";
+import { FadingTitle } from "./components/FadingTitle";
 
 const useStore = create((set) => ({
     desired_path: "MainMenu",
@@ -48,6 +49,7 @@ export function SceneContainer() {
 
     return(
         <>
+            <FadingTitle initialPosition={[170, 148, 58]} {...{useStore}} textModelMenu="MainMenu" visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} numberOfPasses={1} fpsToDecreaseGraphics={55} />}
