@@ -14,7 +14,7 @@ export const Camera = React.memo((props) => {
     const updateCallNow = useRef(false);
     const cam = useRef();
     const controls = useRef();
-    const current_path = useRef("projects");
+    const current_path = useRef("StartingPoint");
     const current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
     const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
     const simpleLookatMode = true

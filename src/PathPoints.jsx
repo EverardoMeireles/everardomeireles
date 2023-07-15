@@ -1,7 +1,97 @@
 import * as THREE from "three";
 
 export const path_points = {
-    "MainMenu-projects":
+
+    "MainMenu-MainMenu":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(194, 150, 63),
+        new THREE.Vector3(194, 150, 63),
+        new THREE.Vector3(194, 150, 63)]),
+
+    "Education-Education":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(-17, 97, 27),
+        new THREE.Vector3(-17, 97, 27),
+        new THREE.Vector3(-17, 97, 27)]),
+
+    "Skills-Skills":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(13, 35, -15),
+        new THREE.Vector3(13, 35, -15),
+        new THREE.Vector3(13, 35, -15)]),
+
+    "ProfessionalExpProjects0-ProfessionalExpProjects0":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(4, 4, -71),
+        new THREE.Vector3(4, 4, -71),
+        new THREE.Vector3(4, 4, -71)]),
+
+    "ProfesysionalExps1-ProfessionalExpProjects1":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(22, 4, -99),
+        new THREE.Vector3(22, 4, -99),
+        new THREE.Vector3(22, 4, -99)]),
+
+    "ProfessionalExpProjects2-ProfessionalExpProjects2":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(-6, 4, -116),
+        new THREE.Vector3(-6, 4, -116),
+        new THREE.Vector3(-6, 4, -116)]),
+
+    "ProfessionalExpProjects3-ProfessionalExpProjects3":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(-23, 4, -89),
+        new THREE.Vector3(-23, 4, -89),
+        new THREE.Vector3(-23, 4, -89)]),
+
+    "ProfessionalExpProjects4-ProfessionalExpProjects4":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(5, 24, -71),
+        new THREE.Vector3(5, 24, -71),
+        new THREE.Vector3(5, 24, -71)]),
+    "ProfessionalExpProjects5-ProfessionalExpProjects5":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(23, 24, -98),
+        new THREE.Vector3(23, 24, -98),
+        new THREE.Vector3(23, 24, -98)]),
+
+    "ProfessionalExpProjects6-ProfessionalExpProjects6":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(-6, 24, -116),
+        new THREE.Vector3(-6, 24, -116),
+        new THREE.Vector3(-6, 24, -116)]),
+
+    "ProfessionalExpProjects7-ProfessionalExpProjects7":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(-23, 24, -90),
+        new THREE.Vector3(-23, 24, -90),
+        new THREE.Vector3(-23, 24, -90)]),
+
+    "ProfessionalExpProjects8-ProfessionalExpProjects8":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(3, 44, -70),
+        new THREE.Vector3(3, 44, -70),
+        new THREE.Vector3(3, 44, -70)]),
+
+    "ProfessionalExpProjects9-ProfessionalExpProjects9":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(22, 44, -99),
+        new THREE.Vector3(22, 44, -99),
+        new THREE.Vector3(22, 44, -99)]),
+
+    "ProfessionalExpProjects10-ProfessionalExpProjects10":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(-6, 44, -116),
+        new THREE.Vector3(-6, 44, -116),
+        new THREE.Vector3(-6, 44, -116)]),
+
+    "ProfessionalExpProjects11-ProfessionalExpProjects11":
+    new THREE.CatmullRomCurve3( [        
+        new THREE.Vector3(-23, 44, -89),
+        new THREE.Vector3(-23, 44, -89),
+        new THREE.Vector3(-23, 44, -89)]),
+
+    "MainMenu-StartingPoint":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(194, 150, 63),
         new THREE.Vector3(10, 7, -9),
@@ -1046,19 +1136,19 @@ export const path_points = {
         new THREE.Vector3(-18, 47, -104),
         new THREE.Vector3(-4, 44, -117)]),
 
-    "projects-MainMenu":
+    "StartingPoint-MainMenu":
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(251, 222, -16),
         new THREE.Vector3(234, 200, 3),
         new THREE.Vector3(194, 150, 63)]),
 
-    "projects": 
+    "StartingPoint": 
     new THREE.CatmullRomCurve3( [        
         new THREE.Vector3(194, 150, 63),
         new THREE.Vector3(15, 10, 15),
         new THREE.Vector3(15, 10, 30)]),
     
-    // "projects-MainMenu": 
+    // "StartingPoint-MainMenu": 
     // new THREE.CatmullRomCurve3( [        
     //     new THREE.Vector3(5, 25, -18),
     //     new THREE.Vector3(22, 24, -99)])
@@ -1116,7 +1206,7 @@ export const path_points_simple_lookat_dict = {
 
 export const path_points_lookat_dict = {
     // index: first page when entering site
-    // "MainMenu-projects": {
+    // "MainMenu-StartingPoint": {
     //     0: new THREE.Vector3(-2, 4, -3),
     //     0.5: new THREE.Vector3(0, 26, -19)
     // },
@@ -1233,12 +1323,12 @@ export const path_points_lookat_dict = {
     //     0.0: new THREE.Vector3(-12, 25, -93)
     // },
 
-    // "projects-MainMenu": {
+    // "StartingPoint-MainMenu": {
     //     0: new THREE.Vector3(9, 3, 2),
     //     0.5: new THREE.Vector3(0, 3, 2)
     // },
     
-    // "projects-MainMenu": {
+    // "StartingPoint-MainMenu": {
     //     0: new THREE.Vector3(-12, 45, -96),
     // }
 }
