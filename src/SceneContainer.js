@@ -44,7 +44,10 @@ export function SceneContainer() {
     const { gl } = useThree();
 
 // useFrame(() => {
-//     console.log(currentSkillHovered)
+//     console.log("calls" + gl.info.render.calls)
+//     console.log("triangles" + gl.info.render.triangles)
+//     console.log("geometries" + gl.info.memory.geometries)
+//     console.log("textures" + gl.info.memory.textures)
 // });
 
     return(
