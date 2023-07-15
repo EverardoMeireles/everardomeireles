@@ -214,7 +214,7 @@ export function IndexMenu(props) {
                 scale = {0.5}
                 position={[0, .5, 0]}
                 >
-                    <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
+                    <coneGeometry args = {[0.5, 1.25, 3, 1]}></coneGeometry>
                     <a.meshBasicMaterial visible={visible} color = {springColor.color0} />
                     
                 </mesh>
@@ -230,7 +230,7 @@ export function IndexMenu(props) {
                 scale = {0.5}
                 position={[0, -.5, 0]}
                 >
-                    <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
+                    <coneGeometry args = {[0.5, 1.25, 3, 1]}></coneGeometry>
                     <a.meshBasicMaterial visible={visible} color = {springColor.color1} />
                     
                 </mesh>
