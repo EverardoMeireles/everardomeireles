@@ -82,7 +82,7 @@ export function SceneContainer() {
                 <ambientLight intensity={1}></ambientLight>
                 {/* <RegularFlickeringLight></RegularFlickeringLight> */}
                 <Suspense>
-                    <SimpleLoader modelName={"NewthreeJsScene.glb"}></SimpleLoader>
+                    <SimpleLoader modelName={"NewthreeJsScene.glb"} ambientOcclusionIntensivity={2.5}></SimpleLoader>
                 </Suspense>
                 <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
                 {/* <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
