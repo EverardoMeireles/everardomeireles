@@ -1692,3 +1692,13 @@ export const path_points_experience_menu_location = {
         "rotation":-3*Math.PI/4
     },
 }
+
+// Place Custom transition speeds here
+export const path_points_speed = {
+    "StartingPoint-MainMenu":{
+        0.1:0.005,
+        0.2:0.005,
+        0.3:0.005,
+        0.9:0.001
+    }
+}

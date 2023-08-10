@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { path_points, path_points_simple_lookat_dict, path_points_lookat_dict } from "../PathPoints";
+import { path_points, path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed } from "../PathPoints";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import React, { useRef, useEffect } from "react";
@@ -68,12 +68,24 @@ export const Camera = React.memo((props) => {
         return Sn;
     }
 
+    function customSpeedSetter(tick, path_speeds){
+        var tick = Number(tick.toPrecision(13));
+        var currentKey = Object.keys(path_speeds).find(key => key >= tick);
+        // if currentKey on last element of path_speeds, default to last element
+        if(currentKey == undefined){
+            currentKey = Object.keys(path_speeds).pop();
+        }
+        console.log(currentKey);
+
+        return path_speeds[currentKey];
+    }
+
     // Moves the camera every frame when the desired path changes
     useFrame((state) => (tick <= 1 ? (
         updateCallNow.current = true,
         state.events.enabled = false,
         controls.current.enabled = false,
-        tick += 0.005,
+        tick += path_points_speed[current_path.current + "-" + desired_path] != undefined ? customSpeedSetter(tick, path_points_speed[current_path.current + "-" + desired_path]) : 0.005,
         smooth = smoothStep(tick),
 
         sub_points = current_point.current = desired_point.getPointAt(smooth),
