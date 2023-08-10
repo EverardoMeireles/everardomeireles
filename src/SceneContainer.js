@@ -52,7 +52,8 @@ export function SceneContainer() {
 
     return(
         <>
-            <FadingTitle initialPosition={[170, 148, 58]} {...{useStore}} textModelMenu="MainMenu" visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+            <FadingTitle initialPosition={[170, 148, 58]} {...{useStore}} text={"Everardo Meireles"} visible={false} textColor={"#000000"} delay={4800} transitionDuration = {1500} />
+            <FadingTitle initialPosition={[170, 146, 59.5]} {...{useStore}} text={"Developpeur Fullstack"} visible={false} textColor={"#000000"} delay={5400} transitionDuration = {1500} />
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} numberOfPasses={1} fpsToDecreaseGraphics={55} />}

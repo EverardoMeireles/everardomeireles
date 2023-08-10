@@ -1,4 +1,4 @@
-import { Suspense, useCallback } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
@@ -13,14 +13,23 @@ export function FadingTitle(props) {
     const {rotation = Math.PI/3 + Math.PI/6} = props;
     const {visible = true} = props;
     const {scale = 17} = props;
+    const {delay = 0} = props;
 
     const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
     const {transitionEnded, desired_path} = props.useStore();
 
+    const [startFade, setStartFade] = useState(false);
+
+    if(delay != 0){
+        setTimeout(() => {
+            setStartFade(true);
+        }, delay);
+    }
+
     // Fade in and out animation
     const springFade = useSpring({
-        opacity: (transitionEnded && desired_path == textModelMenu) ? 1 : 0,
+        opacity: (transitionEnded && desired_path == textModelMenu && delay == 0) || startFade ? 1 : 0,
         config: {
             duration:transitionDuration,
         }
