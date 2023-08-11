@@ -27,9 +27,14 @@ export function FadingTitle(props) {
         }, delay);
     }
 
-    // Fade in and out animation
+var oneOrZero = {
+    1: 0,
+    0: 1
+}
+
+    // If visible = true, then the text will fade out, otherwise it will fade in
     const springFade = useSpring({
-        opacity: (transitionEnded && desired_path == textModelMenu && delay == 0) || startFade ? 1 : 0,
+        opacity: (transitionEnded && desired_path == textModelMenu && delay == 0) || startFade ? oneOrZero[Number(visible)] : oneOrZero[Number(!visible)],
         config: {
             duration:transitionDuration,
         }
@@ -46,7 +51,6 @@ export function FadingTitle(props) {
             ref = {callbackRef}
             // scale={scale}
         >
-            <planeGeometry args = {PlaneSize} />
             <a.meshBasicMaterial opacity = {springFade.opacity} transparent visible={visible}/>
             <Suspense fallback = {null}>
                 <Text font={font} scale={scale} anchorX="left" position = {[-0.6, 0.2, 0]}>
