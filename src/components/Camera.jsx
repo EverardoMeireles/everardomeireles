@@ -27,12 +27,13 @@ export const Camera = React.memo((props) => {
 
     var concat_paths;
 
-    if(simpleLookatMode){
-        pathPointsLookat = path_points_simple_lookat_dict;
-        concat_paths = desired_path;
-    }else{
+    // if no custom lookat path, look directly into the destination until transition ends
+    if(path_points_lookat_dict[current_path.current + "-" + desired_path] != undefined){
         pathPointsLookat = path_points_lookat_dict;
         concat_paths = current_path.current + "-" + desired_path;
+    }else{
+        pathPointsLookat = path_points_simple_lookat_dict;
+        concat_paths = desired_path;
     }
 
     // control target is the last element of path_points_lookat_dict
@@ -90,7 +91,7 @@ export const Camera = React.memo((props) => {
 
         sub_points = current_point.current = desired_point.getPointAt(smooth),
         
-        current_lookat.current.lerp(desired_lookat_dict(smooth), 0.03),
+        current_lookat.current.lerp(customSpeedSetter(smooth, pathPointsLookat[concat_paths]), 0.03),
         state.camera.lookAt(current_lookat.current),
 
         state.camera.position.x = sub_points.x,
