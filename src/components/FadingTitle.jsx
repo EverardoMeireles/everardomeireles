@@ -9,12 +9,10 @@ export function FadingTitle(props) {
     const {textColor = "#000000"} = props; 
     const {transitionDuration = 1000} = props;
     const {initialPosition = [0,0,0]} = props;
-    const {PlaneSize = [7, 6.7]} = props;
     const {rotation = Math.PI/3 + Math.PI/6} = props;
     const {visible = true} = props;
-    const {scale = 17} = props;
+    const {scale = 10} = props;
     const {delay = 0} = props;
-
     const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
     const {transitionEnded, desired_path} = props.useStore();
@@ -49,7 +47,6 @@ var oneOrZero = {
         <mesh
             position = {initialPosition}
             ref = {callbackRef}
-            // scale={scale}
         >
             <a.meshBasicMaterial opacity = {springFade.opacity} transparent visible={visible}/>
             <Suspense fallback = {null}>

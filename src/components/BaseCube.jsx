@@ -17,7 +17,7 @@ export function BaseCube(props) {
     const {opacity = 1} = props;
     const {visible = true} = props;
 
-    const minColorValue = 200;//180 180 180 light grey
+    const minColorValue = 200;//200 200 200 light grey
     const maxColorValue = 255;//255 255 255 white
     const randcolor = hasMovementAnimation ? Math.floor(Math.random() * (maxColorValue - minColorValue) + minColorValue) : 255;
 

@@ -1,10 +1,8 @@
 import React, { useRef, useEffect } from "react";
 import {useSpring, a} from '@react-spring/three';
 
-// this component is used to navigate trought the scene using the url paths
+// this component is used to navigate trought the scene using the url paths, use with HudMenu.jsx
 export function PathNavigation(props) {
-    const {possiblePaths = ["index", "projects", "about us"]} = props;
-
     const {setPath} = props.useStore();
     var urlPath;
     let str;

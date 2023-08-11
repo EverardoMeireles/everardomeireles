@@ -33,12 +33,11 @@ const useStore = create((set) => ({
     setFinishedBenchmark: (finished) => set(() => ({finishedBenchmark: finished})),
     skills: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
     currentSkillHovered: "Python",
-    // if graphicalModes wont be out of range, update currentGraphicalMode
     setSkillHovered: (skill) => set((state) => ({currentSkillHovered: skill})),
     }))
 
 export function SceneContainer() {
-    const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
+    // const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const finishedBenchmark = useStore((state) => state.finishedBenchmark);
     const currentSkillHovered = useStore((state) => state.currentSkillHovered);
     const { gl } = useThree();
@@ -52,16 +51,14 @@ export function SceneContainer() {
 
     return(
         <>
-            <FadingTitle initialPosition={[170, 148, 58]} {...{useStore}} text={"Everardo Meireles"} visible={false} textColor={"#000000"} delay={4800} transitionDuration = {1500} />
-            <FadingTitle initialPosition={[170, 146, 59.5]} {...{useStore}} text={"Developpeur Fullstack"} visible={false} textColor={"#000000"} delay={5400} transitionDuration = {1500} />
+            <FadingTitle initialPosition={[170, 148, 58]} {...{useStore}} scale = {17} text={"Everardo Meireles"} visible={false} textColor={"#000000"} delay={4800} transitionDuration = {1500} />
+            <FadingTitle initialPosition={[170, 146, 59.5]} {...{useStore}} scale = {17} text={"Developpeur Fullstack"} visible={false} textColor={"#000000"} delay={5400} transitionDuration = {1500} />
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} numberOfPasses={1} fpsToDecreaseGraphics={55} />}
-                {/* <directionalLight  intensity={.4} position={[63,96,41]}></directionalLight>  */}
                 <Environment files={process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background />
                 <Environment files={process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
                 <Camera {...{useStore}}></Camera>
-                {/* <OrbitingPointLight orbitDirection={[0, 0, 1]} orbitAxis={"y"} orbitDistance={8} orbitCenterPosition={[-34, -1, 70]} lightIntensivity={2}></OrbitingPointLight> */}
                 <FadingText {...{useStore}} textToFade={Text["PROSPERE-ITB-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects0" scale={2} initialPosition={[1, 4, -82]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textToFade={Text["DRIM-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects1" scale={1.8} initialPosition={[11.5, 5.5, -94]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textToFade={Text["EVERIAL-PRESENTATION"]["FR"]} textModelMenu="ProfessionalExpProjects2" scale={2} initialPosition={[-2, 5.5, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
@@ -74,14 +71,10 @@ export function SceneContainer() {
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
-                <FloatingTextSkills {...{useStore}} initialPosition={[-9, 30, -15]} /*rotation={3*(Math.PI/2)}*/></FloatingTextSkills >
+                <FloatingTextSkills {...{useStore}} initialPosition={[-9, 30, -15]} />
                 <Title initialPosition={[0, 4, 5.4]}/>
-                {/* {finishedBenchmark == true && */}
-                 {/* <group> */}
-                    <OrbitingMenu visible={finishedBenchmark == true ? true : false} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]}/>
-                {/* </group>} */}
+                <OrbitingMenu visible={finishedBenchmark == true ? true : false} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]}/>
                 <ambientLight intensity={1}></ambientLight>
-                {/* <RegularFlickeringLight></RegularFlickeringLight> */}
                 <Suspense>
                     <SimpleLoader modelName={"NewthreeJsScene.glb"} ambientOcclusionIntensivity={2.5}></SimpleLoader>
                 </Suspense>
@@ -89,45 +82,16 @@ export function SceneContainer() {
                 {/* <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
                 <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader> */}
             </Suspense>
-            {/* {(currentGraphicalMode == "potato")
-            &&
-            <group>
-                <SimpleLoader modelName={"threeJsScenePotato.glb"}></SimpleLoader>
-            </group>}
-            {(currentGraphicalMode == "potatoPremium")
-            &&
-            <group>
-                    <SimpleLoader modelName={"threeJsScenePotatoPremium.glb"}></SimpleLoader>
-                <Float>
-                    <SimpleLoader modelName={"threeJsScenePotatoPremiumFloating.glb"}></SimpleLoader>
-                </Float>
-            </group>}
-            {(currentGraphicalMode == "normal")
-            && 
-            <group>
-                <SimpleLoader modelName={"threeJsSceneMainMenuEducationNormal.glb"}></SimpleLoader>
-                <Float>
-                    <SimpleLoader modelName={"threeJsSceneNormalFloating.glb"}></SimpleLoader>
-                </Float>
+            {/* {(currentGraphicalMode == "high")
+            && <group>
+                <OrbitingPointLight orbitDirection = {[0, 1, 0]} orbitSpeed = {0.01} orbitAxis = {"x"} orbitDistance = {60} orbitCenterPosition = {[-40, 30, 0]} lightIntensivity = {1}></OrbitingPointLight>
+                <EffectComposer renderPriority = {1}>
+                    <Bloom luminanceThreshold = {1} mipmapBlur />
+                </EffectComposer>
                 <Suspense>
-                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
+                    {(finishedBenchmark == true) && <SimpleLoader modelName = {"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
                 </Suspense>
-                <Suspense>
-                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneRiverNormal.glb"}></SimpleLoader>}
-                </Suspense>
-            </group>}
-            {(currentGraphicalMode == "high")
-            && <group> */}
-                
-
-                {/* <OrbitingPointLight orbitDirection={[0, 1, 0]} orbitSpeed={0.01} orbitAxis={"x"} orbitDistance={60} orbitCenterPosition={[-40, 30, 0]} lightIntensivity={1}></OrbitingPointLight> */}
-                {/* <EffectComposer renderPriority={1}>
-                    <Bloom luminanceThreshold={1} mipmapBlur />
-                // </EffectComposer> */}
-                {/* <Suspense>
-                    {(finishedBenchmark == true) && <SimpleLoader modelName={"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
-                </Suspense> */}
-            {/* </group>} */}
+            </group>} */}
         </>
     );
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-// A menu that is supposed to go on top of the canvas, use with RoutesNavigation
+// A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx
 export function HudMenu() {
     const [profExpClicked, setProfExpClicked] = useState(false);
 
