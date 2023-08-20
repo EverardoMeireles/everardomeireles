@@ -20,23 +20,10 @@ import { VideoLoader } from "./components/VideoLoader";
 import { PathNavigation } from "./components/PathNavigation";
 import { FadingTitle } from "./components/FadingTitle";
 
-const useStore = create((set) => ({
-    desired_path: "MainMenu",
-    setPath: (desired) => set(() => ({desired_path: desired})),
-    transitionEnded: false,
-    setTransitionEnded: (ended) => set(() => ({transitionEnded: ended})),
-    graphicalModes: ["potato", "potatoPremium", "normal", "high"],
-    currentGraphicalMode: "",
-    // if graphicalModes wont be out of range, update currentGraphicalMode
-    setGraphicalMode: (mode) => set((state) => ({currentGraphicalMode: mode})),
-    finishedBenchmark: false,
-    setFinishedBenchmark: (finished) => set(() => ({finishedBenchmark: finished})),
-    skills: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
-    currentSkillHovered: "Python",
-    setSkillHovered: (skill) => set((state) => ({currentSkillHovered: skill})),
-    }))
 
-export function SceneContainer() {
+export function SceneContainer(props) {
+    const useStore = props.useStore;
+
     // const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const finishedBenchmark = useStore((state) => state.finishedBenchmark);
     const currentSkillHovered = useStore((state) => state.currentSkillHovered);
@@ -55,7 +42,7 @@ export function SceneContainer() {
             <FadingTitle initialPosition={[170, 146, 59.5]} {...{useStore}} scale = {17} text={"Developpeur Fullstack"} visible={false} textColor={"#000000"} delay={5400} transitionDuration = {1500} />
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
-                {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} numberOfPasses={1} fpsToDecreaseGraphics={55} />}
+                {/* {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} numberOfPasses={1} fpsToDecreaseGraphics={55} />} */}
                 <Environment files={process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background />
                 <Environment files={process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
                 <Camera {...{useStore}}></Camera>
