@@ -45,10 +45,10 @@ export function HudMenu(props) {
         {/* Language change flags */}
         <ul style = {ListStyle(0, 0, 20, 0)}>
             <li style={marginDisplay}>
-                <a onClick={() => (setLanguage("English"))}> <img style = {FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "flags/gbr.svg"}></img></a>
+                <a onClick={() => (setLanguage("English"))}> <img style = {FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/gbr.svg"}></img></a>
             </li>
             <li style={marginDisplay}>
-                <a onClick={() => (setLanguage("French"))}> <img style = {FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "flags/fra.svg"}></img></a>
+                <a onClick={() => (setLanguage("French"))}> <img style = {FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/fra.svg"}></img></a>
             </li>
         </ul>
         {/* if those are clicked, hide sub elements */}
