@@ -21,13 +21,13 @@ function App() {
     //Languages: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
     currentLanguage:"English",
     setLanguage: (language) => set((state) => ({currentLanguage: language})),
-
-    }))
+	}))
+  const ResponsiveWidthHeight = {width: window.innerWidth, height: window.innerHeight}
   return (
     <>
-      <HudMenu {...{useStore}}/>
+      <HudMenu responsive={ResponsiveWidthHeight} {...{useStore}}/>
       <Canvas>
-        <SceneContainer {...{useStore}}/>
+        <SceneContainer responsive={ResponsiveWidthHeight} {...{useStore}}/>
       </Canvas>
     </>
   );
