@@ -20,6 +20,7 @@ import { VideoLoader } from "./components/VideoLoader";
 import { PathNavigation } from "./components/PathNavigation";
 import { FadingTitle } from "./components/FadingTitle";
 import { TranslationTable } from "./TranslationTable";
+import { ResponsiveTable } from "./Styles";
 
 export function SceneContainer(props) {
     const useStore = props.useStore;
@@ -47,7 +48,7 @@ videoLoaderPosition
 
 //width
 if(window.innerWidth < 500){
-    titlePosition0 = [170, 148, 58]
+    titlePosition0 = ResponsiveTable["titlePosition0"]/*[170, 148, 58]*/
     titleScale0 = 17
     titlePosition1 = [170, 146, 59.5]
     titleScale1 = 17
@@ -105,7 +106,7 @@ if(window.innerWidth < 500){
                 <Suspense>
                     <SimpleLoader modelName={"NewthreeJsScene.glb"} ambientOcclusionIntensivity={2.5}></SimpleLoader>
                 </Suspense>
-                <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
+                {/* <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
                 {/* <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
                 <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader> */}
             </Suspense>

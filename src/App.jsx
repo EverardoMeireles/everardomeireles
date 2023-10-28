@@ -18,10 +18,16 @@ function App() {
     //skills: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
     currentSkillHovered: "Python",
     setSkillHovered: (skill) => set((state) => ({currentSkillHovered: skill})),
-    //Languages: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
+    //Languages: ["English", "French"],
     currentLanguage:"English",
     setLanguage: (language) => set((state) => ({currentLanguage: language})),
-	}))
+    currentCameraMovements:{"zoom":false, "pan":false, "rotate":true},
+    setcurrentCameraMovements: (cameraMovements) => set((state) => ({currentCameraMovements: cameraMovements})),
+    //Camera modes: ["NormalMovement", "panOnly", "rotateOnly", "zoomOnly"]
+    currentCameraMode:"NormalMovement",
+    setCurrentCameraMode: (cameraMode) => set((state) => ({currentCameraMode: cameraMode})),
+    }))
+
   const ResponsiveWidthHeight = {width: window.innerWidth, height: window.innerHeight}
   return (
     <>

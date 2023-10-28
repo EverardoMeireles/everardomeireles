@@ -1,7 +1,9 @@
 import { Html } from "@react-three/drei";
 import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
+import { HtmlDreiMenuStyles } from "../Styles";
 
+// has jsx styles
 // Put inside default camera(tested in perspective camera)
 export function HtmlDreiMenu(props) {
     const setPath = props.useStore((state) => state.setPath);
@@ -10,21 +12,6 @@ export function HtmlDreiMenu(props) {
     const meshHtmlRef = useRef();
 
     const [parentMenuClicked, setParentMenuClicked] = useState(false);
-
-    const styles = ({
-        menu: {
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            padding: "10px",
-            margin: "30px",
-            backgroundColor: "rgba(255,255,255,1)",
-            borderRadius: "10%",
-            top: '6000vw',
-            left: '6000vw'
-        },
-    })
 
     useEffect(()=>{
         meshHtmlRef.current.position.x=100;
@@ -42,7 +29,7 @@ export function HtmlDreiMenu(props) {
     return(
         <mesh position={[0,0,0]} ref={meshHtmlRef}>
             <Html position={[-1200,-100,-140]} >
-                <div /*id='menu'*/ style={styles.menu}>
+                <div /*id='menu'*/ style={HtmlDreiMenuStyles.menu}>
                     <p onClick={()=> {setPath("MainMenu"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Main Menu" />
                     <p onClick={()=> {setPath("Education"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Education" />
                     <p onClick={()=> {setPath("Skills"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Skills" />

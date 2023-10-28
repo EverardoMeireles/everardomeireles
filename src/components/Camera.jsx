@@ -2,14 +2,16 @@ import { useFrame } from '@react-three/fiber';
 import { path_points, path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed } from "../PathPoints";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { HtmlDreiMenu } from "./HtmlDreiMenu";
 
 export const Camera = React.memo((props) => {
     const useStore = props.useStore;
     const desired_path = useStore((state) => state.desired_path);
     const setTransitionEnded = useStore((state) => state.setTransitionEnded);
-
+    const currentCameraMovements = useStore((state) => state.currentCameraMovements);
+    const currentCameraMode = useStore((state) => state.currentCameraMode);
+    
     const keyboardControlsSpeed = 0.4;
     const updateCallNow = useRef(false);
     const cam = useRef();
@@ -26,6 +28,27 @@ export const Camera = React.memo((props) => {
     let tick = 0;
 
     var concat_paths;
+
+    // Change camera mode
+    const [cameraMode, setCameraMode] = useState(null);
+    useEffect(()=>{
+        if(currentCameraMode == "NormalMovement"){
+            setCameraMode({ RIGHT: THREE.MOUSE.RIGHT, LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE })
+        }
+        else
+        if(currentCameraMode == "panOnly"){
+            setCameraMode({ LEFT: THREE.MOUSE.RIGHT, null: THREE.MOUSE.LEFT, null: THREE.MOUSE.MIDDLE})
+        }
+        else
+        if(currentCameraMode == "rotateOnly"){
+            setCameraMode({ LEFT: THREE.MOUSE.LEFT, null: THREE.MOUSE.RIGHT, null: THREE.MOUSE.MIDDLE})
+        }
+        else
+        if(currentCameraMode == "zoomOnly"){
+            setCameraMode({ MIDDLE: THREE.MOUSE.MIDDLE})
+        }
+
+    }, [currentCameraMode])
 
     // if no custom lookat path, look directly into the destination until transition ends
     if(path_points_lookat_dict[current_path.current + "-" + desired_path] != undefined){
@@ -165,7 +188,7 @@ export const Camera = React.memo((props) => {
             <PerspectiveCamera ref = {cam} makeDefault fov = {75}>
                 {/* <HtmlDreiMenu {...{useStore}}></HtmlDreiMenu> */}
             </PerspectiveCamera>
-            <OrbitControls ref = {controls} target = {[constrolTargetX, constrolTargetY, constrolTargetZ]} />
+            <OrbitControls mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} target = {[constrolTargetX, constrolTargetY, constrolTargetZ]} />
         </>
     )
 })
