@@ -21,6 +21,7 @@ import { PathNavigation } from "./components/PathNavigation";
 import { FadingTitle } from "./components/FadingTitle";
 import { TranslationTable } from "./TranslationTable";
 import { ResponsiveTable } from "./Styles";
+import config from './config.json';
 
 export function SceneContainer(props) {
     const useStore = props.useStore;
@@ -83,7 +84,7 @@ if(window.innerWidth < 500){
             <FadingTitle initialPosition={titlePosition1} {...{useStore}} scale = {titleScale1} text={"Developpeur Fullstack"} visible={false} textColor={"#000000"} delay={5400} transitionDuration = {1500} />
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
-                {/* {finishedBenchmark == false && <GraphicalModeSetter {...{useStore}} numberOfPasses={1} fpsToDecreaseGraphics={55} />} */}
+                {(finishedBenchmark == false && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses={1} fpsToDecreaseGraphics={55} />}
                 <Environment files={process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background />
                 <Environment files={process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
                 <Camera {...{useStore}}></Camera>

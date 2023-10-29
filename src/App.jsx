@@ -2,6 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./components/HudMenu";
 import create from 'zustand';
+import config from './config.json';
 
 function App() {
   const useStore = create((set) => ({
@@ -10,7 +11,7 @@ function App() {
     transitionEnded: false,
     setTransitionEnded: (ended) => set(() => ({transitionEnded: ended})),
     graphicalModes: ["potato", "potatoPremium", "normal", "high"],
-    currentGraphicalMode: "",
+    currentGraphicalMode: config.default_graphical_setting,
     // if graphicalModes wont be out of range, update currentGraphicalMode
     setGraphicalMode: (mode) => set((state) => ({currentGraphicalMode: mode})),
     finishedBenchmark: false,
