@@ -25,7 +25,7 @@ export const Camera = React.memo((props) => {
     let pathPointsLookat;
     let smooth;
     let sub_points;
-    let tick = 0;
+    let tick = 1;
 
     var concat_paths;
 
@@ -92,7 +92,7 @@ export const Camera = React.memo((props) => {
         return Sn;
     }
 
-    function customSpeedSetter(tick, path_speeds){
+    function setCustomSpeed(tick, path_speeds){
         var tick = Number(tick.toPrecision(13));
         var currentKey = Object.keys(path_speeds).find(key => key >= tick);
         // if currentKey on last element of path_speeds, default to last element
@@ -109,12 +109,12 @@ export const Camera = React.memo((props) => {
         updateCallNow.current = true,
         state.events.enabled = false,
         controls.current.enabled = false,
-        tick += path_points_speed[current_path.current + "-" + desired_path] != undefined ? customSpeedSetter(tick, path_points_speed[current_path.current + "-" + desired_path]) : 0.005,
+        tick += path_points_speed[current_path.current + "-" + desired_path] != undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : 0.005,
         smooth = smoothStep(tick),
 
         sub_points = current_point.current = desired_point.getPointAt(smooth),
         
-        current_lookat.current.lerp(customSpeedSetter(smooth, pathPointsLookat[concat_paths]), 0.03),
+        current_lookat.current.lerp(setCustomSpeed(smooth, pathPointsLookat[concat_paths]), 0.03),
         state.camera.lookAt(current_lookat.current),
 
         state.camera.position.x = sub_points.x,
