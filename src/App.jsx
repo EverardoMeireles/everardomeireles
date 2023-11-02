@@ -3,6 +3,7 @@ import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./components/HudMenu";
 import create from 'zustand';
 import config from './config.json';
+import { TutorialOverlay } from "./components/TutorialOverlay";
 
 function App() {
   const useStore = create((set) => ({
@@ -22,16 +23,23 @@ function App() {
     //Languages: ["English", "French"],
     currentLanguage:"English",
     setLanguage: (language) => set((state) => ({currentLanguage: language})),
-    currentCameraMovements:{"zoom":false, "pan":false, "rotate":true},
+    currentCameraMovements:{"zoom":true, "pan":true, "rotate":true},
     setcurrentCameraMovements: (cameraMovements) => set((state) => ({currentCameraMovements: cameraMovements})),
     //Camera modes: ["NormalMovement", "panOnly", "rotateOnly", "zoomOnly"]
     currentCameraMode:"NormalMovement",
     setCurrentCameraMode: (cameraMode) => set((state) => ({currentCameraMode: cameraMode})),
+    tutorialClosed: false,
+    setTutorialClosed: (closed) => set(() => ({tutorialClosed: closed})),
     }))
 
   const ResponsiveWidthHeight = {width: window.innerWidth, height: window.innerHeight}
+  const finishedBenchmark = useStore((state) => state.finishedBenchmark);
+  const transitionEnded = useStore((state) => state.transitionEnded);
+
+
   return (
     <>
+      <TutorialOverlay {...{useStore}}/>
       <HudMenu responsive={ResponsiveWidthHeight} {...{useStore}}/>
       <Canvas>
         <SceneContainer responsive={ResponsiveWidthHeight} {...{useStore}}/>
