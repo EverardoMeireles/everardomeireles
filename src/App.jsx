@@ -4,6 +4,7 @@ import { HudMenu } from "./components/HudMenu";
 import create from 'zustand';
 import config from './config.json';
 import { TutorialOverlay } from "./components/TutorialOverlay";
+import { Alert } from "./components/Alert";
 
 function App() {
   const useStore = create((set) => ({
@@ -30,15 +31,31 @@ function App() {
     setCurrentCameraMode: (cameraMode) => set((state) => ({currentCameraMode: cameraMode})),
     tutorialClosed: false,
     setTutorialClosed: (closed) => set(() => ({tutorialClosed: closed})),
+    alertProperties: {
+      active: false,
+      type: 'Success', //'Error', 'Warning', 'Success'
+      displaySide: 'topRight',
+      duration: 5,
+      width: '300px',
+      height: '50px',
+      transitionDuration: 0.5,
+      text: 'Lorem Ipsum Dolor!'
+    },
+    setAlertProperties: (newProperties) => set((state) => ({
+      alertProperties: {
+        ...state.alertProperties,
+        ...newProperties
+      }
+    }))
     }))
 
   const ResponsiveWidthHeight = {width: window.innerWidth, height: window.innerHeight}
   const finishedBenchmark = useStore((state) => state.finishedBenchmark);
   const transitionEnded = useStore((state) => state.transitionEnded);
 
-
   return (
     <>
+      <Alert {...{useStore}} />
       <TutorialOverlay {...{useStore}}/>
       <HudMenu responsive={ResponsiveWidthHeight} {...{useStore}}/>
       <Canvas>
