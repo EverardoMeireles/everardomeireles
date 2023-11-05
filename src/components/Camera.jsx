@@ -1,9 +1,10 @@
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { path_points, path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed } from "../PathPoints";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";
 import { HtmlDreiMenu } from "./HtmlDreiMenu";
+import {shallow} from 'zustand/shallow';
 
 export const Camera = React.memo((props) => {
     const useStore = props.useStore;
@@ -11,6 +12,8 @@ export const Camera = React.memo((props) => {
     const setTransitionEnded = useStore((state) => state.setTransitionEnded);
     const currentCameraMovements = useStore((state) => state.currentCameraMovements);
     const currentCameraMode = useStore((state) => state.currentCameraMode);
+
+    const transitionEnded = useStore((state) => state.transitionEnded);
     
     const keyboardControlsSpeed = 0.4;
     const updateCallNow = useRef(false);
@@ -21,14 +24,32 @@ export const Camera = React.memo((props) => {
     const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
     const simpleLookatMode = true;
     const desired_point = path_points[current_path.current + "-" + desired_path];
-
+    // const transitionEnded.transitionEnded = false
     let pathPointsLookat;
     let smooth;
     let sub_points;
-    let tick = 1;
+    let tick = current_path.current == "StartingPoint" ? 0:1
+    useEffect(() => {
+        tick = 0;
+    
+    },[desired_path])
+    
 
     var concat_paths;
 
+    const gravitationalPullPoint = path_points[current_path.current+"-"+current_path.current] == null ? path_points["MainMenu-MainMenu"].points[0] : path_points[current_path.current+"-"+current_path.current].points[0]; // This is your target position
+    // const gravitationalPullPoint = path_points[current_path.current+"-"+current_path.current].points[0]
+
+    const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
+    const pullInterval = 10; // How often the pull is applied in milliseconds
+    const edgeThreshold = 150; // Set the threshold in pixels for the edge
+    
+    const [shouldPull, setShouldPull] = useState(false);
+    
+    const isMouseNearEdge = useRef(false);
+
+    const { camera } = useThree();
+    // console.log(camera)
     // Change camera mode
     const [cameraMode, setCameraMode] = useState(null);
     useEffect(()=>{
@@ -47,8 +68,117 @@ export const Camera = React.memo((props) => {
         if(currentCameraMode == "zoomOnly"){
             setCameraMode({ MIDDLE: THREE.MOUSE.MIDDLE})
         }
+        else
+        if (currentCameraMode == "panDirectional" && transitionEnded) {
 
-    }, [currentCameraMode])
+            const handleMouseMove = (event) => {
+              const { innerWidth, innerHeight } = window; // Get the viewport dimensions
+              const edgeThreshold = 200; // Set the threshold in pixels for the edge
+          
+              // Check if the mouse is near the left or right edge of the screen
+              if (event.clientX < edgeThreshold || event.clientX > innerWidth - edgeThreshold) {
+                const deltaX = event.movementX;
+
+                // Apply the delta movement to pan the camera horizontally
+                cam.current.position.x += deltaX * 0.1;
+                controls.current.target.x += deltaX * 0.1;
+                console.log(transitionEnded)
+              }
+            //   console.log(shouldPull)
+            //   console.log(current_path.current)
+
+              
+              // Check if the mouse is near the top or bottom edge of the screen
+              if (event.clientY < edgeThreshold || event.clientY > innerHeight - edgeThreshold) {
+                const deltaY = event.movementY;
+
+                // Apply the delta movement to pan the camera vertically
+                cam.current.position.y -= deltaY * 0.1;
+                controls.current.target.y -= deltaY * 0.1;
+                console.log(transitionEnded)
+              }
+            };
+          
+            // Add the event listener for mousemove
+            window.addEventListener('mousemove', handleMouseMove);
+          
+            // Clean up the event listener when the component unmounts or when the camera mode changes
+            return () => window.removeEventListener('mousemove', handleMouseMove);
+
+          }
+          }, [edgeThreshold, currentCameraMode, transitionEnded]); // Assuming currentCameraMode, cam, and controls are defined in the component's scope
+
+          
+          
+          
+          
+        //   useEffect(() => {
+        //     const intervalId = setInterval(() => {
+        //       if (!cam.current) return;
+          
+        //       // Calculate the direction vector from the camera to the gravitational point
+        //       const direction = gravitationalPullPoint.clone().sub(cam.current.position).normalize();
+          
+        //       // Calculate the distance to the gravitational point
+        //       const distance = cam.current.position.distanceTo(gravitationalPullPoint);
+          
+        //       // Interpolate the camera's position towards the gravitational point
+        //       cam.current.position.addScaledVector(direction, Math.min(pullStrength * distance, distance));
+          
+        //       // If you are also using controls and want to adjust the target of the controls
+        //       if (controls.current) {
+        //         controls.current.target.addScaledVector(direction, Math.min(pullStrength * distance, distance));
+        //       }
+        //     }, pullInterval);
+          
+        //     // Clean up the interval when the component unmounts
+        //     return () => clearInterval(intervalId);
+        //   }, [gravitationalPullPoint, pullStrength, pullInterval]);
+
+        useEffect(() => {
+            const handleMouseMove = (event) => {
+                // console.log(transitionEnded)
+
+              const { innerWidth, innerHeight } = window;
+          
+              // Determine if the mouse is near the edge of the screen
+              isMouseNearEdge.current =
+                event.clientX < edgeThreshold || event.clientX > innerWidth - edgeThreshold ||
+                event.clientY < edgeThreshold || event.clientY > innerHeight - edgeThreshold;
+            };
+          
+            // Add the event listener for mousemove
+            window.addEventListener('mousemove', handleMouseMove);
+          
+            // Clean up the event listener when the component unmounts
+            return () => {
+              window.removeEventListener('mousemove', handleMouseMove);
+            };
+          }, [edgeThreshold]); // edgeThreshold is constant and doesn't need to be a dependency
+          
+          useEffect(() => {
+            if (currentCameraMode === "panDirectional" && transitionEnded) {
+              const intervalId = setInterval(() => {
+              if (!isMouseNearEdge.current && cam.current) {
+                const direction = gravitationalPullPoint.clone().sub(cam.current.position).normalize();
+                const distance = cam.current.position.distanceTo(gravitationalPullPoint);
+          
+                // Apply a scaled vector towards the gravitational point
+                cam.current.position.addScaledVector(direction, Math.min(pullStrength * distance, distance));
+          
+                if (controls.current) {
+                  controls.current.target.addScaledVector(direction, Math.min(pullStrength * distance, distance));
+                }
+              }
+            }, pullInterval);
+          
+            // Clean up the interval when the component unmounts
+            return () => clearInterval(intervalId);
+        }
+          }, [currentCameraMode, transitionEnded]); // Empty dependencies array since we're using refs which don't trigger re-renders
+
+
+
 
     // if no custom lookat path, look directly into the destination until transition ends
     if(path_points_lookat_dict[current_path.current + "-" + desired_path] != undefined){
@@ -74,12 +204,16 @@ export const Camera = React.memo((props) => {
 
     // Sets values after the camera movement is done 
     function updateCall(state){
+        // console.log(transitionEnded.transitionEnded)
+
         if(updateCallNow.current){
             setTransitionEnded(true);
+            console.log("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG")
             updateCallNow.current = false;
             current_path.current = desired_path;
             controls.current.enabled = true;
             state.events.enabled = true;
+
         }
     }
 
@@ -99,13 +233,16 @@ export const Camera = React.memo((props) => {
         if(currentKey == undefined){
             currentKey = Object.keys(path_speeds).pop();
         }
-        console.log(currentKey);
+        // console.log(currentKey);
 
         return path_speeds[currentKey];
     }
 
     // Moves the camera every frame when the desired path changes
     useFrame((state) => (tick <= 1 ? (
+        // console.log(tick),
+        // console.log(transitionEnded.transitionEnded),
+
         updateCallNow.current = true,
         state.events.enabled = false,
         controls.current.enabled = false,
@@ -188,7 +325,7 @@ export const Camera = React.memo((props) => {
             <PerspectiveCamera ref = {cam} makeDefault fov = {75}>
                 {/* <HtmlDreiMenu {...{useStore}}></HtmlDreiMenu> */}
             </PerspectiveCamera>
-            <OrbitControls mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} target = {[constrolTargetX, constrolTargetY, constrolTargetZ]} />
+            <OrbitControls mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} target = {/*currentCameraMode === "panDirectional"?null:*/[constrolTargetX, constrolTargetY, constrolTargetZ]} />
         </>
     )
 })

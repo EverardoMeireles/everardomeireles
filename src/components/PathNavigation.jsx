@@ -3,7 +3,10 @@ import {useSpring, a} from '@react-spring/three';
 
 // this component is used to navigate trought the scene using the url paths, use with HudMenu.jsx
 export function PathNavigation(props) {
+    const useStore = props.useStore;
     const {setPath} = props.useStore();
+    const setTransitionEnded = useStore((state) => state.setTransitionEnded);
+
     var urlPath;
     let str;
     window.addEventListener('popstate', function (event) {
@@ -12,6 +15,7 @@ export function PathNavigation(props) {
         
         console.log(urlPath)
         setPath(urlPath);
+        setTransitionEnded(false);
     });
     return(
     <></>
