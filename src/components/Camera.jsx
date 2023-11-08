@@ -28,12 +28,7 @@ export const Camera = React.memo((props) => {
     let pathPointsLookat;
     let smooth;
     let sub_points;
-    let tick = current_path.current == "StartingPoint" ? 0:1
-    useEffect(() => {
-        tick = 0;
-    
-    },[desired_path])
-    
+    let tick = current_path.current != desired_path ? 0:1
 
     var concat_paths;
 
@@ -73,15 +68,15 @@ export const Camera = React.memo((props) => {
 
             const handleMouseMove = (event) => {
               const { innerWidth, innerHeight } = window; // Get the viewport dimensions
-              const edgeThreshold = 200; // Set the threshold in pixels for the edge
+            //   const edgeThreshold = 150; // Set the threshold in pixels for the edge
           
               // Check if the mouse is near the left or right edge of the screen
               if (event.clientX < edgeThreshold || event.clientX > innerWidth - edgeThreshold) {
                 const deltaX = event.movementX;
 
                 // Apply the delta movement to pan the camera horizontally
-                cam.current.position.x += deltaX * 0.1;
-                controls.current.target.x += deltaX * 0.1;
+                cam.current.position.x += deltaX * 0.01;
+                controls.current.target.x += deltaX * 0.01;
                 console.log(transitionEnded)
               }
             //   console.log(shouldPull)
@@ -95,7 +90,6 @@ export const Camera = React.memo((props) => {
                 // Apply the delta movement to pan the camera vertically
                 cam.current.position.y -= deltaY * 0.1;
                 controls.current.target.y -= deltaY * 0.1;
-                console.log(transitionEnded)
               }
             };
           

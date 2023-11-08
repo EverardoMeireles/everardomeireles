@@ -27,7 +27,7 @@ function App() {
     currentCameraMovements:{"zoom":true, "pan":true, "rotate":true},
     setcurrentCameraMovements: (cameraMovements) => set((state) => ({currentCameraMovements: cameraMovements})),
     //Camera modes: ["NormalMovement", "panOnly", "rotateOnly", "zoomOnly", "panDirectional"]
-    currentCameraMode:"panDirectional",
+    currentCameraMode:"NormalMovement",
     setCurrentCameraMode: (cameraMode) => set((state) => ({currentCameraMode: cameraMode})),
     tutorialClosed: false,
     setTutorialClosed: (closed) => set(() => ({tutorialClosed: closed})),

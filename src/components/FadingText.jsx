@@ -50,6 +50,7 @@ export function FadingText(props) {
         return arr.join("");
     }
 
+
     // Fade in and out animation
     const springFade = useSpring({
         opacity: (transitionEnded && desired_path == textModelMenu) ? 1 : 0,
