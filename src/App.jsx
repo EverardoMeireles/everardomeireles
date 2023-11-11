@@ -29,6 +29,10 @@ function App() {
     //Camera modes: ["NormalMovement", "panOnly", "rotateOnly", "zoomOnly", "panDirectional"]
     currentCameraMode:"NormalMovement",
     setCurrentCameraMode: (cameraMode) => set((state) => ({currentCameraMode: cameraMode})),
+    panDirectionalAxis:['+z','+y'],
+    setPanDirectionalAxis: (axis) => set((state) => ({panDirectionalAxis: axis})),
+    panDirectionalEdgethreshold:150,
+    setPanDirectionalEdgethreshold: (threshold) => set((state) => ({panDirectionalEdgethreshold: threshold})),
     tutorialClosed: false,
     setTutorialClosed: (closed) => set(() => ({tutorialClosed: closed})),
     alertProperties: {

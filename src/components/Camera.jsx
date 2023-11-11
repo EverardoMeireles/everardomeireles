@@ -12,9 +12,10 @@ export const Camera = React.memo((props) => {
     const setTransitionEnded = useStore((state) => state.setTransitionEnded);
     const currentCameraMovements = useStore((state) => state.currentCameraMovements);
     const currentCameraMode = useStore((state) => state.currentCameraMode);
-
     const transitionEnded = useStore((state) => state.transitionEnded);
-    
+    const panDirectionalEdgethreshold = useStore((state) => state.panDirectionalEdgethreshold);
+    const panDirectionalAxis = useStore((state) => state.panDirectionalAxis);
+
     const keyboardControlsSpeed = 0.4;
     const updateCallNow = useRef(false);
     const cam = useRef();
@@ -37,7 +38,6 @@ export const Camera = React.memo((props) => {
 
     const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
     const pullInterval = 10; // How often the pull is applied in milliseconds
-    const edgeThreshold = 150; // Set the threshold in pixels for the edge
     
     const [shouldPull, setShouldPull] = useState(false);
     
@@ -65,34 +65,69 @@ export const Camera = React.memo((props) => {
         }
         else
         if (currentCameraMode == "panDirectional" && transitionEnded) {
+            let horizontalPanSign;
+            let verticalPanSign;
 
+            if (panDirectionalAxis[0].charAt(0) === '+') {
+                horizontalPanSign = 1;
+            } else {
+                horizontalPanSign = -1;
+            }
+
+            if (panDirectionalAxis[1].charAt(0) === '-') {
+                verticalPanSign = 1;
+            } else {
+                verticalPanSign = -1;
+            }
             const handleMouseMove = (event) => {
               const { innerWidth, innerHeight } = window; // Get the viewport dimensions
-            //   const edgeThreshold = 150; // Set the threshold in pixels for the edge
-          
+
               // Check if the mouse is near the left or right edge of the screen
-              if (event.clientX < edgeThreshold || event.clientX > innerWidth - edgeThreshold) {
+              if (event.clientX < panDirectionalEdgethreshold || event.clientX > innerWidth - panDirectionalEdgethreshold) {
                 const deltaX = event.movementX;
 
                 // Apply the delta movement to pan the camera horizontally
-                cam.current.position.x += deltaX * 0.01;
-                controls.current.target.x += deltaX * 0.01;
-                console.log(transitionEnded)
+                switch(panDirectionalAxis[0].charAt(1)){
+                    case 'x':
+                        cam.current.position.x += (deltaX * 0.01) * horizontalPanSign;
+                controls.current.target.x += (deltaX * 0.01)* horizontalPanSign;
+                        break;
+                    case 'y':
+                        cam.current.position.y += (deltaX * 0.01)* horizontalPanSign;
+                controls.current.target.y += (deltaX * 0.01)* horizontalPanSign;
+                        break;
+                    case 'z':
+                        cam.current.position.z -= (deltaX * 0.01)* horizontalPanSign;
+                controls.current.target.z -= (deltaX * 0.01)* horizontalPanSign;
+                        break;
+                }
+                
               }
             //   console.log(shouldPull)
             //   console.log(current_path.current)
 
-              
               // Check if the mouse is near the top or bottom edge of the screen
-              if (event.clientY < edgeThreshold || event.clientY > innerHeight - edgeThreshold) {
+              if (event.clientY < panDirectionalEdgethreshold || event.clientY > innerHeight - panDirectionalEdgethreshold) {
                 const deltaY = event.movementY;
 
                 // Apply the delta movement to pan the camera vertically
-                cam.current.position.y -= deltaY * 0.1;
-                controls.current.target.y -= deltaY * 0.1;
+                switch(panDirectionalAxis[1].charAt(1)){
+                    case 'x':
+                        cam.current.position.x += (deltaY * 0.01)* verticalPanSign;
+                controls.current.target.x += (deltaY * 0.01)* verticalPanSign;
+                        break;
+                    case 'y':
+                        cam.current.position.y += (deltaY * 0.01)* verticalPanSign;
+                controls.current.target.y += (deltaY * 0.01)* verticalPanSign;
+                        break;
+                    case 'z':
+                        cam.current.position.z += (deltaY * 0.01)* verticalPanSign;
+                controls.current.target.z += (deltaY * 0.01)* verticalPanSign;
+                        break;
+                }
               }
             };
-          
+
             // Add the event listener for mousemove
             window.addEventListener('mousemove', handleMouseMove);
           
@@ -100,12 +135,8 @@ export const Camera = React.memo((props) => {
             return () => window.removeEventListener('mousemove', handleMouseMove);
 
           }
-          }, [edgeThreshold, currentCameraMode, transitionEnded]); // Assuming currentCameraMode, cam, and controls are defined in the component's scope
+          }, [panDirectionalEdgethreshold, currentCameraMode, transitionEnded]); // Assuming currentCameraMode, cam, and controls are defined in the component's scope
 
-          
-          
-          
-          
         //   useEffect(() => {
         //     const intervalId = setInterval(() => {
         //       if (!cam.current) return;
@@ -137,8 +168,8 @@ export const Camera = React.memo((props) => {
           
               // Determine if the mouse is near the edge of the screen
               isMouseNearEdge.current =
-                event.clientX < edgeThreshold || event.clientX > innerWidth - edgeThreshold ||
-                event.clientY < edgeThreshold || event.clientY > innerHeight - edgeThreshold;
+                event.clientX < panDirectionalEdgethreshold || event.clientX > innerWidth - panDirectionalEdgethreshold ||
+                event.clientY < panDirectionalEdgethreshold || event.clientY > innerHeight - panDirectionalEdgethreshold;
             };
           
             // Add the event listener for mousemove
@@ -148,7 +179,7 @@ export const Camera = React.memo((props) => {
             return () => {
               window.removeEventListener('mousemove', handleMouseMove);
             };
-          }, [edgeThreshold]); // edgeThreshold is constant and doesn't need to be a dependency
+          }, [panDirectionalEdgethreshold]);
           
           useEffect(() => {
             if (currentCameraMode === "panDirectional" && transitionEnded) {
