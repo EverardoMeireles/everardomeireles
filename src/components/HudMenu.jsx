@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { TranslationTable } from "../TranslationTable";
 import { HudMenuStyles } from "../Styles";
+import { getKeyByValue } from "../Helper";
+import config from '../config.json';
 
 // has jsx HudMenuStyles
 // A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx
@@ -9,6 +11,9 @@ export function HudMenu(props) {
     const useStore = props.useStore;
     const currentLanguage = useStore((state) => state.currentLanguage);
     const setLanguage = useStore((state) => state.setLanguage);
+    const setGraphicalMode = useStore((state) => state.setGraphicalMode);
+    const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
+    const finishedBenchmark = useStore((state) => state.finishedBenchmark);
 
     const [profExpClicked, setProfExpClicked] = useState(false);
 
@@ -16,8 +21,39 @@ export function HudMenu(props) {
 
     const marginDisplay = {marginBottom: "10px", marginLeft:"40px", "display": "inline-block"}
 
+    // increase or decrease the graphics settings
+    function changeGraphicalMode(higherOrLower)
+    {
+        // replace it by store's value later
+        const graphics ={
+            0:"potato",
+            1:"potatoPremium",
+            2:"normal",
+            3:"high"
+        }
+
+        let newGraphicalModeKey;
+        let newGraphicalMode;
+
+        newGraphicalModeKey = parseInt(getKeyByValue(graphics, currentGraphicalMode)) + higherOrLower
+        newGraphicalMode = graphics[newGraphicalModeKey]
+
+        if(!(newGraphicalModeKey < 0) && !(newGraphicalModeKey >= Object.keys(graphics).length)){
+            setGraphicalMode(newGraphicalMode)
+        }
+    }
+
     return(
     <>
+        {/* hide the toggle unless the graphics toggle is enabled in the settings
+        and in case the graphics check is also enabled, wait for the benchmark to 
+        finish before showing the toggle */}
+        {(config.show_html_menu_graphics_toggle == true && (config.check_graphics == false || (config.check_graphics == true && finishedBenchmark == true))) &&
+            <div style={HudMenuStyles.arrowContainerStyle}>
+                <b onClick={()=>{changeGraphicalMode(-1)}} style={HudMenuStyles.arrowStyle}>&#x2190;</b>
+                <b onClick={()=>{changeGraphicalMode(1)}} style={HudMenuStyles.arrowStyle}>&#x2192;</b>
+            </div>
+        }
         {props.responsive.width <= 500 &&
         <>
             <ul style = {HudMenuStyles.ListStyle(0, -7)}>

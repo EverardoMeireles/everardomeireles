@@ -30,6 +30,7 @@ export function SceneContainer(props) {
     const finishedBenchmark = useStore((state) => state.finishedBenchmark);
     const currentSkillHovered = useStore((state) => state.currentSkillHovered);
     const currentLanguage = useStore((state) => state.currentLanguage);
+    const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
 
     const { gl } = useThree();
 
@@ -46,7 +47,6 @@ fadingTextText0, fadingTextPosition0, fadingTextScale0, fadingTextLettersPerUnit
 fadingTextPosition2, fadingTextScale2, fadingTextText3, fadingTextPosition3, fadingTextScale3, fadingTextText4, fadingTextPosition4, fadingTextScale4, 
 fadingTextText5, fadingTextPosition5, fadingTextScale5, FloatingTextSkillsPosition
 
-console.log("Width: "+window.innerWidth)
 if(window.innerWidth < 500){
     fadingTitlePosition0 = ResponsiveTable["Mobile"]["fadingTitlePosition0"]
     fadingTitleScale0 = ResponsiveTable["Mobile"]["fadingTitleScale0"]
@@ -158,7 +158,7 @@ if(window.innerWidth < 500){
                 <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader> */}
             </Suspense>
         
-            {/* {(currentGraphicalMode == "high")
+            {(currentGraphicalMode == "high")
             && <group>
                 <OrbitingPointLight orbitDirection = {[0, 1, 0]} orbitSpeed = {0.01} orbitAxis = {"x"} orbitDistance = {60} orbitCenterPosition = {[-40, 30, 0]} lightIntensivity = {1}></OrbitingPointLight>
                 <EffectComposer renderPriority = {1}>
@@ -167,7 +167,7 @@ if(window.innerWidth < 500){
                 <Suspense>
                     {(finishedBenchmark == true) && <SimpleLoader modelName = {"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
                 </Suspense>
-            </group>} */}
+            </group>}
         </>
     );
 }

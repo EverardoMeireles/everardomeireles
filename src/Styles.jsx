@@ -75,7 +75,7 @@ export const HtmlDreiMenuStyles = ({
         borderRadius: "10%",
         top: '6000vw',
         left: '6000vw'
-    },
+    }
 })
 
 const simple_items_top = ( topBottomPercentage = 0, initialPosition = 0, spaceIncrement = 0, spaceMultiplier = 0, fontSize = 0 ) => ({
@@ -110,9 +110,28 @@ const ListStyle = (topPercentage = 0, initialPosition = 0) => ({
 
 })
 
+const arrowContainerStyle = {
+    position: 'fixed',
+    top: 0,
+    right: '20px',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    zIndex: 100000
+};
+
+const arrowStyle = {
+    textDecoration: 'none',
+    color: 'black',
+    cursor: 'pointer',
+    fontSize:'24px',
+};
+
 export const HudMenuStyles = {
     simple_items_top: simple_items_top,
     simple_items_bottom: simple_items_bottom,
     FlagImgStyle: FlagImgStyle,
     ListStyle: ListStyle,
+    arrowContainerStyle: arrowContainerStyle,
+    arrowStyle : arrowStyle
 }
