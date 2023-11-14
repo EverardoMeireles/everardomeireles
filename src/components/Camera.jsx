@@ -16,35 +16,30 @@ export const Camera = React.memo((props) => {
     const panDirectionalEdgethreshold = useStore((state) => state.panDirectionalEdgethreshold);
     const panDirectionalAxis = useStore((state) => state.panDirectionalAxis);
 
-    const keyboardControlsSpeed = 0.4;
     const updateCallNow = useRef(false);
     const cam = useRef();
     const controls = useRef();
     const current_path = useRef("StartingPoint");
     const current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
     const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
+    const isMouseNearEdge = useRef(false);
+
     const simpleLookatMode = true;
     const desired_point = path_points[current_path.current + "-" + desired_path];
-    // const transitionEnded.transitionEnded = false
+    const keyboardControlsSpeed = 0.4;
+    const gravitationalPullPoint = path_points[current_path.current + "-" + current_path.current] == null ? path_points["MainMenu-MainMenu"].points[0] : path_points[current_path.current + "-" + current_path.current].points[0]; // the point to return to
+    const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
+    const pullInterval = 10; // How often the pull is applied in milliseconds
+    
     let pathPointsLookat;
     let smooth;
     let sub_points;
     let tick = current_path.current != desired_path ? 0:1
 
-    var concat_paths;
-
-    const gravitationalPullPoint = path_points[current_path.current+"-"+current_path.current] == null ? path_points["MainMenu-MainMenu"].points[0] : path_points[current_path.current+"-"+current_path.current].points[0]; // This is your target position
-    // const gravitationalPullPoint = path_points[current_path.current+"-"+current_path.current].points[0]
-
-    const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
-    const pullInterval = 10; // How often the pull is applied in milliseconds
-    
-    const [shouldPull, setShouldPull] = useState(false);
-    
-    const isMouseNearEdge = useRef(false);
+    let concat_paths;    
 
     const { camera } = useThree();
-    // console.log(camera)
+
     // Change camera mode
     const [cameraMode, setCameraMode] = useState(null);
     useEffect(()=>{
@@ -65,145 +60,118 @@ export const Camera = React.memo((props) => {
         }
         else
         if (currentCameraMode == "panDirectional" && transitionEnded) {
+            // these variables and the if else statements determine whether to increment or decrement the two axies by the camera event's output by multiplying it by 1 or -1
             let horizontalPanSign;
             let verticalPanSign;
 
             if (panDirectionalAxis[0].charAt(0) === '+') {
                 horizontalPanSign = 1;
-            } else {
+            } 
+            else {
                 horizontalPanSign = -1;
             }
 
             if (panDirectionalAxis[1].charAt(0) === '-') {
                 verticalPanSign = 1;
-            } else {
+            } 
+            else {
                 verticalPanSign = -1;
             }
+
             const handleMouseMove = (event) => {
-              const { innerWidth, innerHeight } = window; // Get the viewport dimensions
+                const { innerWidth, innerHeight } = window; // Get the viewport dimensions
 
-              // Check if the mouse is near the left or right edge of the screen
-              if (event.clientX < panDirectionalEdgethreshold || event.clientX > innerWidth - panDirectionalEdgethreshold) {
-                const deltaX = event.movementX;
+                // Check if the mouse is near the left or right edge of the screen
+                if (event.clientX < panDirectionalEdgethreshold || event.clientX > innerWidth - panDirectionalEdgethreshold) {
+                    const deltaX = event.movementX;
 
-                // Apply the delta movement to pan the camera horizontally
-                switch(panDirectionalAxis[0].charAt(1)){
-                    case 'x':
-                        cam.current.position.x += (deltaX * 0.01) * horizontalPanSign;
-                controls.current.target.x += (deltaX * 0.01)* horizontalPanSign;
-                        break;
-                    case 'y':
-                        cam.current.position.y += (deltaX * 0.01)* horizontalPanSign;
-                controls.current.target.y += (deltaX * 0.01)* horizontalPanSign;
-                        break;
-                    case 'z':
-                        cam.current.position.z -= (deltaX * 0.01)* horizontalPanSign;
-                controls.current.target.z -= (deltaX * 0.01)* horizontalPanSign;
-                        break;
+                    // Apply the delta movement to pan the camera horizontally
+                    switch(panDirectionalAxis[0].charAt(1)){
+                        case 'x':
+                            cam.current.position.x += (deltaX * 0.01) * horizontalPanSign;
+                    controls.current.target.x += (deltaX * 0.01)* horizontalPanSign;
+                            break;
+                        case 'y':
+                            cam.current.position.y += (deltaX * 0.01)* horizontalPanSign;
+                    controls.current.target.y += (deltaX * 0.01)* horizontalPanSign;
+                            break;
+                        case 'z':
+                            cam.current.position.z -= (deltaX * 0.01)* horizontalPanSign;
+                    controls.current.target.z -= (deltaX * 0.01)* horizontalPanSign;
+                            break;
+                    }
+                    
                 }
-                
-              }
-            //   console.log(shouldPull)
-            //   console.log(current_path.current)
 
-              // Check if the mouse is near the top or bottom edge of the screen
-              if (event.clientY < panDirectionalEdgethreshold || event.clientY > innerHeight - panDirectionalEdgethreshold) {
-                const deltaY = event.movementY;
+                // Check if the mouse is near the top or bottom edge of the screen
+                if (event.clientY < panDirectionalEdgethreshold || event.clientY > innerHeight - panDirectionalEdgethreshold) {
+                    const deltaY = event.movementY;
 
-                // Apply the delta movement to pan the camera vertically
-                switch(panDirectionalAxis[1].charAt(1)){
-                    case 'x':
-                        cam.current.position.x += (deltaY * 0.01)* verticalPanSign;
-                controls.current.target.x += (deltaY * 0.01)* verticalPanSign;
-                        break;
-                    case 'y':
-                        cam.current.position.y += (deltaY * 0.01)* verticalPanSign;
-                controls.current.target.y += (deltaY * 0.01)* verticalPanSign;
-                        break;
-                    case 'z':
-                        cam.current.position.z += (deltaY * 0.01)* verticalPanSign;
-                controls.current.target.z += (deltaY * 0.01)* verticalPanSign;
-                        break;
+                    // Apply the delta movement to pan the camera vertically
+                    switch(panDirectionalAxis[1].charAt(1)){
+                        case 'x':
+                            cam.current.position.x += (deltaY * 0.01)* verticalPanSign;
+                    controls.current.target.x += (deltaY * 0.01)* verticalPanSign;
+                            break;
+                        case 'y':
+                            cam.current.position.y += (deltaY * 0.01)* verticalPanSign;
+                    controls.current.target.y += (deltaY * 0.01)* verticalPanSign;
+                            break;
+                        case 'z':
+                            cam.current.position.z += (deltaY * 0.01)* verticalPanSign;
+                    controls.current.target.z += (deltaY * 0.01)* verticalPanSign;
+                            break;
+                    }
                 }
-              }
             };
 
             // Add the event listener for mousemove
             window.addEventListener('mousemove', handleMouseMove);
-          
+        
             // Clean up the event listener when the component unmounts or when the camera mode changes
             return () => window.removeEventListener('mousemove', handleMouseMove);
-
-          }
-          }, [panDirectionalEdgethreshold, currentCameraMode, transitionEnded]); // Assuming currentCameraMode, cam, and controls are defined in the component's scope
-
-        //   useEffect(() => {
-        //     const intervalId = setInterval(() => {
-        //       if (!cam.current) return;
-          
-        //       // Calculate the direction vector from the camera to the gravitational point
-        //       const direction = gravitationalPullPoint.clone().sub(cam.current.position).normalize();
-          
-        //       // Calculate the distance to the gravitational point
-        //       const distance = cam.current.position.distanceTo(gravitationalPullPoint);
-          
-        //       // Interpolate the camera's position towards the gravitational point
-        //       cam.current.position.addScaledVector(direction, Math.min(pullStrength * distance, distance));
-          
-        //       // If you are also using controls and want to adjust the target of the controls
-        //       if (controls.current) {
-        //         controls.current.target.addScaledVector(direction, Math.min(pullStrength * distance, distance));
-        //       }
-        //     }, pullInterval);
-          
-        //     // Clean up the interval when the component unmounts
-        //     return () => clearInterval(intervalId);
-        //   }, [gravitationalPullPoint, pullStrength, pullInterval]);
+        }
+    }, [panDirectionalEdgethreshold, currentCameraMode, transitionEnded]); // Assuming currentCameraMode, cam, and controls are defined in the component's scope
 
         useEffect(() => {
             const handleMouseMove = (event) => {
-                // console.log(transitionEnded)
+            const { innerWidth, innerHeight } = window;
 
-              const { innerWidth, innerHeight } = window;
-          
               // Determine if the mouse is near the edge of the screen
-              isMouseNearEdge.current =
+            isMouseNearEdge.current =
                 event.clientX < panDirectionalEdgethreshold || event.clientX > innerWidth - panDirectionalEdgethreshold ||
                 event.clientY < panDirectionalEdgethreshold || event.clientY > innerHeight - panDirectionalEdgethreshold;
             };
-          
+
             // Add the event listener for mousemove
             window.addEventListener('mousemove', handleMouseMove);
-          
+
             // Clean up the event listener when the component unmounts
             return () => {
-              window.removeEventListener('mousemove', handleMouseMove);
+                window.removeEventListener('mousemove', handleMouseMove);
             };
-          }, [panDirectionalEdgethreshold]);
-          
-          useEffect(() => {
+        }, [panDirectionalEdgethreshold]);
+
+        useEffect(() => {
             if (currentCameraMode === "panDirectional" && transitionEnded) {
-              const intervalId = setInterval(() => {
-              if (!isMouseNearEdge.current && cam.current) {
-                const direction = gravitationalPullPoint.clone().sub(cam.current.position).normalize();
-                const distance = cam.current.position.distanceTo(gravitationalPullPoint);
-          
-                // Apply a scaled vector towards the gravitational point
-                cam.current.position.addScaledVector(direction, Math.min(pullStrength * distance, distance));
-          
-                if (controls.current) {
-                  controls.current.target.addScaledVector(direction, Math.min(pullStrength * distance, distance));
+                const intervalId = setInterval(() => {
+                if (!isMouseNearEdge.current && cam.current) {
+                    const direction = gravitationalPullPoint.clone().sub(cam.current.position).normalize();
+                    const distance = cam.current.position.distanceTo(gravitationalPullPoint);
+
+                    // Apply a scaled vector towards the gravitational point
+                    cam.current.position.addScaledVector(direction, Math.min(pullStrength * distance, distance));
+
+                    if (controls.current) {
+                        controls.current.target.addScaledVector(direction, Math.min(pullStrength * distance, distance));
+                    }
                 }
-              }
             }, pullInterval);
-          
+
             // Clean up the interval when the component unmounts
-            return () => clearInterval(intervalId);
-        }
-          }, [currentCameraMode, transitionEnded]); // Empty dependencies array since we're using refs which don't trigger re-renders
-
-
-
+                return () => clearInterval(intervalId);
+            }
+        }, [currentCameraMode, transitionEnded]); // Empty dependencies array since we're using refs which don't trigger re-renders
 
     // if no custom lookat path, look directly into the destination until transition ends
     if(path_points_lookat_dict[current_path.current + "-" + desired_path] != undefined){
@@ -229,8 +197,6 @@ export const Camera = React.memo((props) => {
 
     // Sets values after the camera movement is done 
     function updateCall(state){
-        // console.log(transitionEnded.transitionEnded)
-
         if(updateCallNow.current){
             setTransitionEnded(true);
             console.log("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG")
@@ -258,16 +224,12 @@ export const Camera = React.memo((props) => {
         if(currentKey == undefined){
             currentKey = Object.keys(path_speeds).pop();
         }
-        // console.log(currentKey);
 
         return path_speeds[currentKey];
     }
 
     // Moves the camera every frame when the desired path changes
     useFrame((state) => (tick <= 1 ? (
-        // console.log(tick),
-        // console.log(transitionEnded.transitionEnded),
-
         updateCallNow.current = true,
         state.events.enabled = false,
         controls.current.enabled = false,
@@ -300,7 +262,6 @@ export const Camera = React.memo((props) => {
                     cam.current.position.z += keyboardControlsSpeed;
                     controls.current.target.z += keyboardControlsSpeed;
                 break;
-
                 case "KeyS":
                     cam.current.position.x += keyboardControlsSpeed;
                     controls.current.target.x += keyboardControlsSpeed;
@@ -348,7 +309,7 @@ export const Camera = React.memo((props) => {
     return(
         <>
             <PerspectiveCamera ref = {cam} makeDefault fov = {75}>
-                {/* <HtmlDreiMenu {...{useStore}}></HtmlDreiMenu> */}
+            {/* <HtmlDreiMenu {...{useStore}}></HtmlDreiMenu> */}
             </PerspectiveCamera>
             <OrbitControls mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} target = {/*currentCameraMode === "panDirectional"?null:*/[constrolTargetX, constrolTargetY, constrolTargetZ]} />
         </>
