@@ -1,7 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./components/HudMenu";
-import create from 'zustand';
+import { create } from 'zustand';
 import config from './config.json';
 import { TutorialOverlay } from "./components/TutorialOverlay";
 import { Alert } from "./components/Alert";

@@ -13,7 +13,6 @@ export function PathNavigation(props) {
         str = event.currentTarget.location.href;
         urlPath = str.slice(str.indexOf('#') + 1);
         
-        console.log(urlPath)
         setPath(urlPath);
         setTransitionEnded(false);
     });

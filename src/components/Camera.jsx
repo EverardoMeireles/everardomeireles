@@ -187,7 +187,6 @@ export const Camera = React.memo((props) => {
     const constrolTargetY = pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].y;
     const constrolTargetZ = pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].z;
 
-    console.log(current_path.current + "-" + desired_path);
     // used in custom camera lookat
     const desired_lookat_dict = (time) => {
         let nextLookat;
@@ -199,7 +198,6 @@ export const Camera = React.memo((props) => {
     function updateCall(state){
         if(updateCallNow.current){
             setTransitionEnded(true);
-            console.log("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG")
             updateCallNow.current = false;
             current_path.current = desired_path;
             controls.current.enabled = true;

@@ -13,7 +13,6 @@ export const SimpleLoader = React.memo((props) => {
     
     if(useAo) {
         for( let node in gltf.nodes) {
-            console.log(gltf.nodes[node])
             if('material' in gltf.nodes[node]) {
                 gltf.nodes[node].material.aoMapIntensity = ambientOcclusionIntensivity;
             }

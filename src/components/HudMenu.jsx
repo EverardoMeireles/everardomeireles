@@ -17,8 +17,6 @@ export function HudMenu(props) {
 
     const [profExpClicked, setProfExpClicked] = useState(false);
 
-    useEffect(()=>{console.log(props.responsive)})
-
     const marginDisplay = {marginBottom: "10px", marginLeft:"40px", "display": "inline-block"}
 
     // increase or decrease the graphics settings
