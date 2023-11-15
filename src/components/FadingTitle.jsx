@@ -18,8 +18,8 @@ export function FadingTitle(props) {
     const {transitionEnded, desired_path} = props.useStore();
 
     const [startFade, setStartFade] = useState(false);
-
-    if(delay != 0){
+//ds
+    if(delay !== 0){
         setTimeout(() => {
             setStartFade(true);
         }, delay);
@@ -32,7 +32,7 @@ var oneOrZero = {
 
     // If visible = true, then the text will fade out, otherwise it will fade in
     const springFade = useSpring({
-        opacity: (transitionEnded && desired_path == textModelMenu && delay == 0) || startFade ? oneOrZero[Number(visible)] : oneOrZero[Number(!visible)],
+        opacity: (transitionEnded && desired_path === textModelMenu && delay === 0) || startFade ? oneOrZero[Number(visible)] : oneOrZero[Number(!visible)],
         config: {
             duration:transitionDuration,
         }
@@ -41,7 +41,7 @@ var oneOrZero = {
     // Rotate mesh
     const callbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log()
-        )
+        ,[]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return(
         <mesh

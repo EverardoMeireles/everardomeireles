@@ -28,6 +28,9 @@ export function OrbitingPointLight(props) {
             case 'z':
                 axisVector=[0, 0, 1 * orbitDistance];
             break;
+
+            default:
+                axisVector=[1 * orbitDistance, 0, 0];
         }
         return axisVector;
     }

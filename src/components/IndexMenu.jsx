@@ -1,5 +1,5 @@
 import { BaseCube } from "./BaseCube";
-import { Text3D, Text } from "@react-three/drei";
+import { Text } from "@react-three/drei";
 import { useCallback, Suspense, useState } from "react";
 import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
@@ -30,7 +30,7 @@ export function IndexMenu(props) {
 
     // make sure user can't press it during initial graphical setting
     function IncreaseDecreaseGraphics(direction){
-        if(!((["potato"].includes(currentGraphicalMode) && direction == -1) || (["high"].includes(currentGraphicalMode) && direction == 1))){
+        if(!((["potato"].includes(currentGraphicalMode) && direction === -1) || (["high"].includes(currentGraphicalMode) && direction === 1))){
             setGraphicalMode(graphicalModes[graphicalModes.indexOf(currentGraphicalMode) + direction]);
             console.log("GRAPHICS: " + graphicalModes[graphicalModes.indexOf(currentGraphicalMode) + direction])
             
@@ -39,11 +39,11 @@ export function IndexMenu(props) {
 
     const textCallbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log()
-        )
+        ,[]);
 
     const wholeCallbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (rotation))):console.log()
-        )
+        ,[]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return(
         <mesh

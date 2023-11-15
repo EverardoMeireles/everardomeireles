@@ -13,7 +13,7 @@ export function FadingSlideShowModel(props) {
     const {transitionEnded, desired_path} = props.useStore();
 
     const springFade = useSpring({
-        opacity: (transitionEnded && desired_path == textModelMenu) ? 1 : 0,
+        opacity: (transitionEnded && desired_path === textModelMenu) ? 1 : 0,
         config: {
             duration:transitionDuration
         }
@@ -21,7 +21,7 @@ export function FadingSlideShowModel(props) {
 
     const texture = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL +'/textures/'+imageTexture)
     const callbackRef = useCallback(
-        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log("skip render")
+        ref => ref !== null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log("skip render")
         )
 
     return (

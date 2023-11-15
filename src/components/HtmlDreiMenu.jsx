@@ -34,7 +34,7 @@ export function HtmlDreiMenu(props) {
                     <p onClick={()=> {setPath("Education"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Education" />
                     <p onClick={()=> {setPath("Skills"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Skills" />
                     <p onClick={()=> {setPath("ProfessionalExpProjects0"); setTransitionEnded(true); setParentMenuClicked(true)}}  children="Professional experience" />
-                {(parentMenuClicked == true) &&
+                {(parentMenuClicked === true) &&
                 <div>
                     <p onClick={()=> {setPath("ProfessionalExpProjects0"); }} children="Prospere ITB" />
                     <p onClick={()=> {setPath("ProfessionalExpProjects1"); }} children="DRIM" />

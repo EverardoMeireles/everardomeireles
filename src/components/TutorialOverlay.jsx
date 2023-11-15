@@ -29,7 +29,7 @@ export const TutorialOverlay = (props) => {
         // Cleanup function to clear the timeout if the component unmounts
         return () => clearTimeout(timer);
         }
-    }, [transitionEnded]);
+    }, [transitionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleClick = () => {
         setVisible(false);

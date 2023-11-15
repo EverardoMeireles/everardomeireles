@@ -8,5 +8,5 @@ export function RegularFlickeringLight({ ...lightProps }) {
     lightRef.current.intensity = 1 + Math.sin(state.clock.getElapsedTime() * 10) * 0.5;
   });
 
-  return <pointLight ref={lightRef} {...lightProps} />;
+  return <pointLight ref = {lightRef} {...lightProps} />;
 }

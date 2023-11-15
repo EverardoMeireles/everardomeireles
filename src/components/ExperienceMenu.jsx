@@ -1,6 +1,6 @@
 import { BaseCube } from "./BaseCube";
-import { Text3D, Text } from "@react-three/drei";
-import { useCallback, Suspense, useRef } from "react";
+import { Text } from "@react-three/drei";
+import { useCallback, Suspense } from "react";
 import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
 import { path_points_experience_menu_location } from "../PathPoints";
@@ -12,7 +12,7 @@ export function ExperienceMenu(props) {
     const {textColor = "#062d69"} = props;
     const {transitionDuration = 1000} = props;
 
-    const {setPath, setTransitionEnded, transitionEnded, desired_path} = props.useStore();
+    const {setPath, setTransitionEnded, desired_path} = props.useStore();
 
     const isPathExperienceMenu = desired_path.includes("ProfessionalExpProjects"); // is the user going to the professional experience and projects
 
@@ -31,20 +31,13 @@ export function ExperienceMenu(props) {
         }
     });
 
-    // const springFade = useSpring({
-    //     opacity: (transitionEnded && isPathExperienceMenu) ? 1 : 0,
-    //     config: {
-    //         duration:transitionDuration
-    //     }
-    // })
-
     const textCallbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log()
-        )
+        ,[]);
 
     const wholeCallbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (rotation))):console.log()
-        )
+        ,[]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return(
         <>
@@ -73,23 +66,10 @@ export function ExperienceMenu(props) {
 
                 >
                     <Suspense fallback = {null}>
-                        {/* <Text3D
-                        position = {[0.5, -0.25, 2.3]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
-                        >
-                            Menu Principal
-                            <meshBasicMaterial color = {"red"} />
-                        </Text3D> */}
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 2.9]}
                         >
                             {"Menu Principal"}
@@ -120,9 +100,7 @@ export function ExperienceMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 2.1]}
                         >
                             {"Formation"}
@@ -153,9 +131,7 @@ export function ExperienceMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 2.8]}
                         >
                             {"Compétences"}
@@ -186,9 +162,7 @@ export function ExperienceMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 2.5]}
                         >
                             {"Prospere ITB"}
@@ -218,9 +192,7 @@ export function ExperienceMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 1]}
                         >
                             {"Drim"}
@@ -250,9 +222,7 @@ export function ExperienceMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 1.3]}
                         >
                             {"Everial"}
@@ -282,9 +252,7 @@ export function ExperienceMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[8, 8, 8]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 2.9]}
                         >
                             {"Brésil eco-buggy"}
@@ -314,9 +282,7 @@ export function ExperienceMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[8, 8, 8]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 3.05]}
                         >
                             {"EFN projet PPMS"}
@@ -346,9 +312,7 @@ export function ExperienceMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 3.1]}
                         >
                             {"EFN Professeur"}
@@ -549,37 +513,6 @@ export function ExperienceMenu(props) {
                     </Suspense>
                 </BaseCube>
             </mesh> */}
-
-        {/* <BaseCube position = {[0,1,0]} movementVector = {[0.1, 0, 0]} />
-        <BaseCube position = {[0,2,0]} />
-        <BaseCube position = {[0,3,0]} />
-        <BaseCube position = {[0,4,0]} />
-        <BaseCube position = {[0,5,0]} />
-        <BaseCube position = {[0,6,0]} />
-        <BaseCube position = {[0,1,1]} />
-        <BaseCube position = {[0,2,1]} />
-        <BaseCube position = {[0,3,1]} />
-        <BaseCube position = {[0,4,1]} />
-        <BaseCube position = {[0,5,1]} />
-        <BaseCube position = {[0,6,1]} />
-        <BaseCube position = {[0,1,2]} />
-        <BaseCube position = {[0,2,2]} />
-        <BaseCube position = {[0,3,2]} />
-        <BaseCube position = {[0,4,2]} />
-        <BaseCube position = {[0,5,2]} />
-        <BaseCube position = {[0,6,2]} />
-        <BaseCube position = {[0,1,3]} />
-        <BaseCube position = {[0,2,3]} />
-        <BaseCube position = {[0,3,3]} />
-        <BaseCube position = {[0,4,3]} />
-        <BaseCube position = {[0,5,3]} />
-        <BaseCube position = {[0,6,3]} />
-        <BaseCube position = {[0,1,4]} />
-        <BaseCube position = {[0,2,4]} />
-        <BaseCube position = {[0,3,4]} />
-        <BaseCube position = {[0,4,4]} />
-        <BaseCube position = {[0,5,4]} />
-        <BaseCube position = {[0,6,4]} /> */}
     </a.mesh>}
     </>
     );

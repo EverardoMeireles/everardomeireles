@@ -1,5 +1,4 @@
-import React, { useRef, useEffect } from "react";
-import {useSpring, a} from '@react-spring/three';
+import React from "react";
 
 // this component is used to navigate trought the scene using the url paths, use with HudMenu.jsx
 export function PathNavigation(props) {

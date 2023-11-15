@@ -1,10 +1,10 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { TranslationTable } from "../TranslationTable";
 import { HudMenuStyles } from "../Styles";
 import { getKeyByValue } from "../Helper";
 import config from '../config.json';
 
+/* eslint-disable jsx-a11y/anchor-is-valid */
 // has jsx HudMenuStyles
 // A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx
 export function HudMenu(props) {
@@ -23,7 +23,7 @@ export function HudMenu(props) {
     function changeGraphicalMode(higherOrLower)
     {
         // replace it by store's value later
-        const graphics ={
+        const graphics = {
             0:"potato",
             1:"potatoPremium",
             2:"normal",
@@ -46,29 +46,29 @@ export function HudMenu(props) {
         {/* hide the toggle unless the graphics toggle is enabled in the settings
         and in case the graphics check is also enabled, wait for the benchmark to 
         finish before showing the toggle */}
-        {(config.show_html_menu_graphics_toggle == true && (config.check_graphics == false || (config.check_graphics == true && finishedBenchmark == true))) &&
+        {(config.show_html_menu_graphics_toggle && (!config.check_graphics || (config.check_graphics && finishedBenchmark))) &&
             <div style={HudMenuStyles.arrowContainerStyle}>
-                <b onClick={()=>{changeGraphicalMode(-1)}} style={HudMenuStyles.arrowStyle}>&#x2190;</b>
-                <b onClick={()=>{changeGraphicalMode(1)}} style={HudMenuStyles.arrowStyle}>&#x2192;</b>
+                <b onClick={() => {changeGraphicalMode(-1)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
+                <b onClick={() => {changeGraphicalMode(1)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
             </div>
         }
         {props.responsive.width <= 500 &&
         <>
             <ul style = {HudMenuStyles.ListStyle(0, -7)}>
-                <li style={marginDisplay}>
-                    <a onClick={() => (setLanguage("English"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/gbr.svg"}></img></a>
+                <li style = {marginDisplay}>
+                    <a onClick = {() => (setLanguage("English"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/gbr.svg"} alt = "British flag"></img></a>
                 </li>
                 <li style={marginDisplay}>
-                    <a onClick={() => (setLanguage("French"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/fra.svg"}></img></a>
+                    <a onClick={() => (setLanguage("French"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/fra.svg"} alt = "French flag"></img></a>
                 </li>
             </ul>
-            <a href = "#MainMenu" onClick={() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(1, 30, 20, 0, 17)} children = {TranslationTable[currentLanguage]["Menu_MainMenu"]} />
-            <a href = "#Education" onClick={() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(1, 30, 20, 1, 17)} children = {TranslationTable[currentLanguage]["Menu_Education"]} />
-            <a href = "#Skills" onClick={() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(6, 30, 20, 0, 17)} children = {TranslationTable[currentLanguage]["Menu_Skills"]} />
+            <a href = "#MainMenu" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(1, 30, 20, 0, 17)} children = {TranslationTable[currentLanguage]["Menu_MainMenu"]} />
+            <a href = "#Education" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(1, 30, 20, 1, 17)} children = {TranslationTable[currentLanguage]["Menu_Education"]} />
+            <a href = "#Skills" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(6, 30, 20, 0, 17)} children = {TranslationTable[currentLanguage]["Menu_Skills"]} />
             {/* This menu element is supposed to have sub elements */}
             <a href = "#ProfessionalExpProjects0" onClick = {() => (setProfExpClicked(true))} style = {HudMenuStyles.simple_items_top(6, 30, 20, 1, 17)} children = {TranslationTable[currentLanguage]["Menu_ProfessionalExperience"]} />
             
-            { (profExpClicked == true) &&
+            { (profExpClicked === true) &&
             // the sub elements
             <div>
                 <a href = "#ProfessionalExpProjects0" style = {HudMenuStyles.simple_items_bottom(1, 8, 35, 0, 13)} children = {TranslationTable[currentLanguage]["Menu_ProspereITB"]} />
@@ -86,19 +86,19 @@ export function HudMenu(props) {
         <>
             <ul style = {HudMenuStyles.ListStyle(0, 0)}>
                 <li style={marginDisplay}>
-                    <a onClick={() => (setLanguage("English"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/gbr.svg"}></img></a>
+                    <a onClick = {() => (setLanguage("English"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/gbr.svg"} alt = "British flag"></img></a>
                 </li>
                 <li style={marginDisplay}>
-                    <a onClick={() => (setLanguage("French"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/fra.svg"}></img></a>
+                    <a onClick = {() => (setLanguage("French"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/fra.svg"} alt = "French flag"></img></a>
                 </li>
             </ul>
-            <a href = "#MainMenu" onClick={() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 10, 20, 0, 20)} children = {TranslationTable[currentLanguage]["Menu_MainMenu"]} />
-            <a href = "#Education" onClick={() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 10, 20, 1, 20)} children = {TranslationTable[currentLanguage]["Menu_Education"]} />
-            <a href = "#Skills" onClick={() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 15, 20, 2, 20)} children = {TranslationTable[currentLanguage]["Menu_Skills"]} />
+            <a href = "#MainMenu" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 10, 20, 0, 20)} children = {TranslationTable[currentLanguage]["Menu_MainMenu"]} />
+            <a href = "#Education" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 10, 20, 1, 20)} children = {TranslationTable[currentLanguage]["Menu_Education"]} />
+            <a href = "#Skills" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 15, 20, 2, 20)} children = {TranslationTable[currentLanguage]["Menu_Skills"]} />
             {/* This menu element is supposed to have sub elements */}
             <a href = "#ProfessionalExpProjects0" onClick = {() => (setProfExpClicked(true))} style = {HudMenuStyles.simple_items_top(5, 10, 20, 3, 20)} children = {TranslationTable[currentLanguage]["Menu_ProfessionalExperience"]} />
                     
-            { (profExpClicked == true) &&
+            { (profExpClicked === true) &&
             // the sub elements
             <div>
                 <a href = "#ProfessionalExpProjects0" style = {HudMenuStyles.simple_items_bottom(1, 8, 35, 0, 20)} children = {TranslationTable[currentLanguage]["Menu_ProspereITB"]} />
@@ -115,20 +115,20 @@ export function HudMenu(props) {
         {props.responsive.width > 1800 &&
         <>
             <ul style = {HudMenuStyles.ListStyle(0, 0)}>
-                <li style={marginDisplay}>
-                    <a onClick={() => (setLanguage("English"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/gbr.svg"}></img></a>
+                <li style = {marginDisplay}>
+                    <a onClick = {() => (setLanguage("English"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/gbr.svg"} alt = "British flag"></img></a>
                 </li>
-                <li style={marginDisplay}>
-                    <a onClick={() => (setLanguage("French"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/fra.svg"}></img></a>
+                <li style = {marginDisplay}>
+                    <a onClick = {() => (setLanguage("French"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/fra.svg"} alt = "French flag"></img></a>
                 </li>
             </ul>
-            <a href = "#MainMenu" onClick={() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 10, 20, 0, 30)} children = {TranslationTable[currentLanguage]["Menu_MainMenu"]} />
-            <a href = "#Education" onClick={() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 10, 20, 1, 30)} children = {TranslationTable[currentLanguage]["Menu_Education"]} />
-            <a href = "#Skills" onClick={() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 15, 20, 2, 30)} children = {TranslationTable[currentLanguage]["Menu_Skills"]} />
+            <a href = "#MainMenu" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 10, 20, 0, 30)} children = {TranslationTable[currentLanguage]["Menu_MainMenu"]} />
+            <a href = "#Education" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 10, 20, 1, 30)} children = {TranslationTable[currentLanguage]["Menu_Education"]} />
+            <a href = "#Skills" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 15, 20, 2, 30)} children = {TranslationTable[currentLanguage]["Menu_Skills"]} />
             {/* This menu element is supposed to have sub elements */}
             <a href = "#ProfessionalExpProjects0" onClick = {() => (setProfExpClicked(true))} style = {HudMenuStyles.simple_items_top(5, 10, 20, 3, 30)} children = {TranslationTable[currentLanguage]["Menu_ProfessionalExperience"]} />
                     
-            { (profExpClicked == true) &&
+            { (profExpClicked === true) &&
             // the sub elements
             <div>
                 <a href = "#ProfessionalExpProjects0" style = {HudMenuStyles.simple_items_bottom(5, 8, 15, 0, 30)} children = {TranslationTable[currentLanguage]["Menu_ProspereITB"]} />

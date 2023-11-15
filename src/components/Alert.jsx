@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+//lol
 // Define icons for simplicity
 const icons = {
   Error: '❌',
@@ -35,7 +35,7 @@ export const Alert = (props) => {
         clearTimeout(timeoutId);
       }
     };
-  }, [alertProperties.active, alertProperties.duration]);
+  }, [alertProperties.active, alertProperties.duration, setAlertProperties]);
 
   // Inline styles for the alert box
   const alertBoxStyle = {

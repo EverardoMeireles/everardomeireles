@@ -12,12 +12,11 @@ export const GraphicalModeSetter = React.memo((props) => {
     const setGraphicalMode = props.useStore((state) => state.setGraphicalMode);
     const setFinishedBenchmark = props.useStore((state) => state.setFinishedBenchmark);    
 
-    const HardwareAccelerationCheckPassed = true;
-
     useEffect(() => {(async () => {
+        let HardwareAccelerationCheckPassed = true;
         const gpuTier = await getGPUTier({benchmarksURL:"benchmarks"});
         // hardware acceleration check, if the user has hardware acceleration disabled, don't set graphical mode
-        if(gpuTier.type=="WEBGL_UNSUPPORTED" || gpuTier.tier == 0){
+        if(gpuTier.type === "WEBGL_UNSUPPORTED" || gpuTier.tier === 0){
             HardwareAccelerationCheckPassed = false;
         }else{
             if(gpuTier.isMobile){
@@ -51,11 +50,13 @@ export const GraphicalModeSetter = React.memo((props) => {
                 case 3:
                     newGraphicalMode = "high";
                 break;
+                default:
+                    newGraphicalMode = "potatoPremium";
             }
                 console.log("GRAPHICS: " + newGraphicalMode)
                 setGraphicalMode(newGraphicalMode);
         }
-    })()},[])
+    })()},[]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const framesForGraphicModeComparison = 120;
     let pass = 0;
@@ -103,7 +104,7 @@ export const GraphicalModeSetter = React.memo((props) => {
             console.log(averageFps);
             // skip the first pass, it always shows fewer fps than the system is really capable of
 
-            if(pass != 0){
+            if(pass !== 0){
                 // decrease the graphics by one tier
                 if(averageFps < fpsToDecreaseGraphics){
                     if(!["potato", "high"].includes(currentGraphicalMode)){
@@ -117,7 +118,7 @@ export const GraphicalModeSetter = React.memo((props) => {
             arrayFPS = [];
             pass += 1;
             accuFramesForGraphicModeComparison = 0;
-            if(pass == numberOfPasses + 1){
+            if(pass === numberOfPasses + 1){
                 setFinishedBenchmark(true);
             }
         }

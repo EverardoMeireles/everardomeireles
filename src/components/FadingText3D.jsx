@@ -1,10 +1,7 @@
 import { Suspense, useCallback } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
-import { Text3D, Text } from "@react-three/drei";
-import { useEffect } from "react";
-import { useFrame } from "@react-three/fiber";
-import { useState } from "react";
+import { Text3D } from "@react-three/drei";
 
 export function FadingText3D(props) {
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
@@ -24,7 +21,7 @@ export function FadingText3D(props) {
 
     // Fade in and out animation
     const springFade = useSpring({
-        opacity: (transitionEnded && desired_path == textModelMenu) ? 1 : 0,
+        opacity: (transitionEnded && desired_path === textModelMenu) ? 1 : 0,
         config: {
             duration:transitionDuration
         }
@@ -58,7 +55,7 @@ export function FadingText3D(props) {
     const text3DArray = TextRows(textToFade);
     const callbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log()
-        )
+        ,[]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return(
         <mesh

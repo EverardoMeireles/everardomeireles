@@ -6,7 +6,7 @@ export const ResponsiveTable = {
         "fadingTitleScale1": 17,
         "fadingTextPosition0": [1, 4, -82],
         "fadingTextScale0": 2,
-        // "fadingTextLettersPerUnit0": 5,
+        // "fadingTextLettersPerUnit0": 5,d
         "fadingTextPosition1": [11.5, 4.5, -95],
         "fadingTextScale1": 1.8,
         "fadingTextPosition2": [-2, 5.5, -105],
@@ -65,8 +65,6 @@ export const ResponsiveTable = {
 
 export const HtmlDreiMenuStyles = ({
     menu: {
-        top: 0,
-        left: 0,
         width: "100%",
         height: "100%",
         padding: "10px",

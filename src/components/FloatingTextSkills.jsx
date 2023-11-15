@@ -1,19 +1,17 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
-import { Text3D, Float, Text } from "@react-three/drei";
+import { Float, Text } from "@react-three/drei";
 
 export function FloatingTextSkills(props) {
     const {initialPosition = [0,0,0]} = props;
     const {hitBoxSize = [2, 1]} = props;
     const {rotation = Math.PI/2} = props;
-    const {textCurveSergments = 12} = props;
     const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
     const {textPosition = [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]} = props;
 
     const setSkillHovered = props.useStore((state) => state.setSkillHovered); 
 
-    const sizeLarge = 0.600
     const textContents = ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"]// allemand(compris uniquement), API REST, async, arduino, flask 
     const textColorCat = ["red", "red", "red", "blue", "blue", "green", "yellow", "yellow", "black", "black"]
 
@@ -41,10 +39,6 @@ export function FloatingTextSkills(props) {
         scale9: hovered9 ? 1.5 : 1,
     });
 
-    // const springScale = useSpring({
-    //     scale: [1.5, 1, 1.5, 1, 1.5, 1, 1.5, 1, 1.5, 1]
-    // });
-
     const springColor = useSpring({
         color0: hovered0 ? "white" : textColorCat[0],
         color1: hovered1 ? "white" : textColorCat[1],
@@ -58,36 +52,9 @@ export function FloatingTextSkills(props) {
         color9: hovered9 ? "white" : textColorCat[9],
     });
 
-//    function createArrayOfText3DsPlacedRandomlyOnAreaOfASphere(textToShow, radius, distanceBetweenText3Ds) {
-//        let arrayOfText3Ds = [];
-//        for (let i = 0; i < textToShow.length; i++) {
-//            let x = Math.random() * 2 - 1;
-//            let y = Math.random() * 2 - 1;
-//            let z = Math.random() * 2 - 1;
-//            let v = new THREE.Vector3(x, y, z);
-//            v.normalize();
-//            v.multiplyScalar(radius);
-//            arrayOfText3Ds.push(
-//             <Float>
-//                 <a.mesh key={i} position = {v} scale = {springScale.scale0} onPointerOver={() => setHover0(true)} onPointerOut={() => setHover0(false)}>
-//                     <planeGeometry args={hitBoxSize} />
-//                     <meshBasicMaterial visible={false} />
-//                     <Text3D key={i} position={[-1,-0.2,0]} font = {process.env.PUBLIC_URL + fontFileName} size = {sizeLarge} height = {0.065} curveSegments = {12}>
-//                         {textToShow[i]}
-//                         <a.meshStandardMaterial color={springColor.color0}/>
-//                     </Text3D>
-//                 </a.mesh>
-//             </Float>
-//            )
-//        }
-//        return arrayOfText3Ds;
-//    }
-
-// const components = useMemo(() => createArrayOfText3DsPlacedRandomlyOnAreaOfASphere(["react", "javascript", "python"],10, 10, 1), []) 
-
     const callbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log()
-        )
+        ,[]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return(
     <mesh position = {initialPosition} ref = {callbackRef}>

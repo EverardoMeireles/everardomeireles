@@ -16,7 +16,7 @@ export function VideoLoader (props) {
     // initialize video state
     const [video, setVideo] = useState(() => {
         const vid = document.createElement("video");
-        if(triggerType != "triggerTrue" && defaultVideo != "")
+        if(triggerType !== "triggerTrue" && defaultVideo !== "")
             vid.src =  process.env.PUBLIC_URL + defaultVideo + ".mp4";
         vid.crossOrigin = "Anonymous";
         vid.loop = loop;
@@ -28,12 +28,12 @@ export function VideoLoader (props) {
     // for trigger mode, play video when trigger value changes or goes from false to true depending on triggerType
     useEffect(() => {
         console.log(trigger)
-        if(triggerMode == true && trigger != undefined){
+        if(triggerMode === true && trigger !== undefined){
             setVideo(() => {
                 const vid = document.createElement("video");
-                if(triggerType == "triggerTrue" && trigger == true){
+                if(triggerType === "triggerTrue" && trigger === true){
                     vid.src = process.env.PUBLIC_URL + defaultVideo + ".mp4";
-                }else if(triggerType == "valueString")
+                }else if(triggerType === "valueString")
                     vid.src = process.env.PUBLIC_URL + trigger + ".mp4"
 
                 vid.crossOrigin = "Anonymous";
@@ -51,7 +51,7 @@ export function VideoLoader (props) {
                 return vid;
             });
     }
-    },[trigger])
+    },[trigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return ( 
     <mesh rotation={rotation} position={position}>

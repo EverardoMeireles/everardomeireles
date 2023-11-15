@@ -3,7 +3,7 @@ import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./components/HudMenu";
 import { create } from 'zustand';
 import config from './config.json';
-import { TutorialOverlay } from "./components/TutorialOverlay";
+import { TutorialOverlay } from "./components/TutorialOverlay"; // eslint-disable-line no-unused-vars
 import { Alert } from "./components/Alert";
 
 function App() {
@@ -54,12 +54,10 @@ function App() {
     }))
 
   const ResponsiveWidthHeight = {width: window.innerWidth, height: window.innerHeight}
-  const finishedBenchmark = useStore((state) => state.finishedBenchmark);
-  const transitionEnded = useStore((state) => state.transitionEnded);
 
   return (
     <>
-      {/* <Alert {...{useStore}} /> */}
+      <Alert {...{useStore}} />
       {/* <TutorialOverlay {...{useStore}}/> */}
       <HudMenu responsive={ResponsiveWidthHeight} {...{useStore}}/>
       <Canvas>

@@ -8,7 +8,7 @@ export function FadingText(props) {
     const {textModelMenu = "MainMenu"} = props;
     const {textColor = "#000000"} = props;
     const {transitionDuration = 1000} = props;
-    const {initialPosition = [0,0,0]} = props;
+    const {initialPosition = [0, 0, 0]} = props;
     const {PlaneSize = [7, 6.7]} = props;
     const {rotation = Math.PI/2} = props;
     const {visible = true} = props;
@@ -30,14 +30,14 @@ export function FadingText(props) {
         let i = 0
         console.log("");
         while( i < arr.length){
-            if(accuIndex == maxCharsBeforeLineBreak){
+            if(accuIndex === maxCharsBeforeLineBreak){
                 oneSign = -1
             }
 
             if(oneSign > 0){
                 accuIndex += 1
             }else{
-                if(arr[i] == ' '){
+                if(arr[i] === ' '){
                     arr[i] = '\n'
                     oneSign = 1
                     accuIndex = 0
@@ -53,7 +53,7 @@ export function FadingText(props) {
 
     // Fade in and out animation
     const springFade = useSpring({
-        opacity: (transitionEnded && desired_path == textModelMenu) ? 1 : 0,
+        opacity: (transitionEnded && desired_path === textModelMenu) ? 1 : 0,
         config: {
             duration:transitionDuration
         }
@@ -61,7 +61,7 @@ export function FadingText(props) {
 
     const callbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log()
-        )
+        ,[]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return(
         <mesh
