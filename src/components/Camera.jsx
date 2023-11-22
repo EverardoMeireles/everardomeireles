@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";
 import { HtmlDreiMenu } from "./HtmlDreiMenu"; // eslint-disable-line no-unused-vars
+import { smoothStep } from "../Helper";
 
 // revisit custom camera lookat mode and simpleLookatMode
 export const Camera = React.memo((props) => {
@@ -11,6 +12,7 @@ export const Camera = React.memo((props) => {
     const desired_path = useStore((state) => state.desired_path);
     const setTransitionEnded = useStore((state) => state.setTransitionEnded);
     const currentCameraMovements = useStore((state) => state.currentCameraMovements);
+    const setcurrentCameraMovements = useStore((state) => state.setcurrentCameraMovements);
     const currentCameraMode = useStore((state) => state.currentCameraMode);
     const transitionEnded = useStore((state) => state.transitionEnded);
     const panDirectionalEdgethreshold = useStore((state) => state.panDirectionalEdgethreshold);
@@ -24,7 +26,6 @@ export const Camera = React.memo((props) => {
     const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
     const isMouseNearEdge = useRef(false);
 
-    const simpleLookatMode = true; // eslint-disable-line no-unused-vars
     const desired_point = path_points[current_path.current + "-" + desired_path];
     const keyboardControlsSpeed = 0.4;
     const gravitationalPullPoint = path_points[current_path.current + "-" + current_path.current] == null ? path_points["MainMenu-MainMenu"].points[0] : path_points[current_path.current + "-" + current_path.current].points[0]; // the point to return to
@@ -41,23 +42,29 @@ export const Camera = React.memo((props) => {
     // Change camera mode
     const [cameraMode, setCameraMode] = useState(null);
     useEffect(()=>{
+        console.log(currentCameraMode)
         if(currentCameraMode === "NormalMovement"){
+            setcurrentCameraMovements({"zoom":true, "pan":true, "rotate":true})
             setCameraMode({ RIGHT: THREE.MOUSE.RIGHT, LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE })
         }
         else
         if(currentCameraMode === "panOnly"){
+            setcurrentCameraMovements({"zoom":false, "pan":true, "rotate":false})
             setCameraMode({ LEFT: THREE.MOUSE.RIGHT})
         }
         else
         if(currentCameraMode === "rotateOnly"){
+            setcurrentCameraMovements({"zoom":false, "pan":false, "rotate":true})
             setCameraMode({ LEFT: THREE.MOUSE.LEFT})
         }
         else
         if(currentCameraMode === "zoomOnly"){
+            setcurrentCameraMovements({"zoom":true, "pan":false, "rotate":false})
             setCameraMode({ MIDDLE: THREE.MOUSE.MIDDLE})
         }
         else
         if (currentCameraMode === "panDirectional" && transitionEnded) {
+            setcurrentCameraMovements({"zoom":false, "pan":true, "rotate":false})
             // these variables and the if else statements determine whether to increment or decrement the two axies by the camera event's output by multiplying it by 1 or -1
             let horizontalPanSign;
             let verticalPanSign;
@@ -98,7 +105,7 @@ export const Camera = React.memo((props) => {
                             controls.current.target.z -= (deltaX * 0.01)* horizontalPanSign;
                             break;
                         default:
-                            console.log("Invalid axis input! Expected either 'x', 'y' or 'z'")
+                            console.error("Invalid axis input! Expected either 'x', 'y' or 'z'")
 
                     }
                     
@@ -123,7 +130,7 @@ export const Camera = React.memo((props) => {
                             controls.current.target.z += (deltaY * 0.01)* verticalPanSign;
                             break;
                         default:
-                            console.log("Invalid axis input! Expected either 'x', 'y' or 'z'")
+                            console.error("Invalid axis input! Expected either 'x', 'y' or 'z'")
                     }
                 }
             };
@@ -191,7 +198,7 @@ export const Camera = React.memo((props) => {
     // used in custom camera lookat
     const desired_lookat_dict = (time) => { // eslint-disable-line no-unused-vars
         let nextLookat;
-        Object.keys(pathPointsLookat[concat_paths]).forEach((time_key) => time >= time_key ? nextLookat = pathPointsLookat[concat_paths][time_key] : console.log());
+        Object.keys(pathPointsLookat[concat_paths]).forEach((time_key) => time >= time_key ? nextLookat = pathPointsLookat[concat_paths][time_key] : undefined);
         return nextLookat;
     };
 
@@ -203,17 +210,7 @@ export const Camera = React.memo((props) => {
             current_path.current = desired_path;
             controls.current.enabled = true;
             state.events.enabled = true;
-
         }
-    }
-
-    // A function to smooth out the camera movement
-    function smoothStep(x) {
-        let Sn = -2 * Math.pow(x, 3) + 3 * Math.pow(x, 2);
-        if(x >= 1){
-            Sn = 1;
-        }
-        return Sn;
     }
 
     // Set the transition speed if specified in PathPoints.jsx
@@ -233,14 +230,15 @@ export const Camera = React.memo((props) => {
         updateCallNow.current = true,
         state.events.enabled = false,
         controls.current.enabled = false,
-        tick += path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : 0.005,
-        smooth = smoothStep(tick),
+        tick += path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : 0.005, // Determines the speed of the transition
+        smooth = smoothStep(tick), // Smooth the movement
 
-        sub_points = current_point.current = desired_point.getPointAt(smooth),
+        sub_points = current_point.current = desired_point.getPointAt(smooth), // Get the current point along the curve
         
-        current_lookat.current.lerp(setCustomSpeed(smooth, pathPointsLookat[concat_paths]), 0.03),
-        state.camera.lookAt(current_lookat.current),
+        current_lookat.current.lerp(setCustomSpeed(smooth, pathPointsLookat[concat_paths]), 0.03), // Get the point for the camera to look at
+        state.camera.lookAt(current_lookat.current), // Look at the point
 
+        // Updates the camera's position
         state.camera.position.x = sub_points.x,
         state.camera.position.y = sub_points.y,
         state.camera.position.z = sub_points.z)

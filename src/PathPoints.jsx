@@ -1235,9 +1235,19 @@ export const path_points = {
 
 }
 
-//simplified path constant so i don't have to change it for hundreds of individual paths
+// Points that the camera will look at throughout the transition.
+export const path_points_lookat_dict = {
+    // "StartingPoint-MainMenu": {
+    //     0.1: new THREE.Vector3(183, 194, 17),
+    //     0.7: new THREE.Vector3(34, 21, -52),
+    // },
+
+}
+
+// Simplified path for when the path doesn't have custom points path to look at.
+// When there is no path defined in path_points_lookat_dict, the camera will default
+// to the points below and will look at them during the whole transition.
 export const path_points_simple_lookat_dict = {
-    //index: first page when entering site
     "MainMenu": {
         0: new THREE.Vector3(34, 21, -52)},
 
@@ -1282,14 +1292,6 @@ export const path_points_simple_lookat_dict = {
 
     "ProfessionalExpProjects11": {
         0: new THREE.Vector3(-14, 46, -92)},
-}
-
-export const path_points_lookat_dict = {
-    // "StartingPoint-MainMenu": {
-    //     0.1: new THREE.Vector3(183, 194, 17),
-    //     0.5: new THREE.Vector3(34, 21, -52),
-    // },
-
 }
 
 export const path_points_experience_menu_location = {
@@ -1359,8 +1361,7 @@ export const path_points_experience_menu_location = {
 export const path_points_speed = {
     "StartingPoint-MainMenu":{
         0.1:0.005,
-        0.2:0.005,
-        0.3:0.005,
+        0.5:0.005,
         0.9:0.005
     }
 }
