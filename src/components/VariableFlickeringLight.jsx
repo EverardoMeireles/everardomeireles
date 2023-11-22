@@ -1,14 +1,11 @@
 import { useFrame } from '@react-three/fiber';
 import React, { useRef } from "react";
+import { getRandomInt } from "../Helper";
 
 export function VariableFlickeringLight(props) {
   const {FlickerFrameInterval = 3} = props;
   const {FlickerLightIntensivityRangeTuple = (0.1, 0.2)} = props;
   // const {isMainMenu = false} = props;
-
-  function getRandomInt(min, max) {
-    return Math.random() * (max - min + 1) + min;
-  }
 
   const lightRef = useRef();
   let FrameCounter = 0;

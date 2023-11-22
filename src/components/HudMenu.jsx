@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TranslationTable } from "../TranslationTable";
 import { HudMenuStyles } from "../Styles";
-import { getKeyByValue } from "../Helper";
+import { changeGraphicalMode } from "../Helper";
 import config from '../config.json';
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
@@ -19,28 +19,6 @@ export function HudMenu(props) {
 
     const marginDisplay = {marginBottom: "10px", marginLeft:"40px", "display": "inline-block"}
 
-    // increase or decrease the graphics settings
-    function changeGraphicalMode(higherOrLower)
-    {
-        // replace it by store's value later
-        const graphics = {
-            0:"potato",
-            1:"potatoPremium",
-            2:"normal",
-            3:"high"
-        }
-
-        let newGraphicalModeKey;
-        let newGraphicalMode;
-
-        newGraphicalModeKey = parseInt(getKeyByValue(graphics, currentGraphicalMode)) + higherOrLower
-        newGraphicalMode = graphics[newGraphicalModeKey]
-
-        if(!(newGraphicalModeKey < 0) && !(newGraphicalModeKey >= Object.keys(graphics).length)){
-            setGraphicalMode(newGraphicalMode)
-        }
-    }
-
     return(
     <>
         {/* hide the toggle unless the graphics toggle is enabled in the settings
@@ -48,8 +26,8 @@ export function HudMenu(props) {
         finish before showing the toggle */}
         {(config.show_html_menu_graphics_toggle && (!config.check_graphics || (config.check_graphics && finishedBenchmark))) &&
             <div style={HudMenuStyles.arrowContainerStyle}>
-                <b onClick={() => {changeGraphicalMode(-1)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
-                <b onClick={() => {changeGraphicalMode(1)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
+                <b onClick={() => {changeGraphicalMode(currentGraphicalMode, setGraphicalMode, -1)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
+                <b onClick={() => {changeGraphicalMode(currentGraphicalMode, setGraphicalMode, 1)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
             </div>
         }
         {props.responsive.width <= 500 &&

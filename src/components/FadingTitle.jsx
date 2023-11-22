@@ -2,6 +2,7 @@ import { Suspense, useCallback, useState } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
+import { oneOrZero } from "../Helper";
 
 export function FadingTitle(props) {
     const {text = "Everardo Meireles"} = props;
@@ -24,11 +25,6 @@ export function FadingTitle(props) {
             setStartFade(true);
         }, delay);
     }
-
-var oneOrZero = {
-    1: 0,
-    0: 1
-}
 
     // If visible = true, then the text will fade out, otherwise it will fade in
     const springFade = useSpring({
