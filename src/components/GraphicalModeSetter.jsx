@@ -8,7 +8,6 @@ export const GraphicalModeSetter = React.memo((props) => {
     const {numberOfPasses = 1} = props;
     const {fpsToDecreaseGraphics = 45} = props;
 
-    const graphicalModes = props.useStore((state) => state.graphicalModes);
     const currentGraphicalMode = props.useStore((state) => state.currentGraphicalMode);
     const setGraphicalMode = props.useStore((state) => state.setGraphicalMode);
     const setFinishedBenchmark = props.useStore((state) => state.setFinishedBenchmark);    

@@ -17,9 +17,6 @@ function App() {
     setGraphicalMode: (mode) => set((state) => ({currentGraphicalMode: mode})),
     finishedBenchmark: false,
     setFinishedBenchmark: (finished) => set(() => ({finishedBenchmark: finished})),
-    //skills: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
-    currentSkillHovered: "Python",
-    setSkillHovered: (skill) => set((state) => ({currentSkillHovered: skill})),
     //Languages: ["English", "French"],
     currentLanguage:"English",
     setLanguage: (language) => set((state) => ({currentLanguage: language})),
@@ -32,8 +29,6 @@ function App() {
     setPanDirectionalAxis: (axis) => set((state) => ({panDirectionalAxis: axis})),
     panDirectionalEdgethreshold:150,
     setPanDirectionalEdgethreshold: (threshold) => set((state) => ({panDirectionalEdgethreshold: threshold})),
-    tutorialClosed: false,
-    setTutorialClosed: (closed) => set(() => ({tutorialClosed: closed})),
     alertProperties: {
       active: false,
       type: 'Success', //'Error', 'Warning', 'Success'
@@ -49,7 +44,12 @@ function App() {
         ...state.alertProperties,
         ...newProperties
       }
-    }))
+    })),
+    //skills: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
+    currentSkillHovered: "Python",
+    setSkillHovered: (skill) => set((state) => ({currentSkillHovered: skill})),
+    tutorialClosed: false,
+    setTutorialClosed: (closed) => set(() => ({tutorialClosed: closed})),
     }))
 
   const ResponsiveWidthHeight = {width: window.innerWidth, height: window.innerHeight};
