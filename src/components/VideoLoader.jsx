@@ -27,14 +27,14 @@ export function VideoLoader (props) {
 
     // for trigger mode, play video when trigger value changes or goes from false to true depending on triggerType
     useEffect(() => {
-        console.log(trigger)
+        console.log(trigger);
         if(triggerMode === true && trigger !== undefined){
             setVideo(() => {
                 const vid = document.createElement("video");
                 if(triggerType === "triggerTrue" && trigger === true){
                     vid.src = process.env.PUBLIC_URL + defaultVideo + ".mp4";
                 }else if(triggerType === "valueString")
-                    vid.src = process.env.PUBLIC_URL + trigger + ".mp4"
+                    vid.src = process.env.PUBLIC_URL + trigger + ".mp4";
 
                 vid.crossOrigin = "Anonymous";
                 vid.loop = loop;
@@ -47,7 +47,7 @@ export function VideoLoader (props) {
                     vid.pause();
                     vid.src="";
                     vid.load();
-                }, delay)
+                }, delay);
                 return vid;
             });
     }

@@ -32,7 +32,7 @@ export function IndexMenu(props) {
     function IncreaseDecreaseGraphics(direction){
         if(!((["potato"].includes(currentGraphicalMode) && direction === -1) || (["high"].includes(currentGraphicalMode) && direction === 1))){
             setGraphicalMode(graphicalModes[graphicalModes.indexOf(currentGraphicalMode) + direction]);
-            console.log("GRAPHICS: " + graphicalModes[graphicalModes.indexOf(currentGraphicalMode) + direction])
+            console.log("GRAPHICS: " + graphicalModes[graphicalModes.indexOf(currentGraphicalMode) + direction]);
             
         }
     }

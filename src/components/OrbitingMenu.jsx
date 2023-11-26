@@ -73,13 +73,13 @@ export const OrbitingMenu = React.memo((props) => {
         planeRef7.current.position.x = -orbitDistance;
     },[]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    const planetexture0 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheEDHC.png')
-    const planetexture1 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheUNI-RN.png')
-    const planetexture2 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheDUT.png')
-    const planetexture3 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/ortAfficheBTS.png')
-    const planetexture4 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/ortAffiche3CSI.png')
-    const planetexture5 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheMicrolins1.png')
-    const planetexture6 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheMicrolins2.png')
+    const planetexture0 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheEDHC.png');
+    const planetexture1 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheUNI-RN.png');
+    const planetexture2 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheDUT.png');
+    const planetexture3 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/ortAfficheBTS.png');
+    const planetexture4 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/ortAffiche3CSI.png');
+    const planetexture5 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheMicrolins1.png');
+    const planetexture6 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheMicrolins2.png');
     // const texture = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL +'./textures/')
 
     useFrame((state, delta) => {
@@ -92,7 +92,7 @@ export const OrbitingMenu = React.memo((props) => {
 
                 setClicked(false);
             }else{
-                leftOverRadians = 0
+                leftOverRadians = 0;
             }
             
             planeRef0.current.rotation.y = rotationIncrement + leftOverRadians;

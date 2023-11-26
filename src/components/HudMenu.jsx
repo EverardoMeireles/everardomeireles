@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TranslationTable } from "../TranslationTable";
 import { HudMenuStyles } from "../Styles";
-import { changeGraphicalMode } from "../Helper";
+import { increaseOrDecreaseGraphics } from "../Helper";
 import config from '../config.json';
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
@@ -17,7 +17,7 @@ export function HudMenu(props) {
 
     const [profExpClicked, setProfExpClicked] = useState(false);
 
-    const marginDisplay = {marginBottom: "10px", marginLeft:"40px", "display": "inline-block"}
+    const marginDisplay = {marginBottom: "10px", marginLeft:"40px", "display": "inline-block"};
 
     return(
     <>
@@ -26,8 +26,8 @@ export function HudMenu(props) {
         finish before showing the toggle */}
         {(config.show_html_menu_graphics_toggle && (!config.check_graphics || (config.check_graphics && finishedBenchmark))) &&
             <div style={HudMenuStyles.arrowContainerStyle}>
-                <b onClick={() => {changeGraphicalMode(currentGraphicalMode, setGraphicalMode, -1)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
-                <b onClick={() => {changeGraphicalMode(currentGraphicalMode, setGraphicalMode, 1)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
+                <b onClick={() => {increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
+                <b onClick={() => {increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
             </div>
         }
         {props.responsive.width <= 500 &&

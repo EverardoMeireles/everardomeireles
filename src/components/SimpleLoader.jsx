@@ -9,7 +9,7 @@ export const SimpleLoader = React.memo((props) => {
     const {useAo = true} = props;
     const {ambientOcclusionIntensivity = 1} = props;
 
-    const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + modelName)
+    const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + modelName);
     
     if(useAo) {
         for( let node in gltf.nodes) {
@@ -23,14 +23,14 @@ export const SimpleLoader = React.memo((props) => {
     if (gltf.animations.length) {
         mixer = new THREE.AnimationMixer(gltf.scene);
         gltf.animations.forEach(clip => {
-            const action = mixer.clipAction(clip)
+            const action = mixer.clipAction(clip);
             action.play();
         });
     }
 
     // updates deltas for animations
     useFrame((state, delta) => {
-        mixer?.update(delta)
+        mixer?.update(delta);
     })
 
     return (

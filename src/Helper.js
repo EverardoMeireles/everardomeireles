@@ -1,3 +1,11 @@
+    // replace it by store's value later
+export const graphicsModes = {
+    0:"potato",
+    1:"potatoPremium",
+    2:"normal",
+    3:"high"
+}
+
 export var oneOrZero = {
     1: 0,
     0: 1
@@ -18,23 +26,15 @@ export function smoothStep(x) {
 }
 
 // increase or decrease the graphics settings
-export function changeGraphicalMode(currentGraphicalMode, setGraphicalMode, higherOrLower)
+export function increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, higherOrLower)
 {
-    // replace it by store's value later
-    const graphics = {
-        0:"potato",
-        1:"potatoPremium",
-        2:"normal",
-        3:"high"
-    }
-
     let newGraphicalModeKey;
     let newGraphicalMode;
 
-    newGraphicalModeKey = parseInt(getKeyByValue(graphics, currentGraphicalMode)) + higherOrLower
-    newGraphicalMode = graphics[newGraphicalModeKey]
+    newGraphicalModeKey = parseInt(getKeyByValue(graphicsModes, currentGraphicalMode)) + higherOrLower
+    newGraphicalMode = graphicsModes[newGraphicalModeKey]
 
-    if(!(newGraphicalModeKey < 0) && !(newGraphicalModeKey >= Object.keys(graphics).length)){
+    if(!(newGraphicalModeKey < 0) && !(newGraphicalModeKey >= Object.keys(graphicsModes).length)){
         setGraphicalMode(newGraphicalMode)
     }
 }

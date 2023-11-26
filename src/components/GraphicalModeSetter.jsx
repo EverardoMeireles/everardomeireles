@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { getGPUTier } from 'detect-gpu';
 import React,{ useEffect } from "react";
+import { graphicsModes } from "../Helper";
 
 // set graphical by performing a gpu ier test, a fps check and a hardware acceleration check
 export const GraphicalModeSetter = React.memo((props) => {
@@ -31,30 +32,9 @@ export const GraphicalModeSetter = React.memo((props) => {
         }
         // this method require that in the scene container many different sets of graphics be defined in the potatoPremium, normal and high tiers using conditional rendering
         if(HardwareAccelerationCheckPassed){
-            let newGraphicalMode;
-
-            // because of limitations in the detect-gpu package, the graphical modes are limited to 4 for now.
-            switch(gpuTier.tier) {
-                // case 0:
-                //     newGraphicalMode = "potato";
-                // break;
-    
-                case 1:
-                    newGraphicalMode = "potatoPremium";
-                break;
-    
-                case 2:
-                    newGraphicalMode = "normal";
-                break;
-    
-                case 3:
-                    newGraphicalMode = "high";
-                break;
-                default:
-                    newGraphicalMode = "potatoPremium";
-            }
-                console.log("GRAPHICS: " + newGraphicalMode)
-                setGraphicalMode(newGraphicalMode);
+            console.log("GRAPHICS index: " + gpuTier.tier);
+            console.log("GRAPHICS: " + graphicsModes);
+            setGraphicalMode(graphicsModes[gpuTier.tier]);
         }
     })()},[]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -82,18 +62,18 @@ export const GraphicalModeSetter = React.memo((props) => {
             accuDeltasForFPS = 0;
             accuFramesForFPS = 0;
         }
-        console.log("deltas: " + accuDeltasForHardwareAccelerationCheck)
-        console.log("frames: " + accuFramesForHardwareAccelerationCheck)
+        console.log("deltas: " + accuDeltasForHardwareAccelerationCheck);
+        console.log("frames: " + accuFramesForHardwareAccelerationCheck);
         // if after 5 seconds, still less than 60 frames have passed, the site is unusable, ask the user to enable hardware acceleration 
         // by redirecting them to the hardware acceleration page
         if(!skipHardwareAccelerationCheck && accuDeltasForHardwareAccelerationCheck > 5){
-            console.log("entered")
+            console.log("entered");
             if(accuFramesForHardwareAccelerationCheck < 60){
-                console.log("redirected")
+                console.log("redirected");
                 window.location.href = "HardwareAcceleration.html";
             }
             else{
-                console.log("skipped")
+                console.log("skipped");
                 skipHardwareAccelerationCheck = true;
             }
         }
@@ -108,8 +88,8 @@ export const GraphicalModeSetter = React.memo((props) => {
                 // decrease the graphics by one tier
                 if(averageFps < fpsToDecreaseGraphics){
                     if(!["potato", "high"].includes(currentGraphicalMode)){
-                        setGraphicalMode(graphicalModes[graphicalModes.indexOf(currentGraphicalMode) - 1]);
-                        console.log("GRAPHICS: " + graphicalModes[graphicalModes.indexOf(currentGraphicalMode) - 1])
+                        setGraphicalMode(graphicsModes[graphicsModes.indexOf(currentGraphicalMode) - 1]);
+                        console.log("GRAPHICS: " + graphicsModes[graphicsModes.indexOf(currentGraphicalMode) - 1])
                         pass = -1;
                     }
                 }

@@ -3,19 +3,19 @@ import React, { useRef } from "react";
 import { getRandomInt } from "../Helper";
 
 export function VariableFlickeringLight(props) {
-  const {FlickerFrameInterval = 3} = props;
-  const {FlickerLightIntensivityRangeTuple = (0.1, 0.2)} = props;
+  const {flickerFrameInterval = 3} = props;
+  const {flickerLightIntensivityRangeTuple = (0.1, 0.2)} = props;
   // const {isMainMenu = false} = props;
 
   const lightRef = useRef();
-  let FrameCounter = 0;
+  let frameCounter = 0;
   useFrame((state, delta) => {
-    FrameCounter++
+    frameCounter++;
 
-    if(FrameCounter % FlickerFrameInterval === 0){
-      let randdd= getRandomInt(0.1, 0.2)
-      console.log(randdd)
-      lightRef.current.intensity =  0.1 + randdd
+    if(frameCounter % flickerFrameInterval === 0){
+      let random= getRandomInt(0.1, 0.2);
+      console.log(random);
+      lightRef.current.intensity =  0.1 + random;
     }
     
   });

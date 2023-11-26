@@ -12,7 +12,6 @@ function App() {
     setPath: (desired) => set(() => ({desired_path: desired})),
     transitionEnded: false,
     setTransitionEnded: (ended) => set(() => ({transitionEnded: ended})),
-    graphicalModes: ["potato", "potatoPremium", "normal", "high"],
     currentGraphicalMode: config.default_graphical_setting,
     // if graphicalModes wont be out of range, update currentGraphicalMode
     setGraphicalMode: (mode) => set((state) => ({currentGraphicalMode: mode})),
@@ -53,7 +52,7 @@ function App() {
     }))
     }))
 
-  const ResponsiveWidthHeight = {width: window.innerWidth, height: window.innerHeight}
+  const ResponsiveWidthHeight = {width: window.innerWidth, height: window.innerHeight};
 
   return (
     <>
