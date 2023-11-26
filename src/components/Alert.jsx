@@ -53,11 +53,11 @@ export const Alert = (props) => {
     opacity: isVisible ? 1 : 0,
     // Background and alertProperties.text color based on the alert alertProperties.type
     backgroundColor: alertProperties.type === 'Error' ? '#f8d7da' :
-                     alertProperties.type === 'Warning' ? '#fff3cd' :
-                     '#d4edda',
+                    alertProperties.type === 'Warning' ? '#fff3cd' :
+                    '#d4edda',
     color: alertProperties.type === 'Error' ? '#721c24' :
-           alertProperties.type === 'Warning' ? '#856404' :
-           '#155724',
+          alertProperties.type === 'Warning' ? '#856404' :
+          '#155724',
     top: alertProperties.displaySide.includes('top') ? '0' : 'auto',
     bottom: alertProperties.displaySide.includes('bottom') ? '0' : 'auto',
     left: alertProperties.displaySide.includes('Left') ? '0' : 'auto',

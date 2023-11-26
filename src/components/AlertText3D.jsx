@@ -15,11 +15,11 @@ export const AlertText3D = React.memo((props) => {
 
     const [render, setRender] = useState(true);
     setTimeout(() => {
-        setRender(false)
-    }, durationMiliseconds)
+        setRender(false);
+    }, durationMiliseconds);
 
     if(!render){
-    return null
+    return null;
     }
 
     return (

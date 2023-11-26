@@ -9,7 +9,7 @@ export function FadingText3D(props) {
     const {textColor = "#000000"} = props;
     const {transitionDuration = 1000} = props;
     const {initialPosition = [0,0,0]} = props;
-    const {PlaneSize = [7, 6.7]} = props;
+    const {planeSize = [7, 6.7]} = props;
     const {fontFileName = "/roboto.json"} = props; // put the json font file in the public folder
     const {lettersPerUnit = 8} = props; // how many letters should fit inside a spacial unit(a [1,1,1] cube)
     const {rotation = Math.PI/2} = props;
@@ -28,7 +28,7 @@ export function FadingText3D(props) {
     })
 
     const TextRows = (text) => {
-        const unitsPerRow = Math.floor(PlaneSize[1]); //number of spacial units (a [1,1,1] cube) that a fit with the z axis of the plane 
+        const unitsPerRow = Math.floor(planeSize[1]); //number of spacial units (a [1,1,1] cube) that a fit with the z axis of the plane 
         const replace = '.{1,'+(Math.floor(lettersPerUnit) * unitsPerRow)+'}';
         const reg = (new RegExp(replace,"g"));
         const textChunksArray = text.match(reg);
@@ -37,7 +37,7 @@ export function FadingText3D(props) {
             rows.push(
                 <Text3D
                     key = {i}
-                    position = {[-(PlaneSize[1]/2) + textPositionOffset[2], (PlaneSize[0]/2) + textPositionOffset[1] - i,  0]}
+                    position = {[-(planeSize[1]/2) + textPositionOffset[2], (planeSize[0]/2) + textPositionOffset[1] - i,  0]}
                     font = {process.env.PUBLIC_URL + fontFileName}
                     size = {0.200}
                     height = {0.065}
@@ -63,7 +63,7 @@ export function FadingText3D(props) {
             ref = {callbackRef}
             scale={scale}
         >
-            <planeGeometry args = {PlaneSize} />
+            <planeGeometry args = {planeSize} />
             <a.meshBasicMaterial opacity = {springFade.opacity} transparent visible={visible}/>
             <Suspense fallback = {null}>
                 {text3DArray.rows}

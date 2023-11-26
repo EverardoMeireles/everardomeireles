@@ -44,27 +44,27 @@ export const Camera = React.memo((props) => {
     useEffect(()=>{
         console.log(currentCameraMode)
         if(currentCameraMode === "NormalMovement"){
-            setcurrentCameraMovements({"zoom":true, "pan":true, "rotate":true})
-            setCameraMode({ RIGHT: THREE.MOUSE.RIGHT, LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE })
+            setcurrentCameraMovements({"zoom":true, "pan":true, "rotate":true});
+            setCameraMode({ RIGHT: THREE.MOUSE.RIGHT, LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE });
         }
         else
         if(currentCameraMode === "panOnly"){
-            setcurrentCameraMovements({"zoom":false, "pan":true, "rotate":false})
-            setCameraMode({ LEFT: THREE.MOUSE.RIGHT})
+            setcurrentCameraMovements({"zoom":false, "pan":true, "rotate":false});
+            setCameraMode({ LEFT: THREE.MOUSE.RIGHT});
         }
         else
         if(currentCameraMode === "rotateOnly"){
-            setcurrentCameraMovements({"zoom":false, "pan":false, "rotate":true})
-            setCameraMode({ LEFT: THREE.MOUSE.LEFT})
+            setcurrentCameraMovements({"zoom":false, "pan":false, "rotate":true});
+            setCameraMode({ LEFT: THREE.MOUSE.LEFT});
         }
         else
         if(currentCameraMode === "zoomOnly"){
-            setcurrentCameraMovements({"zoom":true, "pan":false, "rotate":false})
-            setCameraMode({ MIDDLE: THREE.MOUSE.MIDDLE})
+            setcurrentCameraMovements({"zoom":true, "pan":false, "rotate":false});
+            setCameraMode({ MIDDLE: THREE.MOUSE.MIDDLE});
         }
         else
         if (currentCameraMode === "panDirectional" && transitionEnded) {
-            setcurrentCameraMovements({"zoom":false, "pan":true, "rotate":false})
+            setcurrentCameraMovements({"zoom":false, "pan":true, "rotate":false});
             // these variables and the if else statements determine whether to increment or decrement the two axies by the camera event's output by multiplying it by 1 or -1
             let horizontalPanSign;
             let verticalPanSign;
@@ -105,7 +105,7 @@ export const Camera = React.memo((props) => {
                             controls.current.target.z -= (deltaX * 0.01)* horizontalPanSign;
                             break;
                         default:
-                            console.error("Invalid axis input! Expected either 'x', 'y' or 'z'")
+                            console.error("Invalid axis input! Expected either 'x', 'y' or 'z'");
 
                     }
                     
@@ -130,7 +130,7 @@ export const Camera = React.memo((props) => {
                             controls.current.target.z += (deltaY * 0.01)* verticalPanSign;
                             break;
                         default:
-                            console.error("Invalid axis input! Expected either 'x', 'y' or 'z'")
+                            console.error("Invalid axis input! Expected either 'x', 'y' or 'z'");
                     }
                 }
             };
