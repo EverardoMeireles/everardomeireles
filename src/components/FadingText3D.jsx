@@ -54,7 +54,7 @@ export function FadingText3D(props) {
 
     const text3DArray = TextRows(textToFade);
     const callbackRef = useCallback(
-        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log()
+        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : undefined
         ,[]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return(

@@ -36,7 +36,7 @@ export function FadingTitle(props) {
 
     // Rotate mesh
     const callbackRef = useCallback(
-        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : console.log()
+        ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : undefined
         ,[]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return(

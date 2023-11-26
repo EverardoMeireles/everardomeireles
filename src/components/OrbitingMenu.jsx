@@ -140,7 +140,7 @@ export const OrbitingMenu = React.memo((props) => {
                 setOrbitDirection(-1)
                 setRotation(0)
                 setClicked(true)
-                } : console.log()}
+                } : undefined}
             rotation = {[Math.PI/2, 0, 0]}
             scale = {0.5}
             position = {[-12.5, -2.5, 0.5]}>
@@ -156,7 +156,7 @@ export const OrbitingMenu = React.memo((props) => {
                 setOrbitDirection(1)
                 setRotation(0)
                 setClicked(true)
-                } : console.log()}
+                } : undefined}
             rotation = {[-Math.PI/2, 0, 0]}
             scale = {0.5}
             position = {[-12.5, -2.5, -0.5]}>
