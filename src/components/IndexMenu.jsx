@@ -3,6 +3,7 @@ import { Text } from "@react-three/drei";
 import { useCallback, Suspense, useState } from "react";
 import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
+import { increaseOrDecreaseGraphics } from "../Helper";
 
 export function IndexMenu(props) {
     const {rotation = 2 * Math.PI} = props;
@@ -27,15 +28,6 @@ export function IndexMenu(props) {
         color0: hovered0 ? "white" : "blue",
         color1: hovered1 ? "white" : "blue"
     });
-
-    // make sure user can't press it during initial graphical setting
-    function IncreaseDecreaseGraphics(direction){
-        if(!((["potato"].includes(currentGraphicalMode) && direction === -1) || (["high"].includes(currentGraphicalMode) && direction === 1))){
-            setGraphicalMode(graphicalModes[graphicalModes.indexOf(currentGraphicalMode) + direction]);
-            console.log("GRAPHICS: " + graphicalModes[graphicalModes.indexOf(currentGraphicalMode) + direction]);
-            
-        }
-    }
 
     const textCallbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log()
@@ -70,24 +62,10 @@ export function IndexMenu(props) {
                 visible={visible}
                 >
                     <Suspense fallback = {null}>
-                        {/* <Text3D
-                        position = {[0.5, -0.25, 2.5]}//Use a more standardised approach
-                        ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
-                        size = {0.575}
-                        height = {0.065}
-                        curveSegments = {12}
-                        >
-                            Menu Principal
-                            <meshStandardMaterial color = {"red"} />
-                        </Text3D> */}
-
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 3.1]}
                             font={font}
                         >
@@ -119,9 +97,7 @@ export function IndexMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 2]}
                             font={font}
                         >
@@ -153,9 +129,7 @@ export function IndexMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[9, 9, 9]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 2.75]}
                             font={font}
                         >
@@ -187,9 +161,7 @@ export function IndexMenu(props) {
                         <Text
                             ref = {textCallbackRef}
                             scale={[8, 8, 8]}
-                            // color="black" // default
-                            anchorX="left" // default
-                            // anchorY="top" // default
+                            anchorX="left"
                             position = {[0.6, 0, 4.8]}
                             font={font}
                         >
@@ -208,7 +180,7 @@ export function IndexMenu(props) {
                 onPointerOut={() => setHover0(false)}
                 onClick = { (e) => {
                 e.stopPropagation();
-                IncreaseDecreaseGraphics(1)
+                increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1)
                 }}
                 rotation = {[Math.PI*2, 0, 0]}
                 scale = {0.5}
@@ -224,7 +196,7 @@ export function IndexMenu(props) {
                 onPointerOut={() => setHover1(false)}
                 onClick = { (e) => {
                 e.stopPropagation();
-                IncreaseDecreaseGraphics(-1)
+                increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1)
                 }}
                 rotation = {[Math.PI, 0, 0]}
                 scale = {0.5}
