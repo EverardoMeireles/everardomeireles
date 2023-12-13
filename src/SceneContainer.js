@@ -121,7 +121,7 @@ if(window.innerWidth < 500){
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
                 <FloatingTextSkills {...{useStore}} initialPosition = {[-9, 30, -15]} textPosition = {FloatingTextSkillsPosition} />
-                <OrbitingMenu visible = { (config.check_graphics === false || finishedBenchmark === true) ? true : false} orbitDistance = {7.5} orbitCenterPosition = {[-17, 97, 27]}/>
+                <OrbitingMenu {...{useStore}} visible = { (config.check_graphics === false || finishedBenchmark === true) ? true : false} orbitDistance = {7.5} orbitCenterPosition = {[-17, 97, 27]}/>
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
                     <SimpleLoader modelName = {"NewthreeJsScene.glb"} ambientOcclusionIntensivity = {2.5}></SimpleLoader>

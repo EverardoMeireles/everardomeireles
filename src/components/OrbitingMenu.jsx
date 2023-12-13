@@ -4,18 +4,22 @@ import {useSpring, a} from '@react-spring/three';
 import * as THREE from "three";
 
 export const OrbitingMenu = React.memo((props) => {
+    const useStore = props.useStore;
     const {orbitCenterPosition = [15.5, 1.1, 0]} = props;
     const {planeSize = [5, 5]} = props;
     const {orbitDistance = 1.5} = props;
     const {visible = false} = props;
 
+    const transitionEnded = useStore((state) => state.transitionEnded);
+    const desired_path = useStore((state) => state.desired_path);
+
     const [hovered0, setHover0] = useState(false);
     const [hovered1, setHover1] = useState(false);
-    const [clicked, setClicked] = useState(false);
     const [rotation, setRotation] = useState(6.29); // optimize these two into one
     const [rotationIncrement, setRotationIncrement] = useState(0); // optimize these two into one
     const [orbitDirection, setOrbitDirection] = useState(1);
 
+    const clicked = useRef(false);
 
     const orbitSpeed = 1;
     const rotationRadians = (2 * Math.PI) / 8;
@@ -90,7 +94,7 @@ export const OrbitingMenu = React.memo((props) => {
             if(leftOverRadians < (delta * Math.abs((orbitSpeed * orbitDirection)))){
                 setRotationIncrement(rotationIncrement + leftOverRadians);
 
-                setClicked(false);
+                clicked.current = false;
             }else{
                 leftOverRadians = 0;
             }
@@ -107,39 +111,38 @@ export const OrbitingMenu = React.memo((props) => {
     });
 
     // THERE ARE PROBLEMS WITH KEYBOARD CONTROLS, THAT IF STATEMENT IS NOT WORKING
-    // useEffect(()=>{
-    //     window.addEventListener("keydown", (event) => {
-    //         if(!clicked){
-    //             switch(event.code) {
-    //                 case "ArrowLeft":
-    //                     setClicked(true)
-    //                     setRotation(0)
+    useEffect(()=>{
+        window.addEventListener("keydown", (event) => {
+            if(!clicked.current && desired_path == "Education" && transitionEnded){
+                clicked.current = true;
+                setRotation(0);
+                switch(event.code) {
+                    case "ArrowLeft":
+                        setOrbitDirection(-1);
     
-    //                     setOrbitDirection(-1)
-    //                     // console.log("left")
-    //                 break;
-    //                 case "ArrowRight":
-    //                     setClicked(true)
-    //                     setRotation(0)
-    
-    //                     setOrbitDirection(1)
-    //                     // console.log("right")
-    //                 break;
-    //             }
-    //         }
-    //     });
-    // });
+                        // console.log("left")
+                    break;
+                    case "ArrowRight":
+                        setOrbitDirection(1);
+                        // setClicked(true)
+                        // setRotation(0)
+                            // console.log("right")
+                    break;
+                }
+            }
+        });
+    });
 
     return (
         <mesh position = {[orbitCenterPosition[0] + orbitDistance, orbitCenterPosition[1], orbitCenterPosition[2]]}>
             <mesh 
             onPointerOver={() => setHover0(true)} 
             onPointerOut={() => setHover0(false)}
-            onClick = {!clicked ? (e) => {
+            onClick = {!clicked.current ? (e) => {
                 e.stopPropagation();
                 setOrbitDirection(-1)
                 setRotation(0)
-                setClicked(true)
+                clicked.current = true;
                 } : undefined}
             rotation = {[Math.PI/2, 0, 0]}
             scale = {0.5}
@@ -151,11 +154,11 @@ export const OrbitingMenu = React.memo((props) => {
             <mesh
             onPointerOver = {() => setHover1(true)} 
             onPointerOut = {() => setHover1(false)}
-            onClick = {!clicked ? (e) => {
+            onClick = {!clicked.current ? (e) => {
                 e.stopPropagation();
                 setOrbitDirection(1)
                 setRotation(0)
-                setClicked(true)
+                clicked.current = true;
                 } : undefined}
             rotation = {[-Math.PI/2, 0, 0]}
             scale = {0.5}
