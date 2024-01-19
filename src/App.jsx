@@ -15,17 +15,14 @@ function App() {
     transitionEnded: false,
     setTransitionEnded: (ended) => set(() => ({transitionEnded: ended})),
     currentGraphicalMode: config.default_graphical_setting,
-    // if graphicalModes wont be out of range, update currentGraphicalMode
-    setGraphicalMode: (mode) => set((state) => ({currentGraphicalMode: mode})),
+    setGraphicalMode: (mode) => set((state) => ({currentGraphicalMode: mode})), // if graphicalModes wont be out of range, update currentGraphicalMode
     finishedBenchmark: false,
     setFinishedBenchmark: (finished) => set(() => ({finishedBenchmark: finished})),
-    //Languages: ["English", "French"],
-    currentLanguage:"English",
+    currentLanguage:"English", // Languages: ["English", "French"],
     setLanguage: (language) => set((state) => ({currentLanguage: language})),
     currentCameraMovements:{"zoom":true, "pan":true, "rotate":true},
     setcurrentCameraMovements: (cameraMovements) => set((state) => ({currentCameraMovements: cameraMovements})),
-    //Camera modes: ["NormalMovement", "panOnly", "rotateOnly", "zoomOnly", "panDirectional"]
-    currentCameraMode:"NormalMovement",
+    currentCameraMode:"panDirectional", // Camera modes: ["NormalMovement", "panOnly", "rotateOnly", "zoomOnly", "panDirectional"]
     setCurrentCameraMode: (cameraMode) => set((state) => ({currentCameraMode: cameraMode})),
     panDirectionalAxis:['+z','+y'],
     setPanDirectionalAxis: (axis) => set((state) => ({panDirectionalAxis: axis})),
@@ -33,7 +30,7 @@ function App() {
     setPanDirectionalEdgethreshold: (threshold) => set((state) => ({panDirectionalEdgethreshold: threshold})),
     alertProperties: {
       active: false,
-      type: 'Success', //'Error', 'Warning', 'Success'
+      type: 'Success', // 'Error', 'Warning', 'Success'
       displaySide: 'topRight',
       duration: 5,
       width: '300px',
@@ -47,11 +44,18 @@ function App() {
         ...newProperties
       }
     })),
-    //skills: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
-    currentSkillHovered: "Python",
+    currentSkillHovered: "Python", // skills: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
     setSkillHovered: (skill) => set((state) => ({currentSkillHovered: skill})),
     tutorialClosed: false,
     setTutorialClosed: (closed) => set(() => ({tutorialClosed: closed})),
+    triggers: {"trigger1": false, "trigger2": false, "trigger3": false, "trigger4": false, "trigger5": false},
+    toggleTrigger: (key) => set((state) => ({ // Use like this: toggleTrigger("exampleTrigger")
+      triggers: {
+          ...state.triggers,
+          [key]: !state.triggers[key]
+      }
+    })),
+
     }))
 
   const ResponsiveWidthHeight = {width: window.innerWidth, height: window.innerHeight};

@@ -1,5 +1,55 @@
 import * as THREE from "three";
 
+const vectorPoints = {
+    "StartingPoint" : new THREE.Vector3(251, 222, -16),
+    "MainMenu" : new THREE.Vector3(194, 150, 63),
+    "Education" : new THREE.Vector3(-17, 97, 27),
+    "Skills" : new THREE.Vector3(13, 35, -15),
+    "ProfessionalExpProjects0" : new THREE.Vector3(4, 4, -71),
+    "ProfessionalExpProjects1" : new THREE.Vector3(22, 4, -99),
+    "ProfessionalExpProjects2" : new THREE.Vector3(-6, 4, -116),
+    "ProfessionalExpProjects3" : new THREE.Vector3(-23, 4, -89),
+    "ProfessionalExpProjects4" : new THREE.Vector3(5, 24, -71),
+    "ProfessionalExpProjects5" : new THREE.Vector3(23, 24, -98),
+    "ProfessionalExpProjects6" : new THREE.Vector3(-6, 24, -116),
+    "ProfessionalExpProjects7" : new THREE.Vector3(-23, 24, -90),
+    "ProfessionalExpProjects8" : new THREE.Vector3(3, 44, -70),
+    "ProfessionalExpProjects9" : new THREE.Vector3(22, 44, -99),
+    "ProfessionalExpProjects10" : new THREE.Vector3(-6, 44, -116),
+    "ProfessionalExpProjects11" : new THREE.Vector3(-23, 44, -89)
+}
+
+function estimateMiddlePoint(start, end) {
+    var midpoint = start.clone().lerp(end, 0.5);
+    var direction = end.clone().sub(start).normalize();
+    var perpendicular = new THREE.Vector3(-direction.y, direction.x, direction.z).normalize();
+    var offsetDistance = 10; // You can adjust this value based on your requirements
+    return midpoint.add(perpendicular.multiplyScalar(offsetDistance));
+}
+
+// Point where the initial transition ends
+export const firstPoint = new THREE.Vector3(194, 150, 63);
+
+export function getCurve(to, from){
+    let returnPath, start, middle, end;
+    console.log(path_points[to + "-" + from])
+    if(path_points[to + "-" + from] !== undefined)
+    {
+        returnPath = path_points[to + "-" + from]
+    }else
+    {
+        start = vectorPoints[to];
+        end = vectorPoints[from];
+        middle = estimateMiddlePoint(start, end);
+        returnPath = new THREE.CatmullRomCurve3( [        
+            start,
+            middle,
+            end])
+        console.log(returnPath);
+    }
+    return returnPath;
+}
+
 export const path_points = {
 //Paths when user clicks on a navigation item but then returns to the previous item
     "MainMenu-MainMenu":
@@ -1216,11 +1266,11 @@ export const path_points = {
         new THREE.Vector3(-18, 47, -104),
         new THREE.Vector3(-4, 44, -117)]),
 
-    "StartingPoint-MainMenu":
-    new THREE.CatmullRomCurve3( [        
-        new THREE.Vector3(251, 222, -16),
-        new THREE.Vector3(234, 200, 3),
-        new THREE.Vector3(194, 150, 63)]),
+    // "StartingPoint-MainMenu":
+    // new THREE.CatmullRomCurve3( [        
+    //     new THREE.Vector3(251, 222, -16),
+    //     new THREE.Vector3(234, 200, 3),
+    //     new THREE.Vector3(194, 150, 63)]),
 
     "StartingPoint": 
     new THREE.CatmullRomCurve3( [        

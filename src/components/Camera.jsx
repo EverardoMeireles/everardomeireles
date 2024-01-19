@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { path_points, path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed } from "../PathPoints";
+import { path_points, path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed, getCurve, firstPoint } from "../PathPoints";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";
@@ -27,9 +27,10 @@ export const Camera = React.memo((props) => {
     const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
     const isMouseNearEdge = useRef(false);
 
-    const desired_point = path_points[current_path.current + "-" + desired_path];
+    const curve = getCurve(current_path.current, desired_path);
     const keyboardControlsSpeed = 0.4;
-    const gravitationalPullPoint = path_points[current_path.current + "-" + current_path.current] == null ? path_points["MainMenu-MainMenu"].points[0] : path_points[current_path.current + "-" + current_path.current].points[0]; // the point to return to
+    const currentPoint = getCurve(current_path.current, current_path.current).points[0];
+    const gravitationalPullPoint = currentPoint == null ? firstPoint : currentPoint;/*getCurve(current_path.current, current_path.current) == null ? firstPoint : getCurve(current_path.current, current_path.current);*/ // the point to return to in panDirectional mode
     const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
     const pullInterval = 10; // How often the pull is applied in milliseconds
     
@@ -236,7 +237,7 @@ export const Camera = React.memo((props) => {
         tick += path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : 0.005, // Determines the speed of the transition
         smooth = smoothStep(tick), // Smooth the movement
 
-        sub_points = current_point.current = desired_point.getPointAt(smooth), // Get the current point along the curve
+        sub_points = current_point.current = curve.getPointAt(smooth), // Get the current point along the curve
         
         current_lookat.current.lerp(setCustomSpeed(smooth, pathPointsLookat[concat_paths]), 0.03), // Get the point for the camera to look at
         state.camera.lookAt(current_lookat.current), // Look at the point
