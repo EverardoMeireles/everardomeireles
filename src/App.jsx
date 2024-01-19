@@ -8,6 +8,8 @@ import { Alert } from "./components/Alert";
 
 function App() {
   const useStore = create((set) => ({
+    trigger: false,
+    setTrigger: (trig) => set(() => ({trigger: trig})),
     desired_path: "MainMenu",
     setPath: (desired) => set(() => ({desired_path: desired})),
     transitionEnded: false,

@@ -1,11 +1,15 @@
 import { useLoader, useFrame } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import * as THREE from "three";
 import React from "react";
 
 export const SimpleLoader = React.memo((props) => {
     const {modelName = "threeJsScene.glb"} = props;
+    const {autoPlay = false} = props;
+    const {position = [0, 0, 0]} = props;
+    const {animationTrigger = false} = props;
+    const {triggeredAnimation = "idle"} = props;
     const {useAo = true} = props;
     const {ambientOcclusionIntensivity = 1} = props;
 
@@ -19,14 +23,32 @@ export const SimpleLoader = React.memo((props) => {
         }
     }
 
-    let mixer
-    if (gltf.animations.length) {
-        mixer = new THREE.AnimationMixer(gltf.scene);
+    let mixer;
+    mixer = new THREE.AnimationMixer(gltf.scene);
+
+    const animations =  [];
+    gltf.animations.forEach(clip => {
+        animations.push(clip)
+    });
+
+    if (autoPlay && gltf.animations.length) {
         gltf.animations.forEach(clip => {
             const action = mixer.clipAction(clip);
             action.play();
         });
     }
+
+    // plays a specific animation if the trigger is set to true
+    useEffect(() => {
+        if(animationTrigger){
+            gltf.animations.forEach(clip => {
+                if(clip.name == triggeredAnimation){
+                    const action = mixer.clipAction(clip);
+                    action.play();
+            }
+            });
+        }
+      }, [animationTrigger]);
 
     // updates deltas for animations
     useFrame((state, delta) => {
@@ -35,7 +57,7 @@ export const SimpleLoader = React.memo((props) => {
 
     return (
     <Suspense fallback={null}>
-        <primitive object={gltf.scene} />
+        <primitive position={position} object={gltf.scene} />
     </Suspense>
     )
 })

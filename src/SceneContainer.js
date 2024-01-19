@@ -24,6 +24,8 @@ export function SceneContainer(props) {
     const currentSkillHovered = useStore((state) => state.currentSkillHovered); // eslint-disable-line no-unused-vars
     const currentLanguage = useStore((state) => state.currentLanguage);
     const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
+    const trigger = useStore((state) => state.trigger);
+    const setTrigger = useStore((state) => state.setTrigger);
 
     const { gl } = useThree(); // eslint-disable-line no-unused-vars
 
@@ -100,8 +102,8 @@ if(window.innerWidth < 500){
 }
     return(
         <>
-            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {"Everardo Meireles"} visible = {false} textColor = {"#000000"} delay = {4800} transitionDuration = {1500} />
-            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {"Developpeur Fullstack"} visible = {false} textColor = {"#000000"} delay = {5400} transitionDuration = {1500} />
+            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {"Everardo Meireles"} visible = {false} textColor = {"#000000"} delay = {5000} transitionDuration = {1500} />
+            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {"Developpeur Fullstack"} visible = {false} textColor = {"#000000"} delay = {5600} transitionDuration = {1500} />
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}
@@ -124,7 +126,7 @@ if(window.innerWidth < 500){
                 <OrbitingMenu {...{useStore}} visible = { (config.check_graphics === false || finishedBenchmark === true) ? true : false} orbitDistance = {7.5} orbitCenterPosition = {[-17, 97, 27]}/>
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
-                    <SimpleLoader modelName = {"NewthreeJsScene.glb"} ambientOcclusionIntensivity = {2.5}></SimpleLoader>
+                    <SimpleLoader triggeredAnimation={"01_Sphere_bot_Roll"} animationTrigger={trigger} position={[160, 143, 62]} modelName = {"sphere_bot.glb"} ambientOcclusionIntensivity = {2.5}></SimpleLoader>
                 </Suspense>
                 {/* <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
                 {/* <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
@@ -138,7 +140,7 @@ if(window.innerWidth < 500){
                     <Bloom luminanceThreshold = {1} mipmapBlur />
                 </EffectComposer>
                 <Suspense>
-                    {(finishedBenchmark === true) && <SimpleLoader modelName = {"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>}
+                    {/* {(finishedBenchmark === true) && <SimpleLoader modelName = {"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>} */}
                 </Suspense>
             </group>}
         </>

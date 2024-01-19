@@ -17,6 +17,7 @@ export const Camera = React.memo((props) => {
     const transitionEnded = useStore((state) => state.transitionEnded);
     const panDirectionalEdgethreshold = useStore((state) => state.panDirectionalEdgethreshold);
     const panDirectionalAxis = useStore((state) => state.panDirectionalAxis);
+    const setTrigger = useStore((state) => state.setTrigger);
 
     const updateCallNow = useRef(false);
     const cam = useRef();
@@ -205,11 +206,13 @@ export const Camera = React.memo((props) => {
     // Sets values after the camera movement is done 
     function updateCall(state){
         if(updateCallNow.current){
+            //setTrigger(true);
             setTransitionEnded(true);
             updateCallNow.current = false;
             current_path.current = desired_path;
             controls.current.enabled = true;
             state.events.enabled = true;
+
         }
     }
 
