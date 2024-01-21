@@ -20,7 +20,7 @@ function App() {
     setLanguage: (language) => set((state) => ({currentLanguage: language})),
     currentCameraMovements:{"zoom":true, "pan":true, "rotate":true},
     setcurrentCameraMovements: (cameraMovements) => set((state) => ({currentCameraMovements: cameraMovements})),
-    currentCameraMode:"panDirectional", // Camera modes: ["NormalMovement", "panOnly", "rotateOnly", "zoomOnly", "panDirectional"]
+    currentCameraMode:"NormalMovement", // Camera modes: ["NormalMovement", "panOnly", "rotateOnly", "zoomOnly", "panDirectional"]
     setCurrentCameraMode: (cameraMode) => set((state) => ({currentCameraMode: cameraMode})),
     panDirectionalAxis:['+z','+y'],
     setPanDirectionalAxis: (axis) => set((state) => ({panDirectionalAxis: axis})),

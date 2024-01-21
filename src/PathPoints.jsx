@@ -45,7 +45,6 @@ export function getCurve(to, from){
             start,
             middle,
             end])
-        console.log(returnPath);
     }
     return returnPath;
 }

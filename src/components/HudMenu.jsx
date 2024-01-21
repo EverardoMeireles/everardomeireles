@@ -20,6 +20,9 @@ export function HudMenu(props) {
     const setGraphicalMode = useStore((state) => state.setGraphicalMode);
     const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const finishedBenchmark = useStore((state) => state.finishedBenchmark);
+    
+	//DEBUG animations
+    const toggleTrigger = useStore((state) => state.toggleTrigger);
 
     const [profExpClicked, setProfExpClicked] = useState(false);
     const [isTransparent, setIsTransparent] = useState(false);
@@ -57,6 +60,8 @@ export function HudMenu(props) {
         finish before showing the toggle */}
         {(config.show_html_menu_graphics_toggle && (!config.check_graphics || (config.check_graphics && finishedBenchmark))) &&
             <div style={HudMenuStyles.arrowContainerStyle}>
+                {/* DEBUG animations */}
+                {/* <b onClick={() => {toggleTrigger("trigger1")}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b> */}
                 <b onClick={() => {increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
                 <b onClick={() => {increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
                 {graphicalLevelIndicatorIsEnabled && <img 
