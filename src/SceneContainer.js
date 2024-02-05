@@ -131,7 +131,7 @@ const { mouse } = useThree();
                 <Suspense>
                     <Raycaster mouse={mouse} frameInterval={10}>
                         <SimpleLoader animationToPlay={["LeftDoorOpen","RightDoorOpen"]} animationTrigger={triggers["trigger1"]} /*position={[160, 143, 62]}*/ sceneName = {"NewthreeJsScene.glb"} 
-                        hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
+                        hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody002"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody002"], ["Monitor_1", "Monitor_2"]]} 
                         ></SimpleLoader>
                     </Raycaster>
                 </Suspense>
