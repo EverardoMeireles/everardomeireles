@@ -14,6 +14,7 @@ import { PathNavigation } from "./components/PathNavigation";
 import { FadingTitle } from "./components/FadingTitle";
 import { TranslationTable } from "./TranslationTable";
 import { ResponsiveTable } from "./Styles";
+import { Raycaster } from "./components/Raycaster";
 import config from './config.json';
 
 export function SceneContainer(props) {
@@ -100,6 +101,8 @@ if(window.innerWidth < 500){
     fadingTextScale5 = ResponsiveTable["Widescreen"]["fadingTextScale5"]
     FloatingTextSkillsPosition = ResponsiveTable["Widescreen"]["FloatingTextSkillsPosition"]
 }
+const { mouse } = useThree();
+
     return(
         <>
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {"Everardo Meireles"} visible = {false} textColor = {"#000000"} delay = {5000} transitionDuration = {1500} />
@@ -126,7 +129,11 @@ if(window.innerWidth < 500){
                 <OrbitingMenu {...{useStore}} visible = { (config.check_graphics === false || finishedBenchmark === true) ? true : false} orbitDistance = {7.5} orbitCenterPosition = {[-17, 97, 27]}/>
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
-                    <SimpleLoader animationToPlay={["LeftDoorOpen","RightDoorOpen"]} animationTrigger={triggers["trigger1"]} /*position={[160, 143, 62]}*/ sceneName = {"NewthreeJsScene.glb"} ambientOcclusionIntensivity = {2.5}></SimpleLoader>
+                    <Raycaster mouse={mouse} frameInterval={10}>
+                        <SimpleLoader animationToPlay={["LeftDoorOpen","RightDoorOpen"]} animationTrigger={triggers["trigger1"]} /*position={[160, 143, 62]}*/ sceneName = {"NewthreeJsScene.glb"} 
+                        hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
+                        ></SimpleLoader>
+                    </Raycaster>
                 </Suspense>
                 {/* <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
                 {/* <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
