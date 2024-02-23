@@ -62,6 +62,10 @@ function App() {
     })),
     currentSkillHovered: "Python", // skills: ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"],
     setSkillHovered: (skill) => set((state) => ({currentSkillHovered: skill})),
+    mouseClicked: false,
+    toggleMouseClicked: () => set((state) => ({mouseClicked: !state.mouseClicked})),
+    currentObjectClicked: "",
+    setCurrentObjectClicked: (object) => set((state) => ({currentObjectClicked: object})),
     tutorialClosed: false,
     setTutorialClosed: (closed) => set(() => ({tutorialClosed: closed})),
     triggers: {"trigger1": false, "trigger2": false, "trigger3": false, "trigger4": false, "trigger5": false},
@@ -100,7 +104,7 @@ function App() {
       <ToolTipCircle {...{useStore}} pathToShow = "MainMenu" position={[70, 40]} text="Left text" image={process.env.PUBLIC_URL + "textures/ortAfficheBTS.png"} />
       {/* <TutorialOverlay {...{useStore}}/> */}
       <HudMenu responsive={ResponsiveWidthHeight} {...{useStore}}/>
-      <Canvas dpr={0.5} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
+      <Canvas onClick={() => useStore.getState().toggleMouseClicked()} dpr={0.5} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
         <SceneContainer responsive={ResponsiveWidthHeight} {...{useStore}}/>
       </Canvas>
     </>

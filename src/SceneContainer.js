@@ -1,5 +1,5 @@
 import { Environment } from "@react-three/drei";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { Camera } from "./components/Camera";
 import { SimpleLoader } from "./components/SimpleLoader";
 import { OrbitingPointLight } from './components/OrbitingPointLights';
@@ -15,7 +15,9 @@ import { FadingTitle } from "./components/FadingTitle";
 import { TranslationTable } from "./TranslationTable";
 import { ResponsiveTable } from "./Styles";
 import { Raycaster } from "./components/Raycaster";
+
 import config from './config.json';
+// import Raycaster from './components/Raycaster';
 
 export function SceneContainer(props) {
     const useStore = props.useStore;
@@ -26,6 +28,8 @@ export function SceneContainer(props) {
     const currentLanguage = useStore((state) => state.currentLanguage);
     const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const triggers = useStore((state) => state.triggers);
+    const currentObjectClicked = useStore((state) => state.currentObjectClicked);
+    const mouseClicked = useStore((state) => state.mouseClicked);
 
     const { gl } = useThree(); // eslint-disable-line no-unused-vars
 useFrame(() => {
@@ -103,8 +107,22 @@ if(window.innerWidth < 500){
 }
 const { mouse } = useThree();
 
+// Place conditions for when the mouse is clicked here:
+useEffect(() => {
+    // Clicked 3D objects:
+    switch(currentObjectClicked) 
+    {
+        case "MainBody":
+            console.log("Main body clicked!")
+        break;
+    }
+    // Clicked 3D objects END
+}, [mouseClicked]);
+
     return(
         <>
+
+
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {"Everardo Meireles"} visible = {false} textColor = {"#000000"} delay = {5000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {"Developpeur Fullstack"} visible = {false} textColor = {"#000000"} delay = {5600} transitionDuration = {1500} />
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
@@ -129,9 +147,9 @@ const { mouse } = useThree();
                 <OrbitingMenu {...{useStore}} visible = { (config.check_graphics === false || finishedBenchmark === true) ? true : false} orbitDistance = {7.5} orbitCenterPosition = {[-17, 97, 27]}/>
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
-                    <Raycaster mouse={mouse} frameInterval={10}>
+                    <Raycaster {...{useStore}} mouse={mouse} frameInterval={10}>
                         <SimpleLoader animationToPlay={["LeftDoorOpen","RightDoorOpen"]} animationTrigger={triggers["trigger1"]} /*position={[160, 143, 62]}*/ sceneName = {"NewthreeJsScene.glb"} 
-                        hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody002"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody002"], ["Monitor_1", "Monitor_2"]]} 
+                        hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
                         ></SimpleLoader>
                     </Raycaster>
                 </Suspense>
