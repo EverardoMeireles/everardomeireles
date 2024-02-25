@@ -99,12 +99,12 @@ function App() {
     <>
       <Alert {...{useStore}} />
 
-      <ToolTip {...{useStore}} text={tooltipText} image={tooltipImage} visible={tooltipVisible}  position = {[30, 40]} />
+      {/* <ToolTip {...{useStore}} text={tooltipText} image={tooltipImage} visible={tooltipVisible}  position = {[30, 40]} />
       <ToolTipCircle {...{useStore}} pathToShow = "MainMenu" position={[30, 40]} text="Right text" image={process.env.PUBLIC_URL + "textures/4x3.png"} />
-      <ToolTipCircle {...{useStore}} pathToShow = "MainMenu" position={[70, 40]} text="Left text" image={process.env.PUBLIC_URL + "textures/ortAfficheBTS.png"} />
+      <ToolTipCircle {...{useStore}} pathToShow = "MainMenu" position={[70, 40]} text="Left text" image={process.env.PUBLIC_URL + "textures/ortAfficheBTS.png"} /> */}
       {/* <TutorialOverlay {...{useStore}}/> */}
       <HudMenu responsive={ResponsiveWidthHeight} {...{useStore}}/>
-      <Canvas onClick={() => useStore.getState().toggleMouseClicked()} dpr={0.5} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
+      <Canvas onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
         <SceneContainer responsive={ResponsiveWidthHeight} {...{useStore}}/>
       </Canvas>
     </>
