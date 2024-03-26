@@ -16,6 +16,7 @@ import { TranslationTable } from "./TranslationTable";
 import { ResponsiveTable } from "./Styles";
 import { Raycaster } from "./components/Raycaster";
 import { CurveInstanceAnimation } from "./components/CurveInstanceAnimation";
+import * as THREE from 'three';
 
 
 import config from './config.json';
@@ -155,8 +156,9 @@ useEffect(() => {
                         ></SimpleLoader>
                     </Raycaster>
                 </Suspense>
-                <CurveInstanceAnimation instancedObject={"Plant.glb"} position={[0, 0, 0]} />
-                <CurveInstanceAnimation instancedObject={"Plant.glb"} position={[0, 500, 0]} />
+                <CurveInstanceAnimation tubeWireframe={true} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} />
+                
+                {/* <CurveInstanceAnimation instancedObject={"Plant.glb"} position={[0, 500, 0]} />
                 {/* <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
                 {/* <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
                 <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader> */}
