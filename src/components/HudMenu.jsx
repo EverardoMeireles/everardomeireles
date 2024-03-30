@@ -79,8 +79,11 @@ export function HudMenu(props) {
                 <li style = {marginDisplay}>
                     <a onClick = {() => (setLanguage("English"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/gbr.svg"} alt = "British flag"></img></a>
                 </li>
-                <li style={marginDisplay}>
+                {/* <li style={marginDisplay}>
                     <a onClick={() => (setLanguage("French"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/fra.svg"} alt = "French flag"></img></a>
+                </li> */}
+                <li style={marginDisplay}>
+                    <a onClick={() => (setLanguage("Portuguese"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/bra.svg"} alt = "Brazilian flag"></img></a>
                 </li>
             </ul>
             <a href = "#MainMenu" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(1, 30, 20, 0, 17)} children = {TranslationTable[currentLanguage]["Menu_MainMenu"]} />
@@ -109,8 +112,11 @@ export function HudMenu(props) {
                 <li style={marginDisplay}>
                     <a onClick = {() => (setLanguage("English"),setTrigger(true))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/gbr.svg"} alt = "British flag"></img></a>
                 </li>
-                <li style={marginDisplay}>
+                {/* <li style={marginDisplay}>
                     <a onClick = {() => (setLanguage("French"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/fra.svg"} alt = "French flag"></img></a>
+                </li> */}
+                <li style={marginDisplay}>
+                    <a onClick={() => (setLanguage("Portuguese"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/bra.svg"} alt = "Brazilian flag"></img></a>
                 </li>
             </ul>
             <a href = "#MainMenu" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 10, 20, 0, 20)} children = {TranslationTable[currentLanguage]["Menu_MainMenu"]} />
@@ -139,8 +145,11 @@ export function HudMenu(props) {
                 <li style = {marginDisplay}>
                     <a onClick = {() => (setLanguage("English"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/gbr.svg"} alt = "British flag"></img></a>
                 </li>
-                <li style = {marginDisplay}>
+                {/* <li style = {marginDisplay}>
                     <a onClick = {() => (setLanguage("French"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/fra.svg"} alt = "French flag"></img></a>
+                </li> */}
+                <li style={marginDisplay}>
+                    <a onClick={() => (setLanguage("Portuguese"))}> <img style = {HudMenuStyles.FlagImgStyle(32,24)} src = {process.env.PUBLIC_URL + "CountryFlags/bra.svg"} alt = "Brazilian flag"></img></a>
                 </li>
             </ul>
             <a href = "#MainMenu" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 10, 20, 0, 30)} children = {TranslationTable[currentLanguage]["Menu_MainMenu"]} />

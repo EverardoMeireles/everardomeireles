@@ -89,7 +89,7 @@ if(window.innerWidth < 500){
     FloatingTextSkillsPosition = ResponsiveTable["Tablet"]["FloatingTextSkillsPosition"]
 
 
-}else if(window.innerWidth <= 1800){
+}else if(window.innerWidth <= 4000){
     fadingTitlePosition0 = ResponsiveTable["Widescreen"]["fadingTitlePosition0"]
     fadingTitleScale0 = ResponsiveTable["Widescreen"]["fadingTitleScale0"]
     fadingTitlePosition1 = ResponsiveTable["Widescreen"]["fadingTitlePosition1"]
@@ -126,8 +126,8 @@ useEffect(() => {
         <>
 
 
-            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {"Everardo Meireles"} visible = {false} textColor = {"#000000"} delay = {5000} transitionDuration = {1500} />
-            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {"Developpeur Fullstack"} visible = {false} textColor = {"#000000"} delay = {5600} transitionDuration = {1500} />
+            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} visible = {false} textColor = {"#000000"} delay = {4000} transitionDuration = {1500} />
+            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} visible = {false} textColor = {"#000000"} delay = {4600} transitionDuration = {1500} />
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}

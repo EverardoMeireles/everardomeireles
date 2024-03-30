@@ -2,8 +2,11 @@ import { useCallback, useState } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Float, Text } from "@react-three/drei";
+import { TranslationTable } from "../TranslationTable";
 
 export function FloatingTextSkills(props) {
+    const useStore = props.useStore;
+    
     const {initialPosition = [0,0,0]} = props;
     const {hitBoxSize = [2, 1]} = props;
     const {rotation = Math.PI/2} = props;
@@ -11,8 +14,15 @@ export function FloatingTextSkills(props) {
     const {textPosition = [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]} = props;
 
     const setSkillHovered = props.useStore((state) => state.setSkillHovered); 
+    const currentLanguage = useStore((state) => state.currentLanguage);
 
-    const textContents = ["Python", "C#", "JavaScript", "React", "Three.js", "blender", "SQL", "HTML/CSS", "anglais", "portugais"]// allemand(compris uniquement), API REST, async, arduino, flask 
+    const textContents = [
+    TranslationTable[currentLanguage]["Floating_text_Python"], TranslationTable[currentLanguage]["Floating_text_C#"], TranslationTable[currentLanguage]["Floating_text_javaScript"],
+    TranslationTable[currentLanguage]["Floating_text_React"], TranslationTable[currentLanguage]["Floating_text_Threejs"], TranslationTable[currentLanguage]["Floating_text_blender"],
+    TranslationTable[currentLanguage]["Floating_text_SQL"], TranslationTable[currentLanguage]["Floating_text_HTML_CSS"], TranslationTable[currentLanguage]["Floating_text_English"], 
+    TranslationTable[currentLanguage]["Floating_text_Portuguese"],
+    ]
+     // allemand(compris uniquement), API REST, async, arduino, flask 
     const textColorCat = ["red", "red", "red", "blue", "blue", "green", "yellow", "yellow", "black", "black"]
 
     const [hovered0, setHover0] = useState(false);
