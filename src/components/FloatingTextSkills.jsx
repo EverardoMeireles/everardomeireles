@@ -11,7 +11,7 @@ export function FloatingTextSkills(props) {
     const {hitBoxSize = [2, 1]} = props;
     const {rotation = Math.PI/2} = props;
     const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
-    const {textPosition = [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]} = props;
+    const {textPosition = [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8], [1, 2, 8]]} = props;
 
     const setSkillHovered = props.useStore((state) => state.setSkillHovered); 
     const currentLanguage = useStore((state) => state.currentLanguage);
@@ -20,10 +20,10 @@ export function FloatingTextSkills(props) {
     TranslationTable[currentLanguage]["Floating_text_Python"], TranslationTable[currentLanguage]["Floating_text_C#"], TranslationTable[currentLanguage]["Floating_text_javaScript"],
     TranslationTable[currentLanguage]["Floating_text_React"], TranslationTable[currentLanguage]["Floating_text_Threejs"], TranslationTable[currentLanguage]["Floating_text_blender"],
     TranslationTable[currentLanguage]["Floating_text_SQL"], TranslationTable[currentLanguage]["Floating_text_HTML_CSS"], TranslationTable[currentLanguage]["Floating_text_English"], 
-    TranslationTable[currentLanguage]["Floating_text_Portuguese"],
+    TranslationTable[currentLanguage]["Floating_text_Portuguese"],TranslationTable[currentLanguage]["Floating_text_French"]
     ]
      // allemand(compris uniquement), API REST, async, arduino, flask 
-    const textColorCat = ["red", "red", "red", "blue", "blue", "green", "yellow", "yellow", "black", "black"]
+    const textColorCat = ["red", "red", "red", "blue", "blue", "green", "yellow", "yellow", "black", "black", "black"]
 
     const [hovered0, setHover0] = useState(false);
     const [hovered1, setHover1] = useState(false);
@@ -35,6 +35,7 @@ export function FloatingTextSkills(props) {
     const [hovered7, setHover7] = useState(false);
     const [hovered8, setHover8] = useState(false);
     const [hovered9, setHover9] = useState(false);
+    const [hovered10, setHover10] = useState(false);
     
     const springScale = useSpring({
         scale0: hovered0 ? 1.5 : 1,
@@ -47,6 +48,7 @@ export function FloatingTextSkills(props) {
         scale7: hovered7 ? 1.5 : 1,
         scale8: hovered8 ? 1.5 : 1,
         scale9: hovered9 ? 1.5 : 1,
+        scale10: hovered10 ? 1.5 : 1,
     });
 
     const springColor = useSpring({
@@ -60,6 +62,7 @@ export function FloatingTextSkills(props) {
         color7: hovered7 ? "white" : textColorCat[7],
         color8: hovered8 ? "white" : textColorCat[8],
         color9: hovered9 ? "white" : textColorCat[9],
+        color10: hovered10 ? "white" : textColorCat[10],
     });
 
     const callbackRef = useCallback(
@@ -215,6 +218,21 @@ export function FloatingTextSkills(props) {
                 >
                     {textContents[9]}
                     <a.meshStandardMaterial color={springColor.color9}/>
+                </Text>
+            </a.mesh>
+        </Float>
+        <Float>
+            <a.mesh position = {textPosition[10]} scale = {springScale.scale10} onPointerOver={() => {setHover10(true); setSkillHovered(textContents[10]);}} onPointerOut={() => setHover10(false)}>
+                <planeGeometry args={hitBoxSize} />
+                <meshBasicMaterial visible={false} />
+                <Text
+                    font={font}
+                    scale={[8, 8, 8]}
+                    anchorX="left"
+                    position = {[0.6, 0, 4.8]}
+                >
+                    {textContents[10]}
+                    <a.meshStandardMaterial color={springColor.color10}/>
                 </Text>
             </a.mesh>
         </Float>

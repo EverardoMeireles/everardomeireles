@@ -20,7 +20,7 @@ function App() {
     setGraphicalMode: (mode) => set((state) => ({currentGraphicalMode: mode})), // if graphicalModes wont be out of range, update currentGraphicalMode
     finishedBenchmark: false,
     setFinishedBenchmark: (finished) => set(() => ({finishedBenchmark: finished})),
-    currentLanguage:"English", // Languages: ["English", "French"],
+    currentLanguage:"Portuguese", // Languages: ["English", "French, Portuguese"],
     setLanguage: (language) => set((state) => ({currentLanguage: language})),
     currentCameraMovements:{"zoom":true, "pan":true, "rotate":true},
     setcurrentCameraMovements: (cameraMovements) => set((state) => ({currentCameraMovements: cameraMovements})),
