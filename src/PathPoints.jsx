@@ -1409,8 +1409,8 @@ export const path_points_experience_menu_location = {
 // Place Custom transition speeds here
 export const path_points_speed = {
     "StartingPoint-MainMenu":{
-        0.1:0.005,
-        0.5:0.005,
-        0.9:0.005
+        0.1:0.08,
+        0.5:0.08,
+        0.9:0.08
     }
 }

@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { path_points, path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed, getCurve, firstPoint } from "../PathPoints";
 import * as THREE from "three";
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, calcPosFromAngles } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";
 import { HtmlDreiMenu } from "./HtmlDreiMenu"; // eslint-disable-line no-unused-vars
 import { smoothStep } from "../Helper";
@@ -33,12 +33,15 @@ export const Camera = React.memo((props) => {
     const gravitationalPullPoint = currentPoint == null ? firstPoint : currentPoint;/*getCurve(current_path.current, current_path.current) == null ? firstPoint : getCurve(current_path.current, current_path.current);*/ // the point to return to in panDirectional mode
     const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
     const pullInterval = 10; // How often the pull is applied in milliseconds
-    
+
     let pathPointsLookat;
     let smooth;
     let sub_points;
     let tick = current_path.current !== desired_path ? 0:1
-
+    let deltaArray = new Array();
+    let deltaAverage = 0;
+    let baseTransitioSpeed = 0.005;
+    let transitionIncrement;
     let concat_paths;    
 
     // Change camera mode
@@ -229,12 +232,20 @@ export const Camera = React.memo((props) => {
         return path_speeds[currentKey];
     }
 
+    function calculateDeltaAverage(delta){
+        deltaArray.push(delta)
+        const sum = deltaArray.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+        return sum / deltaArray.length;
+    }
+
     // Moves the camera every frame when the desired path changes
-    useFrame((state) => (tick <= 1 ? (
+    useFrame((state, delta) => (tick <= 1 ? (
+        deltaAverage = deltaArray[10] == undefined ? calculateDeltaAverage(delta) : deltaAverage,
         updateCallNow.current = true,
         state.events.enabled = false,
         controls.current.enabled = false,
-        tick += path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : 0.005, // Determines the speed of the transition
+        transitionIncrement = (path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : 0.35) * deltaAverage, // Determines the speed of the transition
+        tick +=  transitionIncrement,
         smooth = smoothStep(tick), // Smooth the movement
 
         sub_points = current_point.current = curve.getPointAt(smooth), // Get the current point along the curve
