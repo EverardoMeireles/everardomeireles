@@ -6,6 +6,7 @@ import React from "react";
 import { TextureLoader } from 'three';
 
 export const SimpleLoader = React.memo((props) => {
+    const useStore = props.useStore;
     const {position = [0, 0, 0]} = props;
     const {sceneName = "threeJsScene.glb"} = props; // the model/scene's name
     const {animationToPlay = "idle"} = props; // the name of the animation to be played
@@ -19,6 +20,16 @@ export const SimpleLoader = React.memo((props) => {
     const {hoverAffectedObjects = []} = props; // Objects that are affected by the hover effect and the color that they will "glow"
     const {hoverLinkedObjects = [[]]} = props; // Objects that are affected by the hover effect and the color that they will "glow"
     const {hoveredObject = undefined} = props; // prop passed by the raycaster, its value its the current hovered object
+    const {animationTimesToTrigger = {}} = props; // Times where the triggers are set to activate, to be used with animationTriggerNames. EX:{"CharacterAction": 0.50}
+    const {animationTriggerNames = {}} = props; // Triggers to be activated by the times, to be used with animationTimesToTrigger. EX:{"CharacterAction": "trigger1"}
+
+    let fpsTriggerAnimationIsPlaying = false;
+    let totalTriggerAnimationFrames;
+    let currentAnimationFrame = 0;
+
+    let normalizedClipTime; 
+    let animationCurrentTime;
+    let animationDuration;
 
     const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + sceneName);
 
@@ -28,8 +39,31 @@ export const SimpleLoader = React.memo((props) => {
     const [childObject, setChildObject] = useState(false);
     const [currentLinkedObjects, setCurrentLinkedObjects] = useState([]);
 
+    const toggleTrigger = useStore((state) => state.toggleTrigger);
+    const triggers = useStore((state) => state.triggers);
+
     // initialize the animation mixer
     const mixer = useRef(new THREE.AnimationMixer(gltf.scene));
+
+    // plays the animation
+    function playAnimation(){
+        gltf.animations.forEach(clip => {
+            if(animationToPlay.includes(clip.name)){
+                const action = mixer.current.clipAction(clip);
+                setupLoopMode(action)
+                setupReverseMode(action)
+                action.play();
+                // console.log(animationToPlay)
+            }
+        });
+    }
+
+    useFrame(() => {
+        if(fpsTriggerAnimationIsPlaying){
+            currentAnimationFrame += 1;
+            console.log(currentAnimationFrame)
+        }
+    });
 
     // stops execution if the animation's name string is not inside an array
     if(!Array.isArray(animationToPlay)){
@@ -71,18 +105,6 @@ export const SimpleLoader = React.memo((props) => {
                 child.scale.y = 1
                 child.scale.z = 1
         })
-    }
-
-    // plays the animation
-    function playAnimation(){
-        gltf.animations.forEach(clip => {
-            if(animationToPlay.includes(clip.name)){
-                const action = mixer.current.clipAction(clip);
-                setupLoopMode(action)
-                setupReverseMode(action)
-                action.play();
-            }
-        });
     }
 
     // start to play the animation when scene loads if the prop autoPlay is true
@@ -164,9 +186,31 @@ export const SimpleLoader = React.memo((props) => {
         }
     });
 
+    // Checks whether to toggle trigger on a set
+    function AnimationTimeTriggerCheck(mixer){
+        if(Object.keys(animationTriggerNames).length != 0){
+            mixer.current._actions.forEach(action => {
+                if(Object.keys(animationTriggerNames).includes(action._clip.name)){
+                    animationCurrentTime = action.time;
+                    animationDuration = action._clip.duration;
+                    normalizedClipTime = (animationCurrentTime) / (animationDuration);
+                    if(normalizedClipTime >= 0.98){
+                        toggleTrigger(animationTriggerNames[action._clip.name])
+                    }
+                    
+                    if(normalizedClipTime >= animationTimesToTrigger[action._clip.name] && !triggers[animationTriggerNames[action._clip.name]]){
+                        toggleTrigger(animationTriggerNames[action._clip.name])
+                    }
+                }
+                console.log(triggers[animationTriggerNames[action._clip.name]])
+            });
+        }
+    }
+
     // updates deltas for animations
     useFrame((state, delta) => {
         mixer.current?.update(delta);
+        AnimationTimeTriggerCheck(mixer);
     })
 
     return (

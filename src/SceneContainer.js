@@ -126,8 +126,8 @@ useEffect(() => {
         <>
 
 
-            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} visible = {false} textColor = {"#000000"} delay = {4000} transitionDuration = {1500} />
-            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} visible = {false} textColor = {"#000000"} delay = {4600} transitionDuration = {1500} />
+            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} visible = {false} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
+            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} visible = {false} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} />
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}
@@ -151,7 +151,8 @@ useEffect(() => {
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
                     <Raycaster {...{useStore}} mouse={mouse} frameInterval={10}>
-                        <SimpleLoader animationToPlay={["LeftDoorOpen","RightDoorOpen"]} animationTrigger={triggers["trigger1"]} sceneName = {"NewthreeJsScene.glb"} 
+                        <SimpleLoader {...{useStore}} animationToPlay={["CharacterAction","LeftDoorOpen.003"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
+                        animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} sceneName = {"NewthreeJsScene.glb"} 
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
                         ></SimpleLoader>
                     </Raycaster>
