@@ -151,10 +151,13 @@ useEffect(() => {
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
                     <Raycaster {...{useStore}} mouse={mouse} frameInterval={10}>
-                        <SimpleLoader {...{useStore}} animationToPlay={["CharacterAction","LeftDoorOpen.003"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
+                        <SimpleLoader {...{useStore}} animationToPlay={["CharacterAction.002","Animation"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
                         animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} sceneName = {"NewthreeJsScene.glb"} 
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
                         ></SimpleLoader>
+                        <SimpleLoader {...{useStore}} animationToPlay={["Animation01"]} loopMode={"Loop"} sceneName = {"first_anim.glb"}>
+                            
+                        </SimpleLoader>
                     </Raycaster>
                 </Suspense>
                 {/* <CurveInstanceAnimation tubeWireframe={true} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}
