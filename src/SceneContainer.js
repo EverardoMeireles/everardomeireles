@@ -16,6 +16,7 @@ import { TranslationTable } from "./TranslationTable";
 import { ResponsiveTable } from "./Styles";
 import { Raycaster } from "./components/Raycaster";
 import { CurveInstanceAnimation } from "./components/CurveInstanceAnimation";
+import { InstanceLoader } from "./components/InstanceLoader";
 import * as THREE from 'three';
 
 
@@ -151,15 +152,18 @@ useEffect(() => {
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
                     <Raycaster {...{useStore}} mouse={mouse} frameInterval={10}>
-                        <SimpleLoader {...{useStore}} animationToPlay={["CharacterAction.002","Animation"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
+                        <SimpleLoader {...{useStore}} animationToPlay={["ArmatureAction.002","IcosphereAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
                         animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} sceneName = {"NewthreeJsScene.glb"} 
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
                         ></SimpleLoader>
-                        <SimpleLoader {...{useStore}} animationToPlay={["Animation01"]} loopMode={"Loop"} sceneName = {"first_anim.glb"}>
-                            
-                        </SimpleLoader>
+                        {/* <SimpleLoader {...{useStore}} animationToPlay={["Animation01"]} loopMode={"Loop"} sceneName = {"first_anim.glb"}>
+        
+                        </SimpleLoader> */}
                     </Raycaster>
+                    <InstanceLoader></InstanceLoader>
+
                 </Suspense>
+                {/* <pointLight intensity={1} position={[43, 155, -88]}></pointLight> */}
                 {/* <CurveInstanceAnimation tubeWireframe={true} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}
                 
                 {/* <CurveInstanceAnimation instancedObject={"Plant.glb"} position={[0, 500, 0]} />
