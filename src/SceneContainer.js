@@ -157,11 +157,29 @@ useEffect(() => {
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
                         ></SimpleLoader>
                         {/* <SimpleLoader {...{useStore}} animationToPlay={["Animation01"]} loopMode={"Loop"} sceneName = {"first_anim.glb"}>
-        
+
                         </SimpleLoader> */}
                     </Raycaster>
-                    <InstanceLoader></InstanceLoader>
-
+                    <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]}
+                    directionX = {0} directionY = {0} directionZ = {-1}
+                    customRotation={[
+                        [0, 1.6, 0], [0, 1.75, 0], [0, 1.6, 0], [0, 1.6, 0.17], 
+                        [0, 1.6, 0], [0, 1.6, 0], [0, 1.75, -0.17], [0, 1.6, 0], 
+                        [0, 1.75, 0], [0, 1.6, 0], [0, 1.7, 0], [0, 1.5, 0], 
+                        [0, 1.6, 0], [0, 1.75, 0], [0, 1.6, 0], [0, 1.6, 0.17], 
+                        [0, 1.45, 0], [0, 1.6, 0], [0, 1.6, -0.17], [0, 1.6, 0], 
+                        [0, 1.6, 0], [0, 1.6, 0], [0, 1.6, 0], [0, 1.6, 0.17], 
+                        [0, 1.6, 0], [0, 1.75, 0], [0, 1.6, 0], [0, 1.6, 0.17], 
+                        [0, 1.6, 0], [0, 1.6, 0], [0, 1.6, 0.17], [0, 1.6, 0], 
+                        [0, 1.45, 0], [0, 1.6, 0], [0, 1.75, 0], [0, 1.6, 0.17]]} 
+                        customColors={[
+                            0x1613d1, 0xcff55d, 0x9a35e2, 0x8c7b45, 0xf1d846, 0x3b9f5d, 0xa6c73e, 0x5d13b8,
+                            0xe9f73d, 0x4f6a95, 0x2a3b7c, 0x91d87f, 0xb5234a, 0x6e1b79, 0xf8b54d, 0x4c7a32,
+                            0x87d91e, 0x5b13a6, 0xa96e2d, 0x3d47c8, 0x9e1a74, 0xf726e1, 0x62d3f8, 0x4a7e93,
+                            0xc2a37e, 0x7d19f5, 0x51e48c, 0xad749b, 0x3e2a64, 0xf8a16d, 0x4d27a9, 0x92c85e,
+                            0x6f1d95, 0xe941a3, 0x5a37cf]} 
+                        NumberOfInstances={35} distanceBetweenInstances={3}></InstanceLoader>
+                    {/* <SimpleLoader {...{useStore}} sceneName={"Book.glb"}></SimpleLoader> */}
                 </Suspense>
                 {/* <pointLight intensity={1} position={[43, 155, -88]}></pointLight> */}
                 {/* <CurveInstanceAnimation tubeWireframe={true} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}

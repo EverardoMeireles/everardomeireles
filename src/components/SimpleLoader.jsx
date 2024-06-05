@@ -202,7 +202,7 @@ export const SimpleLoader = React.memo((props) => {
                         toggleTrigger(animationTriggerNames[action._clip.name])
                     }
                 }
-                console.log(triggers[animationTriggerNames[action._clip.name]])
+                // console.log(triggers[animationTriggerNames[action._clip.name]])
             });
         }
     }
