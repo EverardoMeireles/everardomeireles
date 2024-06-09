@@ -151,15 +151,15 @@ useEffect(() => {
                 <OrbitingMenu {...{useStore}} visible = { (config.check_graphics === false || finishedBenchmark === true) ? true : false} orbitDistance = {7.5} orbitCenterPosition = {[-17, 97, 27]}/>
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
-                    <Raycaster {...{useStore}} mouse={mouse} frameInterval={10}>
-                        <SimpleLoader {...{useStore}} animationToPlay={["ArmatureAction.002","IcosphereAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
+                    {/* <Raycaster {...{useStore}} mouse={mouse} frameInterval={10}> */}
+                        <SimpleLoader {...{useStore}} objectsHideRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["ArmatureAction.002","IcosphereAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
                         animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} sceneName = {"NewthreeJsScene.glb"} 
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
                         ></SimpleLoader>
                         {/* <SimpleLoader {...{useStore}} animationToPlay={["Animation01"]} loopMode={"Loop"} sceneName = {"first_anim.glb"}>
 
                         </SimpleLoader> */}
-                    </Raycaster>
+                    {/* </Raycaster> */}
                     <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]}
                     directionX = {0} directionY = {0} directionZ = {-1}
                     customRotation={[
