@@ -10,6 +10,10 @@ import { ToolTipCircle } from "./components/ToolTipCircle";
 
 function App() {
   const useStore = create((set) => ({
+    initialSceneLoaded: false,
+    setInitialSceneLoaded: (loaded) => set(() => ({initialSceneLoaded: loaded})),
+    preloadDone: false,
+    setPreloadDone: (preloaded) => set(() => ({preloadDone: preloaded})),
     trigger: false,
     setTrigger: (trig) => set(() => ({trigger: trig})),
     desired_path: "MainMenu",
