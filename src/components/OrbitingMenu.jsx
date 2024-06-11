@@ -8,13 +8,16 @@ export const OrbitingMenu = React.memo((props) => {
     const {orbitCenterPosition = [15.5, 1.1, 0]} = props;
     const {planeSize = [5, 5]} = props;
     const {orbitDistance = 1.5} = props;
-    const {visible = false} = props;
+    const {visible = true} = props;
+    const {fadeInDuration = 300} = props;
 
     const transitionEnded = useStore((state) => state.transitionEnded);
     const desired_path = useStore((state) => state.desired_path);
 
     const [hovered0, setHover0] = useState(false);
     const [hovered1, setHover1] = useState(false);
+    // const [fadeInDone, setFadeInDone] = useState(false);
+
     const [rotation, setRotation] = useState(6.29); // optimize these two into one
     const [rotationIncrement, setRotationIncrement] = useState(0); // optimize these two into one
     const [orbitDirection, setOrbitDirection] = useState(1);
@@ -47,6 +50,17 @@ export const OrbitingMenu = React.memo((props) => {
     const planeReff5 = useRef();
     const planeReff6 = useRef();
     const planeReff7 = useRef();
+
+    const planeRefArray = useRef([planeRef0, planeRef1, planeRef2, planeRef3, planeRef4, planeRef5, planeRef6, planeRef7])
+
+    useFrame((state, delta)=> {
+        planeRefArray.current.forEach((planeRef) => {
+            if (planeRef.current.material.opacity < 1) {
+                planeRef.current.material.opacity = planeRef.current.material.opacity + (delta / (fadeInDuration / 1000))
+                console.log(planeRef.current.material.opacity)
+            }
+        })
+    })
 
     useEffect(() => {
         planeReff0.current.rotateY(Math.PI / 2);
@@ -170,42 +184,42 @@ export const OrbitingMenu = React.memo((props) => {
             <Suspense>
                 <mesh ref = {planeRef0}>
                     <planeBufferGeometry args={planeSize} ref = {planeReff0} attach = "geometry"/>
-                    <meshBasicMaterial visible={visible} map = {planetexture0} attach = "material" side = {THREE.DoubleSide} />
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture0} attach = "material" side = {THREE.DoubleSide} />
                 </mesh>
 
                 <mesh ref = {planeRef1}>
                     <planeBufferGeometry args={planeSize} ref = {planeReff1} attach = "geometry"/>
-                    <meshBasicMaterial visible={visible} map = {planetexture1} attach = "material" side = {THREE.DoubleSide} />
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture1} attach = "material" side = {THREE.DoubleSide} />
                 </mesh>
 
                 <mesh ref = {planeRef2}>
                     <planeBufferGeometry args={planeSize} ref = {planeReff2} attach = "geometry"/>
-                    <meshBasicMaterial visible={visible} map = {planetexture2} attach = "material" side = {THREE.DoubleSide} />
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture2} attach = "material" side = {THREE.DoubleSide} />
                 </mesh>
 
                 <mesh ref = {planeRef3}>
                     <planeBufferGeometry args={planeSize} ref = {planeReff3} attach = "geometry"/>
-                    <meshBasicMaterial visible={visible} map = {planetexture3} attach = "material" side = {THREE.DoubleSide} />
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture3} attach = "material" side = {THREE.DoubleSide} />
                 </mesh>
 
                 <mesh ref = {planeRef4}>
                     <planeBufferGeometry args={planeSize} ref = {planeReff4} attach = "geometry"/>
-                    <meshBasicMaterial visible={visible} map = {planetexture4} attach = "material" side = {THREE.DoubleSide} />
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture4} attach = "material" side = {THREE.DoubleSide} />
                 </mesh>
 
                 <mesh ref = {planeRef5}>
                     <planeBufferGeometry args={planeSize} ref = {planeReff5} attach = "geometry"/>
-                    <meshBasicMaterial visible={visible} map = {planetexture5} attach = "material" side = {THREE.DoubleSide} />
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture5} attach = "material" side = {THREE.DoubleSide} />
                 </mesh>
 
                 <mesh ref = {planeRef6}>
                     <planeBufferGeometry args={planeSize} ref = {planeReff6} attach = "geometry"/>
-                    <meshBasicMaterial visible={visible} map = {planetexture6} attach = "material" side = {THREE.DoubleSide} />
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture6} attach = "material" side = {THREE.DoubleSide} />
                 </mesh>
 
                 <mesh ref = {planeRef7}>
                     <planeBufferGeometry args={planeSize} ref = {planeReff7} attach = "geometry"/>
-                    <meshBasicMaterial visible={false} /*map = {planetexture6}*/ attach = "material" side = {THREE.DoubleSide} />
+                    <meshBasicMaterial opacity={0} transparent={true} visible={false} /*map = {planetexture6}*/ attach = "material" side = {THREE.DoubleSide} />
                 </mesh>
             </Suspense>
         </mesh>
