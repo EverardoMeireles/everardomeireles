@@ -149,6 +149,38 @@ export const OrbitingMenu = React.memo((props) => {
 
     return (
         <mesh position = {[orbitCenterPosition[0] + orbitDistance, orbitCenterPosition[1], orbitCenterPosition[2]]}>
+            <mesh 
+            onPointerOver={() => setHover0(true)} 
+            onPointerOut={() => setHover0(false)}
+            onClick = {!clicked.current ? (e) => {
+                e.stopPropagation();
+                setOrbitDirection(-1)
+                setRotation(0)
+                clicked.current = true;
+                } : undefined}
+            rotation = {[Math.PI/2, 0, 0]}
+            scale = {0.5}
+            position = {[-12.5, -2.5, 0.5]}>
+                <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
+                <a.meshBasicMaterial visible={visible} color = {springColor.color0} />
+            </mesh>
+
+            <mesh
+            onPointerOver = {() => setHover1(true)} 
+            onPointerOut = {() => setHover1(false)}
+            onClick = {!clicked.current ? (e) => {
+                e.stopPropagation();
+                setOrbitDirection(1)
+                setRotation(0)
+                clicked.current = true;
+                } : undefined}
+            rotation = {[-Math.PI/2, 0, 0]}
+            scale = {0.5}
+            position = {[-12.5, -2.5, -0.5]}>
+                <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
+                <a.meshBasicMaterial visible={visible} color={springColor.color1} />
+            </mesh>
+
             <Suspense>
                 <mesh ref = {planeRef0}>
                     <planeBufferGeometry args={planeSize} ref = {planeReff0} attach = "geometry"/>
