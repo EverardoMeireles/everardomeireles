@@ -53,11 +53,11 @@ export const OrbitingMenu = React.memo((props) => {
 
     const planeRefArray = useRef([planeRef0, planeRef1, planeRef2, planeRef3, planeRef4, planeRef5, planeRef6, planeRef7])
 
+    // Fade-in animation
     useFrame((state, delta)=> {
         planeRefArray.current.forEach((planeRef) => {
             if (planeRef.current.material.opacity < 1) {
                 planeRef.current.material.opacity = planeRef.current.material.opacity + (delta / (fadeInDuration / 1000))
-                console.log(planeRef.current.material.opacity)
             }
         })
     })
@@ -133,14 +133,9 @@ export const OrbitingMenu = React.memo((props) => {
                 switch(event.code) {
                     case "ArrowLeft":
                         setOrbitDirection(-1);
-    
-                        // console.log("left")
-                    break;
+                        break;
                     case "ArrowRight":
                         setOrbitDirection(1);
-                        // setClicked(true)
-                        // setRotation(0)
-                            // console.log("right")
                     break;
                 }
             }
