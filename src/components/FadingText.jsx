@@ -107,7 +107,7 @@ export function FadingText(props) {
                 >
                 
                 {manualLineBreaks ? textToFade : injectLineBreaks(textToFade)}
-                <meshBasicMaterial ref={TextMaterialRef} visible={materialOpacity >= 0} opacity = {materialOpacity} transparent color={textColor}/>
+                <meshBasicMaterial ref = {TextMaterialRef} visible = {materialOpacity > 0} opacity = {materialOpacity} transparent color = {textColor}/>
                 </Text>
         </group>
     );
