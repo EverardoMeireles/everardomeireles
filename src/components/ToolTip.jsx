@@ -19,12 +19,14 @@ export const ToolTip = (props) => {
     const isCircleOnLeft = useStore((state) => state.isCircleOnLeft);
 
     const [isVisible, setIsVisible] = useState(false);
+    const [isDivDisabled, setIsDivDisabled] = useState(false);
 
     useEffect(() => {
         let timeoutId;
         if (tooltipProperties.active) {
             console.log(image)
             setIsVisible(true); // Start to show the alert with fade-in
+            setIsDivDisabled(false)
             timeoutId = setTimeout(() => {
                 setIsVisible(false); // Start to hide the alert with fade-out
                 setTooltipProperties({active:false});
@@ -43,8 +45,8 @@ export const ToolTip = (props) => {
   // Inline styles for the alert box
     const toolTipBoxStyle = {
         position: 'fixed',
-        width: '40vw',
-        height: '90vh',
+        width: isDivDisabled ? '0vw':'40vw',
+        height: isDivDisabled ? '0vh' : '90vh',
         margin: '5vh',
         borderRadius: '5px',
         display: 'flex',
@@ -102,13 +104,17 @@ export const ToolTip = (props) => {
 
     return (
     <>
-        <div style={toolTipBoxStyle} /*onMouseOver={console.log("sqdqsdqsdqsdqsdqsdqsd")}*/>
+        <div style={toolTipBoxStyle} onTransitionEnd={() => {
+            if (!isVisible) {
+                setIsDivDisabled(true);
+            }
+        }} /*onMouseOver={console.log("sqdqsdqsdqsdqsdqsdqsd")}*/>
             <div style={textStyle}>
                 {tooltipProperties.text}
             </div>
             <div style={imageContainerStyle}>
                 {/* <img style={imageStyle} src={process.env.PUBLIC_URL + "textures/4x3.png"} alt="Tooltip Image" /> */}
-                <img style={imageStyle} src={tooltipImage} alt="Tooltip" />
+                <img style={imageStyle} src={process.env.PUBLIC_URL + "textures/" + tooltipImage} alt="Tooltip" />
             </div>
         </div>
     </>
