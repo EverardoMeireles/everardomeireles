@@ -10,21 +10,16 @@ export function FadingText(props) {
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
     const {textModelMenu = "MainMenu"} = props;
     const {textColor = "#000000"} = props;
-    const {transitionDuration = 1000} = props;
     const {initialPosition = [0, 0, 0]} = props;
     const {PlaneSize = [7, 6.7]} = props;
     const {rotation = Math.PI/2} = props;
-    const {visible = true} = props;
     const {scale = 1.5} = props;
     const {textPositionOffset = [0, -0.5, 0.2]} = props;
-    // true if your input text already contains line breaks('\n')
-    const {manualLineBreaks = false} = props;
-    // if manualLineBreaks is false, how many characters before a line break on the previous word, default is the length of the plane times the normal length of a roboto font character
-    const {maxCharsBeforeLineBreak = PlaneSize[0] * 7} = props;
+    const {manualLineBreaks = false} = props; // true if your input text already contains line breaks('\n')
+    const {maxCharsBeforeLineBreak = PlaneSize[0] * 7} = props; // if manualLineBreaks is false, how many characters before a line break on the previous word, default is the length of the plane times the normal length of a roboto font character
     const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
+    const {fadeDuration = 1000} = props;
 
-    // const {transitionEnded, desired_path} = props.useStore();
-    
     const TextMaterialRef = useRef();
     const [fadeFactor, setFadeFactor] = useState(-1); //1 or -1
     const [playAnimation, setPlayAnimation] = useState(false); //1 or -1
@@ -32,12 +27,11 @@ export function FadingText(props) {
 
     const transitionEnded = useStore((state) => state.transitionEnded);
     const desired_path = useStore((state) => state.desired_path);
+    const current_path = useRef("");
 
     // Fade-in animation
     useEffect(() => {
-        if(transitionEnded && desired_path == textModelMenu){
-            
-            // setFadeFactor(fadeFactor * -1) //invert fade factor state
+        if(transitionEnded && desired_path == textModelMenu && current_path.current != desired_path){
             setPlayAnimation(true) //invert play animation state
         }
         
@@ -45,12 +39,14 @@ export function FadingText(props) {
             setPlayAnimation(true)
             setFadeFactor(-1)
         }
+        
     },[desired_path, transitionEnded])
-    
+
     useFrame((state, delta)=> {
         if(playAnimation){
+            current_path.current = desired_path;
             if ((materialOpacity <= 1 && fadeFactor == 1) || (materialOpacity >= 0 && fadeFactor == -1)) {
-                setMaterialOpacity(TextMaterialRef.current.opacity + ((delta / (transitionDuration / 1000))*fadeFactor))
+                setMaterialOpacity(TextMaterialRef.current.opacity + ((delta / (fadeDuration / 1000))*fadeFactor))
             }else{
                 if(TextMaterialRef.current.opacity <= 1){
                     setFadeFactor(1)
@@ -93,27 +89,16 @@ export function FadingText(props) {
         return arr.join("");
     }
 
-
-    // // Fade in and out animation
-    // const springFade = useSpring({
-    //     opacity: (transitionEnded && desired_path === textModelMenu) ? 1 : 0,
-    //     config: {
-    //         duration:transitionDuration
-    //     }
-    // })
-
     const callbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : undefined
         ,[]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return(
-        <mesh
+        <group
             position = {initialPosition}
             ref = {callbackRef}
             scale={scale}
         >
-            <planeGeometry args = {PlaneSize} />
-            <meshBasicMaterial  opacity = {1} transparent visible={visible}/>
                 <Text
                     font={font}
                     scale={[3, 3, 3]}
@@ -124,6 +109,6 @@ export function FadingText(props) {
                 {manualLineBreaks ? textToFade : injectLineBreaks(textToFade)}
                 <meshBasicMaterial ref={TextMaterialRef} visible={materialOpacity >= 0} opacity = {materialOpacity} transparent color={textColor}/>
                 </Text>
-        </mesh>
+        </group>
     );
 }
