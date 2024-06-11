@@ -133,19 +133,19 @@ export function SceneContainer(props) {
 
 
     // post-loading, set the state that will post load some components a first time, so that their meshes and materials can be cached
-    useEffect(() => {
-        const timer1 = setTimeout(() => {
-            setPostloadStart(true);
-            console.log("post load 1")
-        }, postloadingDelay);
+    // useEffect(() => {
+    //     const timer1 = setTimeout(() => {
+    //         setPostloadStart(true);
+    //         console.log("post load 1")
+    //     }, postloadingDelay);
 
-        const timer2 = setTimeout(() => {
-            setPostloadStart(false);
-            console.log("post load 2")
-        }, postloadingDelay+500);
+    //     const timer2 = setTimeout(() => {
+    //         setPostloadStart(false);
+    //         console.log("post load 2")
+    //     }, postloadingDelay+500);
 
-        return () => {clearTimeout(timer1); clearTimeout(timer2);}; // Cleanup the timer if the component unmounts
-    }, []);
+    //     return () => {clearTimeout(timer1); clearTimeout(timer2);}; // Cleanup the timer if the component unmounts
+    // }, []);
 
     return(
         <>                                                                                                          {/*(config.check_graphics === false || finishedBenchmark === true) ? true : false*/}

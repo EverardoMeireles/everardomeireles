@@ -9,7 +9,7 @@ export const OrbitingMenu = React.memo((props) => {
     const {planeSize = [5, 5]} = props;
     const {orbitDistance = 1.5} = props;
     const {visible = true} = props;
-    const {fadeInDuration = 300} = props;
+    const {fadeInDuration = 1000} = props;
 
     const transitionEnded = useStore((state) => state.transitionEnded);
     const desired_path = useStore((state) => state.desired_path);
