@@ -9,7 +9,7 @@ export const OrbitingMenu = React.memo((props) => {
     const {planeSize = [5, 5]} = props;
     const {orbitDistance = 1.5} = props;
     const {visible = true} = props;
-    const {fadeInDuration = 1000} = props;
+    const {fadeInDuration = 300} = props;
 
     const transitionEnded = useStore((state) => state.transitionEnded);
     const desired_path = useStore((state) => state.desired_path);
@@ -53,11 +53,11 @@ export const OrbitingMenu = React.memo((props) => {
 
     const planeRefArray = useRef([planeRef0, planeRef1, planeRef2, planeRef3, planeRef4, planeRef5, planeRef6, planeRef7])
 
-    // Fade-in animation
     useFrame((state, delta)=> {
         planeRefArray.current.forEach((planeRef) => {
             if (planeRef.current.material.opacity < 1) {
                 planeRef.current.material.opacity = planeRef.current.material.opacity + (delta / (fadeInDuration / 1000))
+                console.log(planeRef.current.material.opacity)
             }
         })
     })
@@ -133,9 +133,14 @@ export const OrbitingMenu = React.memo((props) => {
                 switch(event.code) {
                     case "ArrowLeft":
                         setOrbitDirection(-1);
-                        break;
+    
+                        // console.log("left")
+                    break;
                     case "ArrowRight":
                         setOrbitDirection(1);
+                        // setClicked(true)
+                        // setRotation(0)
+                            // console.log("right")
                     break;
                 }
             }
@@ -144,37 +149,47 @@ export const OrbitingMenu = React.memo((props) => {
 
     return (
         <mesh position = {[orbitCenterPosition[0] + orbitDistance, orbitCenterPosition[1], orbitCenterPosition[2]]}>
-            <mesh 
-            onPointerOver={() => setHover0(true)} 
-            onPointerOut={() => setHover0(false)}
-            onClick = {!clicked.current ? (e) => {
-                e.stopPropagation();
-                setOrbitDirection(-1)
-                setRotation(0)
-                clicked.current = true;
-                } : undefined}
-            rotation = {[Math.PI/2, 0, 0]}
-            scale = {0.5}
-            position = {[-12.5, -2.5, 0.5]}>
-                <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
-                <a.meshBasicMaterial visible={visible} color = {springColor.color0} />
-            </mesh>
+            <Suspense>
+                <mesh ref = {planeRef0}>
+                    <planeBufferGeometry args={planeSize} ref = {planeReff0} attach = "geometry"/>
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture0} attach = "material" side = {THREE.DoubleSide} />
+                </mesh>
 
-            <mesh
-            onPointerOver = {() => setHover1(true)} 
-            onPointerOut = {() => setHover1(false)}
-            onClick = {!clicked.current ? (e) => {
-                e.stopPropagation();
-                setOrbitDirection(1)
-                setRotation(0)
-                clicked.current = true;
-                } : undefined}
-            rotation = {[-Math.PI/2, 0, 0]}
-            scale = {0.5}
-            position = {[-12.5, -2.5, -0.5]}>
-                <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
-                <a.meshBasicMaterial visible={visible} color={springColor.color1} />
-            </mesh>
+                <mesh ref = {planeRef1}>
+                    <planeBufferGeometry args={planeSize} ref = {planeReff1} attach = "geometry"/>
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture1} attach = "material" side = {THREE.DoubleSide} />
+                </mesh>
+
+                <mesh ref = {planeRef2}>
+                    <planeBufferGeometry args={planeSize} ref = {planeReff2} attach = "geometry"/>
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture2} attach = "material" side = {THREE.DoubleSide} />
+                </mesh>
+
+                <mesh ref = {planeRef3}>
+                    <planeBufferGeometry args={planeSize} ref = {planeReff3} attach = "geometry"/>
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture3} attach = "material" side = {THREE.DoubleSide} />
+                </mesh>
+
+                <mesh ref = {planeRef4}>
+                    <planeBufferGeometry args={planeSize} ref = {planeReff4} attach = "geometry"/>
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture4} attach = "material" side = {THREE.DoubleSide} />
+                </mesh>
+
+                <mesh ref = {planeRef5}>
+                    <planeBufferGeometry args={planeSize} ref = {planeReff5} attach = "geometry"/>
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture5} attach = "material" side = {THREE.DoubleSide} />
+                </mesh>
+
+                <mesh ref = {planeRef6}>
+                    <planeBufferGeometry args={planeSize} ref = {planeReff6} attach = "geometry"/>
+                    <meshBasicMaterial opacity={0} transparent={true} visible={visible} map = {planetexture6} attach = "material" side = {THREE.DoubleSide} />
+                </mesh>
+
+                <mesh ref = {planeRef7}>
+                    <planeBufferGeometry args={planeSize} ref = {planeReff7} attach = "geometry"/>
+                    <meshBasicMaterial opacity={0} transparent={true} visible={false} /*map = {planetexture6}*/ attach = "material" side = {THREE.DoubleSide} />
+                </mesh>
+            </Suspense>
         </mesh>
     )
 })
