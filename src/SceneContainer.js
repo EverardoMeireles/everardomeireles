@@ -150,7 +150,7 @@ export function SceneContainer(props) {
     return(
         <>
             {/* {(desired_path=="Education" && transitionEnded || postloadStart) && <OrbitingMenu {...{useStore}} visible = {!postloadStart} orbitDistance = {7.5} orbitCenterPosition = {[-17, 97, 27]}/>} */}
-            {(desired_path === "Education" && transitionEnded) || postloadStart(
+            {(desired_path === "Education" && transitionEnded || postloadStart) && (
             <OrbitingMenu {...{ useStore }} visible={!postloadStart} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]} />
             )}
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
