@@ -32,7 +32,7 @@ export const firstPoint = new THREE.Vector3(194, 150, 63);
 
 export function getCurve(to, from){
     let returnPath, start, middle, end;
-    console.log(path_points[to + "-" + from])
+    // console.log(path_points[to + "-" + from])
     if(path_points[to + "-" + from] !== undefined)
     {
         returnPath = path_points[to + "-" + from]
