@@ -243,7 +243,7 @@ export const SimpleLoader = React.memo((props) => {
 
     // Hide marked objects at the start
     useEffect(() => {
-        console.log(gltf)
+        // console.log(gltf)
         Object.entries(objectsHideRevealTriggers).forEach(([key, value]) => {
             gltf.scene.traverse((child) => {
                 if (child.isMesh && child.name === key) {
@@ -334,7 +334,7 @@ export const SimpleLoader = React.memo((props) => {
     }
 
     useEffect(() => {
-        console.log("set initial scene loaded")
+        // console.log("set initial scene loaded")
         setInitialSceneLoaded(true);
     }, [gltf, setInitialSceneLoaded]);
 

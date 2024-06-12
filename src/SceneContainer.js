@@ -18,6 +18,7 @@ import { Raycaster } from "./components/Raycaster";
 import { CurveInstanceAnimation } from "./components/CurveInstanceAnimation";
 import { InstanceLoader } from "./components/InstanceLoader";
 import { PreloadAssets } from "./components/PreloadAssets";
+import { ExplodingModelLoader } from "./components/ExplodingModelLoader";
 import * as THREE from 'three';
 
 
@@ -136,12 +137,12 @@ export function SceneContainer(props) {
     useEffect(() => {
         const timer1 = setTimeout(() => {
             setPostloadStart(true);
-            console.log("post load 1")
+            // console.log("post load 1")
         }, postloadingDelay);
 
         const timer2 = setTimeout(() => {
             setPostloadStart(false);
-            console.log("post load 2")
+            // console.log("post load 2")
         }, postloadingDelay+500);
 
         return () => {clearTimeout(timer1); clearTimeout(timer2);}; // Cleanup the timer if the component unmounts
@@ -153,8 +154,9 @@ export function SceneContainer(props) {
             {(desired_path === "Education" && transitionEnded || postloadStart) && (
             <OrbitingMenu {...{ useStore }} visible={!postloadStart} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]} />
             )}
-            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
-            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} />
+            {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
+            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
+            <ExplodingModelLoader {...{useStore}} sceneName={"Roomba.glb"} position={[140, 100, 48]}></ExplodingModelLoader>
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}
@@ -182,16 +184,16 @@ export function SceneContainer(props) {
                 }
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
-                    <Raycaster {...{useStore}} mouse={mouse} frameInterval={10}>
-                        <SimpleLoader {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["ArmatureAction.002","IcosphereAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
+                    {/* <Raycaster {...{useStore}} mouse={mouse} frameInterval={10}> */}
+                        {/* <SimpleLoader {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["ArmatureAction.002","IcosphereAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
                         animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} sceneName = {"NewthreeJsScene.glb"} 
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
-                        ></SimpleLoader>
+                        ></SimpleLoader> */}
                         {/* <SimpleLoader {...{useStore}} animationToPlay={["Animation01"]} loopMode={"Loop"} sceneName = {"first_anim.glb"}>
 
                         </SimpleLoader> */}
-                    </Raycaster>
-                    <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]}
+                    {/* </Raycaster> */}
+                    {/* <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]}
                     directionX = {0} directionY = {0} directionZ = {-1}
                     customRotation={[
                         [0, 1.6, 0], [0, 1.75, 0], [0, 1.6, 0], [0, 1.6, 0.17], 
@@ -209,7 +211,8 @@ export function SceneContainer(props) {
                             0x87d91e, 0x5b13a6, 0xa96e2d, 0x3d47c8, 0x9e1a74, 0xf726e1, 0x62d3f8, 0x4a7e93,
                             0xc2a37e, 0x7d19f5, 0x51e48c, 0xad749b, 0x3e2a64, 0xf8a16d, 0x4d27a9, 0x92c85e,
                             0x6f1d95, 0xe941a3, 0x5a37cf]} 
-                        NumberOfInstances={35} distanceBetweenInstances={3}></InstanceLoader>
+                        NumberOfInstances={35} distanceBetweenInstances={3}>
+                    </InstanceLoader> */}
                     {/* <SimpleLoader {...{useStore}} sceneName={"Book.glb"}></SimpleLoader> */}
                 </Suspense>
                 {/* <pointLight intensity={1} position={[43, 155, -88]}></pointLight> */}

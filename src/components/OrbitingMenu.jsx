@@ -57,7 +57,7 @@ export const OrbitingMenu = React.memo((props) => {
         planeRefArray.current.forEach((planeRef) => {
             if (planeRef.current.material.opacity < 1) {
                 planeRef.current.material.opacity = planeRef.current.material.opacity + (delta / (fadeInDuration / 1000))
-                console.log(planeRef.current.material.opacity)
+                // console.log(planeRef.current.material.opacity)
             }
         })
     })

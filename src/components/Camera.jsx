@@ -47,7 +47,7 @@ export const Camera = React.memo((props) => {
     // Change camera mode
     const [cameraMode, setCameraMode] = useState(null);
     useEffect(()=>{
-        console.log(currentCameraMode)
+        // console.log(currentCameraMode)
         if(currentCameraMode === "NormalMovement"){
             setcurrentCameraMovements({"zoom":true, "pan":true, "rotate":true});
             setCameraMode({ RIGHT: THREE.MOUSE.RIGHT, LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE });
