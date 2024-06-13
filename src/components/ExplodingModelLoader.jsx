@@ -5,13 +5,14 @@ import * as THREE from "three";
 import React from "react";
 
 export const ExplodingModelLoader = React.memo((props) => {
-    const {position = [0, 0, 0]} = props;
-    const {sceneName = "threeJsScene.glb"} = props; // the model/scene's name
+    const { position = [0, 0, 0] } = props;
+    const { sceneName = "threeJsScene.glb" } = props; // the model/scene's name
     
     // Load Model
     const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + sceneName);
 
-    const [explode, setExplode] = useState(true);
+    const [rock, setRock] = useState(true);
+    const [explode, setExplode] = useState(false);
     const [initialPositions, setInitialPositions] = useState({});
     const [desiredPositions, setDesiredPositions] = useState({});
     const [childInitialPositions, setChildInitialPositions] = useState({});
@@ -19,11 +20,17 @@ export const ExplodingModelLoader = React.memo((props) => {
     const [animationTick, setAnimationTick] = useState(0);
     const [childAnimationTick, setChildAnimationTick] = useState(0);
     const [hasChildAnimation, setHasChildAnimation] = useState(false);
-    
-    const transitionDuration = 1500; // Duration in milliseconds
+
+    const rockingTransitionDuration = 2000; // Duration in milliseconds for rocking animation
+    const transitionDuration = 1500; // Duration in milliseconds for exploding animation
+    const rockingMaxAngle = Math.PI / 32; // Maximum angle for rocking
 
     function easeOutCubic(t) {
         return 1 - Math.pow(1 - t, 3);
+    }
+
+    function easeInCubic(t) {
+        return Math.pow(t, 3);
     }
 
     function getInitialPositions(model) {
@@ -98,7 +105,7 @@ export const ExplodingModelLoader = React.memo((props) => {
             // Clone the current position to avoid mutating the original object
             let newPosition = currentPositions[name].clone();
 
-            newPositions[name] = newPosition.add(incrementVector.multiplyScalar(incrementValue*5));
+            newPositions[name] = newPosition.add(incrementVector.multiplyScalar(incrementValue*4));
         });
 
         return newPositions;
@@ -126,7 +133,28 @@ export const ExplodingModelLoader = React.memo((props) => {
 
     // move animation
     useFrame((state, delta) => {
-        if (explode && animationTick <= 1) {
+        if (rock && animationTick <= 1) {
+            setAnimationTick(prev => Math.min(prev + (delta / (rockingTransitionDuration / 1000)), 1));
+            const easedTick = easeInCubic(animationTick);
+
+            gltf.scene.children.forEach((mesh) => {
+                const randomX = (Math.random() - 0.5) * rockingMaxAngle * easedTick;
+                const randomY = (Math.random() - 0.5) * rockingMaxAngle * easedTick;
+                const randomZ = (Math.random() - 0.5) * rockingMaxAngle * easedTick;
+                mesh.rotation.set(randomX, randomY, randomZ);
+            });
+
+            if (animationTick >= 1) {
+                setRock(false);
+                setExplode(true);
+                setAnimationTick(0); // Reset animation tick for the next animation
+
+                // Reset rotations to initial values
+                gltf.scene.children.forEach((mesh) => {
+                    mesh.rotation.set(0, 0, 0);
+                });
+            }
+        } else if (explode && animationTick <= 1) {
             setAnimationTick(prev => Math.min(prev + (delta / (transitionDuration / 1000)), 1));
             const easedTick = easeOutCubic(animationTick);
 
