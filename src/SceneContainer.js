@@ -19,6 +19,8 @@ import { CurveInstanceAnimation } from "./components/CurveInstanceAnimation";
 import { InstanceLoader } from "./components/InstanceLoader";
 import { PreloadAssets } from "./components/PreloadAssets";
 import { ExplodingModelLoader } from "./components/ExplodingModelLoader";
+import { customInstanceRotation, customInstanceColor } from "./PathPoints";
+
 import * as THREE from 'three';
 
 
@@ -40,6 +42,7 @@ export function SceneContainer(props) {
     const mouseClicked = useStore((state) => state.mouseClicked);
     const initialSceneLoaded = useStore((state) => state.initialSceneLoaded);
     const preloadDone = useStore((state) => state.preloadDone);
+    const raycasterEnabled = useStore((state) => state.raycasterEnabled);
     
     const { gl } = useThree(); // eslint-disable-line no-unused-vars
     const postloadingDelay = 3000
@@ -156,7 +159,7 @@ export function SceneContainer(props) {
             )}
             {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
-            <ExplodingModelLoader {...{useStore}} sceneName={"Roomba.glb"} position={[163, 110, 72]}></ExplodingModelLoader>
+            {/* <ExplodingModelLoader {...{useStore}} sceneName={"Roomba.glb"} position={[163, 110, 72]}></ExplodingModelLoader> */}
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}
@@ -184,34 +187,18 @@ export function SceneContainer(props) {
                 }
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
-                    {/* <Raycaster {...{useStore}} mouse={mouse} frameInterval={10}> */}
-                        {/* <SimpleLoader {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["ArmatureAction.002","IcosphereAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
+                    <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10}>
+                        <SimpleLoader  {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["ArmatureAction.002","IcosphereAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
                         animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} sceneName = {"NewthreeJsScene.glb"} 
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
-                        ></SimpleLoader> */}
+                        ></SimpleLoader>
                         {/* <SimpleLoader {...{useStore}} animationToPlay={["Animation01"]} loopMode={"Loop"} sceneName = {"first_anim.glb"}>
 
                         </SimpleLoader> */}
-                    {/* </Raycaster> */}
-                    {/* <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]}
-                    directionX = {0} directionY = {0} directionZ = {-1}
-                    customRotation={[
-                        [0, 1.6, 0], [0, 1.75, 0], [0, 1.6, 0], [0, 1.6, 0.17], 
-                        [0, 1.6, 0], [0, 1.6, 0], [0, 1.75, -0.17], [0, 1.6, 0], 
-                        [0, 1.75, 0], [0, 1.6, 0], [0, 1.7, 0], [0, 1.5, 0], 
-                        [0, 1.6, 0], [0, 1.75, 0], [0, 1.6, 0], [0, 1.6, 0.17], 
-                        [0, 1.45, 0], [0, 1.6, 0], [0, 1.6, -0.17], [0, 1.6, 0], 
-                        [0, 1.6, 0], [0, 1.6, 0], [0, 1.6, 0], [0, 1.6, 0.17], 
-                        [0, 1.6, 0], [0, 1.75, 0], [0, 1.6, 0], [0, 1.6, 0.17], 
-                        [0, 1.6, 0], [0, 1.6, 0], [0, 1.6, 0.17], [0, 1.6, 0], 
-                        [0, 1.45, 0], [0, 1.6, 0], [0, 1.75, 0], [0, 1.6, 0.17]]} 
-                        customColors={[
-                            0x1613d1, 0xcff55d, 0x9a35e2, 0x8c7b45, 0xf1d846, 0x3b9f5d, 0xa6c73e, 0x5d13b8,
-                            0xe9f73d, 0x4f6a95, 0x2a3b7c, 0x91d87f, 0xb5234a, 0x6e1b79, 0xf8b54d, 0x4c7a32,
-                            0x87d91e, 0x5b13a6, 0xa96e2d, 0x3d47c8, 0x9e1a74, 0xf726e1, 0x62d3f8, 0x4a7e93,
-                            0xc2a37e, 0x7d19f5, 0x51e48c, 0xad749b, 0x3e2a64, 0xf8a16d, 0x4d27a9, 0x92c85e,
-                            0x6f1d95, 0xe941a3, 0x5a37cf]} 
-                        NumberOfInstances={35} distanceBetweenInstances={3}></InstanceLoader> */}
+                    </Raycaster>
+                    <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} directionZ = {-1} 
+                        customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} distanceBetweenInstances={3}>
+                    </InstanceLoader>
                     {/* <SimpleLoader {...{useStore}} sceneName={"Book.glb"}></SimpleLoader> */}
                 </Suspense>
                 {/* <pointLight intensity={1} position={[43, 155, -88]}></pointLight> */}

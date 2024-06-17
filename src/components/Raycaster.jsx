@@ -7,6 +7,7 @@ export const Raycaster = React.memo((props) => {
     const {children} = props;
     const {mouse} = props;
     const {frameInterval = 1} = props; // Ray is casted every x frames
+    const {enabled = false} = props; // enable raycaster
 
     const setCurrentObjectClicked = useStore((state) => state.setCurrentObjectClicked);
     const currentObjectClicked = useStore((state) => state.currentObjectClicked);
@@ -17,28 +18,32 @@ export const Raycaster = React.memo((props) => {
     let frameCount = 0;
 
     useFrame(() => {
+        if(enabled){
         // Perform raycasting every 'frameInterval' frames
-        if (++frameCount % frameInterval === 0) {
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(scene.children, true);
+            if (++frameCount % frameInterval === 0) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
 
-        if (intersects.length > 0) {
-            if (hoveredObject !== intersects[0].object) {
-            setHoveredObject(intersects[0].object.name);
-            console.log("hover: "+hoveredObject)
+            if (intersects.length > 0) {
+                if (hoveredObject !== intersects[0].object) {
+                setHoveredObject(intersects[0].object.name);
+                console.log("hover: "+hoveredObject)
+                }
+            } else if (hoveredObject) {
+                setHoveredObject(null);
             }
-        } else if (hoveredObject) {
-            setHoveredObject(null);
-        }
+            }
         }
     });
 
     const handleRaycastClick = () => {
-        if (hoveredObject) {
-        setCurrentObjectClicked(hoveredObject);
-        //console.log("click: "+currentObjectClicked)
-        } else {
-        setCurrentObjectClicked(""); // Optionally clear the clicked object if clicking on empty space
+        if(enabled){
+            if (hoveredObject) {
+                setCurrentObjectClicked(hoveredObject);
+            } 
+            else {
+                setCurrentObjectClicked(""); // Optionally clear the clicked object if clicking on empty space
+            }
         }
     };
 

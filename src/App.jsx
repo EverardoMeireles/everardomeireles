@@ -10,6 +10,8 @@ import { ToolTipCircle } from "./components/ToolTipCircle";
 
 function App() {
   const useStore = create((set) => ({
+    raycasterEnabled: false,
+    setRaycasterEnabled: (loaded) => set(() => ({raycasterEnabled: loaded})),
     initialSceneLoaded: false,
     setInitialSceneLoaded: (loaded) => set(() => ({initialSceneLoaded: loaded})),
     preloadDone: false,
