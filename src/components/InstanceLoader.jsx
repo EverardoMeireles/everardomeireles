@@ -8,7 +8,7 @@ import * as THREE from 'three';
 export const InstanceLoader = React.memo((props) => {
     const {
         instancedObject = "Book.glb",
-        initialPosition = [0,0,0],
+        initialPosition = [0, 0, 0],
         NumberOfInstances = 5,
         directionX = 1,
         directionY = 0,
@@ -19,7 +19,8 @@ export const InstanceLoader = React.memo((props) => {
         customDistance = [],
         customScale = [],
         customRotation = [],
-        customColors = [0x1613d1, 0xcff55d] // Custom colors, object must not have a applied Material
+        customColors = [0x1613d1, 0xcff55d], // Custom colors, object must not have an applied Material
+        customPosition = [] // Custom positions, value is ignored if equal to initialPosition's value
     } = props;
 
     const meshRef = useRef();
@@ -46,6 +47,9 @@ export const InstanceLoader = React.memo((props) => {
         }
     }, [gltf]);
 
+    // Check if positions are equal
+    const positionsEqual = (pos1, pos2) => pos1.every((val, index) => val === pos2[index]);
+
     // Spawn instances
     useEffect(() => {
         if (!geometry || !material || !meshRef.current) return;
@@ -53,9 +57,11 @@ export const InstanceLoader = React.memo((props) => {
         const colorArray = new Float32Array(NumberOfInstances * 3); // RGB values for each instance
 
         for (let i = 0; i < NumberOfInstances; i++) {
-            const positionX = initialPosition[0] + (i < customDistance.length ? customDistance[i] * directionX : i * directionX * distanceBetweenInstances);
-            const positionY = initialPosition[1] + (i < customDistance.length ? customDistance[i] * directionY : i * directionY * distanceBetweenInstances);
-            const positionZ = initialPosition[2] + (i < customDistance.length ? customDistance[i] * directionZ : i * directionZ * distanceBetweenInstances);
+            const useCustomPosition = i < customPosition.length && !positionsEqual(customPosition[i], initialPosition);
+
+            const positionX = useCustomPosition ? customPosition[i][0] : initialPosition[0] + (i < customDistance.length ? customDistance[i] * directionX : i * directionX * distanceBetweenInstances);
+            const positionY = useCustomPosition ? customPosition[i][1] : initialPosition[1] + (i < customDistance.length ? customDistance[i] * directionY : i * directionY * distanceBetweenInstances);
+            const positionZ = useCustomPosition ? customPosition[i][2] : initialPosition[2] + (i < customDistance.length ? customDistance[i] * directionZ : i * directionZ * distanceBetweenInstances);
 
             const rotation = i < customRotation.length
                 ? new THREE.Euler(customRotation[i][0], customRotation[i][1], customRotation[i][2])
@@ -84,7 +90,7 @@ export const InstanceLoader = React.memo((props) => {
         meshRef.current.geometry.setAttribute('color', new THREE.InstancedBufferAttribute(colorArray, 3));
 
         meshRef.current.instanceMatrix.needsUpdate = true;
-    }, [geometry, material, NumberOfInstances, directionX, directionY, directionZ, distanceBetweenInstances, scale, rotationLimit, customDistance, customScale, customRotation, customColors]);
+    }, [geometry, material, NumberOfInstances, directionX, directionY, directionZ, distanceBetweenInstances, scale, rotationLimit, customDistance, customScale, customRotation, customColors, customPosition, initialPosition]);
 
     if (!geometry || !material) return null; // Ensure geometry and material are loaded
 
