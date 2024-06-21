@@ -35,6 +35,17 @@ export const SimpleLoader = React.memo((props) => {
     const {useAo = true} = props; // use ambient occlusion if the loaded scene supports it
     const {ambientOcclusionIntensity = 1} = props; // intensity of the ambient occlusion
 
+    // Feature : Manualy load the material
+    const {loadMaterialManually = false} = props; // whether to manually load and apply the material
+    const {materialName = "material001.glb"} = props; // the material's name
+
+    // Feature : Offset UVs
+    const {uvOffSet = [0, 0]} = props; // x and y multiplier values to offset the uvs
+    const {uvOffsetAmount = 0.05} = props; // Amount of the uv offset to increment, adjust according to the space in between subtextures in the texture
+
+    // Feature : Set children object's custom UVs
+    const { customObjectsUvs = {} } = props; // if there are child objects with more than 1 uv map and you want to set one in particular, specify the object's name and the uv's index. EX:{"Book":2}
+
 
 
     //////////////////////////////////////////////////////////
@@ -55,7 +66,7 @@ export const SimpleLoader = React.memo((props) => {
 
     // Load Model
     const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + sceneName);
-
+    // console.log(gltf)
     const toggleTrigger = useStore((state) => state.toggleTrigger);
     const triggers = useStore((state) => state.triggers);
 
@@ -71,14 +82,102 @@ export const SimpleLoader = React.memo((props) => {
     // states for the hover feature
     const [triggerScaleAnimation, setTriggerScaleAnimation] = useState(false);
     const [animationFadeOut, setAnimationFadeOut] = useState(false);
-
     const [childObject, setChildObject] = useState(false);
     const [currentLinkedObjects, setCurrentLinkedObjects] = useState([]);
 
+    // States for material loading and error handling
+    const [materialGltf, setMaterialGltf] = useState(null);
+    const [materialError, setMaterialError] = useState(false);
+
+
+
+    //////////////////////////////////////////////////////////
+    /////// Feature : Set children object's custom UVs ///////
+    //////////////////////////////////////////////////////////
+
+    // Set a particular uv as the active one
+    // Known issue: uv of index '0' doesn't cause a visual update
+    useEffect(() => {
+        if (Object.keys(customObjectsUvs).length !== 0) {
+          gltf.scene.traverse((child) => {
+            if (child.isMesh && customObjectsUvs.hasOwnProperty(child.name)) {
+              const uvIndex = customObjectsUvs[child.name];
+              const uvAttributeName = uvIndex === 0 ? 'uv' : `uv${uvIndex}`; // Determine the correct UV attribute name
+              console.log(uvAttributeName)
+
+              if (child.geometry.attributes[uvAttributeName]) {
+                child.geometry.attributes.uv.needsUpdate = true;
+                console.log(child.geometry.attributes)
+              } else {
+                console.warn(`UV map ${uvAttributeName} not found on object ${child.name}`);
+              }
+            }
+          });
+        }
+      }, [gltf, customObjectsUvs]);
+
+
+    //////////////////////////////////////////////////////////
+    ///////////////// Feature : Offset UVs ///////////////////
+    //////////////////////////////////////////////////////////
+
+    // Offset the childs's uvs by a certain increment, useful for modifying appearance without swapping materials
+    useEffect(() => {
+        // check if both of the offset's values are not 0
+        if(uvOffSet[0] + uvOffSet[1] != 0){
+            // Traverse the entire scene to apply the UV updates
+            gltf.scene.traverse((child) => {
+                if (child.material) {
+                    const materials = Array.isArray(child.material) ? child.material : [child.material];
+                    materials.forEach((material) => {
+                    if (material.map) {
+                        material.map.offset.x = uvOffsetAmount * uvOffSet[0];
+                        material.map.offset.y = uvOffsetAmount * uvOffSet[1];
+                        material.map.needsUpdate = true; // Ensure the change is applied
+                    }
+                    });
+                }
+            });
+        }
+      }, [gltf, uvOffsetAmount, uvOffSet]);
+
+
+    //////////////////////////////////////////////////////////
+    ////////// Feature : Manualy load the material ///////////
+    //////////////////////////////////////////////////////////
+
+    // Attempt to load the material if loadMaterialManually is true
+    useEffect(() => {
+        if (loadMaterialManually) {
+            const loader = new GLTFLoader();
+            loader.load(
+                process.env.PUBLIC_URL + '/materials/' + materialName,
+                (gltf) => {
+                    setMaterialGltf(gltf);
+                },
+                undefined,
+                (error) => {
+                    console.error('Material not found:', error);
+                    setMaterialError(true);
+                }
+            );
+        }
+    }, [loadMaterialManually, materialName]);
+
+    // Apply material if loadMaterialManually is true and material is loaded
+    useEffect(() => {
+        if (loadMaterialManually && !materialError && materialGltf) {
+            gltf.scene.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = materialGltf.scene.children[0].material;
+                }
+            });
+        }
+    }, [gltf, loadMaterialManually, materialGltf, materialError]);
 
     
     //////////////////////////////////////////////////////////
-    // Feature : play animation(s) on trigger
+    ////////// Feature : play animation(s) on trigger/////////
     //////////////////////////////////////////////////////////
 
     // stops execution if the animation's name string is not inside an array
@@ -129,7 +228,7 @@ export const SimpleLoader = React.memo((props) => {
     }
 
     //////////////////////////////////////////////////////////
-    // Feature : Hover
+    /////////////////// Feature : Hover //////////////////////
     //////////////////////////////////////////////////////////
 
     // Modify this to only reset appropriate objects???
@@ -208,7 +307,7 @@ export const SimpleLoader = React.memo((props) => {
     });
 
     //////////////////////////////////////////////////////////
-    // Feature : toggles trigger in the middle of animation
+    // Feature : toggles trigger in the middle of animation //
     //////////////////////////////////////////////////////////
 
     // updates deltas for animations
@@ -238,7 +337,7 @@ export const SimpleLoader = React.memo((props) => {
     }
     
     //////////////////////////////////////////////////////////
-    // Feature : hide or reveal mesh on trigger
+    //////// Feature : hide or reveal mesh on trigger ////////
     //////////////////////////////////////////////////////////
 
     // Hide marked objects at the start
@@ -319,9 +418,8 @@ export const SimpleLoader = React.memo((props) => {
         }
     });
 
-
     //////////////////////////////////////////////////////////
-    // Feature : Ambient occlusion
+    ////////////// Feature : Ambient occlusion ///////////////
     //////////////////////////////////////////////////////////
 
     // initiate ambient occlusion if useAo is set to true
