@@ -1,18 +1,24 @@
-import { useLoader, useFrame } from '@react-three/fiber';
+import { useLoader, useFrame, useThree } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Suspense, useEffect, useState, useRef } from "react";
 import * as THREE from "three";
 import React from "react";
+import { Vector3 } from 'three';
 
 export const ExplodingModelLoader = React.memo((props) => {
-    const { position = [0, 0, 0] } = props;
-    const { sceneName = "threeJsScene.glb" } = props; // the model/scene's name
+    const { position = [0, 0, 0], sceneName = "threeJsScene.glb", enableRockingAnimation = true, enableExplodeAnimation = true } = props;
+    const useStore = props.useStore; // Using useStore from props
     
     // Load Model
     const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + sceneName);
 
+    const { camera, gl } = useThree();
+    const setToolTipCirclePositions = useStore((state) => state.setToolTipCirclePositions);
+    const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
+
     const [rock, setRock] = useState(true);
     const [explode, setExplode] = useState(false);
+    const [explodeAnimationEnded, setExplodeAnimationEnded] = useState(false);
     const [initialPositions, setInitialPositions] = useState({});
     const [desiredPositions, setDesiredPositions] = useState({});
     const [childInitialPositions, setChildInitialPositions] = useState({});
@@ -22,8 +28,8 @@ export const ExplodingModelLoader = React.memo((props) => {
     const [hasChildAnimation, setHasChildAnimation] = useState(false);
 
     const rockingTransitionDuration = 2000; // Duration in milliseconds for rocking animation
-    const transitionDuration = 1500; // Duration in milliseconds for exploding animation
-    const rockingMaxAngle = Math.PI / 32; // Maximum angle for rocking
+    const transitionDuration = 3000; // Duration in milliseconds for exploding animation
+    const rockingMaxAngle = Math.PI / 8; // Maximum angle for rocking
 
     function easeOutCubic(t) {
         return 1 - Math.pow(1 - t, 3);
@@ -131,9 +137,49 @@ export const ExplodingModelLoader = React.memo((props) => {
         }
     }, [gltf]);
 
+    const updateToolTipCirclePositions = () => {
+        const positions = {};
+        tooltipCirclesData.forEach((data) => {
+            const objectName = data.objectName;
+            const object = gltf.scene.getObjectByName(objectName);
+            if (object) {
+                const vector = new THREE.Vector3();
+                object.getWorldPosition(vector);
+                vector.project(camera);
+
+                // Convert the normalized device coordinates (NDC) to screen space percentages
+                const x = (vector.x * 0.5 + 0.5) * 100; // Percentage of width
+                const y = (vector.y * -0.5 + 0.5) * 100; // Percentage of height
+console.log("sq")
+                positions[objectName] = [x, y];
+            }
+        });
+        setToolTipCirclePositions(positions);
+    };
+
+    useEffect(() => {
+        const handleControlsChange = () => {
+            if (explodeAnimationEnded) {
+                updateToolTipCirclePositions();
+            }
+        };
+
+        // Assuming you are using OrbitControls
+        const controls = camera.controls;
+        if (controls) {
+            controls.addEventListener('change', handleControlsChange);
+        }
+
+        return () => {
+            if (controls) {
+                controls.removeEventListener('change', handleControlsChange);
+            }
+        };
+    }, [camera, gltf, explodeAnimationEnded]);
+
     // move animation
     useFrame((state, delta) => {
-        if (rock && animationTick <= 1) {
+        if (enableRockingAnimation && rock && animationTick <= 1) {
             setAnimationTick(prev => Math.min(prev + (delta / (rockingTransitionDuration / 1000)), 1));
             const easedTick = easeInCubic(animationTick);
 
@@ -146,7 +192,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
             if (animationTick >= 1) {
                 setRock(false);
-                setExplode(true);
+                setExplode(enableExplodeAnimation);
                 setAnimationTick(0); // Reset animation tick for the next animation
 
                 // Reset rotations to initial values
@@ -154,7 +200,7 @@ export const ExplodingModelLoader = React.memo((props) => {
                     mesh.rotation.set(0, 0, 0);
                 });
             }
-        } else if (explode && animationTick <= 1) {
+        } else if (enableExplodeAnimation && explode && animationTick <= 1) {
             setAnimationTick(prev => Math.min(prev + (delta / (transitionDuration / 1000)), 1));
             const easedTick = easeOutCubic(animationTick);
 
@@ -167,6 +213,8 @@ export const ExplodingModelLoader = React.memo((props) => {
 
             if (animationTick >= 1) {
                 setExplode(false);
+                setExplodeAnimationEnded(true);
+                updateToolTipCirclePositions(); // Ensure we update the tooltip positions after the first explode animation
 
                 // Check if there are objects with children
                 const childInitialPositions = getChildrenInitialPositions(gltf);
@@ -191,6 +239,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
             if (childAnimationTick >= 1) {
                 setHasChildAnimation(false);
+                updateToolTipCirclePositions(); // Ensure we update the tooltip positions after child animations end
             }
         }
     });

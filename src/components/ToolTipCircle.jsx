@@ -23,6 +23,7 @@ export const ToolTipCircle = (props) => {
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
     const desired_path = useStore((state) => state.desired_path);
     const transitionEnded = useStore((state) => state.transitionEnded);
+    const explodeAnimationEnded = useStore((state) => state.explodeAnimationEnded);
 
     const [isVisible, setIsVisible] = useState(false);
 

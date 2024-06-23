@@ -1,0 +1,14 @@
+[
+    {
+    "objectName": "Foot_1BB2",
+    "pathToShow": "MainMenu",
+    "text": "Right text",
+    "image": "textures/4x3.png"
+    },
+    {
+    "objectName": "Wheel_1_1BB1",
+    "pathToShow": "MainMenu",
+    "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
+    "image": "AfficheDUT-French.png"
+    }
+]

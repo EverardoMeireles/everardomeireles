@@ -159,7 +159,7 @@ export function SceneContainer(props) {
             )}
             {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
-            {/* <ExplodingModelLoader {...{useStore}} sceneName={"Roomba.glb"} position={[163, 110, 72]}></ExplodingModelLoader> */}
+            <ExplodingModelLoader {...{useStore}} sceneName={"Roomba.glb"} position={[163, 110, 72]}></ExplodingModelLoader>
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}
@@ -187,7 +187,7 @@ export function SceneContainer(props) {
                 }
                 <ambientLight intensity = {1}></ambientLight>
                 <Suspense>
-                    <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10}>
+                    {/* <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10}> */}
                         <SimpleLoader  {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["ArmatureAction.002","IcosphereAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
                         animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} sceneName = {"NewthreeJsScene.glb"} 
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
@@ -195,7 +195,7 @@ export function SceneContainer(props) {
                         {/* <SimpleLoader {...{useStore}} animationToPlay={["Animation01"]} loopMode={"Loop"} sceneName = {"first_anim.glb"}>
 
                         </SimpleLoader> */}
-                    </Raycaster>
+                    {/* </Raycaster> */}
                     <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} directionZ = {-1} 
                         customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} distanceBetweenInstances={3}>
                     </InstanceLoader>
@@ -213,7 +213,7 @@ export function SceneContainer(props) {
             {(initialSceneLoaded)
             &&
             <Suspense fallback={"Loading additional scenes..."}>
-                <PreloadAssets {...{useStore}} texturesToLoad={["AfficheDUT-French.png", "AfficheDUT-Portuguese.png", "AfficheEDHC-French.png", "AfficheEDHC-Portuguese.png", "AfficheMicrolins1-French.png", "AfficheMicrolins1-Portuguese.png", "AfficheMicrolins2-French.png", "AfficheMicrolins2-Portuguese.png", "AfficheUNIRN-French.png", "AfficheUNIRN-Portuguese.png"]} scenesToLoad={["Mouse.glb", "sphere_bot.glb"]}></PreloadAssets>
+                <PreloadAssets {...{useStore}} texturesToLoad={["AfficheDUT-French.png", "AfficheDUT-Portuguese.png", "AfficheEDHC-French.png", "AfficheEDHC-Portuguese.png", "AfficheMicrolins1-French.png", "AfficheMicrolins1-Portuguese.png", "AfficheMicrolins2-French.png", "AfficheMicrolins2-Portuguese.png", "AfficheUNIRN-French.png", "AfficheUNIRN-Portuguese.png"]} scenesToLoad={[]}></PreloadAssets>
             </Suspense>
             }
 
