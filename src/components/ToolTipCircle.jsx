@@ -24,6 +24,7 @@ export const ToolTipCircle = (props) => {
     const desired_path = useStore((state) => state.desired_path);
     const transitionEnded = useStore((state) => state.transitionEnded);
     const explodeAnimationEnded = useStore((state) => state.explodeAnimationEnded);
+    const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
 
     const [isVisible, setIsVisible] = useState(false);
 
@@ -31,10 +32,10 @@ export const ToolTipCircle = (props) => {
 
     useEffect(() => {
         if(desired_path == pathToShow && transitionEnded){
-            console.log('test')
-
+            setCameraStateTracking(true)
             setIsVisible(true);
         }else{
+            setCameraStateTracking(false)
             setIsVisible(false);
         }
     }, [desired_path, transitionEnded]);

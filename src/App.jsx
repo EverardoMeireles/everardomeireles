@@ -91,7 +91,28 @@ const useStore = create((set) => ({
   isCircleOnLeft: false,
   setIsCircleOnLeft: (isLeft) => set(() => ({ isCircleOnLeft: isLeft })),
   tooltipCirclesData: [],
-  setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data }))
+  setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data })),
+  cameraState: {
+    position: [0, 0, 0],
+    rotation: [0, 0, 0],
+  },
+  setCameraState: (position, rotation) => set(() => ({
+    cameraState: { position, rotation }
+  })),
+  cameraStateTracking: false,
+  setCameraStateTracking: (tracking) => set(() => ({ cameraStateTracking: tracking })),
+  
+  animationIsPlaying: false,
+  setAnimationIsPlaying: (playing) => set(() => ({ animationIsPlaying: playing })),
+
+  animationDirection: true,
+  setAnimationDirection: (direction) => set(() => ({ animationDirection: direction })),
+
+  explodeAnimationEnded: false,
+  setExplodeAnimationEnded: (ended) => set(() => ({ explodeAnimationEnded: ended })),
+  
+  tooltipCircleFadeMode: "OnAnimationEnd", // "OnTransitionEnd", "OnAnimationEnd"
+  setTooltipCircleFadeMode: (text) => set(() => ({ tooltipText: text })),
 }));
 
 function App() {
@@ -121,7 +142,6 @@ function App() {
         // });
         // setToolTipCirclePositions(positions);
         setTooltipCirclesData(data);
-        console.log(toolTipCirclePositions);
 
 
       })
@@ -132,7 +152,7 @@ function App() {
   }, []); // Empty dependency array to run the effect only once
 
   useEffect(() => {
-    console.log(toolTipCirclePositions)
+    // console.log(toolTipCirclePositions)
 
   }, [toolTipCirclePositions, setTooltipCirclesData]);
 

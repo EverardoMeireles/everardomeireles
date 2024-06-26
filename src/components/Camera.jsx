@@ -18,6 +18,8 @@ export const Camera = React.memo((props) => {
     const panDirectionalEdgethreshold = useStore((state) => state.panDirectionalEdgethreshold);
     const panDirectionalAxis = useStore((state) => state.panDirectionalAxis);
     const setTrigger = useStore((state) => state.setTrigger);
+    const setCameraState = useStore((state) => state.setCameraState);
+    const cameraStateTracking = useStore((state) => state.cameraStateTracking);
 
     const updateCallNow = useRef(false);
     const cam = useRef();
@@ -256,8 +258,8 @@ export const Camera = React.memo((props) => {
         // Updates the camera's position
         state.camera.position.x = sub_points.x,
         state.camera.position.y = sub_points.y,
-        state.camera.position.z = sub_points.z)
-        : (updateCall(state))
+        state.camera.position.z = sub_points.z
+    ) : (updateCall(state))
     ));
 
     // orbitcontrols keyboard control is not working, that's a workaround
@@ -317,8 +319,42 @@ export const Camera = React.memo((props) => {
                     controls.current.target.y += -keyboardControlsSpeed;
                 break;
             }
+            setCameraState(
+                [cam.current.position.x, cam.current.position.y, cam.current.position.z],
+                [cam.current.rotation.x, cam.current.rotation.y, cam.current.rotation.z]
+            );
         });
     });
+
+    useEffect(() => {
+        if (!cameraStateTracking) return;
+
+        let animationFrameId;
+        let previousPosition = new THREE.Vector3();
+        let previousRotation = new THREE.Euler();
+
+        const handleFrame = () => {
+            const currentPosition = cam.current.position;
+            const currentRotation = cam.current.rotation;
+
+            if (!currentPosition.equals(previousPosition) || !currentRotation.equals(previousRotation)) {
+                setCameraState(
+                    [currentPosition.x, currentPosition.y, currentPosition.z],
+                    [currentRotation.x, currentRotation.y, currentRotation.z]
+                );
+                previousPosition.copy(currentPosition);
+                previousRotation.copy(currentRotation);
+            }
+
+            animationFrameId = requestAnimationFrame(handleFrame);
+        };
+
+        handleFrame(); // Initial call
+
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, [setCameraState, cameraStateTracking]);
 
     return(
         <>
@@ -328,4 +364,4 @@ export const Camera = React.memo((props) => {
             <OrbitControls mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} target = {/*currentCameraMode === "panDirectional"?null:*/[constrolTargetX, constrolTargetY, constrolTargetZ]} />
         </>
     )
-})
+});
