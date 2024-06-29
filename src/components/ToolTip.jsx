@@ -19,7 +19,7 @@ export const ToolTip = (props) => {
     const isCircleOnLeft = useStore((state) => state.isCircleOnLeft);
 
     const [isVisible, setIsVisible] = useState(false);
-    const [isDivDisabled, setIsDivDisabled] = useState(false);
+    const [isDivDisabled, setIsDivDisabled] = useState(true);
 
     useEffect(() => {
         let timeoutId;
