@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import React from 'react';
 
 export const ExplodingModelLoader = React.memo((props) => {
-  const { position = [0, 0, 0], sceneName = 'threeJsScene.glb', enableRockingAnimation = true, enableExplodeAnimation = true, animationStartOnLoad = true } = props;
+  const { position = [0, 0, 0], sceneName = 'threeJsScene.glb', enableRockingAnimation = true, enableExplodeAnimation = true, animationStartOnLoad = false, setCameraTargetOnMount = true, setCameraTargetTrigger="trigger4", customOrigin=[]} = props;
   const useStore = props.useStore; // Using useStore from props
 
   // Load Model
@@ -19,6 +19,10 @@ export const ExplodingModelLoader = React.memo((props) => {
   const setAnimationIsPlaying = useStore((state) => state.setAnimationIsPlaying);
   const animationDirection = useStore((state) => state.animationDirection);
   const setAnimationDirection = useStore((state) => state.setAnimationDirection);
+  const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
+  const transitionEnded = useStore((state) => state.transitionEnded);
+  const triggers = useStore((state) => state.triggers);
+  const setTrigger = useStore((state) => state.setTrigger);
 
   const [rock, setRock] = useState(false);
   const [explode, setExplode] = useState(false);
@@ -63,6 +67,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       1: 0,
       2: 1
     };
+
     var nameSubstring = '';
     var DirectionValue = '';
     var zIndexValue = 0;
@@ -158,6 +163,26 @@ export const ExplodingModelLoader = React.memo((props) => {
     setToolTipCirclePositions(positions);
   };
 
+  let sceneOrigin = [0,0,0]
+  sceneOrigin = customOrigin != [] ? gltf.scene.position : customOrigin;  
+
+  // Force change the camera's target on component mount
+  useEffect(() => {
+    if (setCameraTargetOnMount) {
+      setForcedCameraTarget(customOrigin.length !== 0 ? customOrigin : gltf.scene.position);
+      setTrigger(setCameraTargetTrigger, false);
+    }
+    // The empty dependency array ensures this useEffect runs only once on mount
+  }, []);
+
+  // Change the camera's target on trigger
+  useEffect(() => {
+    if(triggers[setCameraTargetTrigger]){
+      setForcedCameraTarget(customOrigin != [] ? customOrigin : gltf.scene.position)
+      setTrigger(setCameraTargetTrigger, false)
+    }
+  }, [transitionEnded]);
+
     // Makes the tooltip circles follow the objects when camera position and rotation values change
     useEffect(() => {
       updateToolTipCirclePositions();
@@ -167,12 +192,13 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     if(enableRockingAnimation && animationStartOnLoad){
       setRock(true)
+      setAnimationIsPlaying(true)
     }
 
     if(enableExplodeAnimation && animationStartOnLoad){
       setExplode(true)
+      setAnimationIsPlaying(true)
     }
-    setAnimationIsPlaying(true)
   }, [animationStartOnLoad]);
 
   // When model loads, set the initial and desired positions of the animation
@@ -233,93 +259,92 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Animation
   useFrame((state, delta) => {
-    console.log(animationIsPlaying)
+    if(animationIsPlaying){
+      const adjustedDelta = delta;
 
-    const adjustedDelta = delta;
-
-    console.log()
-    if (rock && enableRockingAnimation && animationTick <= 1 && !rockingAnimationPlayed.current) {
-      setAnimationTick(prev => Math.min(prev + (adjustedDelta / (rockingTransitionDuration / 1000)), 1));
-      const easedTick = easeInCubic(animationTick);
-
-      gltf.scene.children.forEach((mesh) => {
-        const randomX = (Math.random() - 0.5) * rockingMaxAngle * easedTick;
-        const randomY = (Math.random() - 0.5) * rockingMaxAngle * easedTick;
-        const randomZ = (Math.random() - 0.5) * rockingMaxAngle * easedTick;
-        mesh.rotation.set(randomX, randomY, randomZ);
-      });
-
-      if (animationTick >= 1) {
-        setRock(false);
-        rockingAnimationPlayed.current = true;
-        if (enableExplodeAnimation) {
-          setExplode(true);
-        }
-        setAnimationTick(0); // Reset animation tick for the next animation
-
-        // Reset rotations to initial values
+      if (rock && enableRockingAnimation && animationTick <= 1 && !rockingAnimationPlayed.current) {
+        setAnimationTick(prev => Math.min(prev + (adjustedDelta / (rockingTransitionDuration / 1000)), 1));
+        const easedTick = easeInCubic(animationTick);
+  
         gltf.scene.children.forEach((mesh) => {
-          mesh.rotation.set(0, 0, 0);
+          const randomX = (Math.random() - 0.5) * rockingMaxAngle * easedTick;
+          const randomY = (Math.random() - 0.5) * rockingMaxAngle * easedTick;
+          const randomZ = (Math.random() - 0.5) * rockingMaxAngle * easedTick;
+          mesh.rotation.set(randomX, randomY, randomZ);
         });
-      }
-    } else if (explode && enableExplodeAnimation && animationTick <= 1 && !explodeAnimationPlayed.current) {
-      setAnimationTick(prev => Math.min(prev + (adjustedDelta / (transitionDuration / 1000)), 1));
-      const easedTick = animationDirection === true ? easeOutCubic(animationTick) : easeInCubic(animationTick);
-
-      Object.keys(initialPositions).forEach((name) => {
-        const initialPos = initialPositions[name];
-        const desiredPos = desiredPositions[name];
-        const currentPos = new THREE.Vector3().lerpVectors(initialPos, desiredPos, easedTick);
-        gltf.scene.getObjectByName(name).position.copy(currentPos);
-      });
-
-      if (animationTick >= 1) {
-        setExplode(false);
-        explodeAnimationPlayed.current = true;
-        updateToolTipCirclePositions(); // Ensure we update the tooltip positions after the first explode animation
-
-        // Check if there are objects with children
-        if (!childAnimationPlayed.current && animationDirection === true) {
-          const childInitialPositions = getChildrenInitialPositions(gltf);
-          if (Object.keys(childInitialPositions).length > 0) {
-            const childDesiredPositions = getDesiredPositions(childInitialPositions);
-            setChildInitialPositions(childInitialPositions);
-            setChildDesiredPositions(childDesiredPositions);
-            setHasChildAnimation(true);
-            setChildAnimationTick(0); // Reset child animation tick
-          } else {
-            setAnimationIsPlaying(false); // Set animationIsPlaying to false if no child animation
+  
+        if (animationTick >= 1) {
+          setRock(false);
+          rockingAnimationPlayed.current = true;
+          if (enableExplodeAnimation) {
+            setExplode(true);
           }
-        } else {
-          setAnimationIsPlaying(false); // Set animationIsPlaying to false if child animation already played
+          setAnimationTick(0); // Reset animation tick for the next animation
+  
+          // Reset rotations to initial values
+          gltf.scene.children.forEach((mesh) => {
+            mesh.rotation.set(0, 0, 0);
+          });
+        }
+      } else if (explode && enableExplodeAnimation && animationTick <= 1 && !explodeAnimationPlayed.current) {
+        setAnimationTick(prev => Math.min(prev + (adjustedDelta / (transitionDuration / 1000)), 1));
+        const easedTick = animationDirection === true ? easeOutCubic(animationTick) : easeInCubic(animationTick);
+  
+        Object.keys(initialPositions).forEach((name) => {
+          const initialPos = initialPositions[name];
+          const desiredPos = desiredPositions[name];
+          const currentPos = new THREE.Vector3().lerpVectors(initialPos, desiredPos, easedTick);
+          gltf.scene.getObjectByName(name).position.copy(currentPos);
+        });
+  
+        if (animationTick >= 1) {
+          setExplode(false);
+          explodeAnimationPlayed.current = true;
+          updateToolTipCirclePositions(); // Ensure we update the tooltip positions after the first explode animation
+  
+          // Check if there are objects with children
+          if (!childAnimationPlayed.current && animationDirection === true) {
+            const childInitialPositions = getChildrenInitialPositions(gltf);
+            if (Object.keys(childInitialPositions).length > 0) {
+              const childDesiredPositions = getDesiredPositions(childInitialPositions);
+              setChildInitialPositions(childInitialPositions);
+              setChildDesiredPositions(childDesiredPositions);
+              setHasChildAnimation(true);
+              setChildAnimationTick(0); // Reset child animation tick
+            } else {
+              setAnimationIsPlaying(false); // Set animationIsPlaying to false if no child animation
+            }
+          } else {
+            setAnimationIsPlaying(false); // Set animationIsPlaying to false if child animation already played
+          }
+        }
+      } else if (hasChildAnimation && childAnimationTick <= 1 && !childAnimationPlayed.current && animationDirection === true) {
+        setChildAnimationTick(prev => Math.min(prev + (adjustedDelta / (childTransitionDuration / 1000)), 1));
+        const easedTick = animationDirection === true ? easeOutCubic(childAnimationTick) : easeInCubic(childAnimationTick);
+  
+        Object.keys(childInitialPositions).forEach((name) => {
+          const initialPos = childInitialPositions[name];
+          const desiredPos = childDesiredPositions[name];
+          const currentPos = new THREE.Vector3().lerpVectors(initialPos, desiredPos, easedTick);
+          gltf.scene.getObjectByName(name).position.copy(currentPos);
+        });
+  
+        if (childAnimationTick >= 1) {
+          setHasChildAnimation(false);
+          childAnimationPlayed.current = true;
+          updateToolTipCirclePositions(); // Ensure we update the tooltip positions after child animations end
+          setAnimationIsPlaying(false); // Set animationIsPlaying to false after child animation
+  
         }
       }
-    } else if (hasChildAnimation && childAnimationTick <= 1 && !childAnimationPlayed.current && animationDirection === true) {
-      setChildAnimationTick(prev => Math.min(prev + (adjustedDelta / (childTransitionDuration / 1000)), 1));
-      const easedTick = animationDirection === true ? easeOutCubic(childAnimationTick) : easeInCubic(childAnimationTick);
-
-      Object.keys(childInitialPositions).forEach((name) => {
-        const initialPos = childInitialPositions[name];
-        const desiredPos = childDesiredPositions[name];
-        const currentPos = new THREE.Vector3().lerpVectors(initialPos, desiredPos, easedTick);
-        gltf.scene.getObjectByName(name).position.copy(currentPos);
-      });
-
-      if (childAnimationTick >= 1) {
-        setHasChildAnimation(false);
-        childAnimationPlayed.current = true;
-        updateToolTipCirclePositions(); // Ensure we update the tooltip positions after child animations end
-        setAnimationIsPlaying(false); // Set animationIsPlaying to false after child animation
-
+  
+      // When reversing the animation, reset child positions
+      if (animationDirection === false && !childAnimationPlayed.current) {
+        Object.keys(childInitialPositions).forEach((name) => {
+          gltf.scene.getObjectByName(name).position.copy(childInitialPositions[name]);
+        });
+        childAnimationPlayed.current = true; // Mark child animation as played to prevent re-execution
       }
-    }
-
-    // When reversing the animation, reset child positions
-    if (animationIsPlaying && animationDirection === false && !childAnimationPlayed.current) {
-      Object.keys(childInitialPositions).forEach((name) => {
-        gltf.scene.getObjectByName(name).position.copy(childInitialPositions[name]);
-      });
-      childAnimationPlayed.current = true; // Mark child animation as played to prevent re-execution
     }
   });
 

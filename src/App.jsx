@@ -82,6 +82,12 @@ const useStore = create((set) => ({
       [key]: !state.triggers[key]
     }
   })),
+  setTrigger: (key, value) => set((state) => ({
+    triggers: {
+      ...state.triggers,
+      [key]: value
+    }
+  })),
   tooltipVisible: false,
   setTooltipVisible: (visible) => set(() => ({ tooltipVisible: visible })),
   tooltipText: "Example text",
@@ -113,6 +119,9 @@ const useStore = create((set) => ({
   
   tooltipCircleFadeMode: "OnAnimationEnd", // "OnTransitionEnd", "OnAnimationEnd"
   setTooltipCircleFadeMode: (text) => set(() => ({ tooltipText: text })),
+
+  forcedCameraTarget: [], // will force the camera's rotation pivot if not empty
+  setForcedCameraTarget: (target) => set(() => ({ forcedCameraTarget: target })),
 }));
 
 function App() {
@@ -136,14 +145,7 @@ function App() {
         return response.json();
       })
       .then((data) => {
-        // const positions = {};
-        // data.forEach((item) => {
-        //   positions[item.objectName] = [0, 0]; // Set all positions to [0, 0]
-        // });
-        // setToolTipCirclePositions(positions);
         setTooltipCirclesData(data);
-
-
       })
       .catch((error) => {
         console.error('Error fetching the JSON:', error);

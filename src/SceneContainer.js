@@ -43,6 +43,8 @@ export function SceneContainer(props) {
     const initialSceneLoaded = useStore((state) => state.initialSceneLoaded);
     const preloadDone = useStore((state) => state.preloadDone);
     const raycasterEnabled = useStore((state) => state.raycasterEnabled);
+    const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
+    const setTrigger = useStore((state) => state.setTrigger);
     
     const { gl } = useThree(); // eslint-disable-line no-unused-vars
     const postloadingDelay = 3000
@@ -121,6 +123,20 @@ export function SceneContainer(props) {
     }
     const { mouse } = useThree();
 
+    // Place transition code
+    useEffect(() => {
+        setTrigger("trigger4", false)
+        setForcedCameraTarget([])
+        switch (desired_path) {
+            case 'MainMenu':
+                // For now, the ExplodingModelLoader appears in the MainMenu
+                // Trigger change in the camera's target
+                setTrigger("trigger4", true)
+                break;
+          }
+       
+    }, [desired_path]);
+
     // Place conditions for when the mouse is clicked here:
     useEffect(() => {
         // Clicked 3D objects:
@@ -134,7 +150,6 @@ export function SceneContainer(props) {
     }, [mouseClicked]);
 
     const [postloadStart, setPostloadStart] = useState(false);
-
 
     // post-loading, set the state that will post load some components a first time, so that their meshes and materials can be cached
     useEffect(() => {
@@ -159,7 +174,7 @@ export function SceneContainer(props) {
             )}
             {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
-            <ExplodingModelLoader {...{useStore}} sceneName={"Roomba.glb"} position={[163, 110, 72]}></ExplodingModelLoader>
+            <ExplodingModelLoader {...{useStore}} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} customOrigin={[180, 140, 53]}></ExplodingModelLoader>
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}

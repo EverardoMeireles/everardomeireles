@@ -20,6 +20,7 @@ export const Camera = React.memo((props) => {
     const setTrigger = useStore((state) => state.setTrigger);
     const setCameraState = useStore((state) => state.setCameraState);
     const cameraStateTracking = useStore((state) => state.cameraStateTracking);
+    const forcedCameraTarget = useStore((state) => state.forcedCameraTarget);
 
     const updateCallNow = useRef(false);
     const cam = useRef();
@@ -198,9 +199,9 @@ export const Camera = React.memo((props) => {
     }
 
     // control target is the last element of path_points_lookat_dict
-    const constrolTargetX = pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].x;
-    const constrolTargetY = pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].y;
-    const constrolTargetZ = pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].z;
+    const constrolTargetX = forcedCameraTarget[0] == undefined ? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].x : forcedCameraTarget[0];
+    const constrolTargetY = forcedCameraTarget[1] == undefined ? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].y : forcedCameraTarget[1];
+    const constrolTargetZ = forcedCameraTarget[2] == undefined ? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].z : forcedCameraTarget[2];
 
     // used in custom camera lookat
     const desired_lookat_dict = (time) => { // eslint-disable-line no-unused-vars
