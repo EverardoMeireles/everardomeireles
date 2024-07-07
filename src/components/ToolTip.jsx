@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useFrame } from '@react-three/fiber';
+
 
 // A component that displays a message on screen for a time.
 // How to use:
@@ -17,9 +19,13 @@ export const ToolTip = (props) => {
     const tooltipProperties = useStore((state) => state.tooltipProperties);
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
     const isCircleOnLeft = useStore((state) => state.isCircleOnLeft);
-
+    const isCircleOnTop = useStore((state) => state.isCircleOnTop);
+    
+    const tooltipCurrentObjectSelected = useStore((state) => state.tooltipCurrentObjectSelected);
+    
     const [isVisible, setIsVisible] = useState(false);
     const [isDivDisabled, setIsDivDisabled] = useState(true);
+    const [objectRotationAnimation, setObjectRotationAnimation] = useState(false);
 
     useEffect(() => {
         let timeoutId;
@@ -30,7 +36,7 @@ export const ToolTip = (props) => {
             timeoutId = setTimeout(() => {
                 setIsVisible(false); // Start to hide the alert with fade-out
                 setTooltipProperties({active:false});
-            }, tooltipProperties.duration * 1000);
+            }, tooltipProperties.duration * 30000);
         }else{
             setIsVisible(false)
         }

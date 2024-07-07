@@ -9,26 +9,32 @@ import '../PulsatingAnimation.css'; // Adjust the path as necessary
 // setTooltipProperties({active:false, text:"This image is very interesting!"});
 export const ToolTipCircle = (props) => {  
     const useStore = props.useStore;
+    const {objectName = ""} = props;
     const {text = "Sample text"} = props;
     const {size = 30} = props;
     const {image = process.env.PUBLIC_URL + "textures/4x3.png"} = props;
     const {pathToShow = "MainMenu"} = props;
-
+    
     const {position = [30, 40]} = props;
 
     const setTooltipVisible = useStore((state) => state.setTooltipVisible);
     const setTooltipText = useStore((state) => state.setTooltipText);
     const setTooltipImage = useStore((state) => state.setTooltipImage);
     const setIsCircleOnLeft = useStore((state) => state.setIsCircleOnLeft);
+    const setIsCircleOnTop = useStore((state) => state.setIsCircleOnTop);
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
     const desired_path = useStore((state) => state.desired_path);
     const transitionEnded = useStore((state) => state.transitionEnded);
     const explodeAnimationEnded = useStore((state) => state.explodeAnimationEnded);
     const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
-
+    const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
+    const setTooltipCurrentObjectNameSelected = useStore((state) => state.setTooltipCurrentObjectNameSelected);
+    const tooltipCurrentObjectSelected = useStore((state) => state.tooltipCurrentObjectSelected);
+    
     const [isVisible, setIsVisible] = useState(false);
 
     const isCircleOnLeft = position[0] < 50; // Since it's a percentage
+    const isCircleOnTop = position[1] < 50; // Since it's a percentage
 
     useEffect(() => {
         if(desired_path == pathToShow && transitionEnded){
@@ -61,12 +67,17 @@ export const ToolTipCircle = (props) => {
         setTooltipImage(image);
         setTooltipVisible(true);
         setIsCircleOnLeft(isCircleOnLeft)
+        setIsCircleOnTop(isCircleOnTop)
         setTooltipProperties({active:true, text:text})
+        setTooltipCurrentObjectNameSelected(objectName)
+        console.log(objectName)
+        // console.log(tooltipCurrentObjectSelected)
     };
 
     const handleMouseLeave = () => {
         setTooltipVisible(false);
         setTooltipProperties({active:false})
+        setTooltipCurrentObjectNameSelected(undefined)
     };
 
     return <div style={circleStyle} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} />;

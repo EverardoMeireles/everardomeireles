@@ -96,8 +96,15 @@ const useStore = create((set) => ({
   setTooltipImage: (image) => set(() => ({ tooltipImage: image })),
   isCircleOnLeft: false,
   setIsCircleOnLeft: (isLeft) => set(() => ({ isCircleOnLeft: isLeft })),
+  isCircleOnTop: false,
+  setIsCircleOnTop: (isTop) => set(() => ({ isCircleOnTop: isTop })),
+  
   tooltipCirclesData: [],
   setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data })),
+  tooltipCurrentObjectNameSelected: undefined,
+  setTooltipCurrentObjectNameSelected: (object) => set(() => ({ tooltipCurrentObjectNameSelected: object })),
+  tooltipCurrentObjectSelected: {},
+  setTooltipCurrentObjectSelected: (object) => set(() => ({ tooltipCurrentObjectSelected: object })),
   cameraState: {
     position: [0, 0, 0],
     rotation: [0, 0, 0],
@@ -171,6 +178,7 @@ function App() {
           position={toolTipCirclePositions[props.objectName] || [0, 0]}
           text={props.text}
           image={props.image}
+          objectName={props.objectName}
         />
       ))}
       {/* <TutorialOverlay {...{useStore}}/> */}
