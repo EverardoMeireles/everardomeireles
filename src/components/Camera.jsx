@@ -21,52 +21,77 @@ export const Camera = React.memo((props) => {
     const setCameraState = useStore((state) => state.setCameraState);
     const cameraStateTracking = useStore((state) => state.cameraStateTracking);
     const forcedCameraTarget = useStore((state) => state.forcedCameraTarget);
-
+    const forcedCameraPathCurve = useStore((state) => state.forcedCameraPathCurve);
+    const setForcedCameraPathCurve = useStore((state) => state.setForcedCameraPathCurve);
+    const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
+    
     const updateCallNow = useRef(false);
     const cam = useRef();
     const controls = useRef();
     const current_path = useRef("StartingPoint");
-    const current_point = useRef(new THREE.Vector3( 15, 1, 0 ));
-    const current_lookat = useRef(new THREE.Vector3(0, 3, 2));
-    const isMouseNearEdge = useRef(false);
+    const current_lookat = useRef(new THREE.Vector3(0,3,2))
 
-    const curve = getCurve(current_path.current, desired_path);
+    const isMouseNearEdge = useRef(false);
+    
+    const defaultCameraSpeed = 0.35
+
     const keyboardControlsSpeed = 0.4;
     const currentPoint = getCurve(current_path.current, current_path.current).points[0];
+
     const gravitationalPullPoint = currentPoint == null ? firstPoint : currentPoint;/*getCurve(current_path.current, current_path.current) == null ? firstPoint : getCurve(current_path.current, current_path.current);*/ // the point to return to in panDirectional mode
     const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
     const pullInterval = 10; // How often the pull is applied in milliseconds
 
+    const nullCurve = new THREE.CatmullRomCurve3([        
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, 0)])
+
+    let curve = getCurve(current_path.current, desired_path);
     let pathPointsLookat;
     let smooth;
     let sub_points;
-    let tick = current_path.current !== desired_path ? 0:1
     let deltaArray = new Array();
     let deltaAverage = 0;
-    let baseTransitioSpeed = 0.005;
     let transitionIncrement;
     let concat_paths;    
+    let tick = current_path.current !== desired_path ? 0:1
+
+    // used in custom camera lookat
+    const desired_lookat_dict = (time) => { // eslint-disable-line no-unused-vars
+        let nextLookat;
+        Object.keys(pathPointsLookat[concat_paths]).forEach((time_key) => time >= time_key ? nextLookat = pathPointsLookat[concat_paths][time_key] : undefined);
+        return nextLookat;
+    };
+
+    // if no custom lookat path, look directly into the destination until transition ends
+    if(path_points_lookat_dict[current_path.current + "-" + desired_path] !== undefined){
+        pathPointsLookat = path_points_lookat_dict;
+        concat_paths = current_path.current + "-" + desired_path;
+    }else{
+        pathPointsLookat = path_points_simple_lookat_dict;
+        concat_paths = desired_path;
+    }
 
     // Change camera mode
     const [cameraMode, setCameraMode] = useState(null);
     useEffect(()=>{
-        // console.log(currentCameraMode)
-        if(currentCameraMode === "NormalMovement"){
+        if(currentCameraMode === "NormalMovement" && transitionEnded){
             setcurrentCameraMovements({"zoom":true, "pan":true, "rotate":true});
             setCameraMode({ RIGHT: THREE.MOUSE.RIGHT, LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE });
         }
         else
-        if(currentCameraMode === "panOnly"){
+        if(currentCameraMode === "panOnly" && transitionEnded){
             setcurrentCameraMovements({"zoom":false, "pan":true, "rotate":false});
             setCameraMode({ LEFT: THREE.MOUSE.RIGHT});
         }
         else
-        if(currentCameraMode === "rotateOnly"){
+        if(currentCameraMode === "rotateOnly" && transitionEnded){
             setcurrentCameraMovements({"zoom":false, "pan":false, "rotate":true});
             setCameraMode({ LEFT: THREE.MOUSE.LEFT});
         }
         else
-        if(currentCameraMode === "zoomOnly"){
+        if(currentCameraMode === "zoomOnly" && transitionEnded){
             setcurrentCameraMovements({"zoom":true, "pan":false, "rotate":false});
             setCameraMode({ MIDDLE: THREE.MOUSE.MIDDLE});
         }
@@ -189,39 +214,13 @@ export const Camera = React.memo((props) => {
         }
     }, [currentCameraMode, transitionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // if no custom lookat path, look directly into the destination until transition ends
-    if(path_points_lookat_dict[current_path.current + "-" + desired_path] !== undefined){
-        pathPointsLookat = path_points_lookat_dict;
-        concat_paths = current_path.current + "-" + desired_path;
-    }else{
-        pathPointsLookat = path_points_simple_lookat_dict;
-        concat_paths = desired_path;
-    }
-
-    // control target is the last element of path_points_lookat_dict
-    const constrolTargetX = forcedCameraTarget[0] == undefined ? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].x : forcedCameraTarget[0];
-    const constrolTargetY = forcedCameraTarget[1] == undefined ? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].y : forcedCameraTarget[1];
-    const constrolTargetZ = forcedCameraTarget[2] == undefined ? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths]).pop()].z : forcedCameraTarget[2];
-
-    // used in custom camera lookat
-    const desired_lookat_dict = (time) => { // eslint-disable-line no-unused-vars
-        let nextLookat;
-        Object.keys(pathPointsLookat[concat_paths]).forEach((time_key) => time >= time_key ? nextLookat = pathPointsLookat[concat_paths][time_key] : undefined);
-        return nextLookat;
-    };
-
-    // Sets values after the camera movement is done 
-    function updateCall(state){
-        if(updateCallNow.current){
-            //setTrigger(true);
-            setTransitionEnded(true);
-            updateCallNow.current = false;
-            current_path.current = desired_path;
-            controls.current.enabled = true;
-            state.events.enabled = true;
-
+    // if the camera path is forced, reset the animation tick
+    useEffect(() => {
+        if(!compareCurves(forcedCameraPathCurve, nullCurve) && tick != 0){
+            tick = 0;
+            curve = forcedCameraPathCurve
         }
-    }
+    }, [forcedCameraPathCurve]);
 
     // Set the transition speed if specified in PathPoints.jsx
     function setCustomSpeed(currentTick, path_speeds){
@@ -241,20 +240,42 @@ export const Camera = React.memo((props) => {
         return sum / deltaArray.length;
     }
 
+    // Sets values after the camera movement is done 
+    function updateCall(state){
+        if(updateCallNow.current){
+            setTransitionEnded(true);
+            updateCallNow.current = false;
+            current_path.current = desired_path;
+            controls.current.enabled = true;
+            state.events.enabled = true;
+        }
+    }
+
     // Moves the camera every frame when the desired path changes
-    useFrame((state, delta) => (tick <= 1 ? (
+    useFrame((state, delta) => (tick < 1 ? (
         deltaAverage = deltaArray[10] == undefined ? calculateDeltaAverage(delta) : deltaAverage,
         updateCallNow.current = true,
         state.events.enabled = false,
         controls.current.enabled = false,
-        transitionIncrement = (path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : 0.35) * deltaAverage, // Determines the speed of the transition
-        tick +=  transitionIncrement,
-        smooth = smoothStep(tick), // Smooth the movement
 
-        sub_points = current_point.current = curve.getPointAt(smooth), // Get the current point along the curve
+        // If there's a custom transition speed configured, apply it
+        transitionIncrement = (path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : defaultCameraSpeed) * deltaAverage,
+        tick +=  transitionIncrement,
+
+        // Smooth out the movement
+        smooth = smoothStep(tick), 
         
-        current_lookat.current.lerp(setCustomSpeed(smooth, pathPointsLookat[concat_paths]), 0.03), // Get the point for the camera to look at
-        state.camera.lookAt(current_lookat.current), // Look at the point
+        // Determines the next point for the camera to look at
+        current_lookat.current.lerp(forcedCameraTarget.length ==0? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths])] : new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]), 0.03),
+        state.camera.lookAt(current_lookat.current),
+
+        // Updates the orbitcontrol's target
+        controls.current.target.x = current_lookat.current.x,
+        controls.current.target.y = current_lookat.current.y,
+        controls.current.target.z = current_lookat.current.z,
+
+        // Get the current point along the curve
+        sub_points = curve.getPointAt(smooth), 
 
         // Updates the camera's position
         state.camera.position.x = sub_points.x,
@@ -263,13 +284,26 @@ export const Camera = React.memo((props) => {
     ) : (updateCall(state))
     ));
 
+// Function to compare arrays of Vector3
+function compareCurves(curve1, curve2) {
+    if (curve1.points.length !== curve2.points.length) {
+        return false;
+    }
+    for (let i = 0; i < curve1.points.length; i++) {
+        if (!curve1.points[i].equals(curve2.points[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
     // orbitcontrols keyboard control is not working, that's a workaround
     useEffect(()=>{
         window.addEventListener("keydown", (event) => {
             // eslint-disable-next-line default-case
             switch(event.code) {
                 case "KeyP":
-                console.log([Math.floor(cam.current.position.x), Math.floor(cam.current.position.y), Math.floor(cam.current.position.z)]);
+                // consoole.loog([Math.floor(cam.current.position.x), Math.floor(cam.current.position.y), Math.floor(cam.current.position.z)]);
                 break;
                 case "KeyW":
                 cam.current.position.x += -keyboardControlsSpeed;
@@ -362,7 +396,7 @@ export const Camera = React.memo((props) => {
             <PerspectiveCamera ref = {cam} makeDefault fov = {75}>
             {/* <HtmlDreiMenu {...{useStore}}></HtmlDreiMenu> */}
             </PerspectiveCamera>
-            <OrbitControls mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} target = {/*currentCameraMode === "panDirectional"?null:*/[constrolTargetX, constrolTargetY, constrolTargetZ]} />
+            <OrbitControls mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
         </>
     )
 });

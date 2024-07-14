@@ -7,6 +7,7 @@ import config from './config.json';
 import { Alert } from "./components/Alert";
 import { ToolTip } from "./components/ToolTip";
 import { ToolTipCircle } from "./components/ToolTipCircle";
+import * as THREE from "three";
 
 const useStore = create((set) => ({
   toolTipCirclePositions: [],
@@ -112,6 +113,7 @@ const useStore = create((set) => ({
   setCameraState: (position, rotation) => set(() => ({
     cameraState: { position, rotation }
   })),
+
   cameraStateTracking: false,
   setCameraStateTracking: (tracking) => set(() => ({ cameraStateTracking: tracking })),
   
@@ -121,6 +123,9 @@ const useStore = create((set) => ({
   animationDirection: true,
   setAnimationDirection: (direction) => set(() => ({ animationDirection: direction })),
 
+  explodingModelName: "", // will force the camera's rotation pivot if not empty
+  setExplodingModelName: (name) => set(() => ({ explodingModelName: name })),
+
   explodeAnimationEnded: false,
   setExplodeAnimationEnded: (ended) => set(() => ({ explodeAnimationEnded: ended })),
   
@@ -129,6 +134,13 @@ const useStore = create((set) => ({
 
   forcedCameraTarget: [], // will force the camera's rotation pivot if not empty
   setForcedCameraTarget: (target) => set(() => ({ forcedCameraTarget: target })),
+
+  forcedCameraPathCurve: new THREE.CatmullRomCurve3([        
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, 0)]), // custom camera curve path
+  setForcedCameraPathCurve: (curve) => set(() => ({ forcedCameraPathCurve: curve })),
+
 }));
 
 function App() {
@@ -142,9 +154,12 @@ function App() {
   const tooltipText = useStore((state) => state.tooltipText);
   const tooltipVisible = useStore((state) => state.tooltipVisible);
   const tooltipImage = useStore((state) => state.tooltipImage);
+  const explodingModelName = useStore((state) => state.explodingModelName);
 
   useEffect(() => {
-    fetch("tooltipCircles.json")
+    if(explodingModelName != ""){
+      console.log(explodingModelName)
+      fetch("/models/" + explodingModelName + ".json")
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -157,8 +172,8 @@ function App() {
       .catch((error) => {
         console.error('Error fetching the JSON:', error);
       });
-
-  }, []); // Empty dependency array to run the effect only once
+    }
+  }, [explodingModelName]); // Empty dependency array to run the effect only once
 
   useEffect(() => {
     // console.log(toolTipCirclePositions)
@@ -168,7 +183,6 @@ function App() {
   return (
     <>
       <Alert {...{ useStore }} />
-
       <ToolTip {...{ useStore }} text={tooltipText} image={tooltipImage} visible={tooltipVisible} position={[30, 40]} />
       {tooltipCirclesData.length > 0 && tooltipCirclesData.map((props) => (
         <ToolTipCircle
