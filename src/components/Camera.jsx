@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { path_points, path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed, getCurve, firstPoint } from "../PathPoints";
+import { path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed, CreateNavigationCurve, firstPoint} from "../PathPoints";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera, calcPosFromAngles } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";
@@ -26,7 +26,7 @@ export const Camera = React.memo((props) => {
     const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
     
     const updateCallNow = useRef(false);
-    const cam = useRef();
+    const cam = useRef(undefined);
     const controls = useRef();
     const current_path = useRef("StartingPoint");
     const current_lookat = useRef(new THREE.Vector3(0,3,2))
@@ -36,9 +36,10 @@ export const Camera = React.memo((props) => {
     const defaultCameraSpeed = 0.35
 
     const keyboardControlsSpeed = 0.4;
-    const currentPoint = getCurve(current_path.current, current_path.current).points[0];
+    // const currentPoint = getCurve(current_path.current, current_path.current).points[0];
+    const currentPoint = CreateNavigationCurve(current_path.current, current_path.current, 15).points[0];
 
-    const gravitationalPullPoint = currentPoint == null ? firstPoint : currentPoint;/*getCurve(current_path.current, current_path.current) == null ? firstPoint : getCurve(current_path.current, current_path.current);*/ // the point to return to in panDirectional mode
+    const gravitationalPullPoint = currentPoint == null ? firstPoint : currentPoint; // the point to return to in panDirectional mode
     const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
     const pullInterval = 10; // How often the pull is applied in milliseconds
 
@@ -47,14 +48,16 @@ export const Camera = React.memo((props) => {
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, 0)])
 
-    let curve = getCurve(current_path.current, desired_path);
+    // let curve = getCurve(current_path.current, desired_path);
+    let curve = CreateNavigationCurve(current_path.current, desired_path, 15);
+
     let pathPointsLookat;
     let smooth;
     let sub_points;
     let deltaArray = new Array();
     let deltaAverage = 0;
     let transitionIncrement;
-    let concat_paths;    
+    let concat_paths;
     let tick = current_path.current !== desired_path ? 0:1
 
     // used in custom camera lookat
@@ -214,6 +217,13 @@ export const Camera = React.memo((props) => {
         }
     }, [currentCameraMode, transitionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // if the target is forced
+    useEffect(() => {
+        controls.current.target.x = forcedCameraTarget[0]
+        controls.current.target.y = forcedCameraTarget[1]
+        controls.current.target.z = forcedCameraTarget[2]
+    }, [forcedCameraTarget]);
+
     // if the camera path is forced, reset the animation tick
     useEffect(() => {
         if(!compareCurves(forcedCameraPathCurve, nullCurve) && tick != 0){
@@ -284,6 +294,10 @@ export const Camera = React.memo((props) => {
     ) : (updateCall(state))
     ));
 
+// useFrame((delta)=>{
+//     console.log(controls.current.target)
+// })
+
 // Function to compare arrays of Vector3
 function compareCurves(curve1, curve2) {
     if (curve1.points.length !== curve2.points.length) {
@@ -303,7 +317,7 @@ function compareCurves(curve1, curve2) {
             // eslint-disable-next-line default-case
             switch(event.code) {
                 case "KeyP":
-                // consoole.loog([Math.floor(cam.current.position.x), Math.floor(cam.current.position.y), Math.floor(cam.current.position.z)]);
+                console.log([Math.floor(cam.current.position.x), Math.floor(cam.current.position.y), Math.floor(cam.current.position.z)]);
                 break;
                 case "KeyW":
                 cam.current.position.x += -keyboardControlsSpeed;
@@ -363,24 +377,24 @@ function compareCurves(curve1, curve2) {
 
     useEffect(() => {
         if (!cameraStateTracking) return;
-
+        
         let animationFrameId;
         let previousPosition = new THREE.Vector3();
         let previousRotation = new THREE.Euler();
 
         const handleFrame = () => {
-            const currentPosition = cam.current.position;
-            const currentRotation = cam.current.rotation;
+            if (!cam.current) return;
+                const currentPosition = cam.current.position;
+                const currentRotation = cam.current.rotation;
 
-            if (!currentPosition.equals(previousPosition) || !currentRotation.equals(previousRotation)) {
-                setCameraState(
-                    [currentPosition.x, currentPosition.y, currentPosition.z],
-                    [currentRotation.x, currentRotation.y, currentRotation.z]
-                );
-                previousPosition.copy(currentPosition);
-                previousRotation.copy(currentRotation);
-            }
-
+                if (!currentPosition.equals(previousPosition) || !currentRotation.equals(previousRotation)) {
+                    setCameraState(
+                        [currentPosition.x, currentPosition.y, currentPosition.z],
+                        [currentRotation.x, currentRotation.y, currentRotation.z]
+                    );
+                    previousPosition.copy(currentPosition);
+                    previousRotation.copy(currentRotation);
+                }
             animationFrameId = requestAnimationFrame(handleFrame);
         };
 

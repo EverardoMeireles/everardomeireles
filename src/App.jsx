@@ -18,8 +18,6 @@ const useStore = create((set) => ({
   setInitialSceneLoaded: (loaded) => set(() => ({ initialSceneLoaded: loaded })),
   preloadDone: false,
   setPreloadDone: (preloaded) => set(() => ({ preloadDone: preloaded })),
-  trigger: false,
-  setTrigger: (trig) => set(() => ({ trigger: trig })),
   desired_path: "MainMenu",
   setPath: (desired) => set(() => ({ desired_path: desired })),
   transitionEnded: false,
@@ -128,7 +126,15 @@ const useStore = create((set) => ({
 
   explodeAnimationEnded: false,
   setExplodeAnimationEnded: (ended) => set(() => ({ explodeAnimationEnded: ended })),
-  
+
+  rotatingObjectViewportArray: [-0.5, 0.5, 0.25, -0.25],
+  setRotatingObjectViewportArray: (index, value) =>
+    set((state) => {
+      const newArray = [...state.rotatingObjectViewportArray];
+      newArray[index] = value;
+      return { rotatingObjectViewportArray: newArray };
+    }), // Define the NDC viewport coordinates(-1 to 1) that the rotating object is supposed to be on the left, right, top, bottom sides. Usage: setRotatingObjectViewportArray(1, 0.75)
+
   tooltipCircleFadeMode: "OnAnimationEnd", // "OnTransitionEnd", "OnAnimationEnd"
   setTooltipCircleFadeMode: (text) => set(() => ({ tooltipText: text })),
 
@@ -193,6 +199,9 @@ function App() {
           text={props.text}
           image={props.image}
           objectName={props.objectName}
+          rotatingObjectCoordinates={[props.rotatingObjectNDCLeft, props.rotatingObjectNDCRight, props.rotatingObjectNDCTop, props.rotatingObjectNDCBottom]}
+          size={props.circleSize}
+          playPulseAnimation={props.playPulseAnimation}
         />
       ))}
       {/* <TutorialOverlay {...{useStore}}/> */}

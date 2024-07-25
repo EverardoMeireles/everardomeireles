@@ -21,6 +21,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {rotatingObjectForcePositionOffset = {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}} = props; // Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
  
   const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + sceneName);
+  // console.log(gltf)
   // Sets the custom origin for the object if specified in the props
   let sceneOrigin = [0,0,0]
   sceneOrigin = customOrigin != [] ? gltf.scene.position : customOrigin; 
@@ -40,7 +41,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const tooltipCurrentObjectNameSelected = useStore((state) => state.tooltipCurrentObjectNameSelected);
   const setExplodingModelName = useStore((state) => state.setExplodingModelName);
   const setTooltipCurrentObjectSelected = useStore((state) => state.setTooltipCurrentObjectSelected);
-
+  const rotatingObjectViewportArray = useStore((state) => state.rotatingObjectViewportArray);
+  
   const [rock, setRock] = useState(false);
   const [explode, setExplode] = useState(false);
   const [initialPositions, setInitialPositions] = useState({});
@@ -195,24 +197,23 @@ export const ExplodingModelLoader = React.memo((props) => {
   // Force change the camera's target on component mount
   useEffect(() => {
     if (setCameraTargetOnMount) {
-      // setForcedCameraTarget(customOrigin.length !== 0 ? customOrigin : gltf.scene.position);
+      setForcedCameraTarget(customOrigin.length !== 0 ? customOrigin : gltf.scene.position);
       setTrigger(setCameraTargetTrigger, false);
     }
-    // The empty dependency array ensures this useEffect runs only once on mount
   }, []);
 
   // Change the camera's target on trigger
   useEffect(() => {
     if(triggers[setCameraTargetTrigger]){
-      // setForcedCameraTarget(customOrigin != [] ? customOrigin : gltf.scene.position)
+      setForcedCameraTarget(customOrigin != [] ? customOrigin : gltf.scene.position)
       setTrigger(setCameraTargetTrigger, false)
     }
   }, [transitionEnded]);
 
-    // Makes the tooltip circles follow the objects when camera position and rotation values change
-    useEffect(() => {
-      updateToolTipCirclePositions();
-    }, [cameraState]);
+  // Makes the tooltip circles follow the objects when camera position and rotation values change
+  useEffect(() => {
+    updateToolTipCirclePositions();
+  }, [cameraState]);
 
   // Automatically starts the animation when the animationStartOnLoad prop is set to true
   useEffect(() => {
@@ -416,18 +417,26 @@ export const ExplodingModelLoader = React.memo((props) => {
 
       if (isCircleOnLeft) {
         // Place the object on the left side of the viewport
-        ndcX = -0.5 + rotatingObjectForcePositionOffset["left"]
+        // ndcX = -0.5 + rotatingObjectForcePositionOffset["left"]
+        ndcX = rotatingObjectViewportArray[0]
+        console.log(rotatingObjectViewportArray[0])
       } else {
         // Place the object on the right side of the viewport
-        ndcX = 0.5 + rotatingObjectForcePositionOffset["right"]
+        // ndcX = 0.5 + rotatingObjectForcePositionOffset["right"]
+        ndcX = rotatingObjectViewportArray[1]
+        console.log(rotatingObjectViewportArray[1])
       }
   
       if (isCircleOnTop) {
         // Place the object on the top side of the viewport
-        ndcY = 0.25 + rotatingObjectForcePositionOffset["top"]
+        // ndcY = 0.25 + rotatingObjectForcePositionOffset["bottom"]
+        ndcY = rotatingObjectViewportArray[3]
+        console.log(rotatingObjectViewportArray[3])
       } else {
         // Place the object on the bottom side of the viewport
-        ndcY = -0.25 + rotatingObjectForcePositionOffset["bottom"]
+        // ndcY = -0.25 + rotatingObjectForcePositionOffset["top"]
+        ndcY = rotatingObjectViewportArray[2]
+        console.log(rotatingObjectViewportArray[2])
       }
 
       ndcX > 1 ? ndcX = 1 : ndcX = ndcX
@@ -435,16 +444,18 @@ export const ExplodingModelLoader = React.memo((props) => {
       ndcY > 1 ? ndcY = 1 : ndcY = ndcY
       ndcY < -1 ? ndcY = -1 : ndcY = ndcY
 
-      const ndc = new THREE.Vector3(ndcX, ndcY, -1)
+      console.log(planeRef.current.position)
 
+      const ndc = new THREE.Vector3(ndcX, ndcY, -1)
       raycaster.setFromCamera(ndc, camera);
       currectGlobalState.scene.add(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 300, 0xff0000) );
-      const intersects = raycaster.intersectObject(planeRef.current, true); // Replace 'plane' with your plane object
+      const intersects = raycaster.intersectObject(planeRef.current, true);
       const midpoint = new THREE.Vector3();
 
       if(intersects.length != 0){
         // Calculate the 'midpoint' between the source of the ray and the collision point
         midpoint.addVectors(raycaster.ray.origin, intersects[0].point).multiplyScalar(0.5);
+        // console.log(raycaster.ray.origin)
         // Sets the rotating object's position
         objectToRotate.current.position.x = midpoint.x;
         objectToRotate.current.position.y = midpoint.y;
@@ -460,17 +471,15 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [tooltipCurrentObjectNameSelected, isCircleOnLeft, isCircleOnTop, gltf.scene]);
 
+  // console.log(planeRef.current)
   // Object rotation animation
   useFrame((state, delta) => {
     if(objectRotationAnimation){
-      if (objectToRotate.current) {
+      if (objectToRotate.current){
         // Example rotation animation: Rotate object around the z-axis
-        // axisOfRotation
-        // objectToRotate.current.rotation += axisOfRotation * delta
         objectToRotate.current.rotation.x += (rotatingObjectAxisOfRotation[0] * rotatingObjectSpeedOfRotation) * delta;
         objectToRotate.current.rotation.y += (rotatingObjectAxisOfRotation[1] * rotatingObjectSpeedOfRotation) * delta;
         objectToRotate.current.rotation.z += (rotatingObjectAxisOfRotation[2] * rotatingObjectSpeedOfRotation) * delta;
-
       }
     }
   });
@@ -480,13 +489,14 @@ export const ExplodingModelLoader = React.memo((props) => {
       <primitive position={position} object={gltf.scene} />
       <mesh>
         {/* Render the cloned object directly */}
-        {(objectToRotate.current && objectRotationAnimation) && (
+        {(objectToRotate.current /*&& objectRotationAnimation UNCOMMENT THIS to make the rotating object disappear on unhover*/) && (
           <primitive scale = {rotatingObjectScale} object={objectToRotate.current} position={objectToRotate.current.position} />
         )}
       </mesh>
-      {/* Create a plane in front of the camera */}
+
+      {/* Create a plane in front of the camera for the raycaster to collide with */}
       <mesh ref={planeRef} position={position} >
-        <planeGeometry  /*scale={new THREE.Vector3(15,15,15)}*/args={[150,150]} />
+        <planeGeometry  /*scale={new THREE.Vector3(15,15,15)} */args={[150,150]} />
         <meshBasicMaterial color={0xffffff} side={THREE.DoubleSide} transparent opacity={0.3} />
       </mesh>
     </Suspense>

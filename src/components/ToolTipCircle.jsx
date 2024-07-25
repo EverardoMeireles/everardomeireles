@@ -14,6 +14,8 @@ export const ToolTipCircle = (props) => {
     const {size = 30} = props;
     const {image = process.env.PUBLIC_URL + "textures/4x3.png"} = props;
     const {pathToShow = "MainMenu"} = props;
+    const {rotatingObjectCoordinates = []} = props;
+    const {playPulseAnimation = false} = props;
     
     const {position = [30, 40]} = props;
 
@@ -30,12 +32,14 @@ export const ToolTipCircle = (props) => {
     const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
     const setTooltipCurrentObjectNameSelected = useStore((state) => state.setTooltipCurrentObjectNameSelected);
     const tooltipCurrentObjectSelected = useStore((state) => state.tooltipCurrentObjectSelected);
+    const setRotatingObjectViewportArray = useStore((state) => state.setRotatingObjectViewportArray);
     
     const [isVisible, setIsVisible] = useState(false);
+    const [updateViewportArray, setUpdateViewportArray] = useState(false);
 
     const isCircleOnLeft = position[0] < 50; // Since it's a percentage
     const isCircleOnTop = position[1] < 50; // Since it's a percentage
-
+    
     useEffect(() => {
         if(desired_path == pathToShow && transitionEnded){
             setCameraStateTracking(true)
@@ -45,6 +49,25 @@ export const ToolTipCircle = (props) => {
             setIsVisible(false);
         }
     }, [desired_path, transitionEnded]);
+
+    // sets the positions that the rotating object will take on the screen
+    useEffect(() => {
+        if(rotatingObjectCoordinates[0] != undefined){
+            setRotatingObjectViewportArray(0, rotatingObjectCoordinates[0])
+        }
+
+        if(rotatingObjectCoordinates[1] != undefined){
+            setRotatingObjectViewportArray(1, rotatingObjectCoordinates[1])
+        }
+
+        if(rotatingObjectCoordinates[2] != undefined){
+            setRotatingObjectViewportArray(2, rotatingObjectCoordinates[2])
+        }
+
+        if(rotatingObjectCoordinates[3] != undefined){
+            setRotatingObjectViewportArray(3, rotatingObjectCoordinates[3])
+        }
+    }, [updateViewportArray]);
 
     const circleStyle = {
         position: 'fixed',
@@ -58,11 +81,12 @@ export const ToolTipCircle = (props) => {
         opacity: isVisible ? 1 : 0,
         transition: 'opacity 1s ease-in',
         background: 'radial-gradient(circle, rgba(255,255,255,1) 20%, rgba(255,255,255,0.6) 40%, rgba(255,255,255,0) 60%)',
-        animation: 'pulsate 2s infinite ease-in-out',
+        animation: playPulseAnimation ?'pulsate 2s infinite ease-in-out' : "",
         boxShadow: '0 0 10px 10px rgba(255, 255, 255, 0.5), 0 0 15px 15px rgba(255, 255, 255, 0.3), 0 0 20px 20px rgba(255, 255, 255, 0.1)',
     };
 
     const handleMouseEnter = () => {
+        setUpdateViewportArray(true)
         setTooltipText(text);
         setTooltipImage(image);
         setTooltipVisible(true);
@@ -70,11 +94,12 @@ export const ToolTipCircle = (props) => {
         setIsCircleOnTop(isCircleOnTop)
         setTooltipProperties({active:true, text:text})
         setTooltipCurrentObjectNameSelected(objectName)
-        console.log(objectName)
+        // console.log(objectName)
         // console.log(tooltipCurrentObjectSelected)
     };
 
     const handleMouseLeave = () => {
+        setUpdateViewportArray(false)
         setTooltipVisible(false);
         setTooltipProperties({active:false})
         setTooltipCurrentObjectNameSelected(undefined)

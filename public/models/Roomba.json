@@ -1,14 +1,26 @@
 [
     {
-    "objectName": "Foot_1BB2",
+    "objectName": "Motor_gearbox_1TT1",
     "pathToShow": "MainMenu",
     "text": "Right text",
-    "image": "textures/4x3.png"
+    "image": "textures/4x3.png",
+    "rotatingObjectNDCLeft": -0.5,
+    "rotatingObjectNDCRight": 0.5,
+    "rotatingObjectNDCTop": 0.5,
+    "rotatingObjectNDCBottom": -0.25,
+    "circleSize": 30,
+    "playPulseAnimation": true
     },
     {
     "objectName": "Wheel_1_1BB1",
     "pathToShow": "MainMenu",
     "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
-    "image": "AfficheDUT-French.png"
+    "image": "AfficheDUT-French.png",
+    "rotatingObjectNDCLeft": -0.9,
+    "rotatingObjectNDCRight": 0.5,
+    "rotatingObjectNDCTop": 0.1,
+    "rotatingObjectNDCBottom": -0.25,
+    "circleSize": 30,
+    "playPulseAnimation": false
     }
 ]
