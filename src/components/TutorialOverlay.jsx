@@ -2,34 +2,36 @@ import React, { useState, useEffect } from 'react';
 
 export const TutorialOverlay = (props) => {
     const useStore = props.useStore;
-    const {showAfterTransition = false} = props;
-    const {showOnlyOnce = false} = props;
+    const {enable = true} = props;
+    const {showOnlyOnce = true} = props;
     const {imagesPaths = ["textures/Gif1.gif", "textures/Gif2.gif"]} = props;
     const {imageSize = [200, 200]} = props;
     const {textH1 = "Use left click to rotate, shift + left click to pan and the mouseWheel to zoom"} = props;
     const {textH2 = "Click to go to the page"} = props;
     const {fontColor = "white"} = props;
+    
     const [visible, setVisible] = useState(false);
     const [shouldRender, setShouldRender] = useState(false);
-    const transitionEnded = useStore((state) => state.transitionEnded);
+    
     const setTutorialClosed = useStore((state) => state.setTutorialClosed);
 
     useEffect(() => {
-    const tutorialShown = localStorage.getItem('tutorialShown');
-
-        if ((!showAfterTransition || transitionEnded) ) {
+        const tutorialShown = localStorage.getItem('tutorialShown');
+        // console.log(tutorialShown)
+        if ((enable && showOnlyOnce && tutorialShown !== "true") || (enable && !showOnlyOnce)) {
             setShouldRender(true);
             const timer = setTimeout(() => {
-            if(!showOnlyOnce || tutorialShown !=='true'){
+            // if(!showOnlyOnce || tutorialShown !== 'true'){
                 setVisible(true);
+                // local cache
                 localStorage.setItem('tutorialShown', 'true');
-            }
+            // }
         }, 10);
 
         // Cleanup function to clear the timeout if the component unmounts
         return () => clearTimeout(timer);
         }
-    }, [transitionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [enable]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleClick = () => {
         setVisible(false);

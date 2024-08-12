@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./components/HudMenu";
@@ -7,6 +7,8 @@ import config from './config.json';
 import { Alert } from "./components/Alert";
 import { ToolTip } from "./components/ToolTip";
 import { ToolTipCircle } from "./components/ToolTipCircle";
+import { TutorialOverlay } from "./components/TutorialOverlay";
+import { parseJson, removeFileExtensionString } from "./Helper";
 import * as THREE from "three";
 
 const useStore = create((set) => ({
@@ -135,6 +137,9 @@ const useStore = create((set) => ({
       return { rotatingObjectViewportArray: newArray };
     }), // Define the NDC viewport coordinates(-1 to 1) that the rotating object is supposed to be on the left, right, top, bottom sides. Usage: setRotatingObjectViewportArray(1, 0.75)
 
+  rotatingObjectForcedAxisOfRotation: [], // the axis that the rotating object will rotate when its tooltip circle is hovered, takes a three element array
+  setRotatingObjectForcedAxisOfRotation: (axis) => set(() => ({ rotatingObjectForcedAxisOfRotation: axis })),
+
   tooltipCircleFadeMode: "OnAnimationEnd", // "OnTransitionEnd", "OnAnimationEnd"
   setTooltipCircleFadeMode: (text) => set(() => ({ tooltipText: text })),
 
@@ -161,25 +166,52 @@ function App() {
   const tooltipVisible = useStore((state) => state.tooltipVisible);
   const tooltipImage = useStore((state) => state.tooltipImage);
   const explodingModelName = useStore((state) => state.explodingModelName);
+  const transitionEnded = useStore((state) => state.transitionEnded);
+  
+  const [enableTutorial, setEnableTutorial] = useState(false);
 
+  // // Parses a 3D model's corresponding json file to create info circles on the screen
+  // useEffect(() => {
+  //   if(explodingModelName != ""){
+  //     console.log(explodingModelName)
+  //     fetch("/models/" + explodingModelName + ".json")
+  //     .then((response) => {
+  //       if (!response.ok) {
+  //         throw new Error(`HTTP error! Status: ${response.status}`);
+  //       }
+  //       return response.json();
+  //     })
+  //     .then((data) => {
+  //       setTooltipCirclesData(data.TooltipProperties);
+  //       console.log(data.TooltipProperties)
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error fetching the JSON:', error);
+  //     });
+  //   }
+  // }, [explodingModelName]); // Empty dependency array to run the effect only once
+
+    // Parses a 3D model's corresponding json file to create info circles on the screen
+    useEffect(() => {
+      if(explodingModelName != ""){
+        console.log(explodingModelName)
+        // fetch("/models/" + explodingModelName + ".json")
+        parseJson("/models/" + explodingModelName + ".json", "TooltipProperties")
+        .then((data) => {
+          setTooltipCirclesData(data);
+          console.log(data)
+        })
+      }
+    }, [explodingModelName]); // Empty dependency array to run the effect only once
+
+  // Handle events when transition ends
   useEffect(() => {
-    if(explodingModelName != ""){
-      console.log(explodingModelName)
-      fetch("/models/" + explodingModelName + ".json")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setTooltipCirclesData(data);
-      })
-      .catch((error) => {
-        console.error('Error fetching the JSON:', error);
-      });
+    // enable the tutorial when the transition ends, if the tutorial is shown only at the first transition end, the showOnlyOnce prop is set to true in the TutorialOverlay
+    if(transitionEnded){
+      setEnableTutorial(true)
     }
-  }, [explodingModelName]); // Empty dependency array to run the effect only once
+    
+  }, [transitionEnded]);
 
   useEffect(() => {
     // console.log(toolTipCirclePositions)
@@ -189,8 +221,9 @@ function App() {
   return (
     <>
       <Alert {...{ useStore }} />
-      <ToolTip {...{ useStore }} text={tooltipText} image={tooltipImage} visible={tooltipVisible} position={[30, 40]} />
-      {tooltipCirclesData.length > 0 && tooltipCirclesData.map((props) => (
+      <ToolTip showOnlyOnce = {true} {...{ useStore }} text={tooltipText} image={tooltipImage} visible={tooltipVisible} position={[30, 40]} />
+      {/* Create info circles on the screen */}
+      {tooltipCirclesData?.length > 0 && tooltipCirclesData?.map((props) => (
         <ToolTipCircle
           key={props.objectName}
           {...{ useStore }}
@@ -200,11 +233,12 @@ function App() {
           image={props.image}
           objectName={props.objectName}
           rotatingObjectCoordinates={[props.rotatingObjectNDCLeft, props.rotatingObjectNDCRight, props.rotatingObjectNDCTop, props.rotatingObjectNDCBottom]}
+          rotatingObjectAxisOfRotation={props.axisOfRotation}
           size={props.circleSize}
           playPulseAnimation={props.playPulseAnimation}
         />
       ))}
-      {/* <TutorialOverlay {...{useStore}}/> */}
+      <TutorialOverlay enable = {enableTutorial} {...{useStore}}/>
       <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} />
       <Canvas onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
         <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
