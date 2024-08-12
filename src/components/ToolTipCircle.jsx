@@ -15,6 +15,7 @@ export const ToolTipCircle = (props) => {
     const {image = process.env.PUBLIC_URL + "textures/4x3.png"} = props;
     const {pathToShow = "MainMenu"} = props;
     const {rotatingObjectCoordinates = []} = props;
+    const {rotatingObjectAxisOfRotation = []} = props;
     const {playPulseAnimation = false} = props;
     
     const {position = [30, 40]} = props;
@@ -33,9 +34,11 @@ export const ToolTipCircle = (props) => {
     const setTooltipCurrentObjectNameSelected = useStore((state) => state.setTooltipCurrentObjectNameSelected);
     const tooltipCurrentObjectSelected = useStore((state) => state.tooltipCurrentObjectSelected);
     const setRotatingObjectViewportArray = useStore((state) => state.setRotatingObjectViewportArray);
+    const setRotatingObjectForcedAxisOfRotation = useStore((state) => state.setRotatingObjectForcedAxisOfRotation);
     
     const [isVisible, setIsVisible] = useState(false);
     const [updateViewportArray, setUpdateViewportArray] = useState(false);
+    const [updateRotatingObjectAxis, setUpdateRotatingObjectAxis] = useState(false);
 
     const isCircleOnLeft = position[0] < 50; // Since it's a percentage
     const isCircleOnTop = position[1] < 50; // Since it's a percentage
@@ -52,22 +55,38 @@ export const ToolTipCircle = (props) => {
 
     // sets the positions that the rotating object will take on the screen
     useEffect(() => {
-        if(rotatingObjectCoordinates[0] != undefined){
-            setRotatingObjectViewportArray(0, rotatingObjectCoordinates[0])
-        }
-
-        if(rotatingObjectCoordinates[1] != undefined){
-            setRotatingObjectViewportArray(1, rotatingObjectCoordinates[1])
-        }
-
-        if(rotatingObjectCoordinates[2] != undefined){
-            setRotatingObjectViewportArray(2, rotatingObjectCoordinates[2])
-        }
-
-        if(rotatingObjectCoordinates[3] != undefined){
-            setRotatingObjectViewportArray(3, rotatingObjectCoordinates[3])
+        if(updateViewportArray){
+            if(rotatingObjectCoordinates[0] != undefined){
+                setRotatingObjectViewportArray(0, rotatingObjectCoordinates[0])
+            }
+    
+            if(rotatingObjectCoordinates[1] != undefined){
+                setRotatingObjectViewportArray(1, rotatingObjectCoordinates[1])
+            }
+    
+            if(rotatingObjectCoordinates[2] != undefined){
+                setRotatingObjectViewportArray(2, rotatingObjectCoordinates[2])
+            }
+    
+            if(rotatingObjectCoordinates[3] != undefined){
+                setRotatingObjectViewportArray(3, rotatingObjectCoordinates[3])
+            }
         }
     }, [updateViewportArray]);
+
+    // sets the axis that the rotating object will take on the screen
+    useEffect(() => {
+        if(updateRotatingObjectAxis){
+            console.log(rotatingObjectAxisOfRotation)
+            if(rotatingObjectAxisOfRotation != undefined){
+                setRotatingObjectForcedAxisOfRotation(rotatingObjectAxisOfRotation)
+            }
+            else{
+                console.log("none")
+                setRotatingObjectForcedAxisOfRotation([])
+            }
+        }
+    }, [updateRotatingObjectAxis]);
 
     const circleStyle = {
         position: 'fixed',
@@ -87,6 +106,7 @@ export const ToolTipCircle = (props) => {
 
     const handleMouseEnter = () => {
         setUpdateViewportArray(true)
+        setUpdateRotatingObjectAxis(true)
         setTooltipText(text);
         setTooltipImage(image);
         setTooltipVisible(true);
@@ -100,6 +120,7 @@ export const ToolTipCircle = (props) => {
 
     const handleMouseLeave = () => {
         setUpdateViewportArray(false)
+        setUpdateRotatingObjectAxis(false)
         setTooltipVisible(false);
         setTooltipProperties({active:false})
         setTooltipCurrentObjectNameSelected(undefined)
