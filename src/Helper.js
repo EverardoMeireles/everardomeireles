@@ -25,6 +25,14 @@ export function smoothStep(x) {
     return Sn;
 }
 
+export function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+}
+
+export function easeInCubic(t) {
+    return Math.pow(t, 3);
+}
+
 // increase or decrease the graphics settings
 export function increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, higherOrLower)
 {

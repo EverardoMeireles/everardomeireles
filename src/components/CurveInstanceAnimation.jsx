@@ -106,11 +106,11 @@ export const CurveInstanceAnimation = React.memo((props) => {
     // initialize the mesh
     useEffect(() => {
         if (gltf) {
-        const mesh = gltf.scene.children.find(child => child.isMesh);
-        if (mesh) {
-            setGeometry(mesh.geometry);
-            setMaterial(mesh.material);
-        }
+            const mesh = gltf.scene.children.find(child => child.isMesh);
+            if (mesh) {
+                setGeometry(mesh.geometry);
+                setMaterial(mesh.material);
+            }
         }
     }, [gltf]);
 

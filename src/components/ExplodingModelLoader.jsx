@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Suspense, useEffect, useState, useRef } from 'react';
 import * as THREE from 'three';
 import React from 'react';
-import { parseJson, removeFileExtensionString } from "../Helper";
+import { parseJson, removeFileExtensionString, easeInCubic, easeOutCubic } from "../Helper";
 
 export const ExplodingModelLoader = React.memo((props) => {
   const useStore = props.useStore; // Using useStore from props
@@ -47,7 +47,9 @@ export const ExplodingModelLoader = React.memo((props) => {
   const setTooltipCurrentObjectSelected = useStore((state) => state.setTooltipCurrentObjectSelected);
   const rotatingObjectViewportArray = useStore((state) => state.rotatingObjectViewportArray);
   const rotatingObjectForcedAxisOfRotation = useStore((state) => state.rotatingObjectForcedAxisOfRotation);
-  
+  const isCircleOnLeft = useStore((state) => state.isCircleOnLeft);
+  const isCircleOnTop = useStore((state) => state.isCircleOnTop);
+
   const [rock, setRock] = useState(false);
   const [explode, setExplode] = useState(false);
 
@@ -65,44 +67,43 @@ export const ExplodingModelLoader = React.memo((props) => {
   const [explodingTransitionDuration, setExplodingTransitionDuration] = useState(explodingDuration);
   const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
   const [sceneOrigin, setSceneOrigin] = useState([gltf.scene.position.toArray()]);
+  const [intersectionPoint, setIntersectionPoint] = useState(null);
+  const [objectRotationAnimation, setObjectRotationAnimation] = useState(false);
 
     // Sets the imported model's origin point, a custom origin for the object if specified in the props
-    // let sceneOrigin = [0,0,0]
   const rockingAnimationPlayed = useRef(false);
   const explodeAnimationPlayed = useRef(false);
   const childAnimationPlayed = useRef(false);
   const previousAnimationDirection = useRef(null);
+  const objectToRotate = useRef();
+  const planeRef = useRef(new THREE.Object3D()); // Ref for the plane geometry
 
-  function easeOutCubic(t) {
-    return 1 - Math.pow(1 - t, 3);
-  }
-
-  function easeInCubic(t) {
-    return Math.pow(t, 3);
-  }
+  var currentGlobalState = useThree();
+  const cameraViewportSize = new THREE.Vector2(); // create once and reuse it
+  currentGlobalState.gl.getSize(cameraViewportSize)
 
   function getInitialPositions(model) {
     var currentPositions = {};
-
     model.scene.children.forEach((mesh) => {
       currentPositions[mesh.name] = mesh.position.clone(); // Use clone to create a copy
     });
+
     return currentPositions;
   }
 
   function getDesiredPositions(currentPositions) {
-    var zIndexTable = {
+    let zIndexTable = {
       0: -1,
       1: 0,
       2: 1
     };
 
-    var nameSubstring = '';
-    var DirectionValue = '';
-    var zIndexValue = 0;
-    var incrementValue = 0;
-    var incrementVector = new THREE.Vector3(0, 0, 0);
-    var newPositions = {};
+    let nameSubstring = '';
+    let DirectionValue = '';
+    let zIndexValue = 0;
+    let incrementValue = 0;
+    let incrementVector = new THREE.Vector3(0, 0, 0);
+    let newPositions = {};
 
     Object.keys(currentPositions).forEach((name) => {
       nameSubstring = name.slice(-4); // take the 4 characters at the end of the model's name to extract the values
@@ -161,7 +162,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   }
   
   function getChildrenInitialPositions(model) {
-    var currentPositions = {};
+    let currentPositions = {};
 
     model.scene.children.forEach((mesh) => {
       mesh.children.forEach((child) => {
@@ -194,8 +195,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   }
     setToolTipCirclePositions(positions);
   };
-
-  // sceneOrigin = customOrigin == [] ? gltf.scene.position : customOrigin;
 
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
@@ -280,22 +279,6 @@ export const ExplodingModelLoader = React.memo((props) => {
       setAnimationIsPlaying(false); // Failsafe
     }
   }, [animationIsPlaying, enableRockingAnimation, enableExplodeAnimation, animationDirection, setAnimationIsPlaying]);
-
-
-
-
-  const [intersectionPoint, setIntersectionPoint] = useState(null);
-  var currentGlobalState = useThree();
-  const cameraViewportSize = new THREE.Vector2(); // create once and reuse it
-  currentGlobalState.gl.getSize(cameraViewportSize)
-
-  const isCircleOnLeft = useStore((state) => state.isCircleOnLeft);
-  const isCircleOnTop = useStore((state) => state.isCircleOnTop);
-  const objectToRotate = useRef();
-
-  const [objectRotationAnimation, setObjectRotationAnimation] = useState(false);
-
-  const planeRef = useRef(new THREE.Object3D()); // Ref for the plane geometry
 
   // Trigger animation start
   useEffect(() => {
@@ -500,18 +483,6 @@ export const ExplodingModelLoader = React.memo((props) => {
         objectToRotate.current.rotation.z += ((rotatingObjectForcedAxisOfRotation != [] ? rotatingObjectForcedAxisOfRotation[2] : rotatingObjectAxisOfRotation[2]) * rotatingObjectSpeedOfRotation) * delta;
       }
     }
-  });
-
-  useFrame((state, delta) => {
-    // planeRef.current.rotation.y +=0.01
-    // console.log(objectToRotate.current)
-    // planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
-
-    if(objectToRotate.current!=undefined){
-      // console.log(objectToRotate.current.position)
-
-    }
-    // planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
   });
 
   return (
