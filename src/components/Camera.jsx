@@ -58,7 +58,11 @@ export const Camera = React.memo((props) => {
     let deltaAverage = 0;
     let transitionIncrement;
     let concat_paths;
-    let tick = current_path.current !== desired_path ? 0:1
+    // let tick = current_path.current !== desired_path ? 0:1
+    let tick = 0
+
+
+
 
     // used in custom camera lookat
     const desired_lookat_dict = (time) => { // eslint-disable-line no-unused-vars
@@ -258,6 +262,7 @@ export const Camera = React.memo((props) => {
             current_path.current = desired_path;
             controls.current.enabled = true;
             state.events.enabled = true;
+            // state.camera.lookAt(path_points_simple_lookat_dict[desired_path])
         }
     }
 
@@ -270,14 +275,17 @@ export const Camera = React.memo((props) => {
 
         // If there's a custom transition speed configured, apply it
         transitionIncrement = (path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : defaultCameraSpeed) * deltaAverage,
-        tick +=  transitionIncrement,
+        tick += transitionIncrement,
 
         // Smooth out the movement
         smooth = smoothStep(tick), 
         
         // Determines the next point for the camera to look at
-        current_lookat.current.lerp(forcedCameraTarget.length ==0? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths])] : new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]), 0.03),
+        current_lookat.current.lerp(forcedCameraTarget.length ==0 ? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths])] : new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]), 0.03),
         state.camera.lookAt(current_lookat.current),
+
+        // console.log("current_path.current: " + current_path.current), console.log("        desired_path: " + desired_path),
+        // console.log(forcedCameraTarget),
 
         // Updates the orbitcontrol's target
         controls.current.target.x = current_lookat.current.x,
@@ -291,7 +299,7 @@ export const Camera = React.memo((props) => {
         state.camera.position.x = sub_points.x,
         state.camera.position.y = sub_points.y,
         state.camera.position.z = sub_points.z
-    ) : (updateCall(state))
+    ) : (updateCall(state)/*, console.log("current_path.current: " + current_path.current), console.log("        desired_path: " + desired_path)*/)
     ));
 
 // useFrame((delta)=>{
