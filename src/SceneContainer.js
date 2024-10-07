@@ -173,7 +173,7 @@ export function SceneContainer(props) {
             )}
             {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
-            <ExplodingModelLoader {...{useStore}} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader>
+            {/* <ExplodingModelLoader {...{useStore}} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}
@@ -182,12 +182,12 @@ export function SceneContainer(props) {
                 <Camera {...{useStore}}></Camera>
                 {/* {(desired_path.includes("ProfessionalExpProjects")) && 
                 <> */}
-                    <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["prospere_itb_presentation"]} lettersPerUnit = {5} textModelMenu = "ProfessionalExpProjects0" scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                    <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["drim_presentation"]} textModelMenu = "ProfessionalExpProjects1" scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                    <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["everial_presentation"]} textModelMenu = "ProfessionalExpProjects2" scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                    <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["prospere_itb_presentation"]} lettersPerUnit = {5} textModelMenu = "ProfessionalExpProjects0"     scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                    <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["drim_presentation"]} textModelMenu = "ProfessionalExpProjects1"                                  scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                    <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["everial_presentation"]} textModelMenu = "ProfessionalExpProjects2"                               scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
                     <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["bresil_ecobuggy_presentation"]} textModelMenu = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {fadingTextScale3} initialPosition = {fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor={"#FFFFFF"} manualLineBreaks = {true} />
-                    <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["efn1_presentation"]} textModelMenu = "ProfessionalExpProjects4" lettersPerUnit = {9} scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                    <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["efn2_presentation"]} textModelMenu = "ProfessionalExpProjects5" scale = {fadingTextScale5} lettersPerUnit = {7} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                    <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["efn1_presentation"]} textModelMenu = "ProfessionalExpProjects4" lettersPerUnit = {9}             scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                    <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["efn2_presentation"]} textModelMenu = "ProfessionalExpProjects5" lettersPerUnit = {7}             scale = {fadingTextScale5} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
                 {/* </>
                 } */}
                 {/* {/* <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}

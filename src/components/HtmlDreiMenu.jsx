@@ -6,7 +6,7 @@ import { HtmlDreiMenuStyles } from "../Styles";
 // has jsx styles
 // Put inside default camera(tested in perspective camera)
 export function HtmlDreiMenu(props) {
-    const setPath = props.useStore((state) => state.setPath);
+    const setDesiredPath = props.useStore((state) => state.setDesiredPath);
     const setTransitionEnded = props.useStore((state) => state.setTransitionEnded);
 
     const meshHtmlRef = useRef();
@@ -30,18 +30,18 @@ export function HtmlDreiMenu(props) {
         <mesh position={[0,0,0]} ref={meshHtmlRef}>
             <Html position={[-1200,-100,-140]} >
                 <div /*id='menu'*/ style={HtmlDreiMenuStyles.menu}>
-                    <p onClick={()=> {setPath("MainMenu"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Main Menu" />
-                    <p onClick={()=> {setPath("Education"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Education" />
-                    <p onClick={()=> {setPath("Skills"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Skills" />
-                    <p onClick={()=> {setPath("ProfessionalExpProjects0"); setTransitionEnded(true); setParentMenuClicked(true)}}  children="Professional experience" />
+                    <p onClick={()=> {setDesiredPath("MainMenu"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Main Menu" />
+                    <p onClick={()=> {setDesiredPath("Education"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Education" />
+                    <p onClick={()=> {setDesiredPath("Skills"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Skills" />
+                    <p onClick={()=> {setDesiredPath("ProfessionalExpProjects0"); setTransitionEnded(true); setParentMenuClicked(true)}}  children="Professional experience" />
                 {(parentMenuClicked === true) &&
                 <div>
-                    <p onClick={()=> {setPath("ProfessionalExpProjects0"); }} children="Prospere ITB" />
-                    <p onClick={()=> {setPath("ProfessionalExpProjects1"); }} children="DRIM" />
-                    <p onClick={()=> {setPath("ProfessionalExpProjects2"); }} children="Everial" />
-                    <p onClick={()=> {setPath("ProfessionalExpProjects3"); }} children="Brésil eco-buggy" />
-                    <p onClick={()=> {setPath("ProfessionalExpProjects4"); }} children="EFN projet PPMS" />
-                    <p onClick={()=> {setPath("ProfessionalExpProjects5"); }} children="EFN Professeur" />
+                    <p onClick={()=> {setDesiredPath("ProfessionalExpProjects0"); }} children="Prospere ITB" />
+                    <p onClick={()=> {setDesiredPath("ProfessionalExpProjects1"); }} children="DRIM" />
+                    <p onClick={()=> {setDesiredPath("ProfessionalExpProjects2"); }} children="Everial" />
+                    <p onClick={()=> {setDesiredPath("ProfessionalExpProjects3"); }} children="Brésil eco-buggy" />
+                    <p onClick={()=> {setDesiredPath("ProfessionalExpProjects4"); }} children="EFN projet PPMS" />
+                    <p onClick={()=> {setDesiredPath("ProfessionalExpProjects5"); }} children="EFN Professeur" />
                 </div>
                 }
                 </div>

@@ -1326,7 +1326,7 @@ export const path_points_simple_lookat_dict = {
         0: new THREE.Vector3(34, 21, -52)},
 
     "Education": {
-        0: new THREE.Vector3(-23, 97.5, 27.5)},
+        0: new THREE.Vector3(-23, 97.5, 27)},
         
     "Skills": {
         0: new THREE.Vector3(0, 35, -15)},

@@ -12,7 +12,7 @@ export function ExperienceMenu(props) {
     const {textColor = "#062d69"} = props;
     const {transitionDuration = 1000} = props;
 
-    const {setPath, setTransitionEnded, desired_path} = props.useStore();
+    const {setDesiredPath, setTransitionEnded, desired_path} = props.useStore();
 
     const isPathExperienceMenu = desired_path.includes("ProfessionalExpProjects"); // is the user going to the professional experience and projects
 
@@ -50,7 +50,7 @@ export function ExperienceMenu(props) {
                         <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("MainMenu");
+                setDesiredPath("MainMenu");
                 setTransitionEnded(false);
             }}
             position = {[0,13,2]}
@@ -81,7 +81,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("Education");
+                setDesiredPath("Education");
                 setTransitionEnded(false);
             }}
             position = {[0,12,2]}
@@ -112,7 +112,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("Skills");
+                setDesiredPath("Skills");
                 setTransitionEnded(false);
             }}
             position = {[0,11,2]}
@@ -143,7 +143,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects0");
+                setDesiredPath("ProfessionalExpProjects0");
                 setTransitionEnded(false);
             }}
             position = {[0,10,2]}
@@ -174,7 +174,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects1");
+                setDesiredPath("ProfessionalExpProjects1");
                 setTransitionEnded(false);
             }}
             position = {[0,9,2]}
@@ -204,7 +204,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects2");
+                setDesiredPath("ProfessionalExpProjects2");
                 setTransitionEnded(false);
             }}
             position = {[0,8,2]}
@@ -234,7 +234,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects3");
+                setDesiredPath("ProfessionalExpProjects3");
                 setTransitionEnded(false);
             }}
             position = {[0,7,2]}
@@ -264,7 +264,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects4");
+                setDesiredPath("ProfessionalExpProjects4");
                 setTransitionEnded(false);
             }}
             position = {[0,6,2]}
@@ -294,7 +294,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects5");
+                setDesiredPath("ProfessionalExpProjects5");
                 setTransitionEnded(false);
             }}
             position = {[0,5,2]}
@@ -324,7 +324,7 @@ export function ExperienceMenu(props) {
             {/* <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects6");
+                setDesiredPath("ProfessionalExpProjects6");
                 setTransitionEnded(false);
             }}
             position = {[0,4,2]}
@@ -356,7 +356,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects7");
+                setDesiredPath("ProfessionalExpProjects7");
                 setTransitionEnded(false);
             }}
             position = {[0,3,2]}
@@ -388,7 +388,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects8");
+                setDesiredPath("ProfessionalExpProjects8");
                 setTransitionEnded(false);
             }}
             position = {[0,2,2]}
@@ -420,7 +420,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects9");
+                setDesiredPath("ProfessionalExpProjects9");
                 setTransitionEnded(false);
             }}
             position = {[0,1,2]}
@@ -452,7 +452,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects10");
+                setDesiredPath("ProfessionalExpProjects10");
                 setTransitionEnded(false);
             }}
             position = {[0,0,2]}
@@ -484,7 +484,7 @@ export function ExperienceMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects11");
+                setDesiredPath("ProfessionalExpProjects11");
                 setTransitionEnded(false);
             }}
             position = {[0,-1,2]}

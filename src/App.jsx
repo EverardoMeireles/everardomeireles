@@ -21,7 +21,7 @@ const useStore = create((set) => ({
   preloadDone: false,
   setPreloadDone: (preloaded) => set(() => ({ preloadDone: preloaded })),
   desired_path: "MainMenu",
-  setPath: (desired) => set(() => ({ desired_path: desired })),
+  setDesiredPath: (desired) => set(() => ({ desired_path: desired })),
   transitionEnded: false,
   setTransitionEnded: (ended) => set(() => ({ transitionEnded: ended })),
   currentGraphicalMode: config.default_graphical_setting,

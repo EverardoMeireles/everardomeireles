@@ -14,7 +14,7 @@ export function IndexMenu(props) {
     const {visible = true} = props;
     const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
-    const {setPath, setTransitionEnded} = props.useStore();
+    const {setDesiredPath, setTransitionEnded} = props.useStore();
     
     const setGraphicalMode = props.useStore((state) => state.setGraphicalMode);
     const currentGraphicalMode = props.useStore((state) => state.currentGraphicalMode);
@@ -46,7 +46,7 @@ export function IndexMenu(props) {
             &&<mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("MainMenu");
+                setDesiredPath("MainMenu");
                 setTransitionEnded(false);
             }}
             position = {[0,3,2]}
@@ -78,7 +78,7 @@ export function IndexMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("Education");
+                setDesiredPath("Education");
                 setTransitionEnded(false);
             }}
             position = {[0,2,2]}
@@ -110,7 +110,7 @@ export function IndexMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("Skills");
+                setDesiredPath("Skills");
                 setTransitionEnded(false);
             }}
             position = {[0,1,2]}
@@ -142,7 +142,7 @@ export function IndexMenu(props) {
             <mesh
             onClick = {(e) => {
                 e.stopPropagation();
-                setPath("ProfessionalExpProjects0");
+                setDesiredPath("ProfessionalExpProjects0");
                 setTransitionEnded(false);
             }}
             position = {[0,0,2]}
