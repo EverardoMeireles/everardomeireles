@@ -20,6 +20,8 @@ export function HudMenu(props) {
     const setGraphicalMode = useStore((state) => state.setGraphicalMode);
     const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const finishedBenchmark = useStore((state) => state.finishedBenchmark);
+    // const animationTriggerState = useStore((state) => state.animationTriggerState);
+    // const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
     
 	//DEBUG animations
     const toggleTrigger = useStore((state) => state.toggleTrigger);
@@ -64,8 +66,8 @@ export function HudMenu(props) {
             <div style={HudMenuStyles.arrowContainerStyle}>
                 {/* DEBUG animations */}
                 {/* <b onClick={() => {toggleTrigger("trigger1")}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b> */}
-                <b onClick={() => {increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
-                <b onClick={() => {increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
+                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
+                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
                 {graphicalLevelIndicatorIsEnabled && <img 
                     style = { {...HudMenuStyles.FlagImgStyle(24, 32), opacity: goesTransparent && isTransparent ? transparency : 1, 
                     visibility: goesInvisible && isTransparent ? 'hidden' : 'visible'}} 

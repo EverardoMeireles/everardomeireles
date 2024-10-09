@@ -45,6 +45,9 @@ export function SceneContainer(props) {
     const raycasterEnabled = useStore((state) => state.raycasterEnabled);
     const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
     const setTrigger = useStore((state) => state.setTrigger);
+
+    const animationTriggerState = useStore((state) => state.animationTriggerState);
+    const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
     
     const { gl } = useThree(); // eslint-disable-line no-unused-vars
     const postloadingDelay = 3000
@@ -166,6 +169,12 @@ export function SceneContainer(props) {
         return () => {clearTimeout(timer1); clearTimeout(timer2);}; // Cleanup the timer if the component unmounts
     }, []);
 
+    useEffect(() => {
+        // Clicked 3D objects:
+        console.log("animationTriggerState: " + animationTriggerState)
+        // Clicked 3D objects END
+    }, [animationTriggerState]);
+
     return(
         <>
             {(desired_path === "Education" || postloadStart) && (
@@ -173,7 +182,8 @@ export function SceneContainer(props) {
             )}
             {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
-            {/* <ExplodingModelLoader {...{useStore}} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
+            {/* <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
+            <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"TESTEXPLODE.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader>
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}

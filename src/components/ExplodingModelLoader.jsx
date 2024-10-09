@@ -8,6 +8,8 @@ import { parseJson, removeFileExtensionString, easeInCubic, easeOutCubic } from 
 export const ExplodingModelLoader = React.memo((props) => {
   const useStore = props.useStore; // Using useStore from props
 
+  const {animationIsPlaying = false} = props;
+
   const {position = [0, 0, 0]} = props;
   const {sceneName = 'threeJsScene.glb'} = props;
   const {customOrigin = []} = props; // If for any reason the imported scene's position transform is not (0, 0, 0), specify it here
@@ -34,8 +36,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   const setToolTipCirclePositions = useStore((state) => state.setToolTipCirclePositions);
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const cameraState = useStore((state) => state.cameraState);
-  const animationIsPlaying = useStore((state) => state.animationIsPlaying);
-  const setAnimationIsPlaying = useStore((state) => state.setAnimationIsPlaying);
   const animationDirection = useStore((state) => state.animationDirection);
   const setAnimationDirection = useStore((state) => state.setAnimationDirection);
   const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
@@ -50,6 +50,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const isCircleOnLeft = useStore((state) => state.isCircleOnLeft);
   const isCircleOnTop = useStore((state) => state.isCircleOnTop);
 
+  const [isPlaying, setIsPlaying] = useState(false);
   const [rock, setRock] = useState(false);
   const [explode, setExplode] = useState(false);
 
@@ -200,15 +201,11 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     parseJson("/models/" + removeFileExtensionString(sceneName) + ".json", 'ModelProperties')
       .then(modelProperties => {
-        if (modelProperties) {
-          setRockingTransitionDuration(modelProperties.rockingTransitionDuration || rockingDuration);
-          setExplodingTransitionDuration(modelProperties.explodingTransitionDuration || explodingDuration );
-          setChildTransitionDuration(modelProperties.childTransitionDuration || childDuration);
-          setAnimationRockingMaxAngle(modelProperties.rockingAnimationMaxAngle || rockingMaxAngle);
-          console.log(modelProperties.customOrigin)
-          console.log(gltf.scene.position.toArray())
-          setSceneOrigin(modelProperties.customOrigin || (customOrigin != [] ? customOrigin : gltf.scene.position.toArray()));
-        }
+          setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
+          setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
+          setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
+          setAnimationRockingMaxAngle(modelProperties?.rockingAnimationMaxAngle ?? rockingMaxAngle);
+          setSceneOrigin(modelProperties?.customOrigin ?? (customOrigin.length != 0 ? customOrigin : gltf.scene.position.toArray()));
       })
       .catch(error => {
         console.error('Error parsing JSON:', error);
@@ -238,16 +235,27 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   }, [cameraState]);
 
+  // Starts the animation when the animationIsPlaying prop is set to true
+  useEffect(() => {
+    if(animationIsPlaying){
+      setIsPlaying(true)
+    }
+    else{
+      setIsPlaying(false)
+    }
+
+  }, [animationIsPlaying]);
+
   // Automatically starts the animation when the animationStartOnLoad prop is set to true
   useEffect(() => {
     if(enableRockingAnimation && animationStartOnLoad){
       setRock(true)
-      setAnimationIsPlaying(true)
+      setIsPlaying(true)
     }
 
     if(enableExplodeAnimation && animationStartOnLoad){
       setExplode(true)
-      setAnimationIsPlaying(true)
+      setIsPlaying(true)
     }
   }, [animationStartOnLoad]);
 
@@ -264,9 +272,9 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [gltf]);
 
-  // Control the animations using the zustand state
+  // Control the animations using the isPlaying state(set either by the animationIsPlaying or the animationStartOnLoad props)
   useEffect(() => {
-    if (animationIsPlaying && (previousAnimationDirection.current !== animationDirection || previousAnimationDirection.current === null)) {
+    if (isPlaying && (previousAnimationDirection.current !== animationDirection || previousAnimationDirection.current === null)) {
       setAnimationTick(0); // Reset animation tick when starting
       setChildAnimationTick(0); // Reset child animation tick when starting
       if (enableRockingAnimation && animationDirection === true) {
@@ -275,10 +283,10 @@ export const ExplodingModelLoader = React.memo((props) => {
         setExplode(true);
       }
       previousAnimationDirection.current = animationDirection; // Set only when animation starts
-    } else if (animationIsPlaying && previousAnimationDirection.current === animationDirection) {
-      setAnimationIsPlaying(false); // Failsafe
+    } else if (isPlaying && previousAnimationDirection.current === animationDirection) {
+      setIsPlaying(false); // Failsafe
     }
-  }, [animationIsPlaying, enableRockingAnimation, enableExplodeAnimation, animationDirection, setAnimationIsPlaying]);
+  }, [isPlaying, enableRockingAnimation, enableExplodeAnimation, animationDirection]);
 
   // Trigger animation start
   useEffect(() => {
@@ -320,23 +328,18 @@ export const ExplodingModelLoader = React.memo((props) => {
       ndcY > 1 ? ndcY = 1 : ndcY = ndcY
       ndcY < -1 ? ndcY = -1 : ndcY = ndcY
 
-      // console.log(planeRef.current.position)
-
       const ndc = new THREE.Vector3(ndcX, ndcY, -1)
       raycaster.setFromCamera(ndc, camera);
       // UNCOMENT THIS if you want to see the casted ray
       // currentGlobalState.scene.add(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 300, 0xff0000) );
       const intersects = raycaster.intersectObject(planeRef.current, true);
-      // console.log(currentGlobalState.camera.rotation)
       const midpoint = new THREE.Vector3();
 
       if(intersects.length != 0){
         // Calculate the 'midpoint' between the source of the ray and the collision point
         midpoint.addVectors(raycaster.ray.origin, intersects[0].point).multiplyScalar(0.5);
-        // console.log(intersects[0])
-        // console.log(raycaster.ray.origin)
-        // Sets the rotating object's position
         
+        // Sets the rotating object's position
         objectToRotate.current.position.x = midpoint.x;
         objectToRotate.current.position.y = midpoint.y;
         objectToRotate.current.position.z = midpoint.z;
@@ -357,7 +360,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // ANIMATION END EFFECT: Reset animation flags and invert animationDirection
   useEffect(() => {
-    if (!animationIsPlaying && (rockingAnimationPlayed.current || explodeAnimationPlayed.current || childAnimationPlayed.current)) {
+    if (!isPlaying && (rockingAnimationPlayed.current || explodeAnimationPlayed.current || childAnimationPlayed.current)) {
       
       // Swap initialPositions and desiredPositions based on whether or not we're reversing the animation
       if (animationDirection === false) {
@@ -381,11 +384,11 @@ export const ExplodingModelLoader = React.memo((props) => {
       setAnimationTick(0);
       setChildAnimationTick(0);
     }
-  }, [animationIsPlaying, animationDirection, setAnimationDirection]);
+  }, [isPlaying, animationDirection, setAnimationDirection]);
 
   // Animation
   useFrame((state, delta) => {
-    if(animationIsPlaying){
+    if(isPlaying){
       const adjustedDelta = delta;
 
       if (rock && enableRockingAnimation && animationTick <= 1 && !rockingAnimationPlayed.current) {
@@ -438,10 +441,10 @@ export const ExplodingModelLoader = React.memo((props) => {
               setHasChildAnimation(true);
               setChildAnimationTick(0); // Reset child animation tick
             } else {
-              setAnimationIsPlaying(false); // Set animationIsPlaying to false if no child animation
+              setIsPlaying(false); // Set isPlaying to false if no child animation
             }
           } else {
-            setAnimationIsPlaying(false); // Set animationIsPlaying to false if child animation already played
+            setIsPlaying(false); // Set isPlaying to false if child animation already played
           }
         }
       } else if (hasChildAnimation && childAnimationTick <= 1 && !childAnimationPlayed.current && animationDirection === true) {
@@ -459,7 +462,7 @@ export const ExplodingModelLoader = React.memo((props) => {
           setHasChildAnimation(false);
           childAnimationPlayed.current = true;
           updateToolTipCirclePositions(); // Ensure we update the tooltip positions after child animations end
-          setAnimationIsPlaying(false); // Set animationIsPlaying to false after child animation
+          setIsPlaying(false); // Set isPlaying to false after child animation
         }
       }
   

@@ -116,9 +116,9 @@ const useStore = create((set) => ({
 
   cameraStateTracking: false,
   setCameraStateTracking: (tracking) => set(() => ({ cameraStateTracking: tracking })),
-  
-  animationIsPlaying: false,
-  setAnimationIsPlaying: (playing) => set(() => ({ animationIsPlaying: playing })),
+
+  animationTriggerState: false,
+  setAnimationTriggerState: (playing) => set(() => ({ animationTriggerState: playing })),
 
   animationDirection: true,
   setAnimationDirection: (direction) => set(() => ({ animationDirection: direction })),
