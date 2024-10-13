@@ -23,8 +23,8 @@ export const ToolTipCircle = (props) => {
     const setTooltipVisible = useStore((state) => state.setTooltipVisible);
     const setTooltipText = useStore((state) => state.setTooltipText);
     const setTooltipImage = useStore((state) => state.setTooltipImage);
-    const setIsCircleOnLeft = useStore((state) => state.setIsCircleOnLeft);
-    const setIsCircleOnTop = useStore((state) => state.setIsCircleOnTop);
+    const setIsHoveredCircleOnLeft = useStore((state) => state.setIsHoveredCircleOnLeft);
+    const setIsHoveredCircleOnTop = useStore((state) => state.setIsHoveredCircleOnTop);
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
     const desired_path = useStore((state) => state.desired_path);
     const transitionEnded = useStore((state) => state.transitionEnded);
@@ -110,8 +110,8 @@ export const ToolTipCircle = (props) => {
         setTooltipText(text);
         setTooltipImage(image);
         setTooltipVisible(true);
-        setIsCircleOnLeft(isCircleOnLeft)
-        setIsCircleOnTop(isCircleOnTop)
+        setIsHoveredCircleOnLeft(isCircleOnLeft)
+        setIsHoveredCircleOnTop(isCircleOnTop)
         setTooltipProperties({active:true, text:text})
         setTooltipCurrentObjectNameSelected(objectName)
         // console.log(objectName)

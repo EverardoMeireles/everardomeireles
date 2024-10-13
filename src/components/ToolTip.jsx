@@ -18,8 +18,8 @@ export const ToolTip = (props) => {
     const tooltipImage = useStore((state) => state.tooltipImage);
     const tooltipProperties = useStore((state) => state.tooltipProperties);
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
-    const isCircleOnLeft = useStore((state) => state.isCircleOnLeft);
-    const isCircleOnTop = useStore((state) => state.isCircleOnTop);
+    const isHoveredCircleOnLeft = useStore((state) => state.isHoveredCircleOnLeft);
+    const isHoveredCircleOnTop = useStore((state) => state.isHoveredCircleOnTop);
     
     const tooltipCurrentObjectSelected = useStore((state) => state.tooltipCurrentObjectSelected);
     
@@ -66,8 +66,8 @@ export const ToolTip = (props) => {
         color: '#FFFFFF',
         top: 'auto',
         bottom: 'auto',
-        right: isCircleOnLeft ? 0 : 'auto',
-        left: isCircleOnLeft ? 'auto' : 0,
+        right: isHoveredCircleOnLeft ? 0 : 'auto',
+        left: isHoveredCircleOnLeft ? 'auto' : 0,
         display: 'flex',
         flexDirection: 'column',
         height: '90vh', // Adjust as necessary

@@ -12,32 +12,42 @@ import { parseJson, removeFileExtensionString } from "./Helper";
 import * as THREE from "three";
 
 const useStore = create((set) => ({
-  toolTipCirclePositions: [],
-  setToolTipCirclePositions: (positions) => set(() => ({ toolTipCirclePositions: positions })),
   raycasterEnabled: false,
   setRaycasterEnabled: (loaded) => set(() => ({ raycasterEnabled: loaded })),
+
   initialSceneLoaded: false,
   setInitialSceneLoaded: (loaded) => set(() => ({ initialSceneLoaded: loaded })),
+
   preloadDone: false,
   setPreloadDone: (preloaded) => set(() => ({ preloadDone: preloaded })),
+
   desired_path: "MainMenu",
   setDesiredPath: (desired) => set(() => ({ desired_path: desired })),
+
   transitionEnded: false,
   setTransitionEnded: (ended) => set(() => ({ transitionEnded: ended })),
+
   currentGraphicalMode: config.default_graphical_setting,
   setGraphicalMode: (mode) => set(() => ({ currentGraphicalMode: mode })),
+
   finishedBenchmark: false,
   setFinishedBenchmark: (finished) => set(() => ({ finishedBenchmark: finished })),
+
   currentLanguage: "Portuguese",
   setLanguage: (language) => set(() => ({ currentLanguage: language })),
+
   currentCameraMovements: { zoom: true, pan: true, rotate: true },
   setcurrentCameraMovements: (cameraMovements) => set(() => ({ currentCameraMovements: cameraMovements })),
+
   currentCameraMode: "NormalMovement",
   setCurrentCameraMode: (cameraMode) => set(() => ({ currentCameraMode: cameraMode })),
+
   panDirectionalAxis: ['+z', '+y'],
   setPanDirectionalAxis: (axis) => set(() => ({ panDirectionalAxis: axis })),
+
   panDirectionalEdgethreshold: 150,
   setPanDirectionalEdgethreshold: (threshold) => set(() => ({ panDirectionalEdgethreshold: threshold })),
+
   alertProperties: {
     active: false,
     type: 'Success',
@@ -54,6 +64,33 @@ const useStore = create((set) => ({
       ...newProperties
     }
   })),
+
+  currentSkillHovered: "Python", // try to put this on the component itself
+  setSkillHovered: (skill) => set(() => ({ currentSkillHovered: skill })),
+
+  mouseClicked: false,
+  toggleMouseClicked: () => set((state) => ({ mouseClicked: !state.mouseClicked })),
+
+  currentObjectClicked: "",
+  setCurrentObjectClicked: (object) => set(() => ({ currentObjectClicked: object })),
+
+  tutorialClosed: false,
+  setTutorialClosed: (closed) => set(() => ({ tutorialClosed: closed })),
+
+  triggers: { "trigger1": false, "trigger2": false, "trigger3": false, "trigger4": false, "trigger5": false },
+  toggleTrigger: (key) => set((state) => ({
+    triggers: {
+      ...state.triggers,
+      [key]: !state.triggers[key]
+    }
+  })),
+  setTrigger: (key, value) => set((state) => ({
+    triggers: {
+      ...state.triggers,
+      [key]: value
+    }
+  })),
+
   tooltipProperties: {
     active: false,
     type: 'Success',
@@ -68,44 +105,28 @@ const useStore = create((set) => ({
       ...newProperties
     }
   })),
-  currentSkillHovered: "Python",
-  setSkillHovered: (skill) => set(() => ({ currentSkillHovered: skill })),
-  mouseClicked: false,
-  toggleMouseClicked: () => set((state) => ({ mouseClicked: !state.mouseClicked })),
-  currentObjectClicked: "",
-  setCurrentObjectClicked: (object) => set(() => ({ currentObjectClicked: object })),
-  tutorialClosed: false,
-  setTutorialClosed: (closed) => set(() => ({ tutorialClosed: closed })),
-  triggers: { "trigger1": false, "trigger2": false, "trigger3": false, "trigger4": false, "trigger5": false },
-  toggleTrigger: (key) => set((state) => ({
-    triggers: {
-      ...state.triggers,
-      [key]: !state.triggers[key]
-    }
-  })),
-  setTrigger: (key, value) => set((state) => ({
-    triggers: {
-      ...state.triggers,
-      [key]: value
-    }
-  })),
+
   tooltipVisible: false,
   setTooltipVisible: (visible) => set(() => ({ tooltipVisible: visible })),
+
   tooltipText: "Example text",
   setTooltipText: (text) => set(() => ({ tooltipText: text })),
+
   tooltipImage: "",
   setTooltipImage: (image) => set(() => ({ tooltipImage: image })),
-  isCircleOnLeft: false,
-  setIsCircleOnLeft: (isLeft) => set(() => ({ isCircleOnLeft: isLeft })),
-  isCircleOnTop: false,
-  setIsCircleOnTop: (isTop) => set(() => ({ isCircleOnTop: isTop })),
+
+  isHoveredCircleOnLeft: false,
+  setIsHoveredCircleOnLeft: (isLeft) => set(() => ({ isHoveredCircleOnLeft: isLeft })),
+
+  isHoveredCircleOnTop: false,
+  setIsHoveredCircleOnTop: (isTop) => set(() => ({ isHoveredCircleOnTop: isTop })),
   
+  toolTipCirclePositions: [],
+  setToolTipCirclePositions: (positions) => set(() => ({ toolTipCirclePositions: positions })),
+
   tooltipCirclesData: [],
   setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data })),
-  tooltipCurrentObjectNameSelected: undefined,
-  setTooltipCurrentObjectNameSelected: (object) => set(() => ({ tooltipCurrentObjectNameSelected: object })),
-  tooltipCurrentObjectSelected: {},
-  setTooltipCurrentObjectSelected: (object) => set(() => ({ tooltipCurrentObjectSelected: object })),
+
   cameraState: {
     position: [0, 0, 0],
     rotation: [0, 0, 0],
@@ -140,9 +161,6 @@ const useStore = create((set) => ({
   rotatingObjectForcedAxisOfRotation: [], // the axis that the rotating object will rotate when its tooltip circle is hovered, takes a three element array
   setRotatingObjectForcedAxisOfRotation: (axis) => set(() => ({ rotatingObjectForcedAxisOfRotation: axis })),
 
-  tooltipCircleFadeMode: "OnAnimationEnd", // "OnTransitionEnd", "OnAnimationEnd"
-  setTooltipCircleFadeMode: (text) => set(() => ({ tooltipText: text })),
-
   forcedCameraTarget: [], // will force the camera's rotation pivot if not empty
   setForcedCameraTarget: (target) => set(() => ({ forcedCameraTarget: target })),
 
@@ -169,27 +187,6 @@ function App() {
   const transitionEnded = useStore((state) => state.transitionEnded);
   
   const [enableTutorial, setEnableTutorial] = useState(false);
-
-  // // Parses a 3D model's corresponding json file to create info circles on the screen
-  // useEffect(() => {
-  //   if(explodingModelName != ""){
-  //     console.log(explodingModelName)
-  //     fetch("/models/" + explodingModelName + ".json")
-  //     .then((response) => {
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! Status: ${response.status}`);
-  //       }
-  //       return response.json();
-  //     })
-  //     .then((data) => {
-  //       setTooltipCirclesData(data.TooltipProperties);
-  //       console.log(data.TooltipProperties)
-  //     })
-  //     .catch((error) => {
-  //       console.error('Error fetching the JSON:', error);
-  //     });
-  //   }
-  // }, [explodingModelName]); // Empty dependency array to run the effect only once
 
     // Parses a 3D model's corresponding json file to create info circles on the screen
     useEffect(() => {

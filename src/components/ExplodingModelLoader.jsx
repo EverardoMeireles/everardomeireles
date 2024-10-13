@@ -42,14 +42,14 @@ export const ExplodingModelLoader = React.memo((props) => {
   const transitionEnded = useStore((state) => state.transitionEnded);
   const triggers = useStore((state) => state.triggers);
   const setTrigger = useStore((state) => state.setTrigger);
-  const tooltipCurrentObjectNameSelected = useStore((state) => state.tooltipCurrentObjectNameSelected);
   const setExplodingModelName = useStore((state) => state.setExplodingModelName);
   const setTooltipCurrentObjectSelected = useStore((state) => state.setTooltipCurrentObjectSelected);
   const rotatingObjectViewportArray = useStore((state) => state.rotatingObjectViewportArray);
   const rotatingObjectForcedAxisOfRotation = useStore((state) => state.rotatingObjectForcedAxisOfRotation);
-  const isCircleOnLeft = useStore((state) => state.isCircleOnLeft);
-  const isCircleOnTop = useStore((state) => state.isCircleOnTop);
+  const isHoveredCircleOnLeft = useStore((state) => state.isHoveredCircleOnLeft);
+  const isHoveredCircleOnTop = useStore((state) => state.isHoveredCircleOnTop);
 
+  const [tooltipCurrentObjectNameSelected, setTooltipCurrentObjectNameSelected] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [rock, setRock] = useState(false);
   const [explode, setExplode] = useState(false);
@@ -307,7 +307,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       var ndcX = 0
       var ndcY = 0
 
-      if (isCircleOnLeft) {
+      if (isHoveredCircleOnLeft) {
         // Place the object on the left side of the viewport
         ndcX = rotatingObjectForcePositionOffset["left"] != 0 ? rotatingObjectForcePositionOffset["left"] :rotatingObjectViewportArray[0]
       } else {
@@ -315,7 +315,7 @@ export const ExplodingModelLoader = React.memo((props) => {
         ndcX = rotatingObjectForcePositionOffset["right"] != 0 ? rotatingObjectForcePositionOffset["right"] : rotatingObjectViewportArray[1]
       }
   
-      if (isCircleOnTop) {
+      if (isHoveredCircleOnTop) {
         // Place the object on the top side of the viewport
         ndcY = rotatingObjectForcePositionOffset["bottom"] != 0 ? rotatingObjectForcePositionOffset["bottom"] : rotatingObjectViewportArray[3]
       } else {
@@ -353,7 +353,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
       setObjectRotationAnimation(true);
     }
-  }, [tooltipCurrentObjectNameSelected, isCircleOnLeft, isCircleOnTop, gltf.scene]);
+  }, [tooltipCurrentObjectNameSelected, isHoveredCircleOnLeft, isHoveredCircleOnTop, gltf.scene]);
 
 
 
