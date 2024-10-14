@@ -1,4 +1,4 @@
-{
+{"Roomba":{
     "ModelProperties": {
       "rockingTransitionDuration": 2000,
       "explodingTransitionDuration": 300,
@@ -36,4 +36,5 @@
       }
     ]
   }
+}
   

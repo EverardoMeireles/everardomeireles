@@ -48,8 +48,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const rotatingObjectForcedAxisOfRotation = useStore((state) => state.rotatingObjectForcedAxisOfRotation);
   const isHoveredCircleOnLeft = useStore((state) => state.isHoveredCircleOnLeft);
   const isHoveredCircleOnTop = useStore((state) => state.isHoveredCircleOnTop);
+  const tooltipCurrentObjectNameSelected = useStore((state) => state.tooltipCurrentObjectNameSelected);
 
-  const [tooltipCurrentObjectNameSelected, setTooltipCurrentObjectNameSelected] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [rock, setRock] = useState(false);
   const [explode, setExplode] = useState(false);
@@ -176,6 +176,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   // Makes the tooltip circles follow the objects when camera position and rotation values change
   const updateToolTipCirclePositions = () => {
     const positions = {};
+    console.log(tooltipCirclesData)
     if(tooltipCirclesData){
       tooltipCirclesData.forEach((data) => {
         const objectName = data.objectName;
@@ -199,14 +200,14 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
-    parseJson("/models/" + removeFileExtensionString(sceneName) + ".json", 'ModelProperties')
-      .then(modelProperties => {
-          setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
-          setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
-          setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
-          setAnimationRockingMaxAngle(modelProperties?.rockingAnimationMaxAngle ?? rockingMaxAngle);
-          setSceneOrigin(modelProperties?.customOrigin ?? (customOrigin.length != 0 ? customOrigin : gltf.scene.position.toArray()));
-      })
+    parseJson("/models/" + removeFileExtensionString(sceneName) + ".json", removeFileExtensionString(sceneName))
+      .then(data => {
+          setRockingTransitionDuration(data.ModelProperties?.rockingTransitionDuration ?? rockingDuration);
+          setExplodingTransitionDuration(data.ModelProperties?.explodingTransitionDuration ?? explodingDuration);
+          setChildTransitionDuration(data.ModelProperties?.childTransitionDuration ?? childDuration);
+          setAnimationRockingMaxAngle(data.ModelProperties?.rockingAnimationMaxAngle ?? rockingMaxAngle);
+          setSceneOrigin(data.ModelProperties?.customOrigin ?? (customOrigin.length != 0 ? customOrigin : gltf.scene.position.toArray()));
+        })
       .catch(error => {
         console.error('Error parsing JSON:', error);
       });
@@ -295,7 +296,6 @@ export const ExplodingModelLoader = React.memo((props) => {
       setObjectRotationAnimation(false);
     } else {
       const originalObject = gltf.scene.getObjectByName(tooltipCurrentObjectNameSelected);
-
       if (!originalObject) {
         console.warn(`Object '${tooltipCurrentObjectNameSelected}' not found in gltf scene.`);
         return;

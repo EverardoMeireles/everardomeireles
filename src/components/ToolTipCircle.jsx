@@ -7,7 +7,7 @@ import '../PulsatingAnimation.css'; // Adjust the path as necessary
 // At the minimum, use setTooltipProperties({active:true});
 // You can set any of the tooltip's properties like this for example:
 // setTooltipProperties({active:false, text:"This image is very interesting!"});
-export const ToolTipCircle = (props) => {  
+export const ToolTipCircle = (props) => {
     const useStore = props.useStore;
     const {objectName = ""} = props;
     const {text = "Sample text"} = props;
@@ -17,7 +17,6 @@ export const ToolTipCircle = (props) => {
     const {rotatingObjectCoordinates = []} = props;
     const {rotatingObjectAxisOfRotation = []} = props;
     const {playPulseAnimation = false} = props;
-    
     const {position = [30, 40]} = props;
 
     const setTooltipVisible = useStore((state) => state.setTooltipVisible);
@@ -30,7 +29,6 @@ export const ToolTipCircle = (props) => {
     const transitionEnded = useStore((state) => state.transitionEnded);
     const explodeAnimationEnded = useStore((state) => state.explodeAnimationEnded);
     const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
-    const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
     const setTooltipCurrentObjectNameSelected = useStore((state) => state.setTooltipCurrentObjectNameSelected);
     const tooltipCurrentObjectSelected = useStore((state) => state.tooltipCurrentObjectSelected);
     const setRotatingObjectViewportArray = useStore((state) => state.setRotatingObjectViewportArray);

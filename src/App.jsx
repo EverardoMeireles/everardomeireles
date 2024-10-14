@@ -127,6 +127,9 @@ const useStore = create((set) => ({
   tooltipCirclesData: [],
   setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data })),
 
+  tooltipCurrentObjectNameSelected: undefined,
+  setTooltipCurrentObjectNameSelected: (object) => set(() => ({ tooltipCurrentObjectNameSelected: object })),
+
   cameraState: {
     position: [0, 0, 0],
     rotation: [0, 0, 0],
@@ -188,18 +191,31 @@ function App() {
   
   const [enableTutorial, setEnableTutorial] = useState(false);
 
-    // Parses a 3D model's corresponding json file to create info circles on the screen
+    // // Parses a 3D model's corresponding json file to create info circles on the screen
+    // useEffect(() => {
+    //   if(explodingModelName != ""){
+    //     console.log(explodingModelName)
+    //     parseJson("/models/" + explodingModelName + ".json"/*, "TooltipProperties"*/)
+    //     .then((data) => {
+    //       setTooltipCirclesData(data.Roomba.TooltipProperties);
+    //       console.log(data)
+    //       console.log(data.Roomba.TooltipProperties)
+    //     })
+    //   }
+    // }, [explodingModelName]);
+
     useEffect(() => {
-      if(explodingModelName != ""){
-        console.log(explodingModelName)
-        // fetch("/models/" + explodingModelName + ".json")
-        parseJson("/models/" + explodingModelName + ".json", "TooltipProperties")
-        .then((data) => {
-          setTooltipCirclesData(data);
-          console.log(data)
-        })
+      if (explodingModelName !== "") {
+        console.log(explodingModelName);
+        parseJson("/models/" + explodingModelName + ".json")
+          .then((data) => {
+            const firstKey = Object.keys(data)[0];
+            if (firstKey) {
+              setTooltipCirclesData(data[firstKey].TooltipProperties);
+            }
+          });
       }
-    }, [explodingModelName]); // Empty dependency array to run the effect only once
+    }, [explodingModelName]);
 
   // Handle events when transition ends
   useEffect(() => {
