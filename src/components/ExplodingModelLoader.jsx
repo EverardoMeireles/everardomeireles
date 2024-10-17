@@ -42,13 +42,17 @@ export const ExplodingModelLoader = React.memo((props) => {
   const transitionEnded = useStore((state) => state.transitionEnded);
   const triggers = useStore((state) => state.triggers);
   const setTrigger = useStore((state) => state.setTrigger);
-  const setExplodingModelName = useStore((state) => state.setExplodingModelName);
+  // const setExplodingModelName = useStore((state) => state.setExplodingModelName);
   const setTooltipCurrentObjectSelected = useStore((state) => state.setTooltipCurrentObjectSelected);
   const rotatingObjectViewportArray = useStore((state) => state.rotatingObjectViewportArray);
   const rotatingObjectForcedAxisOfRotation = useStore((state) => state.rotatingObjectForcedAxisOfRotation);
   const isHoveredCircleOnLeft = useStore((state) => state.isHoveredCircleOnLeft);
   const isHoveredCircleOnTop = useStore((state) => state.isHoveredCircleOnTop);
   const tooltipCurrentObjectNameSelected = useStore((state) => state.tooltipCurrentObjectNameSelected);
+  // const explodingModelName = useStore((state) => state.explodingModelName);
+  const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
+
+  const [explodingModelName, setExplodingModelName] = useState(undefined);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [rock, setRock] = useState(false);
@@ -176,7 +180,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   // Makes the tooltip circles follow the objects when camera position and rotation values change
   const updateToolTipCirclePositions = () => {
     const positions = {};
-    console.log(tooltipCirclesData)
     if(tooltipCirclesData){
       tooltipCirclesData.forEach((data) => {
         const objectName = data.objectName;
@@ -198,16 +201,67 @@ export const ExplodingModelLoader = React.memo((props) => {
     setToolTipCirclePositions(positions);
   };
 
+  // Makes the tooltip circles follow the objects and updatethe invisible plane when camera position and rotation values change
+  useEffect(() => {
+    updateToolTipCirclePositions();
+    planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
+
+  }, [cameraState]);
+
+  //Parses a 3D model's corresponding json file to create info circles on the screen
+  useEffect(() => {
+    if(explodingModelName){
+      parseJson("/models/" + explodingModelName + ".json", "TooltipProperties")
+      .then((data) => {
+        console.log(data)
+        addTooltipCirclesData(data);
+      })
+    }
+  }, [explodingModelName]);
+
+  // Parses a 3D model's corresponding json file to create info circles on the screen
+// useEffect(() => {
+//   if (explodingModelName) {
+//     parseJson("/models/" + explodingModelName + ".json", "TooltipProperties")
+//       .then((data) => {
+//         console.log(data);
+//         data.forEach(item => {
+//           if (!tooltipCirclesData[item.key]) {
+//             tooltipCirclesData[item.key] = item;
+//           }
+//         });
+//       });
+//   }
+// }, [explodingModelName]);
+
+  // useEffect(() => {
+  //   if (explodingModelName) {
+  //     parseJson("/models/" + explodingModelName + ".json", "TooltipProperties")
+  //       .then((data) => {
+  //           // Ensure no duplicate objectName entries are added
+  //           addTooltipCirclesData((prevData) => {
+  //             const newData = data.filter(newItem => 
+  //               !prevData.some(existingItem => existingItem.objectName === newItem.objectName)
+  //             );
+  //             return [...prevData, ...newData];
+  //           });
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error fetching or parsing JSON:", error);
+  //       });
+  //   }
+  // }, [explodingModelName]);
+
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
-    parseJson("/models/" + removeFileExtensionString(sceneName) + ".json", removeFileExtensionString(sceneName))
-      .then(data => {
-          setRockingTransitionDuration(data.ModelProperties?.rockingTransitionDuration ?? rockingDuration);
-          setExplodingTransitionDuration(data.ModelProperties?.explodingTransitionDuration ?? explodingDuration);
-          setChildTransitionDuration(data.ModelProperties?.childTransitionDuration ?? childDuration);
-          setAnimationRockingMaxAngle(data.ModelProperties?.rockingAnimationMaxAngle ?? rockingMaxAngle);
-          setSceneOrigin(data.ModelProperties?.customOrigin ?? (customOrigin.length != 0 ? customOrigin : gltf.scene.position.toArray()));
-        })
+    parseJson("/models/" + removeFileExtensionString(sceneName) + ".json", 'ModelProperties')
+      .then(modelProperties => {
+          setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
+          setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
+          setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
+          setAnimationRockingMaxAngle(modelProperties?.rockingAnimationMaxAngle ?? rockingMaxAngle);
+          setSceneOrigin(modelProperties?.customOrigin ?? (customOrigin.length != 0 ? customOrigin : gltf.scene.position.toArray()));
+      })
       .catch(error => {
         console.error('Error parsing JSON:', error);
       });
@@ -228,13 +282,6 @@ export const ExplodingModelLoader = React.memo((props) => {
       setTrigger(setCameraTargetTrigger, false)
     }
   }, [transitionEnded]);
-
-  // Makes the tooltip circles follow the objects and updatethe invisible plane when camera position and rotation values change
-  useEffect(() => {
-    updateToolTipCirclePositions();
-    planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
-
-  }, [cameraState]);
 
   // Starts the animation when the animationIsPlaying prop is set to true
   useEffect(() => {

@@ -19,9 +19,6 @@ export const ToolTipCircle = (props) => {
     const {playPulseAnimation = false} = props;
     const {position = [30, 40]} = props;
 
-    const setTooltipVisible = useStore((state) => state.setTooltipVisible);
-    const setTooltipText = useStore((state) => state.setTooltipText);
-    const setTooltipImage = useStore((state) => state.setTooltipImage);
     const setIsHoveredCircleOnLeft = useStore((state) => state.setIsHoveredCircleOnLeft);
     const setIsHoveredCircleOnTop = useStore((state) => state.setIsHoveredCircleOnTop);
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
@@ -75,12 +72,10 @@ export const ToolTipCircle = (props) => {
     // sets the axis that the rotating object will take on the screen
     useEffect(() => {
         if(updateRotatingObjectAxis){
-            console.log(rotatingObjectAxisOfRotation)
             if(rotatingObjectAxisOfRotation != undefined){
                 setRotatingObjectForcedAxisOfRotation(rotatingObjectAxisOfRotation)
             }
             else{
-                console.log("none")
                 setRotatingObjectForcedAxisOfRotation([])
             }
         }
@@ -105,22 +100,24 @@ export const ToolTipCircle = (props) => {
     const handleMouseEnter = () => {
         setUpdateViewportArray(true)
         setUpdateRotatingObjectAxis(true)
-        setTooltipText(text);
-        setTooltipImage(image);
-        setTooltipVisible(true);
+        setTooltipProperties({
+            active:true,
+            text: text,
+            image: image,
+            visible: true
+          });
         setIsHoveredCircleOnLeft(isCircleOnLeft)
         setIsHoveredCircleOnTop(isCircleOnTop)
-        setTooltipProperties({active:true, text:text})
         setTooltipCurrentObjectNameSelected(objectName)
-        // console.log(objectName)
-        // console.log(tooltipCurrentObjectSelected)
     };
 
     const handleMouseLeave = () => {
         setUpdateViewportArray(false)
         setUpdateRotatingObjectAxis(false)
-        setTooltipVisible(false);
-        setTooltipProperties({active:false})
+        setTooltipProperties({
+            active:false,
+            visible: false
+          });
         setTooltipCurrentObjectNameSelected(undefined)
     };
 

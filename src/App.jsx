@@ -93,27 +93,20 @@ const useStore = create((set) => ({
 
   tooltipProperties: {
     active: false,
+    visible: false,
     type: 'Success',
     displaySide: 'topRight',
     duration: 5,
     transitionDuration: 0.5,
-    text: 'Lorem Ipsum Dolor!'
+    text: 'Lorem Ipsum Dolor!',
+    image: ""
   },
   setTooltipProperties: (newProperties) => set((state) => ({
     tooltipProperties: {
       ...state.tooltipProperties,
       ...newProperties
     }
-  })),
-
-  tooltipVisible: false,
-  setTooltipVisible: (visible) => set(() => ({ tooltipVisible: visible })),
-
-  tooltipText: "Example text",
-  setTooltipText: (text) => set(() => ({ tooltipText: text })),
-
-  tooltipImage: "",
-  setTooltipImage: (image) => set(() => ({ tooltipImage: image })),
+  })), // to be used like this: setTooltipProperties({active:false, visible:false});
 
   isHoveredCircleOnLeft: false,
   setIsHoveredCircleOnLeft: (isLeft) => set(() => ({ isHoveredCircleOnLeft: isLeft })),
@@ -126,6 +119,23 @@ const useStore = create((set) => ({
 
   tooltipCirclesData: [],
   setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data })),
+  // addTooltipCirclesData: (newData) => set((state) => ({
+  //   tooltipCirclesData: [...state.tooltipCirclesData, ...newData] // Add new data without overwriting
+  // })),
+  addTooltipCirclesData: (newData) => set((state) => { // Add new data, in case of duplicate keys, the object will be overwritten
+    const updatedData = [...state.tooltipCirclesData];
+    newData.forEach(newItem => {
+      const existingIndex = updatedData.findIndex(item => item.objectName === newItem.objectName);
+      if (existingIndex !== -1) {
+        updatedData[existingIndex] = newItem;
+      } else {
+        updatedData.push(newItem);
+      }
+    });
+    return {
+      tooltipCirclesData: updatedData
+    };
+  }),
 
   tooltipCurrentObjectNameSelected: undefined,
   setTooltipCurrentObjectNameSelected: (object) => set(() => ({ tooltipCurrentObjectNameSelected: object })),
@@ -178,44 +188,22 @@ const useStore = create((set) => ({
 function App() {
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
+  const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
   const setToolTipCirclePositions = useStore((state) => state.setToolTipCirclePositions);
   const toolTipCirclePositions = useStore((state) => state.toolTipCirclePositions);
+  const tooltipProperties = useStore((state) => state.tooltipProperties);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
-  const tooltipText = useStore((state) => state.tooltipText);
-  const tooltipVisible = useStore((state) => state.tooltipVisible);
-  const tooltipImage = useStore((state) => state.tooltipImage);
   const explodingModelName = useStore((state) => state.explodingModelName);
   const transitionEnded = useStore((state) => state.transitionEnded);
   
   const [enableTutorial, setEnableTutorial] = useState(false);
 
-    // // Parses a 3D model's corresponding json file to create info circles on the screen
-    // useEffect(() => {
-    //   if(explodingModelName != ""){
-    //     console.log(explodingModelName)
-    //     parseJson("/models/" + explodingModelName + ".json"/*, "TooltipProperties"*/)
-    //     .then((data) => {
-    //       setTooltipCirclesData(data.Roomba.TooltipProperties);
-    //       console.log(data)
-    //       console.log(data.Roomba.TooltipProperties)
-    //     })
-    //   }
-    // }, [explodingModelName]);
-
-    useEffect(() => {
-      if (explodingModelName !== "") {
-        console.log(explodingModelName);
-        parseJson("/models/" + explodingModelName + ".json")
-          .then((data) => {
-            const firstKey = Object.keys(data)[0];
-            if (firstKey) {
-              setTooltipCirclesData(data[firstKey].TooltipProperties);
-            }
-          });
-      }
-    }, [explodingModelName]);
+        // Parses a 3D model's corresponding json file to create info circles on the screen
+        useEffect(() => {
+          console.log(tooltipCirclesData)
+        }, [tooltipCirclesData]);
 
   // Handle events when transition ends
   useEffect(() => {
@@ -234,7 +222,7 @@ function App() {
   return (
     <>
       <Alert {...{ useStore }} />
-      <ToolTip showOnlyOnce = {true} {...{ useStore }} text={tooltipText} image={tooltipImage} visible={tooltipVisible} position={[30, 40]} />
+      <ToolTip showOnlyOnce = {true} {...{ useStore }} text={tooltipProperties.text} image={tooltipProperties.image} visible={tooltipProperties.visible} position={[30, 40]} />
       {/* Create info circles on the screen */}
       {tooltipCirclesData?.length > 0 && tooltipCirclesData?.map((props) => (
         <ToolTipCircle

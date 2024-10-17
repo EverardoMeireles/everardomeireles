@@ -15,7 +15,6 @@ export const ToolTip = (props) => {
     const {fontSize = 18} = props;
     const {image = ""} = props;
 
-    const tooltipImage = useStore((state) => state.tooltipImage);
     const tooltipProperties = useStore((state) => state.tooltipProperties);
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
     const isHoveredCircleOnLeft = useStore((state) => state.isHoveredCircleOnLeft);
@@ -30,7 +29,6 @@ export const ToolTip = (props) => {
     useEffect(() => {
         let timeoutId;
         if (tooltipProperties.active) {
-            console.log(image)
             setIsVisible(true); // Start to show the alert with fade-in
             setIsDivDisabled(false)
             timeoutId = setTimeout(() => {
@@ -120,7 +118,7 @@ export const ToolTip = (props) => {
             </div>
             <div style={imageContainerStyle}>
                 {/* <img style={imageStyle} src={process.env.PUBLIC_URL + "textures/4x3.png"} alt="Tooltip Image" /> */}
-                <img style={imageStyle} src={process.env.PUBLIC_URL + "textures/" + tooltipImage} alt="Tooltip" />
+                <img style={imageStyle} src={process.env.PUBLIC_URL + "textures/" + tooltipProperties.image} alt="Tooltip" />
             </div>
         </div>
     </>

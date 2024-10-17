@@ -1,7 +1,6 @@
 import * as THREE from "three";
 
 function estimateMiddlePoint(start, end, distance) {
-    console.log(start)
     var midpoint = start.clone().lerp(end, 0.5);
     var direction = end.clone().sub(start).normalize();
     var perpendicular = new THREE.Vector3(-direction.y, direction.x, direction.z).normalize();
