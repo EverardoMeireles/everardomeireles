@@ -18,7 +18,8 @@
       "rotatingObjectNDCTop": 0.25,
       "rotatingObjectNDCBottom": -0.25,
       "circleSize": 30,
-      "playPulseAnimation": true
+      "playPulseAnimation": true,
+      "position": [0, 0]
     },
     {
       "objectName": "Wheel_1_1BB1",
@@ -32,7 +33,8 @@
       "rotatingObjectNDCTop": 0.25,
       "rotatingObjectNDCBottom": -0.25,
       "circleSize": 30,
-      "playPulseAnimation": false
+      "playPulseAnimation": false,
+      "position": [0, 0]
     }
   ]
 }

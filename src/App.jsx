@@ -113,9 +113,6 @@ const useStore = create((set) => ({
 
   isHoveredCircleOnTop: false,
   setIsHoveredCircleOnTop: (isTop) => set(() => ({ isHoveredCircleOnTop: isTop })),
-  
-  toolTipCirclePositions: [],
-  setToolTipCirclePositions: (positions) => set(() => ({ toolTipCirclePositions: positions })),
 
   tooltipCirclesData: [],
   setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data })),
@@ -132,6 +129,14 @@ const useStore = create((set) => ({
         updatedData.push(newItem);
       }
     });
+    return {
+      tooltipCirclesData: updatedData
+    };
+  }),
+  modifyTooltipCircleData: (objectName, newProperties) => set((state) => {
+    const updatedData = state.tooltipCirclesData.map(item =>
+      item.objectName === objectName ? { ...item, ...newProperties } : item
+    );
     return {
       tooltipCirclesData: updatedData
     };
@@ -189,8 +194,6 @@ function App() {
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
   const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
-  const setToolTipCirclePositions = useStore((state) => state.setToolTipCirclePositions);
-  const toolTipCirclePositions = useStore((state) => state.toolTipCirclePositions);
   const tooltipProperties = useStore((state) => state.tooltipProperties);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
@@ -200,10 +203,9 @@ function App() {
   
   const [enableTutorial, setEnableTutorial] = useState(false);
 
-        // Parses a 3D model's corresponding json file to create info circles on the screen
-        useEffect(() => {
-          console.log(tooltipCirclesData)
-        }, [tooltipCirclesData]);
+  useEffect(() => {
+    // console.log(tooltipCirclesData)
+  }, [tooltipCirclesData]);
 
   // Handle events when transition ends
   useEffect(() => {
@@ -217,7 +219,7 @@ function App() {
   useEffect(() => {
     // console.log(toolTipCirclePositions)
 
-  }, [toolTipCirclePositions, setTooltipCirclesData]);
+  }, [tooltipProperties, setTooltipCirclesData]);
 
   return (
     <>
@@ -229,7 +231,7 @@ function App() {
           key={props.objectName}
           {...{ useStore }}
           pathToShow={props.pathToShow}
-          position={toolTipCirclePositions[props.objectName] || [0, 0]}
+          position={props.position || [0, 0]}
           text={props.text}
           image={props.image}
           objectName={props.objectName}

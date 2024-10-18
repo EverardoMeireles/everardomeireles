@@ -33,7 +33,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   // console.log(gltf)
 
   const { camera, gl } = useThree();
-  const setToolTipCirclePositions = useStore((state) => state.setToolTipCirclePositions);
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const cameraState = useStore((state) => state.cameraState);
   const animationDirection = useStore((state) => state.animationDirection);
@@ -51,7 +50,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const tooltipCurrentObjectNameSelected = useStore((state) => state.tooltipCurrentObjectNameSelected);
   // const explodingModelName = useStore((state) => state.explodingModelName);
   const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
-
+  const modifyTooltipCircleData = useStore((state) => state.modifyTooltipCircleData);
+  
   const [explodingModelName, setExplodingModelName] = useState(undefined);
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -176,14 +176,15 @@ export const ExplodingModelLoader = React.memo((props) => {
     });
     return currentPositions;
   }
+  const tooltipProperties = useStore((state) => state.tooltipProperties);
 
   // Makes the tooltip circles follow the objects when camera position and rotation values change
   const updateToolTipCirclePositions = () => {
-    const positions = {};
+    let positions = [];
     if(tooltipCirclesData){
       tooltipCirclesData.forEach((data) => {
-        const objectName = data.objectName;
-        const object = gltf.scene.getObjectByName(objectName);
+        const objectName = data.objectName; 
+        const object = gltf.scene.getObjectByName(objectName); // pass object as a parameter
 
         if (object) {
           const vector = new THREE.Vector3();
@@ -194,17 +195,19 @@ export const ExplodingModelLoader = React.memo((props) => {
           const x = (vector.x * 0.5 + 0.5) * 100; // Percentage of width
           const y = (vector.y * -0.5 + 0.5) * 100; // Percentage of height
 
-          positions[objectName] = [x, y];
+          modifyTooltipCircleData(objectName, {
+            position: [x, y]
+          });
         }
       });
-  }
-    setToolTipCirclePositions(positions);
+    }
   };
 
   // Makes the tooltip circles follow the objects and updatethe invisible plane when camera position and rotation values change
   useEffect(() => {
     updateToolTipCirclePositions();
     planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
+    console.log(cameraState.position)
 
   }, [cameraState]);
 
