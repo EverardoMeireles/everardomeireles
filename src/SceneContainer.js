@@ -130,6 +130,7 @@ export function SceneContainer(props) {
     useEffect(() => {
         setTrigger("trigger4", false)
         setForcedCameraTarget([])
+        // setTrigger("forceTransitionSpeedTrigger", true)
         switch (desired_path) {
             case 'MainMenu':
                 // For now, the ExplodingModelLoader appears in the MainMenu
@@ -189,7 +190,7 @@ export function SceneContainer(props) {
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}
                 <Environment files = {process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background />
                 <Environment files = {process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
-                <Camera {...{useStore}}></Camera>
+                <Camera {...{useStore}} ></Camera>
                 {/* {(desired_path.includes("ProfessionalExpProjects")) && 
                 <> */}
                     <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["prospere_itb_presentation"]} lettersPerUnit = {5} textModelMenu = "ProfessionalExpProjects0"     scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />

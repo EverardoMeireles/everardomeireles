@@ -207,7 +207,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     updateToolTipCirclePositions();
     planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
-    console.log(cameraState.position)
+    // console.log(cameraState.position)
 
   }, [cameraState]);
 

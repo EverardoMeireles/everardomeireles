@@ -23,7 +23,8 @@ export const Camera = React.memo((props) => {
     const forcedCameraTarget = useStore((state) => state.forcedCameraTarget);
     const forcedCameraPathCurve = useStore((state) => state.forcedCameraPathCurve);
     const setForcedCameraPathCurve = useStore((state) => state.setForcedCameraPathCurve);
-    
+    const triggers = useStore((state) => state.triggers);
+
     const updateCallNow = useRef(false);
     const cam = useRef(undefined);
     const controls = useRef();
@@ -57,9 +58,8 @@ export const Camera = React.memo((props) => {
     let deltaAverage = 0;
     let transitionIncrement;
     let concat_paths;
-    // let tick = current_path.current !== desired_path ? 0:1
-    let tick = 0
-
+    let tick = current_path.current !== desired_path ? 0:1
+    // let tick = 0
 
 
 
@@ -222,9 +222,13 @@ export const Camera = React.memo((props) => {
 
     // if the target is forced
     useEffect(() => {
-        controls.current.target.x = forcedCameraTarget[0]
-        controls.current.target.y = forcedCameraTarget[1]
-        controls.current.target.z = forcedCameraTarget[2]
+        console.log(forcedCameraTarget)
+        if(forcedCameraTarget != [])
+        {
+            controls.current.target.x = forcedCameraTarget[0]
+            controls.current.target.y = forcedCameraTarget[1]
+            controls.current.target.z = forcedCameraTarget[2]
+        }
     }, [forcedCameraTarget]);
 
     // if the camera path is forced, reset the animation tick
@@ -261,7 +265,6 @@ export const Camera = React.memo((props) => {
             current_path.current = desired_path;
             controls.current.enabled = true;
             state.events.enabled = true;
-            // state.camera.lookAt(path_points_simple_lookat_dict[desired_path])
         }
     }
 
@@ -282,9 +285,7 @@ export const Camera = React.memo((props) => {
         // Determines the next point for the camera to look at
         current_lookat.current.lerp(forcedCameraTarget.length ==0 ? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths])] : new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]), 0.03),
         state.camera.lookAt(current_lookat.current),
-
-        // console.log("current_path.current: " + current_path.current), console.log("        desired_path: " + desired_path),
-        // console.log(forcedCameraTarget),
+        // console.log(tick),
 
         // Updates the orbitcontrol's target
         controls.current.target.x = current_lookat.current.x,
@@ -384,7 +385,7 @@ function compareCurves(curve1, curve2) {
 
     useEffect(() => {
         if (!cameraStateTracking) return;
-        
+
         let animationFrameId;
         let previousPosition = new THREE.Vector3();
         let previousRotation = new THREE.Euler();
