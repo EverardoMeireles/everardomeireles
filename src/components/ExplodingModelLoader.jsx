@@ -45,7 +45,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const setTooltipCurrentObjectSelected = useStore((state) => state.setTooltipCurrentObjectSelected);
   const rotatingObjectViewportArray = useStore((state) => state.rotatingObjectViewportArray);
   const rotatingObjectForcedAxisOfRotation = useStore((state) => state.rotatingObjectForcedAxisOfRotation);
-  const isHoveredCircleOnLeft = useStore((state) => state.isHoveredCircleOnLeft);
+  const isCircleOnLeftSelected = useStore((state) => state.isCircleOnLeftSelected);
   const isHoveredCircleOnTop = useStore((state) => state.isHoveredCircleOnTop);
   const tooltipCurrentObjectNameSelected = useStore((state) => state.tooltipCurrentObjectNameSelected);
   // const explodingModelName = useStore((state) => state.explodingModelName);
@@ -222,39 +222,6 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [explodingModelName]);
 
-  // Parses a 3D model's corresponding json file to create info circles on the screen
-// useEffect(() => {
-//   if (explodingModelName) {
-//     parseJson("/models/" + explodingModelName + ".json", "TooltipProperties")
-//       .then((data) => {
-//         console.log(data);
-//         data.forEach(item => {
-//           if (!tooltipCirclesData[item.key]) {
-//             tooltipCirclesData[item.key] = item;
-//           }
-//         });
-//       });
-//   }
-// }, [explodingModelName]);
-
-  // useEffect(() => {
-  //   if (explodingModelName) {
-  //     parseJson("/models/" + explodingModelName + ".json", "TooltipProperties")
-  //       .then((data) => {
-  //           // Ensure no duplicate objectName entries are added
-  //           addTooltipCirclesData((prevData) => {
-  //             const newData = data.filter(newItem => 
-  //               !prevData.some(existingItem => existingItem.objectName === newItem.objectName)
-  //             );
-  //             return [...prevData, ...newData];
-  //           });
-  //       })
-  //       .catch((error) => {
-  //         console.error("Error fetching or parsing JSON:", error);
-  //       });
-  //   }
-  // }, [explodingModelName]);
-
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
     parseJson("/models/" + removeFileExtensionString(sceneName) + ".json", 'ModelProperties')
@@ -357,7 +324,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       var ndcX = 0
       var ndcY = 0
 
-      if (isHoveredCircleOnLeft) {
+      if (isCircleOnLeftSelected) {
         // Place the object on the left side of the viewport
         ndcX = rotatingObjectForcePositionOffset["left"] != 0 ? rotatingObjectForcePositionOffset["left"] :rotatingObjectViewportArray[0]
       } else {
@@ -403,7 +370,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
       setObjectRotationAnimation(true);
     }
-  }, [tooltipCurrentObjectNameSelected, isHoveredCircleOnLeft, isHoveredCircleOnTop, gltf.scene]);
+  }, [tooltipCurrentObjectNameSelected, isCircleOnLeftSelected, isHoveredCircleOnTop, gltf.scene]);
 
 
 

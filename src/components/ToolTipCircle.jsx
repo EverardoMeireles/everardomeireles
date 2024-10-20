@@ -19,8 +19,8 @@ export const ToolTipCircle = (props) => {
     const {playPulseAnimation = false} = props;
     const {position = [30, 40]} = props;
 
-    const setIsHoveredCircleOnLeft = useStore((state) => state.setIsHoveredCircleOnLeft);
-    const setIsHoveredCircleOnTop = useStore((state) => state.setIsHoveredCircleOnTop);
+    const setIsCircleOnLeftSelected = useStore((state) => state.setIsCircleOnLeftSelected);
+    const setIsCircleOnTopSelected = useStore((state) => state.setIsCircleOnTopSelected);
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
     const desired_path = useStore((state) => state.desired_path);
     const transitionEnded = useStore((state) => state.transitionEnded);
@@ -106,8 +106,8 @@ export const ToolTipCircle = (props) => {
             image: image,
             visible: true
           });
-        setIsHoveredCircleOnLeft(isCircleOnLeft)
-        setIsHoveredCircleOnTop(isCircleOnTop)
+        setIsCircleOnLeftSelected(isCircleOnLeft)
+        setIsCircleOnTopSelected(isCircleOnTop)
         setTooltipCurrentObjectNameSelected(objectName)
     };
 

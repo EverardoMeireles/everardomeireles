@@ -108,12 +108,6 @@ const useStore = create((set) => ({
     }
   })), // to be used like this: setTooltipProperties({active:false, visible:false});
 
-  isHoveredCircleOnLeft: false,
-  setIsHoveredCircleOnLeft: (isLeft) => set(() => ({ isHoveredCircleOnLeft: isLeft })),
-
-  isHoveredCircleOnTop: false,
-  setIsHoveredCircleOnTop: (isTop) => set(() => ({ isHoveredCircleOnTop: isTop })),
-
   tooltipCirclesData: [],
   setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data })),
   // addTooltipCirclesData: (newData) => set((state) => ({
@@ -141,6 +135,12 @@ const useStore = create((set) => ({
       tooltipCirclesData: updatedData
     };
   }),
+
+  isCircleOnLeftSelected: false,
+  setIsCircleOnLeftSelected: (isLeft) => set(() => ({ isCircleOnLeftSelected: isLeft })),
+
+  isCircleOnTopSelected: false,
+  setIsCircleOnTopSelected: (isTop) => set(() => ({ isHoveredCircleOnTop: isTop })),
 
   tooltipCurrentObjectNameSelected: undefined,
   setTooltipCurrentObjectNameSelected: (object) => set(() => ({ tooltipCurrentObjectNameSelected: object })),
