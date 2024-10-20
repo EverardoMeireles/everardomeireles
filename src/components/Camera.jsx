@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera, calcPosFromAngles } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";
 import { HtmlDreiMenu } from "./HtmlDreiMenu"; // eslint-disable-line no-unused-vars
-import { smoothStep } from "../Helper";
+import { smoothStep, roundToDecimalPlace, hasSignificantChange } from "../Helper";
 
 // revisit custom camera lookat mode and simpleLookatMode
 export const Camera = React.memo((props) => {
@@ -23,7 +23,6 @@ export const Camera = React.memo((props) => {
     const forcedCameraTarget = useStore((state) => state.forcedCameraTarget);
     const forcedCameraPathCurve = useStore((state) => state.forcedCameraPathCurve);
     const setForcedCameraPathCurve = useStore((state) => state.setForcedCameraPathCurve);
-    const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
     
     const updateCallNow = useRef(false);
     const cam = useRef(undefined);
@@ -389,27 +388,49 @@ function compareCurves(curve1, curve2) {
         let animationFrameId;
         let previousPosition = new THREE.Vector3();
         let previousRotation = new THREE.Euler();
-
+    
         const handleFrame = () => {
             if (!cam.current) return;
-                const currentPosition = cam.current.position;
-                const currentRotation = cam.current.rotation;
+    
+            const currentPosition = cam.current.position;
+            const currentRotation = cam.current.rotation;
+            const positionChanged = (
+                hasSignificantChange(previousPosition.x, currentPosition.x) ||
+                hasSignificantChange(previousPosition.y, currentPosition.y) ||
+                hasSignificantChange(previousPosition.z, currentPosition.z)
+            );
+    
+            const rotationChanged = (
+                hasSignificantChange(previousRotation.x, currentRotation.x) ||
+                hasSignificantChange(previousRotation.y, currentRotation.y) ||
+                hasSignificantChange(previousRotation.z, currentRotation.z)
+            );
 
-                if (!currentPosition.equals(previousPosition) || !currentRotation.equals(previousRotation)) {
-                    setCameraState(
-                        [currentPosition.x, currentPosition.y, currentPosition.z],
-                        [currentRotation.x, currentRotation.y, currentRotation.z]
-                    );
-                    previousPosition.copy(currentPosition);
-                    previousRotation.copy(currentRotation);
-                }
+            if (positionChanged || rotationChanged) {
+                setCameraState(
+                    [
+                        roundToDecimalPlace(currentPosition.x, 1), 
+                        roundToDecimalPlace(currentPosition.y, 1), 
+                        roundToDecimalPlace(currentPosition.z, 1)
+                    ], 
+                    [
+                        roundToDecimalPlace(currentRotation.x, 1), 
+                        roundToDecimalPlace(currentRotation.y, 1), 
+                        roundToDecimalPlace(currentRotation.z, 1)
+                    ]
+                );
+    
+                previousPosition.copy(currentPosition);
+                previousRotation.copy(currentRotation);
+            }
+    
             animationFrameId = requestAnimationFrame(handleFrame);
         };
-
+    
         handleFrame(); // Initial call
-
+    
         return () => {
-            cancelAnimationFrame(animationFrameId);
+            cancelAnimationFrame(animationFrameId); // Cleanup on component unmount
         };
     }, [setCameraState, cameraStateTracking]);
 

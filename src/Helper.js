@@ -25,6 +25,15 @@ export function smoothStep(x) {
     return Sn;
 }
 
+export function roundToDecimalPlace (num, decimals){
+    const factor = Math.pow(10, decimals);
+    return Math.round(num * factor) / factor;
+};
+
+export function hasSignificantChange (prev, current, threshold = 0.1) {
+    return Math.abs(current - prev) > threshold;
+};
+
 export function easeOutCubic(t) {
     return 1 - Math.pow(1 - t, 3);
 }
