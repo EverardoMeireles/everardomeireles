@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 export const TutorialOverlay = (props) => {
     const useStore = props.useStore;
     const {enable = true} = props;
-    const {showOnlyOnce = true} = props;
-    const {imagesPaths = ["textures/Gif1.gif", "textures/Gif2.gif"]} = props;
-    const {imageSize = [200, 200]} = props;
+    const {showOnlyOnce = false} = props;
+    const {topImagePaths = ["textures/tutorial_rotate_video.png", "textures/tutorial_zoom_video.png"]} = props;
+    const {bottomImagePaths = ["textures/tutorial_rotate.png", "textures/tutorial_zoom.png"]} = props;
+    const {imageSize = [260, 216]} = props;
     const {textH1 = "Use left click to rotate, shift + left click to pan and the mouseWheel to zoom"} = props;
     const {textH2 = "Click to go to the page"} = props;
     const {fontColor = "white"} = props;
@@ -41,27 +42,45 @@ export const TutorialOverlay = (props) => {
         }, 1000); // This duration should match the CSS transition duration
     };
 
-    const images = [];
-    if(visible){
-        for (let i = 0; i < imagesPaths.length; i++) {
-            images.push(
-                <img src={process.env.PUBLIC_URL + imagesPaths[i]} key={i} alt="Tutorial" style={{ width: imageSize[0], height: imageSize[1] }}></img>
-            )
-        }
+    const topImages = [];
+    const bottomImages = [];
+
+    if (visible) {
+        topImagePaths.forEach((path, index) => {
+            topImages.push(
+                <img
+                    src={process.env.PUBLIC_URL + "/" + path}
+                    key={`topImage-${index}`}
+                    alt={`Top Tutorial ${index}`}
+                    style={{ width: imageSize[0], height: imageSize[1] }}
+                />
+            );
+        });
+
+        bottomImagePaths.forEach((path, index) => {
+            bottomImages.push(
+                <img
+                    src={process.env.PUBLIC_URL + "/" + path}
+                    key={`bottomImage-${index}`}
+                    alt={`Bottom Tutorial ${index}`}
+                    style={{ width: imageSize[0], height: imageSize[1] }}
+                />
+            );
+        });
     }
     
     if (!shouldRender) return null;
 
     const overlayStyle = {
-        position: 'absolute',
+        position: 'fixed', // Centering in the viewport
         top: 0,
         left: 0,
         width: '100%',
         height: '100%',
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'center', // Center vertically
+        justifyContent: 'center', // Center horizontally
         zIndex: 9999,
         opacity: visible ? 1 : 0,
         transition: 'opacity 1s ease',
@@ -71,15 +90,30 @@ export const TutorialOverlay = (props) => {
         textAlign: 'center',
         opacity: visible ? 1 : 0,
         transition: `opacity 1s ease ${visible ? '1s' : '0s'}`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center', // Center horizontally
+        gap: '20px', // Adds space between the top and bottom image groups
+    };
+
+    const imageRowStyle = {
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '10px', // Adds space between the images in each row
     };
 
     return (
         shouldRender && (
             <div style={overlayStyle} onClick={handleClick}>
                 <div style={contentStyle}>
-                    <h1 style={{ color:fontColor }} >{textH1}</h1>
-                    {images}
-                    <h1 style={{ color:fontColor }} >{textH2}</h1>
+                    <h1 style={{ color: fontColor }}>{textH1}</h1>
+                    <div style={imageRowStyle}>
+                        {topImages}
+                    </div>
+                    <div style={imageRowStyle}>
+                        {bottomImages}
+                    </div>
+                    <h1 style={{ color: fontColor }}>{textH2}</h1>
                 </div>
             </div>
         )
