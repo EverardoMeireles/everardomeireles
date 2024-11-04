@@ -126,6 +126,18 @@ export function SceneContainer(props) {
     }
     const { mouse } = useThree();
 
+    const [customMaterial, setCustomMaterial] = useState("");
+    // Place trigger code
+    useEffect(() => {
+        switch (triggers) {
+            case 'trigger 9':
+                // console.log("clicked")
+                // setCustomMaterial("NoMaterial.glb")
+                break;
+          }
+       
+    }, [triggers]);
+
     // Place transition code
     useEffect(() => {
         setTrigger("trigger4", false)
@@ -141,9 +153,20 @@ export function SceneContainer(props) {
        
     }, [desired_path]);
 
+    const [clickedTimes, setClickedTimes] = useState(0);
+
     // Place conditions for when the mouse is clicked here:
     useEffect(() => {
         // Clicked 3D objects:
+        
+        // CLICK COUNTER FOR DEBUG
+        // setClickedTimes(clickedTimes+1)
+        // console.log(clickedTimes)
+        // if(clickedTimes == 5){
+        //     console.log("Material CHANGE!")
+        //     setCustomMaterial("LightBlueMaterial.glb")
+        // }
+
         switch(currentObjectClicked) 
         {
             case "MainBody":
@@ -184,7 +207,7 @@ export function SceneContainer(props) {
             {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
             {/* <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
-            <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader>
+            <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader>
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}

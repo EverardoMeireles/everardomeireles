@@ -28,9 +28,12 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {rotatingObjectSpeedOfRotation = 1.2} = props; // Rotating object's speed of rotation
   const {rotatingObjectScale = 3} = props; // Rotating object's scale
   const {rotatingObjectForcePositionOffset = {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}} = props; // Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
- 
+
+  // feature: Swap material
+  const {materialName = ""} = props;
+
   const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + sceneName);
-  // console.log(gltf)
+  const newMaterialGltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/materials/' + ( (!materialName || materialName == "") ? "NoMaterial.glb" : materialName));
 
   const { camera, gl } = useThree();
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
@@ -504,6 +507,23 @@ export const ExplodingModelLoader = React.memo((props) => {
       }
     }
   });
+
+  // Material change feature
+  useEffect(() => {
+    if (materialName != "" && materialName && newMaterialGltf && gltf) {
+      const newMaterial = newMaterialGltf.scene.children.find(child => child.isMesh)?.material;
+
+      if (newMaterial) {
+        // Traverse the main scene to apply the new material to each mesh
+        gltf.scene.traverse((child) => {
+          if (child.isMesh) {
+            child.material = newMaterial;
+            child.material.needsUpdate = true;
+          }
+        });
+      }
+    }
+  }, [materialName, newMaterialGltf, gltf]);
 
   return (
     <Suspense fallback={null}>
