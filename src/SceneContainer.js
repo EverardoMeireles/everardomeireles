@@ -11,6 +11,7 @@ import { FadingText } from "./components/FadingText";
 import { useFrame, useThree } from "@react-three/fiber"; // eslint-disable-line no-unused-vars
 import { VideoLoader } from "./components/VideoLoader";
 import { PathNavigation } from "./components/PathNavigation";
+import { GraphicalModeSetter2 } from "./components/GraphicalModeSetter2";
 import { FadingTitle } from "./components/FadingTitle";
 import { TranslationTable } from "./TranslationTable";
 import { ResponsiveTable } from "./Styles";
@@ -45,7 +46,6 @@ export function SceneContainer(props) {
     const raycasterEnabled = useStore((state) => state.raycasterEnabled);
     const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
     const setTrigger = useStore((state) => state.setTrigger);
-
     const animationTriggerState = useStore((state) => state.animationTriggerState);
     const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
     
@@ -204,6 +204,7 @@ export function SceneContainer(props) {
             {(desired_path === "Education" || postloadStart) && (
             <OrbitingMenu {...{ useStore }} visible={!postloadStart} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]} />
             )}
+            <GraphicalModeSetter2 {...{useStore}} ></GraphicalModeSetter2>
             {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
             {/* <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}

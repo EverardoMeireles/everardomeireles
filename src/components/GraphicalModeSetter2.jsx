@@ -9,12 +9,14 @@ export const GraphicalModeSetter2 = React.memo((props) => {
     const {fpsToDecreaseGraphics = 45} = props;
     const {fpsToShutdownCanvas = 10} = props;
     const {redirectToFallbackPage = true} = props;
+    const {fallbackMode = 'disableRender'} = props; // if site is unusable, exit. disableRender or fallbackPage
     const {fallBackPageName = "HardwareAcceleration.html"} = props;
 
     const currentGraphicalMode = props.useStore((state) => state.currentGraphicalMode);
     const setGraphicalMode = props.useStore((state) => state.setGraphicalMode);
+    const setForceDisableRender = props.useStore((state) => state.setForceDisableRender);
     // const setFinishedBenchmark = props.useStore((state) => state.setFinishedBenchmark);    
-
+    
     useEffect(() => {(async () => {
         let HardwareAccelerationCheckPassed = true;
         const gpuTier = await getGPUTier({benchmarksURL:"benchmarks"});
@@ -79,7 +81,13 @@ export const GraphicalModeSetter2 = React.memo((props) => {
                 // if decreasing graphics is impossible, either redirect to fallback page or disable canvas
                 if(currentGraphicalMode == "potato" && averageFps <= fpsToShutdownCanvas){
                     if(redirectToFallbackPage){
-                        window.location.href = fallBackPageName;
+                        if(fallbackMode == "disableRender"){
+                            setForceDisableRender(true);
+                        }
+                        else if(fallbackMode == "fallbackPage"){
+                            window.location.href = fallBackPageName;
+                        }
+                        
                     }
                     else{
                         // use a zustand state and conditional rendering in the App.jsx to disable the canvas

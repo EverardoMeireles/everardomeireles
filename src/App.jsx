@@ -188,6 +188,9 @@ const useStore = create((set) => ({
         new THREE.Vector3(0, 0, 0)]), // custom camera curve path
   setForcedCameraPathCurve: (curve) => set(() => ({ forcedCameraPathCurve: curve })),
 
+  forceDisableRender: false, // will disable the app's render
+  setForceDisableRender: (DisableRender) => set(() => ({ forceDisableRender: DisableRender })),
+
 }));
 
 function App() {
@@ -195,6 +198,7 @@ function App() {
   const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
   const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
   const tooltipProperties = useStore((state) => state.tooltipProperties);
+  const forceDisableRender = useStore((state) => state.forceDisableRender);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
@@ -223,6 +227,8 @@ function App() {
 
   return (
     <>
+    {!forceDisableRender && (
+      <>
       <Alert {...{ useStore }} />
       <ToolTip showOnlyOnce = {true} {...{ useStore }} text={tooltipProperties.text} image={tooltipProperties.image} visible={tooltipProperties.visible} position={[30, 40]} />
       {/* Create info circles on the screen */}
@@ -246,6 +252,8 @@ function App() {
       <Canvas onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
         <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
       </Canvas>
+      </>
+      )}
     </>
   );
 }
