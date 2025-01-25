@@ -1,5 +1,5 @@
 import { Environment } from "@react-three/drei";
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { Camera } from "./components/Camera";
 import { SimpleLoader } from "./components/SimpleLoader";
 import { OrbitingPointLight } from './components/OrbitingPointLights';
@@ -8,7 +8,7 @@ import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { OrbitingMenu } from "./components/OrbitingMenu";
 import { FloatingTextSkills } from "./components/FloatingTextSkills";
 import { FadingText } from "./components/FadingText";
-import { useFrame, useThree } from "@react-three/fiber"; // eslint-disable-line no-unused-vars
+import { useFrame, useThree, useLoader } from "@react-three/fiber"; // eslint-disable-line no-unused-vars
 import { VideoLoader } from "./components/VideoLoader";
 import { PathNavigation } from "./components/PathNavigation";
 import { GraphicalModeSetter2 } from "./components/GraphicalModeSetter2";
@@ -21,9 +21,16 @@ import { InstanceLoader } from "./components/InstanceLoader";
 import { PreloadAssets } from "./components/PreloadAssets";
 import { ExplodingModelLoader } from "./components/ExplodingModelLoader";
 import { customInstanceRotation, customInstanceColor } from "./PathPoints";
+import { CurveLightAnimation } from "./components/CurveLightAnimation";
+import { AnimationMixer } from 'three';
+
+
+
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+
+
 
 import * as THREE from 'three';
-
 
 import config from './config.json';
 // import Raycaster from './components/Raycaster';
@@ -51,7 +58,47 @@ export function SceneContainer(props) {
     
     const { gl } = useThree(); // eslint-disable-line no-unused-vars
     const postloadingDelay = 3000
+    
+    const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + 'NewthreeJsSceneLamp.glb');
+  let mixer;
+  const [animTime, setAnimTime] = useState(0);
+
+  useEffect(() => {
+    if (!gltf.animations.length) return; // Ensure there are animations in the GLTF
+    
+    // Create an AnimationMixer
+    mixer = new AnimationMixer(gltf.scene);
+
+    // Get the first animation clip (index 0)
+    const action = mixer.clipAction(gltf.animations[0]);
+    
+    // Play the animation
+    action.play();
+
+    // Log the current frame time every frame
+    const logFrameTime = () => {
+    //   console.log(`Current frame time: ${action.time.toFixed(2)} seconds`);
+    };
+    // Update the mixer in your render loop
+    const clock = new THREE.Clock();
+    const tick = () => {
+      const delta = clock.getDelta(); // Time since last frame
+      mixer.update(delta); // Update mixer with delta time
+      logFrameTime(); // Log the frame time
+      requestAnimationFrame(tick); // Continue the loop
+      setAnimTime(action.time.toFixed(2))
+    //   console.log(animTime)
+    };
+
+    tick(); // Start the loop
+
+    // Cleanup function to stop the mixer when the component unmounts
+    return () => mixer.stopAllAction();
+  }, [gltf]);
+
     useFrame(() => {
+
+
     //console.log(i)
     // console.log("calls" + gl.info.render.calls)
     // console.log("triangles" + gl.info.render.triangles)
@@ -204,16 +251,16 @@ export function SceneContainer(props) {
             {(desired_path === "Education" || postloadStart) && (
             <OrbitingMenu {...{ useStore }} visible={!postloadStart} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]} />
             )}
-            <GraphicalModeSetter2 {...{useStore}} ></GraphicalModeSetter2>
+            {/* <GraphicalModeSetter2 {...{useStore}} ></GraphicalModeSetter2> */}
             {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
             {/* <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
-            <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader>
+            {/* <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}
-                <Environment files = {process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background />
-                <Environment files = {process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} />
+                {/* <Environment files = {process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background /> */}
+                {/* <Environment files = {process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} /> */}
                 <Camera {...{useStore}} ></Camera>
                 {/* {(desired_path.includes("ProfessionalExpProjects")) && 
                 <> */}
@@ -234,16 +281,32 @@ export function SceneContainer(props) {
                 {(desired_path=="Skills" && transitionEnded) &&
                 <FloatingTextSkills {...{useStore}} initialPosition = {[-9, 30, -15]} textPosition = {FloatingTextSkillsPosition} /> 
                 }
-                <ambientLight intensity = {1}></ambientLight>
+                {/* <pointLight color={"red"} intensity={0.2} position={[46, 84, -44]}></pointLight> */}
+
                 <Suspense>
                     {/* <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10}> */}
-                        <SimpleLoader  {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["ArmatureAction.002","IcosphereAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
-                        animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} sceneName = {"NewthreeJsScene.glb"} 
+                        <SimpleLoader  {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["LampAction.001","RopeAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
+                        animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} sceneName = {"NewthreeJsSceneLamp.glb"} 
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
                         ></SimpleLoader>
-                        {/* <SimpleLoader {...{useStore}} animationToPlay={["Animation01"]} loopMode={"Loop"} sceneName = {"first_anim.glb"}>
 
-                        </SimpleLoader> */}
+
+                        {/* <CurveLightAnimation
+                        colorMode="multiple"
+                        colors={[0xff0000, 0xff5a00, 0xff9a00]}
+                        colorFrameIntervals={[5, 7, 3]}
+                        animationSpeed={0.005}
+                        /> */}
+                        {/* <ambientLight intensity = {0.2}></ambientLight> */}
+
+                        <CurveLightAnimation currentAnimationTime={animTime} // Playtime in seconds
+                        totalAnimationDuration={6} // Total duration of the animation in seconds
+                        synchronizeAnimationFrames={true}
+                        startingSide="right" 
+                        colorMode="multiple"
+                        colors={[0xff0000,0xff5a00,	0xff9a00]}
+                        colorFrameIntervals={[5, 7, 3]}/>
+
                     {/* </Raycaster> */}
                     <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} directionZ = {-1} 
                         customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} distanceBetweenInstances={3}>
