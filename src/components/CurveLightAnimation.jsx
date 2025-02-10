@@ -1,195 +1,91 @@
-// import React, { useRef, useMemo, useState } from "react";
-// import { useFrame } from "@react-three/fiber";
-// import * as THREE from "three";
-
-// // Creates an animation where a point light goes back and forth between two ends of a curve
-// export const CurveLightAnimation = React.memo((props) => {
-//   const {
-//     curve = new THREE.CatmullRomCurve3([
-//       new THREE.Vector3(54, 120, -20),
-//       new THREE.Vector3(48, 82, -49),
-//       new THREE.Vector3(54, 120, -77),
-//     ]),
-//   } = props;
-
-//   const {
-//     animationSpeed = 0, // Default speed is 0
-//     animationDurationFrames = 0, // Default duration in frames is 0
-//     currentAnimationTime = 0, // Current animation playtime in seconds
-//     synchronizeAnimationFrames = false, // Whether to sync light with animation
-//     totalAnimationDuration = 0, // Total duration of the GLTF animation in seconds
-//     startingSide = "right", // Default starting side is "right"
-//   } = props;
-
-//   const { wireFrameVisible = false } = props; // Show the wireframe tube
-//   const { lightColor = 0xffffff} = props; // Point light color
-//   const { lightSphereSize = 1 } = props; // Size of the visible sphere representing the light
-
-//   // Refs for the point light and the visible sphere
-//   const pointLightRef = useRef();
-//   const sphereRef = useRef();
-
-//   // Validate props
-//   if (synchronizeAnimationFrames && (animationSpeed !== 0 || animationDurationFrames !== 0)) {
-//     throw new Error(
-//       "When 'synchronizeAnimationFrames' is true, 'animationSpeed' and 'animationDurationFrames' must both be set to 0."
-//     );
-//   }
-
-//   if (startingSide !== "left" && startingSide !== "right") {
-//     throw new Error(
-//       "The 'startingSide' prop must be either 'left' or 'right'."
-//     );
-//   }
-
-//   if (synchronizeAnimationFrames && totalAnimationDuration <= 0) {
-//     throw new Error(
-//       "When 'synchronizeAnimationFrames' is true, 'totalAnimationDuration' must be greater than 0."
-//     );
-//   }
-
-//   // State to keep track of the light's progress (`t`) along the curve and its direction
-//   const [t, setT] = useState(startingSide === "left" ? 0 : 1); // Start at the left or right side
-//   const [direction, setDirection] = useState(startingSide === "left" ? 1 : -1); // Start moving forward or backward
-
-//   // Tube component for visualizing the curve (optional for debugging)
-//   const Tube = ({ curve }) => {
-//     const tubeGeometry = useMemo(() => {
-//       const tube = new THREE.TubeGeometry(curve, 20, 2, 8);
-//       return tube;
-//     }, [curve]);
-
-//     return (
-//       <mesh
-//         geometry={tubeGeometry}
-//         material={new THREE.MeshBasicMaterial({
-//           wireframe: wireFrameVisible,
-//           color: 0xffffff,
-//           visible: wireFrameVisible
-//         })}
-//       />
-//     );
-//   };
-
-//   // Handle animation
-//   useFrame(() => {
-//     let newT = t; // Progress along the curve
-
-//     if (synchronizeAnimationFrames) {
-//       // Use externally controlled currentAnimationTime to calculate `t`
-//       if (totalAnimationDuration > 0) {
-//         // Normalize time to range [0, 2]
-//         const normalizedTime = (currentAnimationTime / totalAnimationDuration) * 2;
-
-//         // Determine forward/backward progress
-//         const normalizedProgress = normalizedTime % 2; // Value in range [0, 2]
-//         if (normalizedProgress <= 1) {
-//           // Forward motion (0 to 1)
-//           newT = startingSide === "left" ? normalizedProgress : 1 - normalizedProgress;
-//         } else {
-//           // Backward motion (1 to 0)
-//           const backwardProgress = 2 - normalizedProgress;
-//           newT = startingSide === "left" ? backwardProgress : 1 - backwardProgress;
-//         }
-
-//         // Clamp `t` between 0 and 1
-//         newT = Math.max(0, Math.min(newT, 1));
-//       }
-//     } else {
-//       // Internal animation logic (fallback if synchronizeAnimationFrames is false)
-//       const step = animationDurationFrames !== 0
-//         ? (1 / animationDurationFrames) * direction // Step size per frame
-//         : animationSpeed * direction; // Step size per second if animationSpeed is provided
-
-//       // Update `t` with the calculated step
-//       newT += step;
-
-//       // Reverse direction when reaching the ends of the curve
-//       if (newT >= 1) {
-//         newT = 1;
-//         setDirection(-1); // Reverse direction
-//       } else if (newT <= 0) {
-//         newT = 0;
-//         setDirection(1); // Reverse direction
-//       }
-//     }
-
-//     // Update state for `t`
-//     setT(newT);
-
-//     // Get the point along the curve based on `t`
-//     const position = curve.getPointAt(newT);
-
-//     // Update the point light's position
-//     if (pointLightRef.current) {
-//       pointLightRef.current.position.copy(position);
-//     }
-
-//     // Update the visible sphere's position
-//     if (sphereRef.current) {
-//       sphereRef.current.position.copy(position);
-//     }
-//   });
-
-//   return (
-//     <>
-//       {/* Debugging wireframe */}
-//       <Tube curve={curve} />
-
-//       {/* Point Light that moves */}
-//       <pointLight ref={pointLightRef} color={lightColor} intensity={0.3} />
-
-//       {/* Visible sphere to represent the point light */}
-//       <mesh ref={sphereRef}>
-//         <sphereGeometry args={[lightSphereSize, 16, 16]} />
-//         <meshBasicMaterial color={lightColor} />
-//       </mesh>
-//     </>
-//   );
-// });
-
-
-import React, { useRef, useMemo, useState, useEffect } from "react";
+import React, { useRef, useMemo, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-// Creates an animation where a point light goes back and forth between two ends of a curve
 export const CurveLightAnimation = React.memo((props) => {
   const {
     curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(54, 120, -20),
-      new THREE.Vector3(48, 82, -49),
-      new THREE.Vector3(54, 120, -77),
-    ]),
-  } = props;
+      new THREE.Vector3(1, 1, 1),
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(-1, -1, -1),
+    ]), // The curve along which the point light will go back and forth
+    startingSide = "right", // Starting side of the curve's animation
+    debugMode = true, // Mode to visualize the wireframe and current light trajectory
 
-  const {
-    animationSpeed = 0, // Default speed is 0
-    animationDurationFrames = 0, // Default duration in frames is 0
-    currentAnimationTime = 0, // Current animation playtime in seconds
-    synchronizeAnimationFrames = false, // Whether to sync light with animation
-    totalAnimationDuration = 0, // Total duration of the GLTF animation in seconds
-    startingSide = "right", // Default starting side is "right"
-    colorMode = "single", // "single" or "multiple"
-    colors = [0xffffff], // Colors to alternate between (for "multiple" mode)
+    animationSpeed = 0, // Set animation's speed manually
+    animationDurationFrames = 0, // Set animation's duration manually
+
+    synchronizeAnimationFrames = false, // Whether to sync light with external animation
+    currentAnimationTime = 0, // Current animation playtime in seconds (if synchronizeAnimationFrames = true)
+    totalAnimationDuration = 0, // Total duration of the GLTF animation in seconds (if synchronizeAnimationFrames = true)
+
+    colors = [0xffffff], // Colors to alternate between
     colorFrameIntervals = [60], // Frame intervals for each color (in frames)
+
+    enableRandomColorFrameIntervals = true, // If true, generate random intervals for color switching.
+    randomColorFrameIntervalsMargin = [100, 101], // [min, max] margin (in frames) for random intervals.
+
+    randomIntensitiyMargin = [0.05, 0.1], // A two-element array [min, max] for random intensity.
+
+    enableRandomColorOrder = true, // If true, shuffle the colors order on each cycle.
   } = props;
 
-  const { wireFrameVisible = false } = props; // Show the wireframe tube
-  const { lightColor = 0xffffff } = props; // Default light color (used in "single" mode)
-  const { lightSphereSize = 1 } = props; // Size of the visible sphere representing the light
+  //////////////////////////////////////////////////////////
+  ///////////// Variables, states and refs /////////////////
+  //////////////////////////////////////////////////////////
 
-  // Refs for the point light and the visible sphere
+
+
+
+  // Refs for the point light and the visible sphere.
   const pointLightRef = useRef();
   const sphereRef = useRef();
 
-  // State for the current color index (for "multiple" mode)
+  // New state: hold the current order of colors.
+  const [orderedColors, setOrderedColors] = useState(colors);
+
+  // State for the current color index.
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
 
-  // Counter for frames to track when to switch colors
+  // Counter for frames to track when to switch colors.
   const frameCountRef = useRef(0);
 
-  // Validate props
+  // State to keep track of the light's progress (t) along the curve and its direction.
+  const [t, setT] = useState(startingSide === "left" ? 0 : 1);
+  const [direction, setDirection] = useState(startingSide === "left" ? 1 : -1);
+
+  // Helper function to generate a random interval based on the provided margin.
+  const getRandomInterval = () => {
+    const [minInterval, maxInterval] = randomColorFrameIntervalsMargin;
+    return Math.floor(minInterval + Math.random() * (maxInterval - minInterval));
+  };
+
+  // State for the current interval. If random intervals are enabled, initialize with a random value;
+  // otherwise, use the first static value from colorFrameIntervals.
+  const [currentInterval, setCurrentInterval] = useState(
+    enableRandomColorFrameIntervals ? getRandomInterval() : colorFrameIntervals[0]
+  );
+
+  // Tube component for visualizing the curve (optional for debugging).
+  const Tube = ({ curve }) => {
+    const tubeGeometry = useMemo(() => {
+      return new THREE.TubeGeometry(curve, 16, 2, 5);
+    }, [curve]);
+
+    return debugMode ? (
+      <mesh geometry={tubeGeometry}>
+        <meshBasicMaterial wireframe={true} color={0xffffff} />
+      </mesh>
+    ) : null;
+  };
+
+  //////////////////////////////////////////////////////////
+  ///////////////// Rules, constraints /////////////////////
+  //////////////////////////////////////////////////////////
+
+
+
+
   if (synchronizeAnimationFrames && (animationSpeed !== 0 || animationDurationFrames !== 0)) {
     throw new Error(
       "When 'synchronizeAnimationFrames' is true, 'animationSpeed' and 'animationDurationFrames' must both be set to 0."
@@ -197,139 +93,155 @@ export const CurveLightAnimation = React.memo((props) => {
   }
 
   if (startingSide !== "left" && startingSide !== "right") {
-    throw new Error(
-      "The 'startingSide' prop must be either 'left' or 'right'."
-    );
+    throw new Error("The 'startingSide' prop must be either 'left' or 'right'.");
   }
 
   if (synchronizeAnimationFrames && totalAnimationDuration <= 0) {
-    throw new Error(
-      "When 'synchronizeAnimationFrames' is true, 'totalAnimationDuration' must be greater than 0."
-    );
+    throw new Error("When 'synchronizeAnimationFrames' is true, 'totalAnimationDuration' must be greater than 0.");
   }
 
-  if (colorMode === "multiple" && colors.length !== colorFrameIntervals.length) {
-    throw new Error(
-      "The 'colors' and 'colorFrameIntervals' arrays must have the same length."
-    );
+  if (!enableRandomColorFrameIntervals && colors.length !== colorFrameIntervals.length) {
+    throw new Error("The 'colors' and 'colorFrameIntervals' arrays must have the same length.");
   }
 
-  // State to keep track of the light's progress (`t`) along the curve and its direction
-  const [t, setT] = useState(startingSide === "left" ? 0 : 1); // Start at the left or right side
-  const [direction, setDirection] = useState(startingSide === "left" ? 1 : -1); // Start moving forward or backward
+  //////////////////////////////////////////////////////////
+  //////////////////// Animation handle ////////////////////
+  //////////////////////////////////////////////////////////
 
-  // Tube component for visualizing the curve (optional for debugging)
-  const Tube = ({ curve }) => {
-    const tubeGeometry = useMemo(() => {
-      const tube = new THREE.TubeGeometry(curve, 20, 2, 8);
-      return tube;
-    }, [curve]);
 
-    return (
-      <mesh
-        geometry={tubeGeometry}
-        material={{
-          wireframe: wireFrameVisible,
-          visible: wireFrameVisible,
-          color: 0xffffff,
-        }}
-      />
-    );
-  };
 
-  // Handle animation
+
   useFrame(() => {
-    let newT = t; // Progress along the curve
+    // 't' is a number between 0 and 1 representing the normalized position of the light along the curve.
+    let newT = t;
+
+    //////////////////////////////////////////////////////////
+    ////////// External animation synchronization logic ////////////// 
+    //////////////////////////////////////////////////////////
+
+
+
 
     if (synchronizeAnimationFrames) {
-      // Use externally controlled currentAnimationTime to calculate `t`
+      // External animation synchronization logic.
       if (totalAnimationDuration > 0) {
-        // Normalize time to range [0, 2]
         const normalizedTime = (currentAnimationTime / totalAnimationDuration) * 2;
-
-        // Determine forward/backward progress
-        const normalizedProgress = normalizedTime % 2; // Value in range [0, 2]
+        const normalizedProgress = normalizedTime % 2;
         if (normalizedProgress <= 1) {
-          // Forward motion (0 to 1)
           newT = startingSide === "left" ? normalizedProgress : 1 - normalizedProgress;
         } else {
-          // Backward motion (1 to 0)
-          const backwardProgress = 2 - normalizedProgress;
+          const backwardProgress = 2 - (normalizedTime % 2);
           newT = startingSide === "left" ? backwardProgress : 1 - backwardProgress;
         }
-
-        // Clamp `t` between 0 and 1
         newT = Math.max(0, Math.min(newT, 1));
       }
     } else {
-      // Internal animation logic (fallback if synchronizeAnimationFrames is false)
-      const step = animationDurationFrames !== 0
-        ? (1 / animationDurationFrames) * direction // Step size per frame
-        : animationSpeed * direction; // Step size per second if animationSpeed is provided
+      ////////////////////////////////////////////////////////////////////////////////////////////////////
+      ////////// Internal animation logic (fallback if synchronizeAnimationFrames is false) //////////////
+      ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-      // Update `t` with the calculated step
+
+
+
+      // Internal animation logic.
+      const step =
+        animationDurationFrames !== 0 ? (1 / animationDurationFrames) * direction : animationSpeed * direction;
       newT += step;
 
-      // Reverse direction when reaching the ends of the curve
+      // Reverse direction when reaching the ends of the curve.
       if (newT >= 1) {
         newT = 1;
-        setDirection(-1); // Reverse direction
+        setDirection(-1);
       } else if (newT <= 0) {
         newT = 0;
-        setDirection(1); // Reverse direction
+        setDirection(1);
       }
     }
 
-    // Update state for `t`
+    //////////////////////////////////////////////////////////
+    ///////////// State and position update //////////////////
+    //////////////////////////////////////////////////////////
+
+
+
+
+    // Update state for t.
     setT(newT);
 
-    // Get the point along the curve based on `t`
-    const position = curve.getPointAt(newT);
+    // Get the point along the curve based on t.
+    const positionOnCurve = curve.getPointAt(newT);
 
-    // Update the point light's position
+    // Update the point light's position.
     if (pointLightRef.current) {
-      pointLightRef.current.position.copy(position);
+      pointLightRef.current.position.copy(positionOnCurve);
     }
 
-    // Update the visible sphere's position
+    // Update the visible sphere's position.
     if (sphereRef.current) {
-      sphereRef.current.position.copy(position);
+      sphereRef.current.position.copy(positionOnCurve);
     }
 
-    // Color alternating logic (only in "multiple" mode)
-    if (colorMode === "multiple") {
-      frameCountRef.current += 1; // Increment frame counter
+    //////////////////////////////////////////////////////////
+    ////////////// Color alternating logic ///////////////////
+    //////////////////////////////////////////////////////////
 
-      if (
-        frameCountRef.current >=
-        colorFrameIntervals[currentColorIndex % colorFrameIntervals.length]
-      ) {
-        // Reset frame counter and switch to the next color
-        frameCountRef.current = 0;
-        setCurrentColorIndex((prevIndex) => (prevIndex + 1) % colors.length);
+
+
+
+    frameCountRef.current += 1;
+    // Use the current interval if random intervals are enabled, else use the static one.
+    const interval = enableRandomColorFrameIntervals
+      ? currentInterval
+      : colorFrameIntervals[currentColorIndex % colorFrameIntervals.length];
+
+    if (frameCountRef.current >= interval) {
+      frameCountRef.current = 0;
+      // If enableRandomColorOrder is true, shuffle the orderedColors array.
+      if (enableRandomColorOrder) {
+        setOrderedColors([...orderedColors].sort(() => Math.random() - 0.5));
+      }
+      
+      setCurrentColorIndex((prevIndex) => {
+        console.log(prevIndex)
+        const newIndex = (prevIndex + 1) % orderedColors.length;
+        // Update light intensity when the color changes if randomIntensitiyMargin is provided.
+        if (
+          randomIntensitiyMargin &&
+          Array.isArray(randomIntensitiyMargin) &&
+          randomIntensitiyMargin.length === 2 &&
+          pointLightRef.current
+        ) {
+          const [min, max] = randomIntensitiyMargin;
+          pointLightRef.current.intensity = min + Math.random() * (max - min);
+        }
+        return newIndex;
+      });
+      // If random intervals are enabled, update currentInterval directly.
+      if (enableRandomColorFrameIntervals) {
+        setCurrentInterval(getRandomInterval());
       }
     }
   });
 
   return (
     <>
-      {/* Debugging wireframe */}
-      <Tube curve={curve} />
-
-      {/* Point Light that moves */}
+      {/* Point Light that moves along the curve */}
       <pointLight
         ref={pointLightRef}
-        color={colorMode === "single" ? lightColor : colors[currentColorIndex]} // Alternate colors if "multiple"
-        intensity={0.3}
+        color={orderedColors[currentColorIndex]}
+        intensity={0.3} // Default intensity; updated on color change if randomIntensitiyMargin is provided.
       />
 
-      {/* Visible sphere to represent the point light */}
-      <mesh ref={sphereRef}>
-        <sphereGeometry args={[lightSphereSize, 16, 16]} />
-        <meshBasicMaterial
-          color={colorMode === "single" ? lightColor : colors[currentColorIndex]} // Match the light color
-        />
-      </mesh>
+      {/* Debug mode: Visible wireframe curve */}
+      <Tube curve={curve} />
+
+      {/* Debug mode: Visible sphere to represent the point light */}
+      {debugMode && (
+        <mesh ref={sphereRef}>
+          <sphereGeometry args={[1, 16, 16]} />
+          <meshBasicMaterial color={orderedColors[currentColorIndex]} />
+        </mesh>
+      )}
     </>
   );
 });

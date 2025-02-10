@@ -22,6 +22,7 @@ import { PreloadAssets } from "./components/PreloadAssets";
 import { ExplodingModelLoader } from "./components/ExplodingModelLoader";
 import { customInstanceRotation, customInstanceColor } from "./PathPoints";
 import { CurveLightAnimation } from "./components/CurveLightAnimation";
+import { PointLightAnimation } from "./components/PointLightAnimation";
 import { AnimationMixer } from 'three';
 
 
@@ -290,22 +291,19 @@ export function SceneContainer(props) {
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
                         ></SimpleLoader>
 
+                
+                    <ambientLight intensity = {0.1}></ambientLight>
 
-                        {/* <CurveLightAnimation
-                        colorMode="multiple"
-                        colors={[0xff0000, 0xff5a00, 0xff9a00]}
-                        colorFrameIntervals={[5, 7, 3]}
-                        animationSpeed={0.005}
-                        /> */}
-                        {/* <ambientLight intensity = {0.2}></ambientLight> */}
+                    <pointLight position={ [46, 83, -47]} color={0xb8774f}></pointLight>
 
-                        <CurveLightAnimation currentAnimationTime={animTime} // Playtime in seconds
-                        totalAnimationDuration={6} // Total duration of the animation in seconds
-                        synchronizeAnimationFrames={true}
-                        startingSide="right" 
-                        colorMode="multiple"
-                        colors={[0xff0000,0xff5a00,	0xff9a00]}
-                        colorFrameIntervals={[5, 7, 3]}/>
+                    <PointLightAnimation
+                    position={[48, 83, -49]}
+                    colors={[0x773502, 0xff8c00, 0xffd700]}
+                    colorFrameIntervals={[7, 5, 6]}
+                    randomIntensitiyMargin={[0.05, 0.1]}
+                    enableRandomColorFrameIntervals = {true}
+                    />
+
 
                     {/* </Raycaster> */}
                     <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} directionZ = {-1} 
