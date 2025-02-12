@@ -23,6 +23,7 @@ import { ExplodingModelLoader } from "./components/ExplodingModelLoader";
 import { customInstanceRotation, customInstanceColor } from "./PathPoints";
 import { CurveLightAnimation } from "./components/CurveLightAnimation";
 import { PointLightAnimation } from "./components/PointLightAnimation";
+import { LinkedObject } from "./components/LinkedObject";
 import { AnimationMixer } from 'three';
 
 
@@ -302,6 +303,7 @@ export function SceneContainer(props) {
                     enableRandomColorFrameIntervals = {true}
                     />
 
+                    <LinkedObject position={[48, 89, -49]} scale={[5, 5, 5]} gltf={mainScene}  />
                     {/* </Raycaster> */}
                     <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} directionZ = {-1} 
                         customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} distanceBetweenInstances={3}>
