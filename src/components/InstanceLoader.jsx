@@ -3,6 +3,16 @@ import { useLoader } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import * as THREE from 'three';
 
+//////////////////
+/// TODO:BEGIN ///
+//////////////////
+
+// Apply a material to the loaded glb(Can be a material of the main scene)
+    // For a smoother experience, and to avoid future issues, assign a timer to apply the material
+//////////////////
+/// TODO:END ///
+//////////////////
+
 // Creates an animation where instances of objects follow a curve then disappear
 // Objects must be .glb and have their origin at the center of the object (in blender: Object/set origin/geometry to origin)
 export const InstanceLoader = React.memo((props) => {

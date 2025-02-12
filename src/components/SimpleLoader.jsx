@@ -65,15 +65,14 @@ export const SimpleLoader = React.memo((props) => {
     let objectHideRevealDirections = {}; // store the factor of the scale up or down effects, 1 or -1. EX:{"BookShelf" : -1, "Table" : 1}
 
     // Load Model
-    const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + sceneName);
-    // console.log(gltf)
     const toggleTrigger = useStore((state) => state.toggleTrigger);
     const triggers = useStore((state) => state.triggers);
 
     const setInitialSceneLoaded = useStore((state) => state.setInitialSceneLoaded);
+    const mainScene = useStore((state) => state.mainScene);
 
     // initialize the animation mixer
-    const mixer = useRef(new THREE.AnimationMixer(gltf.scene));
+    const mixer = useRef(new THREE.AnimationMixer(mainScene.scene));
 
     // ref and state of the HideReveal feature
     const fadeInObjectsKeysRef = useRef([]);
@@ -99,7 +98,7 @@ export const SimpleLoader = React.memo((props) => {
     // Known issue: uv of index '0' doesn't cause a visual update
     useEffect(() => {
         if (Object.keys(customObjectsUvs).length !== 0) {
-          gltf.scene.traverse((child) => {
+          mainScene.scene.traverse((child) => {
             if (child.isMesh && customObjectsUvs.hasOwnProperty(child.name)) {
               const uvIndex = customObjectsUvs[child.name];
               const uvAttributeName = uvIndex === 0 ? 'uv' : `uv${uvIndex}`; // Determine the correct UV attribute name
@@ -114,7 +113,7 @@ export const SimpleLoader = React.memo((props) => {
             }
           });
         }
-      }, [gltf, customObjectsUvs]);
+      }, [mainScene, customObjectsUvs]);
 
 
     //////////////////////////////////////////////////////////
@@ -126,7 +125,7 @@ export const SimpleLoader = React.memo((props) => {
         // check if both of the offset's values are not 0
         if(uvOffSet[0] + uvOffSet[1] != 0){
             // Traverse the entire scene to apply the UV updates
-            gltf.scene.traverse((child) => {
+            mainScene.scene.traverse((child) => {
                 if (child.material) {
                     const materials = Array.isArray(child.material) ? child.material : [child.material];
                     materials.forEach((material) => {
@@ -139,7 +138,7 @@ export const SimpleLoader = React.memo((props) => {
                 }
             });
         }
-      }, [gltf, uvOffsetAmount, uvOffSet]);
+      }, [mainScene, uvOffsetAmount, uvOffSet]);
 
 
     //////////////////////////////////////////////////////////
@@ -152,8 +151,8 @@ export const SimpleLoader = React.memo((props) => {
             const loader = new GLTFLoader();
             loader.load(
                 process.env.PUBLIC_URL + '/materials/' + materialName,
-                (gltf) => {
-                    setMaterialGltf(gltf);
+                (mainScene) => {
+                    setMaterialGltf(mainScene);
                 },
                 undefined,
                 (error) => {
@@ -167,13 +166,13 @@ export const SimpleLoader = React.memo((props) => {
     // Apply material if loadMaterialManually is true and material is loaded
     useEffect(() => {
         if (loadMaterialManually && !materialError && materialGltf) {
-            gltf.scene.traverse((child) => {
+            mainScene.scene.traverse((child) => {
                 if (child.isMesh) {
                     child.material = materialGltf.scene.children[0].material;
                 }
             });
         }
-    }, [gltf, loadMaterialManually, materialGltf, materialError]);
+    }, [mainScene, loadMaterialManually, materialGltf, materialError]);
 
     
     //////////////////////////////////////////////////////////
@@ -203,7 +202,7 @@ export const SimpleLoader = React.memo((props) => {
 
     // start to play the animation when scene loads if the prop autoPlay is true
     useEffect(() => {
-        if (autoPlay && gltf.animations.length) {
+        if (autoPlay && mainScene.animations.length) {
             playAnimation();
         }
     }, [autoPlay]);
@@ -217,7 +216,7 @@ export const SimpleLoader = React.memo((props) => {
 
     // plays the animation
     function playAnimation(){
-        gltf.animations.forEach(clip => {
+        mainScene.animations.forEach(clip => {
             if(animationToPlay.includes(clip.name)){
                 const action = mixer.current.clipAction(clip);
                 setupLoopMode(action)
@@ -234,7 +233,7 @@ export const SimpleLoader = React.memo((props) => {
     // Modify this to only reset appropriate objects???
     // Resets the scale of all objects back to 0
     function resetObjectsScale(){
-        gltf.scene.traverse((child) => {
+        mainScene.scene.traverse((child) => {
                 child.scale.x = 1
                 child.scale.y = 1
                 child.scale.z = 1
@@ -246,7 +245,7 @@ export const SimpleLoader = React.memo((props) => {
 
         hoverLinkedObjects.forEach(function(objectGroupNames) {
             if(objectGroupNames.includes(object.name)){
-                gltf.scene.traverse((child) => {
+                mainScene.scene.traverse((child) => {
                     if(objectGroupNames.includes(child.name)){
                         returnedObjects.push(child)
                     }
@@ -265,7 +264,7 @@ export const SimpleLoader = React.memo((props) => {
     // trigger the scale animation based on hover state(assumes that base object scales are [x:1, y:1, z:1])
     useEffect(() => {
         if(hover && hoveredObject != undefined && hoverAffectedObjects.includes(hoveredObject) ){
-            gltf.scene.traverse((child) => {
+            mainScene.scene.traverse((child) => {
                 if(child.name == hoveredObject){
                     resetObjectsScale();
                     setCurrentLinkedObjects(getLinkedObjects(child))
@@ -278,7 +277,7 @@ export const SimpleLoader = React.memo((props) => {
             setAnimationFadeOut(true)
             setTriggerScaleAnimation(false);
         }
-    }, [gltf.scene, hoveredObject]);
+    }, [mainScene.scene, hoveredObject]);
 
     // Animation where the object scales up and down
     useFrame(() => {
@@ -342,22 +341,21 @@ export const SimpleLoader = React.memo((props) => {
 
     // Hide marked objects at the start
     useEffect(() => {
-        // console.log(gltf)
         Object.entries(objectsHideRevealTriggers).forEach(([key, value]) => {
-            gltf.scene.traverse((child) => {
+            mainScene.scene.traverse((child) => {
                 if (child.isMesh && child.name === key) {
                     // console.log(child.name)
                 child.scale.set(0, 0, 0);
                 }
             });
         });
-    }, [gltf]);
+    }, [mainScene]);
 
       // set scale factors of marked objects
     useEffect(() => {
-        // console.log(gltf)
+        // console.log(mainScene)
         Object.entries(objectsHideRevealTriggers).forEach(([key, value]) => {
-            gltf.scene.traverse((child) => {
+            mainScene.scene.traverse((child) => {
                 if (child.isMesh && child.name === key) {
                     if(child.scale["x"] <= 0){
                         objectHideRevealDirections[key] = 1;
@@ -369,7 +367,7 @@ export const SimpleLoader = React.memo((props) => {
                 }
             });
         });
-    }, [gltf, objectHideRevealDirections]);
+    }, [mainScene, objectHideRevealDirections]);
 
     // trigger the fade in scale animation(trigger is set to true)
     useEffect(() => {
@@ -387,7 +385,7 @@ export const SimpleLoader = React.memo((props) => {
     useFrame(() => {
         if (fade) {
             fadeInObjectsKeysRef.current.forEach((key)=>{
-                gltf.scene.traverse((child) => {
+                mainScene.scene.traverse((child) => {
                     // Don't fade in or out if already done and not set to be reversible
                     if (child.isMesh && child.name === key) {
                         if((child.scale["x"] >= 1 && objectHideRevealDirections[key] == 1) || (child.scale["x"] <= 0 && objectHideRevealDirections[key] == -1)){
@@ -424,9 +422,9 @@ export const SimpleLoader = React.memo((props) => {
 
     // initiate ambient occlusion if useAo is set to true
     if(useAo) {
-        for( let node in gltf.nodes) {
-            if('material' in gltf.nodes[node]) {
-                gltf.nodes[node].material.aoMapIntensity = ambientOcclusionIntensity;
+        for( let node in mainScene.nodes) {
+            if('material' in mainScene.nodes[node]) {
+                mainScene.nodes[node].material.aoMapIntensity = ambientOcclusionIntensity;
             }
         }
     }
@@ -434,11 +432,11 @@ export const SimpleLoader = React.memo((props) => {
     useEffect(() => {
         // console.log("set initial scene loaded")
         setInitialSceneLoaded(true);
-    }, [gltf, setInitialSceneLoaded]);
+    }, [mainScene, setInitialSceneLoaded]);
 
     return (
     <Suspense fallback={null}>
-        <primitive position={position} object={gltf.scene} />
+        <primitive position={position} object={mainScene.scene} />
     </Suspense>
     )
 })

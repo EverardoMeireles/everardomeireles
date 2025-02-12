@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./components/HudMenu";
@@ -10,8 +10,13 @@ import { ToolTipCircle } from "./components/ToolTipCircle";
 import { TutorialOverlay } from "./components/TutorialOverlay";
 import { parseJson, removeFileExtensionString } from "./Helper";
 import * as THREE from "three";
+import { useLoader, useFrame } from '@react-three/fiber'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 const useStore = create((set) => ({
+  mainScene: undefined,
+  setMainScene: (loaded) => set(() => ({ mainScene: loaded })),
+
   raycasterEnabled: false,
   setRaycasterEnabled: (loaded) => set(() => ({ raycasterEnabled: loaded })),
 
@@ -199,6 +204,8 @@ function App() {
   const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
   const tooltipProperties = useStore((state) => state.tooltipProperties);
   const forceDisableRender = useStore((state) => state.forceDisableRender);
+  const mainScene = useStore((state) => state.mainScene);
+  const setMainScene = useStore((state) => state.setMainScene);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
@@ -206,6 +213,14 @@ function App() {
   const transitionEnded = useStore((state) => state.transitionEnded);
   
   const [enableTutorial, setEnableTutorial] = useState(false);
+
+  const scene = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + 'NewthreeJsSceneLamp.glb')
+
+  // Load initial main sceneeeeee
+  useEffect(() => {
+    setMainScene(scene)
+    console.log(mainScene)
+}, [scene]);
 
   useEffect(() => {
     // console.log(tooltipCirclesData)
@@ -249,9 +264,11 @@ function App() {
       ))}
       <TutorialOverlay enable = {enableTutorial} {...{useStore}}/>
       <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} />
-      <Canvas onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
-        <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
-      </Canvas>
+      <Suspense>
+        <Canvas onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
+          <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
+        </Canvas>
+      </Suspense>
       </>
       )}
     </>

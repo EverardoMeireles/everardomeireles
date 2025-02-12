@@ -11,7 +11,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {animationIsPlaying = false} = props;
 
   const {position = [0, 0, 0]} = props;
-  const {sceneName = 'threeJsScene.glb'} = props;
+  const {modelName = 'explodingModel.glb'} = props;
   const {customOrigin = []} = props; // If for any reason the imported scene's position transform is not (0, 0, 0), specify it here
   const {animationStartOnLoad = false} = props;
   const {enableRockingAnimation = true} = props;
@@ -32,9 +32,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   // feature: Swap material
   const {materialName = ""} = props;
 
-  const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + sceneName);
+  const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + modelName);
   const newMaterialGltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/materials/' + ( (!materialName || materialName == "") ? "NoMaterial.glb" : materialName));
-
   const { camera, gl } = useThree();
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const cameraState = useStore((state) => state.cameraState);
@@ -227,7 +226,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
-    parseJson("/models/" + removeFileExtensionString(sceneName) + ".json", 'ModelProperties')
+    parseJson("/models/" + removeFileExtensionString(modelName) + ".json", 'ModelProperties')
       .then(modelProperties => {
           setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
           setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
@@ -238,7 +237,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       .catch(error => {
         console.error('Error parsing JSON:', error);
       });
-  }, [sceneName]);
+  }, [modelName]);
 
   // Force change the camera's target on component mount
   useEffect(() => {
@@ -289,7 +288,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       setInitialPositions(initialPositions);
       setDesiredPositions(desiredPositions);
       setChildInitialPositions(childInitialPositions);
-      setExplodingModelName(removeFileExtensionString(sceneName))
+      setExplodingModelName(removeFileExtensionString(modelName))
     }
   }, [gltf]);
 

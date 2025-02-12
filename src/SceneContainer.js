@@ -56,22 +56,22 @@ export function SceneContainer(props) {
     const setTrigger = useStore((state) => state.setTrigger);
     const animationTriggerState = useStore((state) => state.animationTriggerState);
     const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
-    
+    const mainScene = useStore((state) => state.mainScene);
+
     const { gl } = useThree(); // eslint-disable-line no-unused-vars
     const postloadingDelay = 3000
     
-    const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + 'NewthreeJsSceneLamp.glb');
   let mixer;
   const [animTime, setAnimTime] = useState(0);
 
   useEffect(() => {
-    if (!gltf.animations.length) return; // Ensure there are animations in the GLTF
+    if (!mainScene.animations.length) return; // Ensure there are animations in the GLTF
     
     // Create an AnimationMixer
-    mixer = new AnimationMixer(gltf.scene);
+    mixer = new AnimationMixer(mainScene.scene);
 
     // Get the first animation clip (index 0)
-    const action = mixer.clipAction(gltf.animations[0]);
+    const action = mixer.clipAction(mainScene.animations[0]);
     
     // Play the animation
     action.play();
@@ -95,11 +95,9 @@ export function SceneContainer(props) {
 
     // Cleanup function to stop the mixer when the component unmounts
     return () => mixer.stopAllAction();
-  }, [gltf]);
+  }, [mainScene]);
 
     useFrame(() => {
-
-
     //console.log(i)
     // console.log("calls" + gl.info.render.calls)
     // console.log("triangles" + gl.info.render.triangles)
@@ -256,7 +254,7 @@ export function SceneContainer(props) {
             {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
             {/* <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
-            {/* <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
+            {/* <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} modelName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
                 {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}
@@ -304,7 +302,6 @@ export function SceneContainer(props) {
                     enableRandomColorFrameIntervals = {true}
                     />
 
-
                     {/* </Raycaster> */}
                     <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} directionZ = {-1} 
                         customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} distanceBetweenInstances={3}>
@@ -312,7 +309,7 @@ export function SceneContainer(props) {
                     {/* <SimpleLoader {...{useStore}} sceneName={"Book.glb"}></SimpleLoader> */}
                 </Suspense>
                 {/* <pointLight intensity={1} position={[43, 155, -88]}></pointLight> */}
-                {/* <CurveInstanceAnimation tubeWireframe={true} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}
+                {/* <CurveInstanceAnimation {...{useStore}} tubeWireframe={true} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}
                 
                 {/* <CurveInstanceAnimation instancedObject={"Plant.glb"} position={[0, 500, 0]} />
                 {/* <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
