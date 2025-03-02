@@ -23,7 +23,8 @@ import { ExplodingModelLoader } from "./components/ExplodingModelLoader";
 import { customInstanceRotation, customInstanceColor } from "./PathPoints";
 import { CurveLightAnimation } from "./components/CurveLightAnimation";
 import { PointLightAnimation } from "./components/PointLightAnimation";
-import { LinkedObject } from "./components/LinkedObject";
+import { ObjectLink } from "./components/ObjectLink";
+import { ParticleEmitter } from "./components/ParticleEmitter";
 import { AnimationMixer } from 'three';
 
 
@@ -245,6 +246,7 @@ export function SceneContainer(props) {
         console.log("animationTriggerState: " + animationTriggerState)
         // Clicked 3D objects END
     }, [animationTriggerState]);
+    const object = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + 'Plant.glb')
 
     return(
         <>
@@ -292,18 +294,67 @@ export function SceneContainer(props) {
 
                 
                     <ambientLight intensity = {0.1}></ambientLight>
+                    {/* <ambientLight intensity = {1}></ambientLight> */}
 
                     <pointLight position={ [46, 83, -47]} color={0xb8774f}></pointLight>
 
-                    <PointLightAnimation
-                    position={[48, 83, -49]}
+
+
+                    <Suspense>
+                        <ObjectLink position={[48, 89, -49]} scale={[1, 1, 1]} scene={mainScene} linkedObjectName = {"Lamp"} objectToLink={object}>
+                            {/* <mesh>
+                                <boxGeometry args={[10, 10, 10]} />
+                                <meshStandardMaterial color="orange" />
+                            </mesh>
+
+                            <primitive object={object.scene || object} /> */}
+    {/* <mesh> */}
+    <ParticleEmitter 
+        {...{useStore}} 
+        imageNames={["fire.png", "fire4.png"]}
+        count={50}
+        speed={10}
+        initialSize={10}
+        maxSizeOverLifespan={15}
+        fadeInOut={true}   // Use true to see fade in and fade out.
+        faceCamera = {false}
+        faceCameraFrameCheck = {80}
+        faceCameraAxisLock = {[1, 1, 1]}
+        instanceMaxRandomDelay = {10}
+        lifespan={0.3}
+        spread={3}
+        position={[0, -1, 0]}
+        rotation={[0, 1, 0]}
+        direction={[0, 1, 0]}
+    />
+    {/* </mesh> */}
+    <PointLightAnimation
+                    position={[0, 0, 0]}
                     colors={[0x773502, 0xff8c00, 0xffd700]}
                     colorFrameIntervals={[7, 5, 6]}
                     randomIntensitiyMargin={[0.05, 0.1]}
                     enableRandomColorFrameIntervals = {true}
                     />
+                        </ObjectLink>
+                    </Suspense>
+{/* <ParticleEmitter 
+  imageName="fire2.png"
+  count={50}
+  speed={10}
+  initialSize={10}
+  maxSizeOverLifespan={15}
+  fadeInOut={true}   // Use true to see fade in and fade out.
+  faceCamera = {true}
+  instanceMaxRandomDelay = {10}
+  faceCameraAxisLock = {[1, 1, 0]}
+  lifespan={0.3}
+  spread={3}
+  position={[145, 111, 28]}
+  rotation={[0, 1, 0]}
+  direction={[0, 1, 0]}
+/> */}
+                    {/* <ParticleEmitter imageName="fire.png"></ParticleEmitter> */}
 
-                    <LinkedObject position={[48, 89, -49]} scale={[5, 5, 5]} gltf={mainScene}  />
                     {/* </Raycaster> */}
                     <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} directionZ = {-1} 
                         customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} distanceBetweenInstances={3}>
