@@ -5,7 +5,7 @@ import * as THREE from "three";
 export const PointLightAnimation = React.memo((props) => {
   const {
     position = [0, 0, 0], // position of the point light
-    debugMode = true, // Mode to visualize the wireframe and light trajectory
+    debugMode = false, // Mode to visualize the wireframe and light trajectory
 
     colors = [0xffffff], // Colors to alternate between (for "multiple" mode)
     colorFrameIntervals = [60], // Static frame intervals (in frames)

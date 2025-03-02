@@ -2,63 +2,157 @@ import React, { useRef, useMemo, useLayoutEffect } from 'react';
 import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
+///////////////////////////////
+// ParticleEmitter Component //
+///////////////////////////////
+export const ParticleEmitter = React.memo((props) => {
+  const { imageNames = ["fire1", "fire2"] } = props; // Array of image filenames (without path). Textures are loaded from `${process.env.PUBLIC_URL}/textures/${name}`.
+  const { count = 100 } = props; // Total number of particles.
+  const { speed = 1 } = props; // Movement speed (m/s).
+  const { initialSize = 0.5 } = props; // Initial particle size (m).
+  const { maxSizeOverLifespan = 0 } = props; // Maximum particle size (m); if 0, size stays constant.
+  const { lifespan = 2 } = props; // Particle lifespan (s).
+  const { spread = 0.3 } = props; // Random offset (m) for each particle's start position.
+  const { fadeInOut = false } = props; // If true, particles fade in and out.
+  const { faceCamera = false } = props; // If true, particles will orient to face the camera. // revise feature later
+  const { faceCameraFrameCheck = 1 } = props; // Perform face-camera orientation check and update every n frames.
+  const { faceCameraAxisLock = [1, 1, 1] } = props; // Array [x, y, z] to lock specific axes (1 = follow camera, 0 = lock).
+  const { instanceMaxRandomDelay = 0 } = props; // Extra random delay (s) added per particle.
+  const { position = [0, 0, 0] } = props; // Position of the emitter.
+  const { rotation = [0, 0, 0] } = props; // Rotation of the emitter if faceCamera is false.
+  const { direction = [0, 1, 0] } = props; // Direction of the particle emitter.
+
+  /////////////////////////
+  // Build Texture Paths //
+  /////////////////////////
+  const texturePaths = useMemo(() => 
+    imageNames.map(name => `${process.env.PUBLIC_URL}/textures/${name}`),
+    [imageNames]
+  );
+
+  ////////////////////////////////////////
+  // Load Textures using TextureLoader. //
+  ////////////////////////////////////////
+  const textures = useLoader(THREE.TextureLoader, texturePaths);
+
+  //////////////////////////////////////////////////////////////////////
+  // Create Particle State:                                           //
+  //   Each particle receives:                                        //
+  //     - A random texture index from the loaded textures.           //
+  //     - A delay (sequential base delay plus a random extra delay). //
+  //     - A random start position offset based on 'spread'.          //
+  //     - An initial age (negative, so that emission is delayed).    //
+  //////////////////////////////////////////////////////////////////////
+  const particles = useMemo(() => {
+    return new Array(count).fill().map((_, i) => {
+      const baseDelay = i * (lifespan / count);
+      const randomDelay = Math.random() * instanceMaxRandomDelay;
+      const delay = baseDelay + randomDelay;
+      const startPosition = new THREE.Vector3(
+        (Math.random() - 0.5) * spread,
+        (Math.random() - 0.5) * spread,
+        (Math.random() - 0.5) * spread
+      );
+      return {
+        imageIndex: Math.floor(Math.random() * textures.length),
+        delay,
+        startPosition,
+        position: startPosition.clone(),
+        velocity: new THREE.Vector3(...direction).normalize().multiplyScalar(speed),
+        age: -delay,
+        opacity: 0,
+        quaternion: new THREE.Quaternion(),
+      };
+    });
+  }, [count, lifespan, spread, instanceMaxRandomDelay, textures.length, direction, speed]);
+
+  ////////////////////////////////////////////////////////////
+  // Group Particles by their Assigned Texture (imageIndex) //
+  ////////////////////////////////////////////////////////////
+  const groups = useMemo(() => {
+    const g = {};
+    particles.forEach(p => {
+      if (!g[p.imageIndex]) g[p.imageIndex] = [];
+      g[p.imageIndex].push(p);
+    });
+    return g;
+  }, [particles]);
+
+  ////////////////////////////////////////////////////
+  // Render a ParticleGroup for each texture group. //
+  ////////////////////////////////////////////////////
+  return (
+    <group>
+      {Object.keys(groups).map(key => (
+        <ParticleGroup
+          key={key}
+          texture={textures[parseInt(key)]}
+          particles={groups[key]}
+          speed={speed}
+          initialSize={initialSize}
+          maxSizeOverLifespan={maxSizeOverLifespan}
+          lifespan={lifespan}
+          fadeInOut={fadeInOut}
+          faceCamera={faceCamera}
+          faceCameraFrameCheck={faceCameraFrameCheck}
+          faceCameraAxisLock={faceCameraAxisLock}
+          rotation={rotation}
+          direction={direction}
+          position={position}
+        />
+      ))}
+    </group>
+  );
+}, (prevProps, nextProps) => {
+  return JSON.stringify(prevProps) === JSON.stringify(nextProps);
+});
+
+export default ParticleEmitter;
+
+
+
+
+
+
 // Linear interpolation helper.
 function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-//////////////////////////////////////////////////////////
-// ParticleGroup Component
-//////////////////////////////////////////////////////////
-// Renders an instancedMesh for a group of particles that share the same texture.
-// -----------------------------------------------------------------------------
-// Props:
-//   texture              - Texture to use for the particles.
-//   particles            - Array of particle state objects.
-//   speed                - Movement speed in m/s.
-//   initialSize          - Initial size (in meters) of each particle.
-//   maxSizeOverLifespan  - Maximum size reached over the particle's lifespan (if 0, size remains constant).
-//   lifespan             - Particle lifespan in seconds.
-//   spread               - Random spawn offset (in meters) for each particle.
-//   fadeInOut            - If true, particles fade in at spawn and fade out at end-of-life.
-//   faceCamera           - If true, particles will always orient to face the camera.
-//   faceCameraFrameCheck - Update the face-camera orientation every n frames.
-//   faceCameraAxisLock   - Array [x, y, z]: 1 allows the axis to follow the camera, 0 locks it to the default rotation.
-//   rotation             - Emitter's default rotation (used if faceCamera is false or for locked axes).
-//   direction            - Movement direction vector (e.g. [0, 1, 0] for upward).
-//   position             - Position of the emitter.
-//////////////////////////////////////////////////////////
-const ParticleGroup = ({
-  texture,
-  particles,
-  speed,
-  initialSize,
-  maxSizeOverLifespan,
-  lifespan,
-  fadeInOut,
-  faceCamera,
-  faceCameraFrameCheck,
-  faceCameraAxisLock,
-  rotation,
-  direction,
-  position,
-}) => {
+/////////////////////////////
+// ParticleGroup Component //
+/////////////////////////////
+const ParticleGroup = (props) => {
+  const { texture } = props; // Texture to use for the particles.
+  const { particles } = props; // Array of particle state objects.
+  const { speed } = props; // Movement speed in m/s.
+  const { initialSize } = props; // Initial size (in meters) of each particle.
+  const { maxSizeOverLifespan } = props; // Maximum size reached over the particle's lifespan (if 0, size remains constant).
+  const { lifespan } = props; // Particle lifespan in seconds.
+  const { fadeInOut } = props; // If true, particles fade in at spawn and fade out at end-of-life.
+  const { faceCamera } = props; // If true, particles will always orient to face the camera.
+  const { faceCameraFrameCheck } = props; // Update the face-camera orientation every n frames.
+  const { faceCameraAxisLock } = props; // Array [x, y, z]: 1 allows the axis to follow the camera, 0 locks it to the default rotation.
+  const { rotation = [0, 0, 0]} = props; // Emitter's default rotation (used if faceCamera is false or for locked axes).
+  const { direction } = props; // Movement direction vector (e.g. [0, 1, 0] for upward).
+  const { position = [0, 0, 0] } = props; // Position of the emitter.
+
   const { camera } = useThree();
   const meshRef = useRef();
   const frameCountRef = useRef(0);
 
-  //////////////////////////////////////////////////////////
-  // Create Instanced Buffer Attribute for Per-Instance Opacity.
-  //////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
+  // Create Instanced Buffer Attribute for Per-Instance Opacity. //
+  /////////////////////////////////////////////////////////////////
   const opacityArray = useMemo(() => {
     const arr = new Float32Array(particles.length);
     arr.fill(0);
     return arr;
   }, [particles.length]);
 
-  //////////////////////////////////////////////////////////
-  // Attach the Opacity Attribute to the Geometry.
-  //////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////
+  // Attach the Opacity Attribute to the Geometry. //
+  ///////////////////////////////////////////////////
   useLayoutEffect(() => {
     if (meshRef.current) {
       meshRef.current.geometry.setAttribute(
@@ -68,16 +162,16 @@ const ParticleGroup = ({
     }
   }, [opacityArray]);
 
-  //////////////////////////////////////////////////////////
-  // Compute Normalized Movement Direction.
-  //////////////////////////////////////////////////////////
+  ////////////////////////////////////////////
+  // Compute Normalized Movement Direction. //
+  ////////////////////////////////////////////
   const dirVector = useMemo(() => {
     return new THREE.Vector3(...direction).normalize().multiplyScalar(speed);
   }, [direction, speed]);
 
-  //////////////////////////////////////////////////////////
-  // Update Loop: Update Particle State, Position, Opacity, and (if enabled) Orientation.
-  //////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////
+  // Update Loop: Update Particle State, Position, Opacity, and (if enabled) Orientation. //
+  //////////////////////////////////////////////////////////////////////////////////////////
   useFrame((state, delta) => {
     frameCountRef.current++;
     const dummy = new THREE.Object3D();
@@ -116,9 +210,9 @@ const ParticleGroup = ({
       dummy.position.copy(p.position);
       dummy.scale.set(scale, scale, scale);
       
-      //////////////////////////////////////////////////////////
-      // Feature: Emitter Face the Camera (Might need some work)
-      //////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////
+      // Feature: Emitter Face the Camera (Might need some work) //
+      /////////////////////////////////////////////////////////////
       if (faceCamera) {
         if (frameCountRef.current % faceCameraFrameCheck === 0) {
           const temp = new THREE.Object3D();
@@ -150,9 +244,9 @@ const ParticleGroup = ({
     meshRef.current.geometry.getAttribute('instanceOpacity').needsUpdate = true;
   });
 
-  //////////////////////////////////////////////////////////
-  // Create Custom Material with Per-Instance Opacity.
-  //////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////
+  // Create Custom Material with Per-Instance Opacity. //
+  ///////////////////////////////////////////////////////
   const customMaterial = useMemo(() => {
     const mat = new THREE.MeshBasicMaterial({
       map: texture,
@@ -183,9 +277,9 @@ const ParticleGroup = ({
     return mat;
   }, [texture]);
 
-  //////////////////////////////////////////////////////////
-  // Return the instancedMesh.
-  //////////////////////////////////////////////////////////
+  ///////////////////////////////
+  // Return the instancedMesh. //
+  ///////////////////////////////
   return (
     <instancedMesh
       ref={meshRef}
@@ -197,130 +291,3 @@ const ParticleGroup = ({
     </instancedMesh>
   );
 };
-
-//////////////////////////////////////////////////////////
-// ParticleEmitter Component
-//////////////////////////////////////////////////////////
-// Loads a pool of textures from the provided imageNames array,
-// creates a random particle state for each particle, and groups particles
-// by their assigned texture. Each group is rendered via a ParticleGroup.
-// -----------------------------------------------------------------------------
-// Props:
-//   imageNames           - Array of image filenames (without path). Textures are loaded from `${process.env.PUBLIC_URL}/textures/${name}`.
-//   count                - Total number of particles.
-//   speed                - Movement speed (m/s).
-//   initialSize          - Initial particle size (m).
-//   maxSizeOverLifespan  - Maximum particle size (m); if 0, size stays constant.
-//   lifespan             - Particle lifespan (s).
-//   spread               - Random offset (m) for each particle's start position.
-//   fadeInOut            - If true, particles fade in and out.
-//   faceCamera           - If true, particles will orient to face the camera.
-//   faceCameraFrameCheck - Update face-camera orientation every n frames.
-//   faceCameraAxisLock   - Array [x, y, z] to lock specific axes (1 = follow camera, 0 = lock).
-//   instanceMaxRandomDelay - Extra random delay (s) added per particle.
-//////////////////////////////////////////////////////////
-export const ParticleEmitter = React.memo((props) => {
-  const {
-    imageNames = ['default.png'],
-    count = 100,
-    speed = 1,
-    initialSize = 0.5,
-    maxSizeOverLifespan = 0,
-    lifespan = 2,
-    spread = 0.3,
-    fadeInOut = false,
-    faceCamera = false,
-    faceCameraFrameCheck = 1,
-    faceCameraAxisLock = [1, 1, 1],
-    instanceMaxRandomDelay = 0,
-    position = [0, 0, 0],
-    rotation = [0, 0, 0],
-    direction = [0, 1, 0],
-  } = props;
-
-  //////////////////////////////////////////////////////////
-  // Build Texture Paths
-  //////////////////////////////////////////////////////////
-  const texturePaths = useMemo(() => 
-    imageNames.map(name => `${process.env.PUBLIC_URL}/textures/${name}`),
-    [imageNames]
-  );
-
-  //////////////////////////////////////////////////////////
-  // Load Textures using TextureLoader.
-  //////////////////////////////////////////////////////////
-  const textures = useLoader(THREE.TextureLoader, texturePaths);
-
-  //////////////////////////////////////////////////////////
-  // Create Particle State:
-  //   Each particle receives:
-  //     - A random texture index from the loaded textures.
-  //     - A delay (sequential base delay plus a random extra delay).
-  //     - A random start position offset based on 'spread'.
-  //     - An initial age (negative, so that emission is delayed).
-  //////////////////////////////////////////////////////////
-  const particles = useMemo(() => {
-    return new Array(count).fill().map((_, i) => {
-      const baseDelay = i * (lifespan / count);
-      const randomDelay = Math.random() * instanceMaxRandomDelay;
-      const delay = baseDelay + randomDelay;
-      const startPosition = new THREE.Vector3(
-        (Math.random() - 0.5) * spread,
-        (Math.random() - 0.5) * spread,
-        (Math.random() - 0.5) * spread
-      );
-      return {
-        imageIndex: Math.floor(Math.random() * textures.length),
-        delay,
-        startPosition,
-        position: startPosition.clone(),
-        velocity: new THREE.Vector3(...direction).normalize().multiplyScalar(speed),
-        age: -delay,
-        opacity: 0,
-        quaternion: new THREE.Quaternion(),
-      };
-    });
-  }, [count, lifespan, spread, instanceMaxRandomDelay, textures.length, direction, speed]);
-
-  //////////////////////////////////////////////////////////
-  // Group Particles by their Assigned Texture (imageIndex)
-  //////////////////////////////////////////////////////////
-  const groups = useMemo(() => {
-    const g = {};
-    particles.forEach(p => {
-      if (!g[p.imageIndex]) g[p.imageIndex] = [];
-      g[p.imageIndex].push(p);
-    });
-    return g;
-  }, [particles]);
-
-  //////////////////////////////////////////////////////////
-  // Render a ParticleGroup for each texture group.
-  //////////////////////////////////////////////////////////
-  return (
-    <group>
-      {Object.keys(groups).map(key => (
-        <ParticleGroup
-          key={key}
-          texture={textures[parseInt(key)]}
-          particles={groups[key]}
-          speed={speed}
-          initialSize={initialSize}
-          maxSizeOverLifespan={maxSizeOverLifespan}
-          lifespan={lifespan}
-          fadeInOut={fadeInOut}
-          faceCamera={faceCamera}
-          faceCameraFrameCheck={faceCameraFrameCheck}
-          faceCameraAxisLock={faceCameraAxisLock}
-          rotation={rotation}
-          direction={direction}
-          position={position}
-        />
-      ))}
-    </group>
-  );
-}, (prevProps, nextProps) => {
-  return JSON.stringify(prevProps) === JSON.stringify(nextProps);
-});
-
-export default ParticleEmitter;

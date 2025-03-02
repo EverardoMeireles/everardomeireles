@@ -312,7 +312,7 @@ export function SceneContainer(props) {
     <ParticleEmitter 
         {...{useStore}} 
         imageNames={["fire.png", "fire4.png"]}
-        count={50}
+        count={10}
         speed={10}
         initialSize={10}
         maxSizeOverLifespan={15}
@@ -337,22 +337,6 @@ export function SceneContainer(props) {
                     />
                         </ObjectLink>
                     </Suspense>
-{/* <ParticleEmitter 
-  imageName="fire2.png"
-  count={50}
-  speed={10}
-  initialSize={10}
-  maxSizeOverLifespan={15}
-  fadeInOut={true}   // Use true to see fade in and fade out.
-  faceCamera = {true}
-  instanceMaxRandomDelay = {10}
-  faceCameraAxisLock = {[1, 1, 0]}
-  lifespan={0.3}
-  spread={3}
-  position={[145, 111, 28]}
-  rotation={[0, 1, 0]}
-  direction={[0, 1, 0]}
-/> */}
                     {/* <ParticleEmitter imageName="fire.png"></ParticleEmitter> */}
 
                     {/* </Raycaster> */}
