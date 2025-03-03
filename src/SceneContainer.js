@@ -308,36 +308,35 @@ export function SceneContainer(props) {
                             </mesh>
 
                             <primitive object={object.scene || object} /> */}
-    {/* <mesh> */}
-    <ParticleEmitter 
-        {...{useStore}} 
-        imageNames={["fire.png", "fire4.png"]}
-        count={10}
-        speed={10}
-        initialSize={10}
-        maxSizeOverLifespan={15}
-        fadeInOut={true}   // Use true to see fade in and fade out.
-        faceCamera = {false}
-        faceCameraFrameCheck = {80}
-        faceCameraAxisLock = {[1, 1, 1]}
-        instanceMaxRandomDelay = {10}
-        lifespan={0.3}
-        spread={3}
-        position={[0, -1, 0]}
-        rotation={[0, 1, 0]}
-        direction={[0, 1, 0]}
-    />
-    {/* </mesh> */}
-    <PointLightAnimation
-                    position={[0, 0, 0]}
-                    colors={[0x773502, 0xff8c00, 0xffd700]}
-                    colorFrameIntervals={[7, 5, 6]}
-                    randomIntensitiyMargin={[0.05, 0.1]}
-                    enableRandomColorFrameIntervals = {true}
-                    />
+                            {/* <mesh> */}
+                            <ParticleEmitter 
+                                {...{useStore}} 
+                                imageNames={["fire.png", "fire4.png"]}
+                                count={15}
+                                speed={10}
+                                initialSize={10}
+                                maxSizeOverLifespan={15}
+                                fadeInOut={true}   // Use true to see fade in and fade out.
+                                faceCamera = {false}
+                                faceCameraFrameCheck = {80}
+                                faceCameraAxisLock = {[1, 1, 1]}
+                                instanceMaxRandomDelay = {10}
+                                lifespan={0.3}
+                                spread={3}
+                                position={[0, -1, 0]}
+                                rotation={[0, 1, 0]}
+                                direction={[0, 1, 0]}
+                            />
+                            {/* </mesh> */}
+                            <PointLightAnimation
+                            position={[0, 0, 0]}
+                            colors={[0x773502, 0xff8c00, 0xffd700]}
+                            colorFrameIntervals={[7, 5, 6]}
+                            randomIntensitiyMargin={[0.05, 0.1]}
+                            enableRandomColorFrameIntervals = {true}
+                            />
                         </ObjectLink>
                     </Suspense>
-                    {/* <ParticleEmitter imageName="fire.png"></ParticleEmitter> */}
 
                     {/* </Raycaster> */}
                     <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} directionZ = {-1} 
@@ -364,9 +363,9 @@ export function SceneContainer(props) {
             {(currentGraphicalMode === "high")
             && <group>
                 <OrbitingPointLight orbitDirection = {[0, 1, 0]} orbitSpeed = {0.01} orbitAxis = {"x"} orbitDistance = {60} orbitCenterPosition = {[-40, 30, 0]} lightIntensivity = {1}></OrbitingPointLight>
-                <EffectComposer renderPriority = {1}>
+                {/* <EffectComposer renderPriority = {1}>
                     <Bloom luminanceThreshold = {1} mipmapBlur />
-                </EffectComposer>
+                </EffectComposer> CAUSES ERROR WHY?*/}
                 <Suspense>
                     {/* {(finishedBenchmark === true) && <SimpleLoader modelName = {"threeJsSceneIslandProjectsNormal.glb"}></SimpleLoader>} */}
                 </Suspense>

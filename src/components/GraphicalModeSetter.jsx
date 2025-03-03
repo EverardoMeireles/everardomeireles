@@ -80,7 +80,7 @@ export const GraphicalModeSetter = React.memo((props) => {
         // Every n frames, calculate the average fps
         if(accuFramesForGraphicModeComparison >= framesForGraphicModeComparison){
             const averageFps = arrayFPS.reduce((a, b) => a + b, 0) / arrayFPS.length;
-            console.log(averageFps);
+            console.log("averageFps: " + averageFps);
             // skip the first pass, it always shows fewer fps than the system is really capable of
 
             if(pass !== 0){
