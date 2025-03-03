@@ -1,5 +1,5 @@
 [
-  "5.0.7",
+  "5",
   [
     "arm mali-g31",
     "31",
@@ -31,6 +31,12 @@
         1080,
         5,
         "skyworth 8n10 g1a"
+      ],
+      [
+        2224,
+        1080,
+        19,
+        "huawei honor 9x"
       ]
     ]
   ],
@@ -45,6 +51,12 @@
         720,
         29,
         "samsung galaxy a21s"
+      ],
+      [
+        1473,
+        720,
+        16,
+        "samsung sm-a127f"
       ],
       [
         1554,
@@ -87,6 +99,12 @@
         "xiaomi redmi 10x 4g"
       ],
       [
+        2195,
+        1080,
+        19,
+        "samsung galaxy a31 (sm-a315n)"
+      ],
+      [
         2208,
         1080,
         22,
@@ -127,22 +145,22 @@
     0,
     [
       [
-        2160,
+        2174,
         1080,
-        35,
-        "samsung galaxy a22 5g"
-      ],
-      [
-        2304,
-        1036,
-        38,
+        39,
         "poco m4 pro 5g (21091116ag)"
       ],
       [
-        2307,
-        1036,
-        34,
+        2177,
+        1080,
+        36,
         "xiaomi poco m4 pro"
+      ],
+      [
+        2208,
+        1080,
+        35,
+        "samsung galaxy a22 5g"
       ]
     ]
   ],
@@ -157,6 +175,54 @@
         1080,
         48,
         "realme rmx2173"
+      ]
+    ]
+  ],
+  [
+    "arm mali-g610 mc6",
+    "610",
+    "arm mali-g610 mc6",
+    0,
+    [
+      [
+        2316,
+        1080,
+        60,
+        "realme gt neo 3 150w"
+      ]
+    ]
+  ],
+  [
+    "arm mali-g68",
+    "68",
+    "arm mali-g68",
+    0,
+    [
+      [
+        2207,
+        1080,
+        57,
+        "samsung galaxy m33"
+      ]
+    ]
+  ],
+  [
+    "arm mali-g68 mc4",
+    "68",
+    "arm mali-g68 mc4",
+    0,
+    [
+      [
+        2153,
+        1080,
+        56,
+        "oppo reno6 5g"
+      ],
+      [
+        2944,
+        1712,
+        31,
+        "lenovo tab p12"
       ]
     ]
   ],
@@ -255,7 +321,7 @@
       [
         2311,
         1080,
-        120,
+        121,
         "vivo x90"
       ]
     ]
@@ -271,6 +337,12 @@
         1080,
         55,
         "huawei mate 10 pro (bla-xxx)"
+      ],
+      [
+        2094,
+        1080,
+        57,
+        "samsung galaxy note 9"
       ],
       [
         2160,
@@ -305,8 +377,8 @@
       [
         2792,
         1440,
-        27,
-        "samsung galaxy note 9"
+        47,
+        "samsung galaxy s9+ (mali-g72, sm-g965)"
       ]
     ]
   ],
@@ -321,6 +393,20 @@
         678,
         39,
         "motorola one macro"
+      ]
+    ]
+  ],
+  [
+    "arm mali-g720-immortalis mc12",
+    "720",
+    "arm mali-g720-immortalis mc12",
+    0,
+    [
+      [
+        2680,
+        1260,
+        120,
+        "vivo x100"
       ]
     ]
   ],
@@ -343,10 +429,10 @@
         "samsung galaxy s10 plus sm-g975n"
       ],
       [
-        2050,
+        2047,
         1080,
-        55,
-        "samsung galaxy s10 5g (sm-g977n)"
+        60,
+        "samsung sm-g975f"
       ],
       [
         2064,
@@ -355,16 +441,22 @@
         "samsung galaxy note 10 5g (mali-g76, sm-n971x)"
       ],
       [
-        2173,
-        1041,
-        59,
-        "samsung sm-g975f"
-      ],
-      [
         2111,
         1080,
-        40,
+        46,
         "huawei nova 5t (yal-l21)"
+      ],
+      [
+        2159,
+        1080,
+        47,
+        "samsung galaxy a51 5g"
+      ],
+      [
+        2176,
+        1080,
+        54,
+        "samsung galaxy s10 5g (sm-g977n)"
       ],
       [
         2232,
@@ -377,12 +469,6 @@
         1080,
         59,
         "huawei p30 pro"
-      ],
-      [
-        2312,
-        1080,
-        27,
-        "samsung galaxy a51 5g"
       ],
       [
         2328,
@@ -412,7 +498,7 @@
         2759,
         1440,
         59,
-        "samsung galaxy note 10+ 5g (mali-g76, sm-n976x)"
+        "samsung galaxy note 10+ (mali-g76, sm-n975x)"
       ],
       [
         2861,
@@ -445,13 +531,13 @@
       [
         2168,
         1080,
-        67,
+        93,
         "samsung galaxy s20 fe (sm-g780f)"
       ],
       [
         2173,
         1080,
-        57,
+        58,
         "samsung galaxy note 20 (sm-n980f)"
       ],
       [
@@ -463,7 +549,7 @@
       [
         2200,
         1080,
-        67,
+        113,
         "samsung galaxy s20 ultra 5g (sm-g988b)"
       ],
       [
@@ -493,16 +579,16 @@
         "oneplus nord 2 5g"
       ],
       [
-        2304,
-        1036,
-        105,
-        "xiaomi poco x3 gt (21061110ag)"
-      ],
-      [
         2293,
         1080,
         59,
         "oppo pdsm00"
+      ],
+      [
+        2304,
+        1080,
+        102,
+        "xiaomi poco x3 gt (21061110ag)"
       ]
     ]
   ],
@@ -513,7 +599,7 @@
     0,
     [
       [
-        2282,
+        2272,
         1017,
         90,
         "google pixel 6"
@@ -1374,7 +1460,7 @@
         1280,
         800,
         9,
-        "samsung sm-t536 (mali-t830)"
+        "samsung sm-t230nw (mali-t830)"
       ],
       [
         1776,

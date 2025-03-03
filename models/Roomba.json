@@ -1,39 +1,41 @@
 {
-    "ModelProperties": {
-      "rockingTransitionDuration": 2000,
-      "explodingTransitionDuration": 300,
-      "childTransitionDuration": 150,
-      "customOrigin": [180, 140, 51]
+  "ModelProperties": {
+    "rockingTransitionDuration": 2000,
+    "explodingTransitionDuration": 300,
+    "childTransitionDuration": 150,
+    "customOrigin": [180, 140, 51]
+  },
+
+  "TooltipProperties": [
+    {
+      "objectName": "Motor_gearbox_1TT1",
+      "pathToShow": "MainMenu",
+      "text": "Right text",
+      "image": "textures/4x3.png",
+      "axisOfRotation": [0, 1, 0],
+      "rotatingObjectNDCLeft": -0.5,
+      "rotatingObjectNDCRight": 0.5,
+      "rotatingObjectNDCTop": 0.25,
+      "rotatingObjectNDCBottom": -0.25,
+      "circleSize": 30,
+      "playPulseAnimation": true,
+      "position": [0, 0]
     },
+    {
+      "objectName": "Wheel_1_1BB1",
+      "pathToShow": "MainMenu",
+      "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
+      "image": "AfficheDUT-French.png",
+      "axisOfRotation": [0, 0, 1],
 
-    "TooltipProperties": [
-      {
-        "objectName": "Motor_gearbox_1TT1",
-        "pathToShow": "MainMenu",
-        "text": "Right text",
-        "image": "textures/4x3.png",
-        "axisOfRotation": [0, 1, 0],
-        "rotatingObjectNDCLeft": -0.5,
-        "rotatingObjectNDCRight": 0.5,
-        "rotatingObjectNDCTop": 0.25,
-        "rotatingObjectNDCBottom": -0.25,
-        "circleSize": 30,
-        "playPulseAnimation": true
-      },
-      {
-        "objectName": "Wheel_1_1BB1",
-        "pathToShow": "MainMenu",
-        "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
-        "image": "AfficheDUT-French.png",
-        "axisOfRotation": [0, 0, 1],
-
-        "rotatingObjectNDCLeft": -0.5,
-        "rotatingObjectNDCRight": 0.5,
-        "rotatingObjectNDCTop": 0.25,
-        "rotatingObjectNDCBottom": -0.25,
-        "circleSize": 30,
-        "playPulseAnimation": false
-      }
-    ]
-  }
+      "rotatingObjectNDCLeft": -0.5,
+      "rotatingObjectNDCRight": 0.5,
+      "rotatingObjectNDCTop": 0.25,
+      "rotatingObjectNDCBottom": -0.25,
+      "circleSize": 30,
+      "playPulseAnimation": false,
+      "position": [0, 0]
+    }
+  ]
+}
   
