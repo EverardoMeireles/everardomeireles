@@ -1,11 +1,11 @@
 import { useLoader, useFrame } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { Suspense, useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState, useRef, forwardRef } from "react";
 import * as THREE from "three";
 import React from "react";
 import { TextureLoader } from 'three';
 
-export const SimpleLoader = React.memo((props) => {
+export const SimpleLoader = forwardRef((props, ref) => {
     const useStore = props.useStore;
     const {position = [0, 0, 0]} = props;
     const {sceneName = "threeJsScene.glb"} = props; // the model/scene's name
@@ -436,7 +436,7 @@ export const SimpleLoader = React.memo((props) => {
 
     return (
     <Suspense fallback={null}>
-        <primitive position={position} object={mainScene.scene} />
+        <primitive ref={ref} position={position} object={mainScene.scene} />
     </Suspense>
     )
 })

@@ -214,7 +214,7 @@ function App() {
   
   const [enableTutorial, setEnableTutorial] = useState(false);
 
-  const scene = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + 'NewthreeJsSceneLamp.glb')
+  const scene = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + 'NewthreeJsScene.glb')
 
   // Load initial main sceneeeeee
   useEffect(() => {

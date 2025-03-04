@@ -1,5 +1,5 @@
 import { Environment } from "@react-three/drei";
-import { Suspense, useState, useEffect, useRef } from "react";
+import { Suspense, useState, useEffect, useRef  } from "react";
 import { Camera } from "./components/Camera";
 import { SimpleLoader } from "./components/SimpleLoader";
 import { OrbitingPointLight } from './components/OrbitingPointLights';
@@ -25,6 +25,7 @@ import { CurveLightAnimation } from "./components/CurveLightAnimation";
 import { PointLightAnimation } from "./components/PointLightAnimation";
 import { ObjectLink } from "./components/ObjectLink";
 import { ParticleEmitter } from "./components/ParticleEmitter";
+import { DynamicMaterialLoader } from "./components/DynamicMaterialLoader";
 import { AnimationMixer } from 'three';
 
 
@@ -287,28 +288,28 @@ export function SceneContainer(props) {
 
                 <Suspense>
                     {/* <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10}> */}
-                        <SimpleLoader  {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["LampAction.001","RopeAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
-                        animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} sceneName = {"NewthreeJsSceneLamp.glb"} 
-                        hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
-                        ></SimpleLoader>
-
-                
                     <ambientLight intensity = {0.1}></ambientLight>
                     {/* <ambientLight intensity = {1}></ambientLight> */}
 
                     <pointLight position={ [46, 83, -47]} color={0xb8774f}></pointLight>
 
-
+    <DynamicMaterialLoader 
+        lowResFile="low_512.glb"
+        midResFile="high_4096_NOPBR.glb"
+        highResFile="high_4096_PBR.glb"
+        forceLowResTrigger={false}
+        forceMidResTrigger={false}
+        forceHighResTrigger={false}
+    >
+            <SimpleLoader  {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["LampAction.001","RopeAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
+                        animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} 
+                        hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
+                        >
+            </SimpleLoader>
+      </DynamicMaterialLoader>
 
                     <Suspense>
                         <ObjectLink position={[48, 89, -49]} scale={[1, 1, 1]} scene={mainScene} linkedObjectName = {"Lamp"} objectToLink={object}>
-                            {/* <mesh>
-                                <boxGeometry args={[10, 10, 10]} />
-                                <meshStandardMaterial color="orange" />
-                            </mesh>
-
-                            <primitive object={object.scene || object} /> */}
-                            {/* <mesh> */}
                             <ParticleEmitter 
                                 {...{useStore}} 
                                 imageNames={["fire.png", "fire4.png"]}
@@ -327,7 +328,6 @@ export function SceneContainer(props) {
                                 rotation={[0, 1, 0]}
                                 direction={[0, 1, 0]}
                             />
-                            {/* </mesh> */}
                             <PointLightAnimation
                             position={[0, 0, 0]}
                             colors={[0x773502, 0xff8c00, 0xffd700]}
