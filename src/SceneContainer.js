@@ -312,7 +312,7 @@ export function SceneContainer(props) {
                         <ObjectLink position={[48, 89, -49]} scale={[1, 1, 1]} scene={mainScene} linkedObjectName = {"Lamp"} objectToLink={object}>
                             <ParticleEmitter 
                                 {...{useStore}} 
-                                imageNames={["fire.png", "fire4.png"]}
+                                imageNames={["fire.png", "fire2.png"]}
                                 count={15}
                                 speed={10}
                                 initialSize={10}
