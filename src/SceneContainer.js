@@ -90,8 +90,7 @@ export function SceneContainer(props) {
 
   // Force swap the scene's materials if graphical mode changes
   useEffect(() => {
-    if(filesToLoadBeforeEnablingMaterialSwap){
-        // console.log("swap")
+    if(enableMaterialSwap){
         setForceLowresMaterial(false);
         setForceMidresMaterial(false);
         setForceHighResMaterial(false);
@@ -141,33 +140,33 @@ export function SceneContainer(props) {
     ///////////
 
     //3D info
-//   useEffect(() => {
-//     const intervalId = setInterval(() => {
-//         console.clear()
-//         console.log("calls: " + gl.info.render.calls)
-//         console.log("triangles: " + gl.info.render.triangles)
-//         console.log("geometries: " + gl.info.memory.geometries)
-//         console.log("textures: " + gl.info.memory.textures)
-//         // console.log("---------------------")
-//           }, 500); // Check every 1000 milliseconds
-      
-//           return () => {
-//             clearInterval(intervalId);
-//           };
-//   },[])
+    // useEffect(() => {
+    //     const intervalId = setInterval(() => {
+    //         console.clear()
+    //         console.log("calls: " + gl.info.render.calls)
+    //         console.log("triangles: " + gl.info.render.triangles)
+    //         console.log("geometries: " + gl.info.memory.geometries)
+    //         console.log("textures: " + gl.info.memory.textures)
+    //         // console.log("---------------------")
+    //         }, 500); // Check every 1000 milliseconds
+        
+    //         return () => {
+    //             clearInterval(intervalId);
+    //         };
+    // },[])
 
     //FPS counter
-    const accuDeltasForFPS = useRef(0);
-    const accuFramesForFPS = useRef(0);
-    useFrame((state, delta)=>{
-        accuDeltasForFPS.current += delta;
-        accuFramesForFPS.current += 1;
-        if(accuDeltasForFPS.current >= 1){
-            console.log("FPS:" + accuFramesForFPS.current);
-            accuDeltasForFPS.current = 0;
-            accuFramesForFPS.current = 0;
-        }
-    });
+    // const accuDeltasForFPS = useRef(0);
+    // const accuFramesForFPS = useRef(0);
+    // useFrame((state, delta)=>{
+    //     accuDeltasForFPS.current += delta;
+    //     accuFramesForFPS.current += 1;
+    //     if(accuDeltasForFPS.current >= 1){
+    //         console.log("FPS:" + accuFramesForFPS.current);
+    //         accuDeltasForFPS.current = 0;
+    //         accuFramesForFPS.current = 0;
+    //     }
+    // });
 
     <VideoLoader rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
 
@@ -352,6 +351,7 @@ export function SceneContainer(props) {
                     {/* <ambientLight intensity = {1}></ambientLight> */}
 
                     <pointLight position={ [46, 83, -47]} color={0xb8774f}></pointLight>
+                    <Suspense>
 
     <DynamicMaterialLoader
         lowResFile="low_512.glb"
@@ -361,12 +361,13 @@ export function SceneContainer(props) {
         forceMidResTrigger={forceMidresMaterial}
         forceHighResTrigger={forceHighResMaterial}
     >
-            <SimpleLoader  {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["LampAction.001","RopeAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
+            <SimpleLoader  {...{useStore}} scene={mainScene} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["LampAction.001","RopeAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
                         animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} 
                         hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} 
                         >
             </SimpleLoader>
       </DynamicMaterialLoader>
+      </Suspense>
 
                     <Suspense>
                         <ObjectLink position={[48, 89, -49]} scale={[1, 1, 1]} scene={mainScene} linkedObjectName = {"Lamp"} objectToLink={object}>
