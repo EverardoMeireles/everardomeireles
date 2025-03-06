@@ -8,7 +8,7 @@ import { TextureLoader } from 'three';
 export const SimpleLoader = forwardRef((props, ref) => {
     const useStore = props.useStore;
     const {position = [0, 0, 0]} = props;
-    const {sceneName = "threeJsScene.glb"} = props; // the model/scene's name
+    const {scene = undefined} = props; // the scene
     
     // feature: play animation(s) on trigger
     const {animationToPlay = "idle"} = props; // the name of the animation to be played
@@ -69,10 +69,9 @@ export const SimpleLoader = forwardRef((props, ref) => {
     const triggers = useStore((state) => state.triggers);
 
     const setInitialSceneLoaded = useStore((state) => state.setInitialSceneLoaded);
-    const mainScene = useStore((state) => state.mainScene);
 
     // initialize the animation mixer
-    const mixer = useRef(new THREE.AnimationMixer(mainScene.scene));
+    const mixer = useRef(new THREE.AnimationMixer(scene.scene));
 
     // ref and state of the HideReveal feature
     const fadeInObjectsKeysRef = useRef([]);
@@ -88,8 +87,6 @@ export const SimpleLoader = forwardRef((props, ref) => {
     const [materialGltf, setMaterialGltf] = useState(null);
     const [materialError, setMaterialError] = useState(false);
 
-
-
     //////////////////////////////////////////////////////////
     /////// Feature : Set children object's custom UVs ///////
     //////////////////////////////////////////////////////////
@@ -98,7 +95,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
     // Known issue: uv of index '0' doesn't cause a visual update
     useEffect(() => {
         if (Object.keys(customObjectsUvs).length !== 0) {
-          mainScene.scene.traverse((child) => {
+          scene.scene.traverse((child) => {
             if (child.isMesh && customObjectsUvs.hasOwnProperty(child.name)) {
               const uvIndex = customObjectsUvs[child.name];
               const uvAttributeName = uvIndex === 0 ? 'uv' : `uv${uvIndex}`; // Determine the correct UV attribute name
@@ -113,7 +110,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
             }
           });
         }
-      }, [mainScene, customObjectsUvs]);
+      }, [scene, customObjectsUvs]);
 
 
     //////////////////////////////////////////////////////////
@@ -125,7 +122,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
         // check if both of the offset's values are not 0
         if(uvOffSet[0] + uvOffSet[1] != 0){
             // Traverse the entire scene to apply the UV updates
-            mainScene.scene.traverse((child) => {
+            scene.scene.traverse((child) => {
                 if (child.material) {
                     const materials = Array.isArray(child.material) ? child.material : [child.material];
                     materials.forEach((material) => {
@@ -138,7 +135,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
                 }
             });
         }
-      }, [mainScene, uvOffsetAmount, uvOffSet]);
+      }, [scene, uvOffsetAmount, uvOffSet]);
 
 
     //////////////////////////////////////////////////////////
@@ -151,8 +148,8 @@ export const SimpleLoader = forwardRef((props, ref) => {
             const loader = new GLTFLoader();
             loader.load(
                 process.env.PUBLIC_URL + '/materials/' + materialName,
-                (mainScene) => {
-                    setMaterialGltf(mainScene);
+                (scene) => {
+                    setMaterialGltf(scene);
                 },
                 undefined,
                 (error) => {
@@ -166,13 +163,13 @@ export const SimpleLoader = forwardRef((props, ref) => {
     // Apply material if loadMaterialManually is true and material is loaded
     useEffect(() => {
         if (loadMaterialManually && !materialError && materialGltf) {
-            mainScene.scene.traverse((child) => {
+            scene.scene.traverse((child) => {
                 if (child.isMesh) {
                     child.material = materialGltf.scene.children[0].material;
                 }
             });
         }
-    }, [mainScene, loadMaterialManually, materialGltf, materialError]);
+    }, [scene, loadMaterialManually, materialGltf, materialError]);
 
     
     //////////////////////////////////////////////////////////
@@ -202,7 +199,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
 
     // start to play the animation when scene loads if the prop autoPlay is true
     useEffect(() => {
-        if (autoPlay && mainScene.animations.length) {
+        if (autoPlay && scene.animations.length) {
             playAnimation();
         }
     }, [autoPlay]);
@@ -216,7 +213,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
 
     // plays the animation
     function playAnimation(){
-        mainScene.animations.forEach(clip => {
+        scene.animations.forEach(clip => {
             if(animationToPlay.includes(clip.name)){
                 const action = mixer.current.clipAction(clip);
                 setupLoopMode(action)
@@ -233,7 +230,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
     // Modify this to only reset appropriate objects???
     // Resets the scale of all objects back to 0
     function resetObjectsScale(){
-        mainScene.scene.traverse((child) => {
+        scene.scene.traverse((child) => {
                 child.scale.x = 1
                 child.scale.y = 1
                 child.scale.z = 1
@@ -245,7 +242,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
 
         hoverLinkedObjects.forEach(function(objectGroupNames) {
             if(objectGroupNames.includes(object.name)){
-                mainScene.scene.traverse((child) => {
+                scene.scene.traverse((child) => {
                     if(objectGroupNames.includes(child.name)){
                         returnedObjects.push(child)
                     }
@@ -264,7 +261,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
     // trigger the scale animation based on hover state(assumes that base object scales are [x:1, y:1, z:1])
     useEffect(() => {
         if(hover && hoveredObject != undefined && hoverAffectedObjects.includes(hoveredObject) ){
-            mainScene.scene.traverse((child) => {
+            scene.scene.traverse((child) => {
                 if(child.name == hoveredObject){
                     resetObjectsScale();
                     setCurrentLinkedObjects(getLinkedObjects(child))
@@ -277,7 +274,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
             setAnimationFadeOut(true)
             setTriggerScaleAnimation(false);
         }
-    }, [mainScene.scene, hoveredObject]);
+    }, [scene.scene, hoveredObject]);
 
     // Animation where the object scales up and down
     useFrame(() => {
@@ -342,20 +339,20 @@ export const SimpleLoader = forwardRef((props, ref) => {
     // Hide marked objects at the start
     useEffect(() => {
         Object.entries(objectsHideRevealTriggers).forEach(([key, value]) => {
-            mainScene.scene.traverse((child) => {
+            scene.scene.traverse((child) => {
                 if (child.isMesh && child.name === key) {
                     // console.log(child.name)
                 child.scale.set(0, 0, 0);
                 }
             });
         });
-    }, [mainScene]);
+    }, [scene]);
 
       // set scale factors of marked objects
     useEffect(() => {
-        // console.log(mainScene)
+        // console.log(scene)
         Object.entries(objectsHideRevealTriggers).forEach(([key, value]) => {
-            mainScene.scene.traverse((child) => {
+            scene.scene.traverse((child) => {
                 if (child.isMesh && child.name === key) {
                     if(child.scale["x"] <= 0){
                         objectHideRevealDirections[key] = 1;
@@ -367,7 +364,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
                 }
             });
         });
-    }, [mainScene, objectHideRevealDirections]);
+    }, [scene, objectHideRevealDirections]);
 
     // trigger the fade in scale animation(trigger is set to true)
     useEffect(() => {
@@ -385,7 +382,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
     useFrame(() => {
         if (fade) {
             fadeInObjectsKeysRef.current.forEach((key)=>{
-                mainScene.scene.traverse((child) => {
+                scene.scene.traverse((child) => {
                     // Don't fade in or out if already done and not set to be reversible
                     if (child.isMesh && child.name === key) {
                         if((child.scale["x"] >= 1 && objectHideRevealDirections[key] == 1) || (child.scale["x"] <= 0 && objectHideRevealDirections[key] == -1)){
@@ -422,9 +419,9 @@ export const SimpleLoader = forwardRef((props, ref) => {
 
     // initiate ambient occlusion if useAo is set to true
     if(useAo) {
-        for( let node in mainScene.nodes) {
-            if('material' in mainScene.nodes[node]) {
-                mainScene.nodes[node].material.aoMapIntensity = ambientOcclusionIntensity;
+        for( let node in scene.nodes) {
+            if('material' in scene.nodes[node]) {
+                scene.nodes[node].material.aoMapIntensity = ambientOcclusionIntensity;
             }
         }
     }
@@ -432,11 +429,11 @@ export const SimpleLoader = forwardRef((props, ref) => {
     useEffect(() => {
         // console.log("set initial scene loaded")
         setInitialSceneLoaded(true);
-    }, [mainScene, setInitialSceneLoaded]);
+    }, [scene, setInitialSceneLoaded]);
 
     return (
     <Suspense fallback={null}>
-        <primitive ref={ref} position={position} object={mainScene.scene} />
+        <primitive ref={ref} position={position} object={scene.scene} />
     </Suspense>
     )
 })
