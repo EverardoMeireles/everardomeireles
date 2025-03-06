@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useState, useRef } from "react";
+import { Suspense, useCallback, useState, useRef, useEffect } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
@@ -24,12 +24,15 @@ export function FadingTitle(props) {
     const timerRef = useRef(null);
 
     // start
-    if (delay !== 0) {
-        timerRef.current = setTimeout(() => {
-            setStartFade(true);
-            clearTimeout(timerRef.current);
-        }, delay);
-    }
+    useEffect(()=>{
+        if (delay !== 0) {
+            timerRef.current = setTimeout(() => {
+                setStartFade(true);
+                clearTimeout(timerRef.current);
+            }, delay);
+        }
+    },[])
+
 
     // Fade in/out animation
     useFrame((state, delta)=> {
@@ -46,7 +49,7 @@ export function FadingTitle(props) {
     // Rotate mesh
     const callbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0), (rotation))) : undefined
-        ,[]); // eslint-disable-line react-hooks/exhaustive-deps
+        ,[]);
 
     return(
         <group

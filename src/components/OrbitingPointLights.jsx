@@ -51,10 +51,7 @@ export function OrbitingPointLight(props) {
         position={orbitCenterPosition}
         ref={orbitRef}
         >
-            <pointLight intensity={lightIntensivity} position={axis} />
-            <boxGeometry />
-            <meshStandardMaterial emissive={lightColor} emissiveIntensity={bloomIntensivity} toneMapped={false} />
-            {/* <meshBasicMaterial  toneMapped={false} /> */}
+            <pointLight color={lightColor} intensity={lightIntensivity} position={axis} />
         </mesh>
     )
 }

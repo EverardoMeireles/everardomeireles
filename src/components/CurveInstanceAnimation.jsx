@@ -7,7 +7,7 @@ import * as THREE from 'three';
 // Objects must be .glb and have their origin at the center of the object (in blender: Object/set origin/geometry to origin)
 export const CurveInstanceAnimation = React.memo((props) => {
     const {instanceInterval = 500} = props; // time in milliseconds between instancing objects
-    const {instanceSpeed = 0.005} = props; // the speed of the animation
+    const {instanceSpeed = 0.001} = props; // the speed of the animation
     const {instancedObject = "placeholder.glb"} = props; // the name of the model, placed inside public/models
     const {curveNumber = 1 } = props; // number of curves(maximum 9), they will be instanciated around the initial curve
     const {offSetAxis1 = "z"} = props; // the first axis that the curve is facing

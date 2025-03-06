@@ -40,6 +40,7 @@ export const Raycaster = React.memo((props) => {
         if(enabled){
             if (hoveredObject) {
                 setCurrentObjectClicked(hoveredObject);
+                console.log(currentObjectClicked)
             } 
             else {
                 setCurrentObjectClicked(""); // Optionally clear the clicked object if clicking on empty space

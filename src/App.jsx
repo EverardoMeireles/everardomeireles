@@ -17,11 +17,8 @@ const useStore = create((set) => ({
   mainScene: undefined,
   setMainScene: (loaded) => set(() => ({ mainScene: loaded })),
 
-  raycasterEnabled: false,
+  raycasterEnabled: true,
   setRaycasterEnabled: (loaded) => set(() => ({ raycasterEnabled: loaded })),
-
-  initialSceneLoaded: false,
-  setInitialSceneLoaded: (loaded) => set(() => ({ initialSceneLoaded: loaded })),
 
   preloadDone: false,
   setPreloadDone: (preloaded) => set(() => ({ preloadDone: preloaded })),

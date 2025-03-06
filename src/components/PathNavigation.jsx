@@ -1,6 +1,7 @@
 import React from "react";
 
-// this component is used to navigate trought the scene using the url paths, use with HudMenu.jsx
+// this component is used to navigate trought the scene using the url paths, use with HudMenu.jsx 
+// or another component that uses the url paths
 export function PathNavigation(props) {
     const useStore = props.useStore;
     const {setDesiredPath} = props.useStore();

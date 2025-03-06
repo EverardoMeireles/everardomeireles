@@ -376,7 +376,7 @@ function compareCurves(curve1, curve2) {
                     controls.current.target.y += -keyboardControlsSpeed;
                 break;
             }
-            setCameraState(
+            setCameraState(//error while holding any key after a full renrender(by modifying this comment for example)
                 [cam.current.position.x, cam.current.position.y, cam.current.position.z],
                 [cam.current.rotation.x, cam.current.rotation.y, cam.current.rotation.z]
             );

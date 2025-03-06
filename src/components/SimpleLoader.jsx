@@ -68,8 +68,6 @@ export const SimpleLoader = forwardRef((props, ref) => {
     const toggleTrigger = useStore((state) => state.toggleTrigger);
     const triggers = useStore((state) => state.triggers);
 
-    const setInitialSceneLoaded = useStore((state) => state.setInitialSceneLoaded);
-
     // initialize the animation mixer
     const mixer = useRef(new THREE.AnimationMixer(scene.scene));
 
@@ -425,11 +423,6 @@ export const SimpleLoader = forwardRef((props, ref) => {
             }
         }
     }
-
-    useEffect(() => {
-        // console.log("set initial scene loaded")
-        setInitialSceneLoaded(true);
-    }, [scene, setInitialSceneLoaded]);
 
     return (
     <Suspense fallback={null}>
