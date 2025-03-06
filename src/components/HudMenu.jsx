@@ -19,10 +19,11 @@ export function HudMenu(props) {
     const setLanguage = useStore((state) => state.setLanguage);
     const setGraphicalMode = useStore((state) => state.setGraphicalMode);
     const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
-    const finishedBenchmark = useStore((state) => state.finishedBenchmark);
+    const enableDynamicGraphicalModeSetting = useStore((state) => state.enableDynamicGraphicalModeSetting);
+    const setEnableDynamicGraphicalModeSetting = useStore((state) => state.setEnableDynamicGraphicalModeSetting);
     // const animationTriggerState = useStore((state) => state.animationTriggerState);
     // const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
-    
+
 	//DEBUG animations
     const toggleTrigger = useStore((state) => state.toggleTrigger);
 
@@ -34,6 +35,10 @@ export function HudMenu(props) {
     const marginDisplay = {marginBottom: "10px", marginLeft:"40px", "display": "inline-block"};
 
     const numberOfGraphicalModes = Object.keys(graphicsModes).length;
+
+    const toggleDynamicGraphicalModeSetting = () => {
+        setEnableDynamicGraphicalModeSetting(!enableDynamicGraphicalModeSetting);
+      };
 
     // Function to hide the image after a delay
     const hideImage = () => {
@@ -47,7 +52,7 @@ export function HudMenu(props) {
         const timer = hideImage();
 
         return () => clearTimeout(timer);
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     // Reset visibility and timer on currentGraphicalMode change
     useEffect(() => {
@@ -55,19 +60,30 @@ export function HudMenu(props) {
         const timer = hideImage();
 
         return () => clearTimeout(timer);
-    }, [currentGraphicalMode]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [currentGraphicalMode, enableDynamicGraphicalModeSetting]);
 
     return(
     <>
         {/* hide the toggle unless the graphics toggle is enabled in the settings
         and in case the graphics check is also enabled, wait for the benchmark to 
         finish before showing the toggle */}
-        {(config.show_html_menu_graphics_toggle && (!config.check_graphics || (config.check_graphics && finishedBenchmark))) &&
+        {(config.show_html_menu_graphics_toggle && (!config.check_graphics || (config.check_graphics))) &&
             <div style={HudMenuStyles.arrowContainerStyle}>
-                {/* DEBUG animations */}
-                {/* <b onClick={() => {toggleTrigger("trigger1")}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b> */}
-                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
-                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
+                {/* Auto button */}
+                <div
+                    onClick={toggleDynamicGraphicalModeSetting}
+                    style={{
+                        color: enableDynamicGraphicalModeSetting ? 'green' : 'red',
+                        cursor: 'pointer',
+                        opacity: goesTransparent && isTransparent ? transparency : 1,
+                        visibility: goesInvisible && isTransparent ? 'hidden' : 'visible'
+                    }}>Auto</div>
+
+                {/* Graphical mode arrows */}
+                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1); setEnableDynamicGraphicalModeSetting(false)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
+                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1); setEnableDynamicGraphicalModeSetting(false)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
+                
+                {/* Graphical mode indicator */}
                 {graphicalLevelIndicatorIsEnabled && <img 
                     style = { {...HudMenuStyles.FlagImgStyle(24, 32), opacity: goesTransparent && isTransparent ? transparency : 1, 
                     visibility: goesInvisible && isTransparent ? 'hidden' : 'visible'}} 

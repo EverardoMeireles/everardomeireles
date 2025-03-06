@@ -1,87 +1,27 @@
-// import React, { useState, useEffect, useRef } from "react";
-// import { useLoader } from "@react-three/fiber";
-// import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-
-// // This component progressively applies materials to its child scene
-// export const DynamicMaterialLoader = React.memo(({ lowResFile, midResFile = undefined, highResFile, children }) => { 
-//   const sceneRef = useRef(); // Reference for the child scene
-//   const [material, setMaterial] = useState(null); 
-//   const [currentStage, setCurrentStage] = useState("low"); // Tracks the material stage: "low" -> "mid" -> "high"
-
-//   // Load low-res material
-//   const lowResMaterial = useLoader(GLTFLoader, process.env.PUBLIC_URL + `/materials/${lowResFile}`);
-
-//   // Load mid-res material (if provided)
-//   useEffect(() => {
-//     if (midResFile) {
-//       let isMounted = true;
-
-//       new GLTFLoader().load(process.env.PUBLIC_URL + `/materials/${midResFile}`, (gltf) => {
-//         if (isMounted) {
-//           setMaterial(gltf.scene.children[0].material);
-//           setCurrentStage("mid");
-//         }
-//       });
-
-//       return () => { isMounted = false; };
-//     }
-//   }, [midResFile]);
-
-//   // Load high-res material in the background
-//   useEffect(() => {
-//     let isMounted = true;
-
-//     new GLTFLoader().load(process.env.PUBLIC_URL + `/materials/${highResFile}`, (gltf) => {
-//       if (isMounted) {
-//         setMaterial(gltf.scene.children[0].material);
-//         setCurrentStage("high");
-//       }
-//     });
-
-//     return () => { isMounted = false; };
-//   }, [highResFile]);
-
-//   // Apply the material once it's loaded
-//   useEffect(() => {
-//     if (sceneRef.current && lowResMaterial) {
-//       sceneRef.current.traverse((child) => {
-//         if (child.isMesh) {
-//           if (currentStage === "low") {
-//             child.material = lowResMaterial.scene.children[0].material;
-//           } else {
-//             child.material = material;
-//           }
-//         }
-//       });
-//     }
-//   }, [sceneRef, lowResMaterial, material, currentStage]);
-
-//   return React.cloneElement(children, { ref: sceneRef });
-// });
-
-
-
 import React, { useState, useEffect, useRef } from "react";
-import { useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 // Global material cache to prevent unnecessary loading
 const materialCache = new Map();
 
 // This component progressively applies materials to its child scene
-export const DynamicMaterialLoader = React.memo(({ 
-  lowResFile, 
-  midResFile = undefined, 
-  highResFile, 
-  forceLowResTrigger = false, 
-  forceMidResTrigger = false, 
-  forceHighResTrigger = false, 
-  children 
-}) => { 
+export const DynamicMaterialLoader = React.memo((props) => { 
+  const {lowResFile = false} = props;
+  const {midResFile = false} = props;
+  const {highResFile = false} = props;
+  const {forceLowResTrigger = false} = props;
+  const {forceMidResTrigger = false} = props;
+  const {forceHighResTrigger = false} = props;
+  const {children} = props;
+
   const sceneRef = useRef(); // Reference for the child scene
+
   const [currentMaterial, setCurrentMaterial] = useState(null); // Stores the active material
-  const [currentStage, setCurrentStage] = useState("low"); // Tracks material stage: "low" -> "mid" -> "high"
   const [loadedMaterials, setLoadedMaterials] = useState({ low: null, mid: null, high: null });
+
+  ///////////////////////////////////
+  // Material loading and applying //
+  ///////////////////////////////////
 
   // Function to load a material if it's not in the cache
   const loadMaterial = (file, stage) => {
@@ -109,7 +49,6 @@ export const DynamicMaterialLoader = React.memo(({
       setLoadedMaterials((prev) => ({ ...prev, low: material }));
       if (!forceMidResTrigger && !forceHighResTrigger) {
         setCurrentMaterial(material);
-        setCurrentStage("low");
       }
     });
   }, [lowResFile, forceMidResTrigger, forceHighResTrigger]);
@@ -121,7 +60,6 @@ export const DynamicMaterialLoader = React.memo(({
         setLoadedMaterials((prev) => ({ ...prev, mid: material }));
         if (!forceMidResTrigger) {
           setCurrentMaterial(material);
-          setCurrentStage("mid");
         }
       });
     }
@@ -134,11 +72,14 @@ export const DynamicMaterialLoader = React.memo(({
         setLoadedMaterials((prev) => ({ ...prev, high: material }));
         if (!forceHighResTrigger) {
           setCurrentMaterial(material);
-          setCurrentStage("high");
         }
       });
     }
   }, [highResFile, forceLowResTrigger, forceMidResTrigger]);
+
+  //////////////////////
+  // Material forcing //
+  //////////////////////
 
   // Force material based on trigger props (only change material if it’s different)
   useEffect(() => {
@@ -146,18 +87,13 @@ export const DynamicMaterialLoader = React.memo(({
       sceneRef.current.traverse((child) => {
         if (child.isMesh) {
           let newMaterial = currentMaterial;
-
           if (forceLowResTrigger) {
             newMaterial = loadedMaterials.low;
-            setCurrentStage("low");
           } else if (forceMidResTrigger && loadedMaterials.mid) {
             newMaterial = loadedMaterials.mid;
-            setCurrentStage("mid");
           } else if (forceHighResTrigger && loadedMaterials.high) {
             newMaterial = loadedMaterials.high;
-            setCurrentStage("high");
           }
-
           // Only apply if the material is different
           if (newMaterial && child.material !== newMaterial) {
             child.material = newMaterial;

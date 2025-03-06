@@ -35,11 +35,11 @@ const useStore = create((set) => ({
   currentGraphicalMode: config.default_graphical_setting,
   setGraphicalMode: (mode) => set(() => ({ currentGraphicalMode: mode })),
 
-  finishedBenchmark: false,
-  setFinishedBenchmark: (finished) => set(() => ({ finishedBenchmark: finished })),
-
   currentLanguage: "Portuguese",
   setLanguage: (language) => set(() => ({ currentLanguage: language })),
+
+  enableDynamicGraphicalModeSetting: true,
+  setEnableDynamicGraphicalModeSetting: (trueOrFalse) => set(() => ({ enableDynamicGraphicalModeSetting: trueOrFalse })),
 
   currentCameraMovements: { zoom: true, pan: true, rotate: true },
   setcurrentCameraMovements: (cameraMovements) => set(() => ({ currentCameraMovements: cameraMovements })),
@@ -199,6 +199,8 @@ const useStore = create((set) => ({
 }));
 
 function App() {
+  THREE.Cache.enabled = true;
+
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
   const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);

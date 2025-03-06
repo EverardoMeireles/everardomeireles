@@ -5,9 +5,12 @@
     <title>Please enable Hardware acceleration</title>
   </head>
   <body>
-
     <h1 style="text-align: center;" id="title1"></h1>
     <div id="div1"></div>
+    <footer>
+      <div id="fpsCount"></div>
+      <dib style="font-size: 9px;">Redirected by: GraphicalModeSetter.jsx</dib>
+    </footer>
     <script>
       const availableLanguages = ["fr-FR"]
       const LanguageText = {
@@ -31,19 +34,19 @@
         }
     })(window.navigator.userAgent.toLowerCase());
 
-    // var usrlang = navigator.language || navigator.userLanguage;
     var usrlang = availableLanguages.includes(navigator.language || navigator.userLanguage) ? navigator.language || navigator.userLanguage:"en-US";
-    console.log(browserName);
-    console.log(usrlang);
-
     const img = document.createElement("img");
     const element = document.getElementById("div1");
-    const titleText = document.getElementById("title1");
+    const title1Text = document.getElementById("title1");
+    const title2Text = document.getElementById("fpsCount");
     const textNode = document.createTextNode(LanguageText[usrlang].text);
+    const lastFps = document.createTextNode("Last recorded FPS: " + new URLSearchParams(window.location.search).get('fps'))
+
     img.src = "textures/HardwareAcceleration"+browserName+usrlang+".png";
     img.style = "width: auto height:auto;";
     element.appendChild(img);
-    titleText.appendChild(textNode);
+    title1Text.appendChild(textNode);
+    title2Text.appendChild(lastFps);
     </script>
   </body>
 </html>

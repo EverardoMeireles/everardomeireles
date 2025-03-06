@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 // replace it by store's value later
 export const graphicsModes = {
     0:"potato",
@@ -11,18 +13,13 @@ export var oneOrZero = {
     0: 1
 }
 
+export function CalculateAverageOfArray(arrayFPS){
+    return arrayFPS.reduce((a, b) => a + b, 0) / arrayFPS.length;
+}
+
 // get a dictionary's key by its value
 export function getKeyByValue(object, value) {
     return Object.keys(object).find(key => object[key] === value);
-}
-
-// A function to smooth out the camera movement
-export function smoothStep(x) {
-    let Sn = -2 * Math.pow(x, 3) + 3 * Math.pow(x, 2);
-    if(x >= 1){
-        Sn = 1;
-    }
-    return Sn;
 }
 
 export function roundToDecimalPlace (num, decimals){
@@ -42,19 +39,32 @@ export function easeInCubic(t) {
     return Math.pow(t, 3);
 }
 
-// increase or decrease the graphics settings
-export function increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, higherOrLower)
-{
-    let newGraphicalModeKey;
-    let newGraphicalMode;
-
-    newGraphicalModeKey = parseInt(getKeyByValue(graphicsModes, currentGraphicalMode)) + higherOrLower
-    newGraphicalMode = graphicsModes[newGraphicalModeKey]
-
-    if(!(newGraphicalModeKey < 0) && !(newGraphicalModeKey >= Object.keys(graphicsModes).length)){
-        setGraphicalMode(newGraphicalMode)
+// A function to smooth out the camera movement
+export function smoothStep(x) {
+    let Sn = -2 * Math.pow(x, 3) + 3 * Math.pow(x, 2);
+    if(x >= 1){
+        Sn = 1;
     }
+    return Sn;
 }
+
+// increase or decrease the graphics settings
+export function increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, higherOrLower) {
+    const totalModes = Object.keys(graphicsModes).length;
+    const currentKey = parseInt(getKeyByValue(graphicsModes, currentGraphicalMode));
+    let newGraphicalModeKey = currentKey + higherOrLower;
+    
+    // Clamp the value between 0 and totalModes - 1
+    newGraphicalModeKey = Math.max(0, Math.min(newGraphicalModeKey, totalModes - 1));
+    
+    const newGraphicalMode = graphicsModes[newGraphicalModeKey];
+    
+    // Optionally, only update if the mode changes
+    if (newGraphicalMode !== currentGraphicalMode) {
+      setGraphicalMode(newGraphicalMode);
+      console.log(newGraphicalMode);
+    }
+  }
 
 export function getRandomInt(min, max) {
     return Math.random() * (max - min + 1) + min;
@@ -99,3 +109,21 @@ export async function parseJson(filePath, objectToGet = null) {
         return null;
     }
 }
+
+export const pollForFilesInTHREECache = (filesArray) => {
+    try {
+    // Check that every file in the array is present in the THREE.Cache.
+    const allLoaded = filesArray.every((file) => {
+        const cached = THREE.Cache.get(file);
+        return cached;
+    });
+    if (allLoaded) {
+        // console.log("All files are fully loaded.");
+        return true;
+    }
+    return false;
+    } catch (error) {
+    console.error("Error polling materials:", error);
+    return false;
+    }
+};

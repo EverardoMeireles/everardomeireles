@@ -13,40 +13,34 @@ import { VideoLoader } from "./components/VideoLoader";
 import { PathNavigation } from "./components/PathNavigation";
 import { GraphicalModeSetter2 } from "./components/GraphicalModeSetter2";
 import { FadingTitle } from "./components/FadingTitle";
-import { TranslationTable } from "./TranslationTable";
-import { ResponsiveTable } from "./Styles";
 import { Raycaster } from "./components/Raycaster";
 import { CurveInstanceAnimation } from "./components/CurveInstanceAnimation";
 import { InstanceLoader } from "./components/InstanceLoader";
 import { PreloadAssets } from "./components/PreloadAssets";
 import { ExplodingModelLoader } from "./components/ExplodingModelLoader";
-import { customInstanceRotation, customInstanceColor } from "./PathPoints";
 import { CurveLightAnimation } from "./components/CurveLightAnimation";
 import { PointLightAnimation } from "./components/PointLightAnimation";
 import { ObjectLink } from "./components/ObjectLink";
 import { ParticleEmitter } from "./components/ParticleEmitter";
 import { DynamicMaterialLoader } from "./components/DynamicMaterialLoader";
+// import Raycaster from './components/Raycaster';
 import { AnimationMixer } from 'three';
-
-
-
+import { customInstanceRotation, customInstanceColor } from "./PathPoints";
+import { TranslationTable } from "./TranslationTable";
+import { ResponsiveTable } from "./Styles";
+import { pollForFilesInTHREECache } from "./Helper";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-
-
 
 import * as THREE from 'three';
 
 import config from './config.json';
-// import Raycaster from './components/Raycaster';
 
 export function SceneContainer(props) {
     const useStore = props.useStore;
 
-    // const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const desired_path = useStore((state) => state.desired_path);
     const transitionEnded = useStore((state) => state.transitionEnded);
-    const finishedBenchmark = useStore((state) => state.finishedBenchmark);
-    const currentSkillHovered = useStore((state) => state.currentSkillHovered); // eslint-disable-line no-unused-vars
+    const currentSkillHovered = useStore((state) => state.currentSkillHovered);
     const currentLanguage = useStore((state) => state.currentLanguage);
     const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const triggers = useStore((state) => state.triggers);
@@ -61,37 +55,78 @@ export function SceneContainer(props) {
     const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
     const mainScene = useStore((state) => state.mainScene);
 
-    const { gl } = useThree(); // eslint-disable-line no-unused-vars
+    const { gl } = useThree();
     const postloadingDelay = 3000
     
   let mixer;
   const [animTime, setAnimTime] = useState(0);
 
+  const [forceLowresMaterial, setForceLowresMaterial] = useState(false);
+  const [forceMidresMaterial, setForceMidresMaterial] = useState(false);
+  const [forceHighResMaterial, setForceHighResMaterial] = useState(false);
+
+  const [enableMaterialSwap, setEnableMaterialSwap] = useState(false);
+
+  const filesToLoadBeforeEnablingMaterialSwap = ["/materials/low_512.glb", "/materials/high_4096_NOPBR.glb", "/materials/high_4096_PBR.glb"]; 
+
+  // Block forcing the scene's materials to change until the materials are properly loaded
+  useEffect(() => {
+    let cancelled = false;
+    const intervalId = setInterval(() => {
+      if (!cancelled) {
+        const success = pollForFilesInTHREECache(filesToLoadBeforeEnablingMaterialSwap);
+        if (success) {
+            setEnableMaterialSwap(true);
+            clearInterval(intervalId);
+        }
+      }
+    }, 1000); // Check every 1000 milliseconds
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [setEnableMaterialSwap]);
+
+  // Force swap the scene's materials if graphical mode changes
+  useEffect(() => {
+    if(filesToLoadBeforeEnablingMaterialSwap){
+        // console.log("swap")
+        setForceLowresMaterial(false);
+        setForceMidresMaterial(false);
+        setForceHighResMaterial(false);
+        switch (currentGraphicalMode) {
+            case "potato":
+                setForceLowresMaterial(true)
+                break;
+            case "potatoPremium":
+            case "normal":
+                setForceMidresMaterial(true)
+                break;
+            case "high":
+                setForceHighResMaterial(true)
+                break;
+        }
+    }
+    
+  },[currentGraphicalMode])
+
   useEffect(() => {
     if (!mainScene.animations.length) return; // Ensure there are animations in the GLTF
     
-    // Create an AnimationMixer
-    mixer = new AnimationMixer(mainScene.scene);
+    mixer = new AnimationMixer(mainScene.scene); // Create an AnimationMixer
 
-    // Get the first animation clip (index 0)
-    const action = mixer.clipAction(mainScene.animations[0]);
-    
-    // Play the animation
-    action.play();
+    const action = mixer.clipAction(mainScene.animations[0]); // Get the first animation clip (index 0)
 
-    // Log the current frame time every frame
-    const logFrameTime = () => {
-    //   console.log(`Current frame time: ${action.time.toFixed(2)} seconds`);
-    };
+    action.play(); // Play the animation
+
     // Update the mixer in your render loop
     const clock = new THREE.Clock();
     const tick = () => {
       const delta = clock.getDelta(); // Time since last frame
       mixer.update(delta); // Update mixer with delta time
-      logFrameTime(); // Log the frame time
       requestAnimationFrame(tick); // Continue the loop
       setAnimTime(action.time.toFixed(2))
-    //   console.log(animTime)
     };
 
     tick(); // Start the loop
@@ -100,14 +135,40 @@ export function SceneContainer(props) {
     return () => mixer.stopAllAction();
   }, [mainScene]);
 
-    useFrame(() => {
-    //console.log(i)
-    // console.log("calls" + gl.info.render.calls)
-    // console.log("triangles" + gl.info.render.triangles)
-    // console.log("geometries" + gl.info.memory.geometries)
-    // console.log("textures" + gl.info.memory.textures)
 
+    ///////////
+    // Debug //
+    ///////////
+
+    //3D info
+//   useEffect(() => {
+//     const intervalId = setInterval(() => {
+//         console.clear()
+//         console.log("calls: " + gl.info.render.calls)
+//         console.log("triangles: " + gl.info.render.triangles)
+//         console.log("geometries: " + gl.info.memory.geometries)
+//         console.log("textures: " + gl.info.memory.textures)
+//         // console.log("---------------------")
+//           }, 500); // Check every 1000 milliseconds
+      
+//           return () => {
+//             clearInterval(intervalId);
+//           };
+//   },[])
+
+    //FPS counter
+    const accuDeltasForFPS = useRef(0);
+    const accuFramesForFPS = useRef(0);
+    useFrame((state, delta)=>{
+        accuDeltasForFPS.current += delta;
+        accuFramesForFPS.current += 1;
+        if(accuDeltasForFPS.current >= 1){
+            console.log("FPS:" + accuFramesForFPS.current);
+            accuDeltasForFPS.current = 0;
+            accuFramesForFPS.current = 0;
+        }
     });
+
     <VideoLoader rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
 
     var fadingTitlePosition0, fadingTitleScale0, fadingTitlePosition1, fadingTitleScale1,
@@ -252,16 +313,15 @@ export function SceneContainer(props) {
     return(
         <>
             {(desired_path === "Education" || postloadStart) && (
-            <OrbitingMenu {...{ useStore }} visible={!postloadStart} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]} />
+                <OrbitingMenu {...{ useStore }} visible={!postloadStart} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]} />
             )}
-            {/* <GraphicalModeSetter2 {...{useStore}} ></GraphicalModeSetter2> */}
             {/* <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {4000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {4600} transitionDuration = {1500} /> */}
             {/* <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
             {/* <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} modelName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} ></ExplodingModelLoader> */}
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             <Suspense fallback = {null} >
-                {(!finishedBenchmark && config.check_graphics) && <GraphicalModeSetter {...{useStore}} numberOfPasses = {1} fpsToDecreaseGraphics = {55} />}
+                {(/*!finishedBenchmark && */config.check_graphics) && <GraphicalModeSetter {...{useStore}} enableGraphicalModeSwapping = {false} fpsToDecreaseGraphics = {55} />}
                 {/* <Environment files = {process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background /> */}
                 {/* <Environment files = {process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} /> */}
                 <Camera {...{useStore}} ></Camera>
@@ -281,9 +341,9 @@ export function SceneContainer(props) {
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
-                {(desired_path=="Skills" && transitionEnded) &&
+                {/* {(desired_path=="Skills" && transitionEnded) &&
                 <FloatingTextSkills {...{useStore}} initialPosition = {[-9, 30, -15]} textPosition = {FloatingTextSkillsPosition} /> 
-                }
+                } */}
                 {/* <pointLight color={"red"} intensity={0.2} position={[46, 84, -44]}></pointLight> */}
 
                 <Suspense>
@@ -293,13 +353,13 @@ export function SceneContainer(props) {
 
                     <pointLight position={ [46, 83, -47]} color={0xb8774f}></pointLight>
 
-    <DynamicMaterialLoader 
+    <DynamicMaterialLoader
         lowResFile="low_512.glb"
         midResFile="high_4096_NOPBR.glb"
         highResFile="high_4096_PBR.glb"
-        forceLowResTrigger={false}
-        forceMidResTrigger={false}
-        forceHighResTrigger={false}
+        forceLowResTrigger={forceLowresMaterial}
+        forceMidResTrigger={forceMidresMaterial}
+        forceHighResTrigger={forceHighResMaterial}
     >
             <SimpleLoader  {...{useStore}} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} animationToPlay={["LampAction.001","RopeAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
                         animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} 
@@ -311,7 +371,7 @@ export function SceneContainer(props) {
                     <Suspense>
                         <ObjectLink position={[48, 89, -49]} scale={[1, 1, 1]} scene={mainScene} linkedObjectName = {"Lamp"} objectToLink={object}>
                             <ParticleEmitter 
-                                {...{useStore}} 
+                                {...{useStore}}
                                 imageNames={["fire.png", "fire2.png"]}
                                 count={15}
                                 speed={10}
@@ -362,7 +422,7 @@ export function SceneContainer(props) {
 
             {(currentGraphicalMode === "high")
             && <group>
-                <OrbitingPointLight orbitDirection = {[0, 1, 0]} orbitSpeed = {0.01} orbitAxis = {"x"} orbitDistance = {60} orbitCenterPosition = {[-40, 30, 0]} lightIntensivity = {1}></OrbitingPointLight>
+                {/* <OrbitingPointLight orbitDirection = {[0, 1, 0]} orbitSpeed = {0.01} orbitAxis = {"x"} orbitDistance = {60} orbitCenterPosition = {[-40, 30, 0]} lightIntensivity = {1}></OrbitingPointLight> */}
                 {/* <EffectComposer renderPriority = {1}>
                     <Bloom luminanceThreshold = {1} mipmapBlur />
                 </EffectComposer> CAUSES ERROR WHY?*/}
