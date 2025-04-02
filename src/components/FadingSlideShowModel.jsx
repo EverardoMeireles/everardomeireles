@@ -2,6 +2,7 @@ import React, { Suspense, useCallback } from 'react'
 import { useLoader } from '@react-three/fiber'
 import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
+import config from '../config';
 
 export function FadingSlideShowModel(props) {
     const {textModelMenu = "MainMenu"} = props;
@@ -19,7 +20,7 @@ export function FadingSlideShowModel(props) {
         }
     })
 
-    const texture = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL +'/textures/'+imageTexture)
+    const texture = useLoader(THREE.TextureLoader, config.resource_path +'/textures/'+imageTexture)
     const callbackRef = useCallback(
         ref => ref !== null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (Math.PI/2))):console.log("skip render")
         )

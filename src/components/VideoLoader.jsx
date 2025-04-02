@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import React, { useEffect, useState } from "react";
+import config from '../config';
 
 export function VideoLoader (props) {
     const {position = [0, 0, 0]} = props; // position on the scene
@@ -17,7 +18,7 @@ export function VideoLoader (props) {
     const [video, setVideo] = useState(() => {
         const vid = document.createElement("video");
         if(triggerType !== "triggerTrue" && defaultVideo !== "")
-            vid.src =  process.env.PUBLIC_URL + defaultVideo + ".mp4";
+            vid.src =  config.resource_path + defaultVideo + ".mp4";
         vid.crossOrigin = "Anonymous";
         vid.loop = loop;
         vid.muted = muted;
@@ -32,9 +33,9 @@ export function VideoLoader (props) {
             setVideo(() => {
                 const vid = document.createElement("video");
                 if(triggerType === "triggerTrue" && trigger === true){
-                    vid.src = process.env.PUBLIC_URL + defaultVideo + ".mp4";
+                    vid.src = config.resource_path + defaultVideo + ".mp4";
                 }else if(triggerType === "valueString")
-                    vid.src = process.env.PUBLIC_URL + trigger + ".mp4";
+                    vid.src = config.resource_path + trigger + ".mp4";
 
                 vid.crossOrigin = "Anonymous";
                 vid.loop = loop;

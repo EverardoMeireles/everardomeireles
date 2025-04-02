@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useRef, forwardRef } from "react";
 import * as THREE from "three";
 import React from "react";
 import { TextureLoader } from 'three';
+import config from '../config';
 
 export const SimpleLoader = forwardRef((props, ref) => {
     const useStore = props.useStore;
@@ -145,7 +146,7 @@ export const SimpleLoader = forwardRef((props, ref) => {
         if (loadMaterialManually) {
             const loader = new GLTFLoader();
             loader.load(
-                process.env.PUBLIC_URL + '/materials/' + materialName,
+                config.resource_path + '/materials/' + materialName,
                 (scene) => {
                     setMaterialGltf(scene);
                 },

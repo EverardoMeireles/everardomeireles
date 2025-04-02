@@ -3,7 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./components/HudMenu";
 import { create } from 'zustand';
-import config from './config.json';
+import config from './config';
 import { Alert } from "./components/Alert";
 import { ToolTip } from "./components/ToolTip";
 import { ToolTipCircle } from "./components/ToolTipCircle";
@@ -193,6 +193,16 @@ const useStore = create((set) => ({
   forceDisableRender: false, // will disable the app's render
   setForceDisableRender: (DisableRender) => set(() => ({ forceDisableRender: DisableRender })),
 
+  siteMode: "resume",
+  setSiteMode: (mode) => set(() => ({ siteMode: mode })),
+
+  message: {
+    type: undefined,
+    payload: undefined,
+  },
+  setMessage: (type, payload) => set(() => ({
+    message: { type, payload }
+  })),
 }));
 
 function App() {
@@ -210,12 +220,14 @@ function App() {
 
   const explodingModelName = useStore((state) => state.explodingModelName);
   const transitionEnded = useStore((state) => state.transitionEnded);
-  
+
+  const message = useStore((state) => state.message);
+
   const [enableTutorial, setEnableTutorial] = useState(false);
 
-  const scene = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + 'NewthreeJsScene.glb')
+  const scene = useLoader(GLTFLoader, config.resource_path + '/models/' + 'NewthreeJsScene.glb')
 
-  // Load initial main sceneeeeee
+  // Load initial main scene
   useEffect(() => {
     setMainScene(scene)
     console.log(mainScene)
@@ -239,6 +251,14 @@ function App() {
 
   }, [tooltipProperties, setTooltipCirclesData]);
 
+  // Handle sending messages to parent
+  useEffect(() => {
+    if (message?.type && message.payload !== undefined) {
+      window.parent.postMessage(message, "*");
+      console.log("📤 Sent message to parent:", message);
+    }
+  }, [message]);
+  
   return (
     <>
     {!forceDisableRender && (

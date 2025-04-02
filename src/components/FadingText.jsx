@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
+import config from '../config';
 
 export function FadingText(props) {
     const useStore = props.useStore;
@@ -17,7 +18,7 @@ export function FadingText(props) {
     const {textPositionOffset = [0, -0.5, 0.2]} = props;
     const {manualLineBreaks = false} = props; // true if your input text already contains line breaks('\n')
     const {maxCharsBeforeLineBreak = PlaneSize[0] * 7} = props; // if manualLineBreaks is false, how many characters before a line break on the previous word, default is the length of the plane times the normal length of a roboto font character
-    const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
+    const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
     const {fadeDuration = 1000} = props;
 
     const TextMaterialRef = useRef();

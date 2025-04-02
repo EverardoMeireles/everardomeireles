@@ -2,6 +2,7 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useFrame, useLoader } from '@react-three/fiber';
 import {useSpring, a} from '@react-spring/three';
 import * as THREE from "three";
+import config from '../config';
 
 export const OrbitingMenu = React.memo((props) => {
     const useStore = props.useStore;
@@ -91,14 +92,14 @@ export const OrbitingMenu = React.memo((props) => {
         planeRef7.current.position.x = -orbitDistance;
     },[]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    const planetexture0 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheEDHC-Portuguese.png');
-    const planetexture1 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheUNIRN-Portuguese.png');
-    const planetexture2 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheDUT-Portuguese.png');
-    const planetexture3 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/ortAfficheBTS-French.png');
-    const planetexture4 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/ortAffiche3CSI-French.png');
-    const planetexture5 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheMicrolins1-Portuguese.png');
-    const planetexture6 = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL + '/textures/AfficheMicrolins2-Portuguese.png');
-    // const texture = useLoader(THREE.TextureLoader, process.env.PUBLIC_URL +'./textures/')
+    const planetexture0 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheEDHC-Portuguese.png');
+    const planetexture1 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheUNIRN-Portuguese.png');
+    const planetexture2 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheDUT-Portuguese.png');
+    const planetexture3 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/ortAfficheBTS-French.png');
+    const planetexture4 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/ortAffiche3CSI-French.png');
+    const planetexture5 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheMicrolins1-Portuguese.png');
+    const planetexture6 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheMicrolins2-Portuguese.png');
+    // const texture = useLoader(THREE.TextureLoader, config.resource_path +'./textures/')
 
     useFrame((state, delta) => {
         if(Math.abs(rotation) <= rotationRadians){

@@ -1,12 +1,13 @@
 import React, { useRef, useMemo, useLayoutEffect } from 'react';
 import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import config from '../config';
 
 ///////////////////////////////
 // ParticleEmitter Component //
 ///////////////////////////////
 export const ParticleEmitter = React.memo((props) => {
-  const { imageNames = ["fire1", "fire2"] } = props; // Array of image filenames (without path). Textures are loaded from `${process.env.PUBLIC_URL}/textures/${name}`.
+  const { imageNames = ["fire1", "fire2"] } = props; // Array of image filenames (without path). Textures are loaded from `${config.resource_path}/textures/${name}`.
   const { count = 100 } = props; // Total number of particles.
   const { speed = 1 } = props; // Movement speed (m/s).
   const { initialSize = 0.5 } = props; // Initial particle size (m).
@@ -26,7 +27,7 @@ export const ParticleEmitter = React.memo((props) => {
   // Build Texture Paths //
   /////////////////////////
   const texturePaths = useMemo(() => 
-    imageNames.map(name => `${process.env.PUBLIC_URL}/textures/${name}`),
+    imageNames.map(name => `${config.resource_path}/textures/${name}`),
     [imageNames]
   );
 

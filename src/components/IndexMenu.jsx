@@ -4,6 +4,7 @@ import { useCallback, Suspense, useState } from "react";
 import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
 import { increaseOrDecreaseGraphics } from "../Helper";
+import config from '../config';
 
 export function IndexMenu(props) {
     const {rotation = 2 * Math.PI} = props;
@@ -12,7 +13,7 @@ export function IndexMenu(props) {
     const {textColor = "#000000"} = props;
     const {isMainMenu = false} = props;
     const {visible = true} = props;
-    const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
+    const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
     const {setDesiredPath, setTransitionEnded} = props.useStore();
     

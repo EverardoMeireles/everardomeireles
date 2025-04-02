@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import config from '../config';
 
 // Global material cache to prevent unnecessary loading
 const materialCache = new Map();
@@ -30,7 +31,7 @@ export const DynamicMaterialLoader = React.memo((props) => {
         resolve(materialCache.get(file)); // Return from cache
       } else {
         new GLTFLoader().load(
-          process.env.PUBLIC_URL + `/materials/${file}`,
+          config.resource_path + `/materials/${file}`,
           (gltf) => {
             const material = gltf.scene.children[0].material;
             materialCache.set(file, material); // Store in cache

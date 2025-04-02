@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useLoader } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import * as THREE from 'three';
+import config from '../config';
 
 //////////////////
 /// TODO:BEGIN ///
@@ -37,7 +38,7 @@ export const InstanceLoader = React.memo((props) => {
     const object3D = new THREE.Object3D();
 
     // Load the object to be instanced
-    const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + instancedObject);
+    const gltf = useLoader(GLTFLoader, config.resource_path + '/models/' + instancedObject);
 
     const [geometry, setGeometry] = useState(null);
     const [material, setMaterial] = useState(null);

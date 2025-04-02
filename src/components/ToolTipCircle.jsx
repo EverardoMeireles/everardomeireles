@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../PulsatingAnimation.css'; // Adjust the path as necessary
+import config from '../config';
 
 // A component that displays a message on screen for a time.
 // How to use:
@@ -12,7 +13,7 @@ export const ToolTipCircle = (props) => {
     const {objectName = ""} = props;
     const {text = "Sample text"} = props;
     const {size = 30} = props;
-    const {image = process.env.PUBLIC_URL + "textures/4x3.png"} = props;
+    const {image = config.resource_path + "textures/4x3.png"} = props;
     const {pathToShow = "MainMenu"} = props;
     const {rotatingObjectCoordinates = []} = props;
     const {rotatingObjectAxisOfRotation = []} = props;
@@ -30,6 +31,7 @@ export const ToolTipCircle = (props) => {
     const tooltipCurrentObjectSelected = useStore((state) => state.tooltipCurrentObjectSelected);
     const setRotatingObjectViewportArray = useStore((state) => state.setRotatingObjectViewportArray);
     const setRotatingObjectForcedAxisOfRotation = useStore((state) => state.setRotatingObjectForcedAxisOfRotation);
+    const setMessage = useStore((state) => state.setMessage);
     
     const [isVisible, setIsVisible] = useState(false);
     const [updateViewportArray, setUpdateViewportArray] = useState(false);
@@ -98,6 +100,7 @@ export const ToolTipCircle = (props) => {
     };
 
     const handleMouseEnter = () => {
+        setMessage('3D_TOOLTIP_HOVER', {text:text, image:image}) // Communication with external applications
         setUpdateViewportArray(true)
         setUpdateRotatingObjectAxis(true)
         setTooltipProperties({

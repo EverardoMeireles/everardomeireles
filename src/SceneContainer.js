@@ -32,7 +32,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 import * as THREE from 'three';
 
-import config from './config.json';
+import config from './config';
 
 export function SceneContainer(props) {
     const useStore = props.useStore;
@@ -52,6 +52,7 @@ export function SceneContainer(props) {
     const animationTriggerState = useStore((state) => state.animationTriggerState);
     const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
     const mainScene = useStore((state) => state.mainScene);
+    const siteMode = useStore((state) => state.siteMode);
 
     const { gl } = useThree();
     const { mouse } = useThree();
@@ -289,110 +290,126 @@ export function SceneContainer(props) {
 
     return(
     <>
-        {/* /////////////////////
-            //System components//
-            ///////////////////// */}
+                <Camera {...{useStore}} ></Camera>
 
-        <Camera {...{useStore}} ></Camera>
-        <PreloadAssets {...{useStore}} delay={4000} texturesToLoad={["AfficheDUT-French.png", "AfficheDUT-Portuguese.png", "AfficheEDHC-French.png", "AfficheEDHC-Portuguese.png", "AfficheMicrolins1-French.png", "AfficheMicrolins1-Portuguese.png", "AfficheMicrolins2-French.png", "AfficheMicrolins2-Portuguese.png", "AfficheUNIRN-French.png", "AfficheUNIRN-Portuguese.png"]} scenesToLoad={[]}></PreloadAssets>
-        <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
-        {/* <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10} /> */}
-        {(config.check_graphics) 
-        && 
-        <GraphicalModeSetter {...{useStore}} enableGraphicalModeSwapping = {false} fpsToDecreaseGraphics = {55} />
-        }
-
-        {/* /////////////////////
-            //Content components//
-            ///////////////////// */}
-
-        <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} 
-        text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {2000} transitionDuration = {1500} />
-        <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} 
-        text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {2600} transitionDuration = {1500} />
-
-        {/* <Environment files = {process.env.PUBLIC_URL + "/textures/dikhololo_night_1k.hdr"} background /> */}
-        {/* <Environment files = {process.env.PUBLIC_URL + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} /> */}
-        {(desired_path === "Education") 
-        && (
-        <OrbitingMenu {...{ useStore }} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]} />
-        )}
-
-        {(desired_path.includes("ProfessionalExpProjects")) && 
+        {(siteMode === "resume") && 
         <>
-            <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["prospere_itb_presentation"]} lettersPerUnit = {5} textModelMenu = "ProfessionalExpProjects0"     scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-            <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["drim_presentation"]} textModelMenu = "ProfessionalExpProjects1"                                  scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-            <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["everial_presentation"]} textModelMenu = "ProfessionalExpProjects2"                               scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-            <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["bresil_ecobuggy_presentation"]} textModelMenu = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {fadingTextScale3} initialPosition = {fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor={"#FFFFFF"} manualLineBreaks = {true} />
-            <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["efn1_presentation"]} textModelMenu = "ProfessionalExpProjects4" lettersPerUnit = {9}             scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-            <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["efn2_presentation"]} textModelMenu = "ProfessionalExpProjects5" lettersPerUnit = {7}             scale = {fadingTextScale5} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-            {/* <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-            <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-            <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-            <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-            <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-            <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
-        </>
-        }
-        
-        {/* {(desired_path=="Skills" && transitionEnded) &&
-        <FloatingTextSkills {...{useStore}} initialPosition = {[-9, 30, -15]} textPosition = {FloatingTextSkillsPosition} /> 
-        } */}
+            {/* /////////////////////
+                //System components//
+                ///////////////////// */}
 
-        {(currentGraphicalMode === "potato")
-        && 
-        <ambientLight intensity = {0.5}></ambientLight>
-        }
+            <PreloadAssets {...{useStore}} delay={4000} texturesToLoad={["AfficheDUT-French.png", "AfficheDUT-Portuguese.png", "AfficheEDHC-French.png", "AfficheEDHC-Portuguese.png", "AfficheMicrolins1-French.png", "AfficheMicrolins1-Portuguese.png", "AfficheMicrolins2-French.png", "AfficheMicrolins2-Portuguese.png", "AfficheUNIRN-French.png", "AfficheUNIRN-Portuguese.png"]} scenesToLoad={[]}></PreloadAssets>
+            <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
+            {/* <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10} /> */}
+            {(config.check_graphics) 
+            && 
+            <GraphicalModeSetter {...{useStore}} enableGraphicalModeSwapping = {false} fpsToDecreaseGraphics = {55} />
+            }
 
-        {(currentGraphicalMode !== "potato")
-        && 
-        <ambientLight intensity = {0.1}></ambientLight>
-        }
+            {/* /////////////////////
+                //Content components//
+                ///////////////////// */}
 
-        {/* <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} 
-        position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} /> */}
-        {/* <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} 
-        modelName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} /> */}
-        <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
-        forceLowResTrigger={forceLowresMaterial} forceMidResTrigger={forceMidresMaterial} forceHighResTrigger={forceHighResMaterial}>
-            <SimpleLoader  {...{useStore}} scene={mainScene} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} 
-            animationToPlay={["LampAction.001","RopeAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
-            animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} 
-            hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} 
-            hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} />
-        </DynamicMaterialLoader>
-        {(currentGraphicalMode !== "potato")
-        && 
-        <>
-            <ObjectLink position={[48, 89, -49]} scale={[1, 1, 1]} scene={mainScene} linkedObjectName = {"Lamp"} >
-                {/* <pointLight position={ [46, 83, -47]} color={0xb8774f}></pointLight> */}
-                <OrbitingPointLight lightColor = {0xb8774f} orbitDirection = {[0, 1, 0]} orbitSpeed = {0.007} orbitAxis = {"x"} 
-                orbitDistance = {50} orbitCenterPosition = {[0,20,0]} lightIntensivity = {1} />
-                <ParticleEmitter {...{useStore}} imageNames={["fire.png", "fire2.png"]} count={15} speed={10} initialSize={10}
-                maxSizeOverLifespan={15} fadeInOut={true} faceCamera = {false} faceCameraFrameCheck = {80} faceCameraAxisLock = {[1, 1, 1]}
-                instanceMaxRandomDelay = {10} lifespan={0.3} spread={3} position={[0, -1, 0]} rotation={[0, 1, 0]} direction={[0, 1, 0]} />
-                <PointLightAnimation position={[0, 0, 0]} colors={[0x773502, 0xff8c00, 0xffd700]} colorFrameIntervals={[7, 5, 6]}
-                randomIntensitiyMargin={[0.05, 0.1]} enableRandomColorFrameIntervals = {true}/>
-            </ObjectLink>
+            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} 
+            text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {2000} transitionDuration = {1500} />
+            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} 
+            text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {2600} transitionDuration = {1500} />
+
+            {/* <Environment files = {config.resource_path + "/textures/dikhololo_night_1k.hdr"} background /> */}
+            {/* <Environment files = {config.resource_path + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} /> */}
+            {(desired_path === "Education") 
+            && (
+            <OrbitingMenu {...{ useStore }} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]} />
+            )}
+
+            {(desired_path.includes("ProfessionalExpProjects")) && 
+            <>
+                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["prospere_itb_presentation"]} lettersPerUnit = {5} textModelMenu = "ProfessionalExpProjects0"     scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["drim_presentation"]} textModelMenu = "ProfessionalExpProjects1"                                  scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["everial_presentation"]} textModelMenu = "ProfessionalExpProjects2"                               scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["bresil_ecobuggy_presentation"]} textModelMenu = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {fadingTextScale3} initialPosition = {fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor={"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["efn1_presentation"]} textModelMenu = "ProfessionalExpProjects4" lettersPerUnit = {9}             scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["efn2_presentation"]} textModelMenu = "ProfessionalExpProjects5" lettersPerUnit = {7}             scale = {fadingTextScale5} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                {/* <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
+            </>
+            }
             
-            <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} 
-            directionZ = {-1} customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} 
-            distanceBetweenInstances={3} />
+            {/* {(desired_path=="Skills" && transitionEnded) &&
+            <FloatingTextSkills {...{useStore}} initialPosition = {[-9, 30, -15]} textPosition = {FloatingTextSkillsPosition} /> 
+            } */}
+
+            {(currentGraphicalMode === "potato")
+            && 
+            <ambientLight intensity = {0.5}></ambientLight>
+            }
+
+            {(currentGraphicalMode !== "potato")
+            && 
+            <ambientLight intensity = {0.1}></ambientLight>
+            }
+
+            {/* <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} 
+            position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} /> */}
+            {/* <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} 
+            modelName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} /> */}
+            <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
+            forceLowResTrigger={forceLowresMaterial} forceMidResTrigger={forceMidresMaterial} forceHighResTrigger={forceHighResMaterial}>
+                <SimpleLoader  {...{useStore}} scene={mainScene} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} 
+                animationToPlay={["LampAction.001","RopeAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
+                animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} 
+                hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} 
+                hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} />
+            </DynamicMaterialLoader>
+            {(currentGraphicalMode !== "potato")
+            && 
+            <>
+                <ObjectLink position={[48, 89, -49]} scale={[1, 1, 1]} scene={mainScene} linkedObjectName = {"Lamp"} >
+                    {/* <pointLight position={ [46, 83, -47]} color={0xb8774f}></pointLight> */}
+                    <OrbitingPointLight lightColor = {0xb8774f} orbitDirection = {[0, 1, 0]} orbitSpeed = {0.007} orbitAxis = {"x"} 
+                    orbitDistance = {50} orbitCenterPosition = {[0,20,0]} lightIntensivity = {1} />
+                    <ParticleEmitter {...{useStore}} imageNames={["fire.png", "fire2.png"]} count={15} speed={10} initialSize={10}
+                    maxSizeOverLifespan={15} fadeInOut={true} faceCamera = {false} faceCameraFrameCheck = {80} faceCameraAxisLock = {[1, 1, 1]}
+                    instanceMaxRandomDelay = {10} lifespan={0.3} spread={3} position={[0, -1, 0]} rotation={[0, 1, 0]} direction={[0, 1, 0]} />
+                    <PointLightAnimation position={[0, 0, 0]} colors={[0x773502, 0xff8c00, 0xffd700]} colorFrameIntervals={[7, 5, 6]}
+                    randomIntensitiyMargin={[0.05, 0.1]} enableRandomColorFrameIntervals = {true}/>
+                </ObjectLink>
+                
+                <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} 
+                directionZ = {-1} customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} 
+                distanceBetweenInstances={3} />
+            </>
+            }
+            {/* <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
+            <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
+            <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader> */}
+            {/* <CurveInstanceAnimation {...{useStore}} curveNumber = {5} instanceInterval = {1000} tubeWireframe={false} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}
+            
+            {(currentGraphicalMode === "high")
+            && 
+            <group>
+                {/* <OrbitingPointLight orbitDirection = {[0, 1, 0]} orbitSpeed = {0.01} orbitAxis = {"x"} orbitDistance = {60} orbitCenterPosition = {[-40, 30, 0]} lightIntensivity = {1}></OrbitingPointLight> */}
+                {/* <EffectComposer renderPriority = {1}>
+                    <Bloom luminanceThreshold = {1} mipmapBlur />
+                </EffectComposer> CAUSES ERROR WHY?*/}
+            </group>}
         </>
         }
-        {/* <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
-        <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
-        <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader> */}
-        {/* <CurveInstanceAnimation {...{useStore}} curveNumber = {5} instanceInterval = {1000} tubeWireframe={false} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}
-        
-        {(currentGraphicalMode === "high")
-        && 
-        <group>
-            {/* <OrbitingPointLight orbitDirection = {[0, 1, 0]} orbitSpeed = {0.01} orbitAxis = {"x"} orbitDistance = {60} orbitCenterPosition = {[-40, 30, 0]} lightIntensivity = {1}></OrbitingPointLight> */}
-            {/* <EffectComposer renderPriority = {1}>
-                <Bloom luminanceThreshold = {1} mipmapBlur />
-            </EffectComposer> CAUSES ERROR WHY?*/}
-        </group>}
+
+        {(siteMode === "store") && 
+        <>
+            <ambientLight intensity = {1}></ambientLight>
+
+            <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} 
+            modelName={"Roomba.glb"} position={[163, 113, 72]} setCameraTargetTrigger={"trigger4"} />
+
+            
+        </>
+        }
     </>
     );
 }

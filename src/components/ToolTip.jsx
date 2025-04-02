@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import config from '../config';
 
 
 // A component that displays a message on screen for a time.
@@ -117,8 +118,8 @@ export const ToolTip = (props) => {
                 {tooltipProperties.text}
             </div>
             <div style={imageContainerStyle}>
-                {/* <img style={imageStyle} src={process.env.PUBLIC_URL + "textures/4x3.png"} alt="Tooltip Image" /> */}
-                <img style={imageStyle} src={process.env.PUBLIC_URL + "textures/" + tooltipProperties.image} alt="Tooltip" />
+                {/* <img style={imageStyle} src={config.resource_path + "textures/4x3.png"} alt="Tooltip Image" /> */}
+                <img style={imageStyle} src={config.resource_path + "textures/" + tooltipProperties.image} alt="Tooltip" />
             </div>
         </div>
     </>

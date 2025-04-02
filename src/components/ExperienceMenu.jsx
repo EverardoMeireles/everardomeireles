@@ -4,6 +4,7 @@ import { useCallback, Suspense } from "react";
 import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
 import { path_points_experience_menu_location } from "../PathPoints";
+import config from '../config';
 
 export function ExperienceMenu(props) {
     // const {rotation = 2 * Math.PI} = props;
@@ -342,7 +343,7 @@ export function ExperienceMenu(props) {
                         <Text3D
                         position = {[0.5, -0.25, 0.8]}//Use a more standardised approach
                         ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
+                        font = {config.resource_path + "/roboto.json"}
                         size = {0.575}
                         height = {0.065}
                         curveSegments = {12}
@@ -374,7 +375,7 @@ export function ExperienceMenu(props) {
                         <Text3D
                         position = {[0.5, -0.25, 0.8]}//Use a more standardised approach
                         ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
+                        font = {config.resource_path + "/roboto.json"}
                         size = {0.575}
                         height = {0.065}
                         curveSegments = {12}
@@ -406,7 +407,7 @@ export function ExperienceMenu(props) {
                         <Text3D
                         position = {[0.5, -0.25, 0.8]}//Use a more standardised approach
                         ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
+                        font = {config.resource_path + "/roboto.json"}
                         size = {0.575}
                         height = {0.065}
                         curveSegments = {12}
@@ -438,7 +439,7 @@ export function ExperienceMenu(props) {
                         <Text3D
                         position = {[0.5, -0.25, 0.8]}//Use a more standardised approach
                         ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
+                        font = {config.resource_path + "/roboto.json"}
                         size = {0.575}
                         height = {0.065}
                         curveSegments = {12}
@@ -470,7 +471,7 @@ export function ExperienceMenu(props) {
                         <Text3D
                         position = {[0.5, -0.25, 0.8]}//Use a more standardised approach
                         ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
+                        font = {config.resource_path + "/roboto.json"}
                         size = {0.575}
                         height = {0.065}
                         curveSegments = {12}
@@ -502,7 +503,7 @@ export function ExperienceMenu(props) {
                         <Text3D
                         position = {[0.5, -0.25, 0.8]}//Use a more standardised approach
                         ref = {textCallbackRef}
-                        font = {process.env.PUBLIC_URL + "/roboto.json"}
+                        font = {config.resource_path + "/roboto.json"}
                         size = {0.575}
                         height = {0.065}
                         curveSegments = {12}

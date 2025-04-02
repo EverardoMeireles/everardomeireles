@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { Text } from "@react-three/drei";
 import { oneOrZero } from "../Helper";
 import { useFrame } from "@react-three/fiber";
+import config from '../config';
 
 export function FadingTitle(props) {
     const {text = "Everardo Meireles"} = props;
@@ -13,7 +14,7 @@ export function FadingTitle(props) {
     const {rotation = Math.PI/3 + Math.PI/6} = props;
     const {scale = 10} = props;
     const {delay = 0} = props;
-    const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
+    const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
     const {transitionEnded, desired_path} = props.useStore();
 

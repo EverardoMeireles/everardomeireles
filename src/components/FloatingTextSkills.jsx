@@ -3,6 +3,7 @@ import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Float, Text } from "@react-three/drei";
 import { TranslationTable } from "../TranslationTable";
+import config from '../config';
 
 export function FloatingTextSkills(props) {
     const useStore = props.useStore;
@@ -10,7 +11,7 @@ export function FloatingTextSkills(props) {
     const {initialPosition = [0,0,0]} = props;
     const {hitBoxSize = [2, 1]} = props;
     const {rotation = Math.PI/2} = props;
-    const {font = process.env.PUBLIC_URL + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
+    const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
     const {textPosition = [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8], [1, 2, 8]]} = props;
 
     const setSkillHovered = props.useStore((state) => state.setSkillHovered); 

@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import * as THREE from 'three';
+import config from '../config';
 
 // Creates a animation where instances of objects follow a curve then dissapear
 // Objects must be .glb and have their origin at the center of the object (in blender: Object/set origin/geometry to origin)
@@ -29,7 +30,7 @@ export const CurveInstanceAnimation = React.memo((props) => {
     const object3D = new THREE.Object3D();
 
     // Load the GLTF model
-    const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + instancedObject);
+    const gltf = useLoader(GLTFLoader, config.resource_path + '/models/' + instancedObject);
 
     const [geometry, setGeometry] = useState(null);
     const [material, setMaterial] = useState(null);

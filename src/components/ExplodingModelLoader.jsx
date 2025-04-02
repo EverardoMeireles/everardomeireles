@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useRef } from 'react';
 import * as THREE from 'three';
 import React from 'react';
 import { parseJson, removeFileExtensionString, easeInCubic, easeOutCubic } from "../Helper";
+import config from '../config';
 
 export const ExplodingModelLoader = React.memo((props) => {
   const useStore = props.useStore; // Using useStore from props
@@ -32,8 +33,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   // feature: Swap material
   const {materialName = ""} = props;
 
-  const gltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/models/' + modelName);
-  const newMaterialGltf = useLoader(GLTFLoader, process.env.PUBLIC_URL + '/materials/' + ( (!materialName || materialName == "") ? "NoMaterial.glb" : materialName));
+  const gltf = useLoader(GLTFLoader, config.resource_path + '/models/' + modelName);
+  const newMaterialGltf = useLoader(GLTFLoader, config.resource_path + '/materials/' + ( (!materialName || materialName == "") ? "NoMaterial.glb" : materialName));
   const { camera, gl } = useThree();
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const cameraState = useStore((state) => state.cameraState);

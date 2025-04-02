@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLoader } from '@react-three/fiber';
 import { TextureLoader } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import config from '../config';
 
 export const PreloadAssets = (props) => {
   const useStore = props.useStore;
@@ -22,8 +23,8 @@ export const PreloadAssets = (props) => {
     return () => clearTimeout(timer); // Cleanup the timer if the component unmounts
   }, [delay]);
 
-  const texturePaths = texturesToLoad.map(texture => process.env.PUBLIC_URL + '/textures/' + texture);
-  const scenePaths = scenesToLoad.map(scene => process.env.PUBLIC_URL + '/models/' + scene);
+  const texturePaths = texturesToLoad.map(texture => config.resource_path + '/textures/' + texture);
+  const scenePaths = scenesToLoad.map(scene => config.resource_path + '/models/' + scene);
 
   const textures = useLoader(TextureLoader, startLoading ? texturePaths : []);
   const scenes = useLoader(GLTFLoader, startLoading ? scenePaths : []);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import config from '../config';
 
 export const TutorialOverlay = (props) => {
     const useStore = props.useStore;
@@ -49,7 +50,7 @@ export const TutorialOverlay = (props) => {
         topImagePaths.forEach((path, index) => {
             topImages.push(
                 <img
-                    src={process.env.PUBLIC_URL + "/" + path}
+                    src={config.resource_path + "/" + path}
                     key={`topImage-${index}`}
                     alt={`Top Tutorial ${index}`}
                     style={{ width: imageSize[0], height: imageSize[1] }}
@@ -60,7 +61,7 @@ export const TutorialOverlay = (props) => {
         bottomImagePaths.forEach((path, index) => {
             bottomImages.push(
                 <img
-                    src={process.env.PUBLIC_URL + "/" + path}
+                    src={config.resource_path + "/" + path}
                     key={`bottomImage-${index}`}
                     alt={`Bottom Tutorial ${index}`}
                     style={{ width: imageSize[0], height: imageSize[1] }}
