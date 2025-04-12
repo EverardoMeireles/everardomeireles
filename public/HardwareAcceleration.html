@@ -42,7 +42,7 @@
     const textNode = document.createTextNode(LanguageText[usrlang].text);
     const lastFps = document.createTextNode("Last recorded FPS: " + new URLSearchParams(window.location.search).get('fps'))
 
-    img.src = "textures/HardwareAcceleration"+browserName+usrlang+".png";
+    img.src = "/textures/HardwareAcceleration"+browserName+usrlang+".png";
     img.style = "width: auto height:auto;";
     element.appendChild(img);
     title1Text.appendChild(textNode);

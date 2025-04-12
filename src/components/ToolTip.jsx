@@ -118,8 +118,8 @@ export const ToolTip = (props) => {
                 {tooltipProperties.text}
             </div>
             <div style={imageContainerStyle}>
-                {/* <img style={imageStyle} src={config.resource_path + "textures/4x3.png"} alt="Tooltip Image" /> */}
-                <img style={imageStyle} src={config.resource_path + "textures/" + tooltipProperties.image} alt="Tooltip" />
+                {/* <img style={imageStyle} src={config.resource_path + "/textures/4x3.png"} alt="Tooltip Image" /> */}
+                <img style={imageStyle} src={config.resource_path + "/textures/" + tooltipProperties.image} alt="Tooltip" />
             </div>
         </div>
     </>

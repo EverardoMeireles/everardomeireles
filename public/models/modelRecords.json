@@ -1,0 +1,17 @@
+[
+    {
+      "model": "car.glb",
+      "default_material": "car_default_material.glb",
+      "id":63
+    },
+    {
+      "model": "plane.glb",
+      "default_material": "plane_default_material.glb",
+      "id":64
+    },
+    {
+      "model": "tree.glb",
+      "default_material": "tree_default_material.glb",
+      "id":65
+    }
+  ]

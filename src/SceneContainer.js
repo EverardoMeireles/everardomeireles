@@ -1,5 +1,5 @@
 import { Environment } from "@react-three/drei";
-import { Suspense, useState, useEffect, useRef  } from "react";
+import { Suspense, useState, useEffect, useRef, useMemo  } from "react";
 import { Camera } from "./components/Camera";
 import { SimpleLoader } from "./components/SimpleLoader";
 import { OrbitingPointLight } from './components/OrbitingPointLights';
@@ -28,7 +28,7 @@ import { customInstanceRotation, customInstanceColor } from "./PathPoints";
 import { TranslationTable } from "./TranslationTable";
 import { ResponsiveTable } from "./Styles";
 import { pollForFilesInTHREECache } from "./Helper";
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 import * as THREE from 'three';
 
@@ -53,7 +53,8 @@ export function SceneContainer(props) {
     const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
     const mainScene = useStore((state) => state.mainScene);
     const siteMode = useStore((state) => state.siteMode);
-
+    const productInformationFromMessage = useStore((state) => state.productInformationFromMessage);
+    
     const { gl } = useThree();
     const { mouse } = useThree();
 
@@ -288,10 +289,84 @@ export function SceneContainer(props) {
     //     }
     // });
 
+    const [modelsConfiguration, setModelsConfiguration] = useState({});
+    const [modelRecords, setModelRecords] = useState([]);
+
+    useEffect(() => {
+      async function loadModels() {
+        try {
+          // Load the modelRecords.json file
+          const recordsResponse = await fetch(`${config.models_path}/modelRecords.json`);
+          if (!recordsResponse.ok) {
+            throw new Error("Failed to load modelRecords.json");
+          }
+          const records = await recordsResponse.json();
+          // Convert array to object
+          const objectRecords = records.reduce((acc, record, index) => {
+            acc[index] = record;
+            return acc;
+          }, {});
+          setModelRecords(objectRecords);
+          // Create an object to hold all model JSON data
+          const modelsObject = await records.reduce(async (accPromise, record) => {
+            const acc = await accPromise;
+            // Remove the .glb extension to get the base name (e.g. "car")
+            const modelBaseName = record.model.replace(".glb", "");
+            // Build the corresponding JSON filename (e.g. "car.json")
+            const jsonFilename = `${modelBaseName}.json`;
+            const modelResponse = await fetch(`${config.models_path}/${jsonFilename}`);
+            if (!modelResponse.ok) {
+              throw new Error(`Failed to load ${jsonFilename}`);
+            }
+
+            const modelJson = await modelResponse.json();
+            // Combine the record with its corresponding JSON data
+            acc[modelBaseName] = {
+              ...record,
+              data: modelJson,
+            };
+
+            return acc;
+          }, Promise.resolve({}));
+
+          setModelsConfiguration(modelsObject);
+        } catch (err) {
+            throw new Error(err);
+        }
+      }
+
+      loadModels();
+
+    }, []);
+
+
+
+
+
+
+
+    const [explodingMaterialName, setExplodingMaterialName] = useState(0);
+    const [explodingModel, setExplodingModel] = useState(0);
+    // modelRecords : Record file(modelRecords.json)
+    // modelsConfiguration : Model configuration files
+    // productInformationFromMessage : Product information sent by CMS
+    
+    // Determine model and material for ExplodingModelLoader
+    useEffect(() => {
+        console.log(modelRecords)
+        console.log(modelsConfiguration)
+        console.log(productInformationFromMessage)
+        
+
+    }, [explodingMaterialName, explodingModel, modelRecords, modelsConfiguration, productInformationFromMessage]);
+
+
+
+
+
     return(
     <>
-                <Camera {...{useStore}} ></Camera>
-
+        <Camera {...{useStore}} ></Camera>
         {(siteMode === "resume") && 
         <>
             {/* /////////////////////
@@ -301,7 +376,7 @@ export function SceneContainer(props) {
             <PreloadAssets {...{useStore}} delay={4000} texturesToLoad={["AfficheDUT-French.png", "AfficheDUT-Portuguese.png", "AfficheEDHC-French.png", "AfficheEDHC-Portuguese.png", "AfficheMicrolins1-French.png", "AfficheMicrolins1-Portuguese.png", "AfficheMicrolins2-French.png", "AfficheMicrolins2-Portuguese.png", "AfficheUNIRN-French.png", "AfficheUNIRN-Portuguese.png"]} scenesToLoad={[]}></PreloadAssets>
             <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             {/* <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10} /> */}
-            {(config.check_graphics) 
+            {(config.check_graphics)
             && 
             <GraphicalModeSetter {...{useStore}} enableGraphicalModeSwapping = {false} fpsToDecreaseGraphics = {55} />
             }
@@ -366,7 +441,7 @@ export function SceneContainer(props) {
                 hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} />
             </DynamicMaterialLoader>
             {(currentGraphicalMode !== "potato")
-            && 
+            &&
             <>
                 <ObjectLink position={[48, 89, -49]} scale={[1, 1, 1]} scene={mainScene} linkedObjectName = {"Lamp"} >
                     {/* <pointLight position={ [46, 83, -47]} color={0xb8774f}></pointLight> */}
@@ -390,7 +465,7 @@ export function SceneContainer(props) {
             {/* <CurveInstanceAnimation {...{useStore}} curveNumber = {5} instanceInterval = {1000} tubeWireframe={false} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}
             
             {(currentGraphicalMode === "high")
-            && 
+            &&
             <group>
                 {/* <OrbitingPointLight orbitDirection = {[0, 1, 0]} orbitSpeed = {0.01} orbitAxis = {"x"} orbitDistance = {60} orbitCenterPosition = {[-40, 30, 0]} lightIntensivity = {1}></OrbitingPointLight> */}
                 {/* <EffectComposer renderPriority = {1}>
@@ -403,11 +478,8 @@ export function SceneContainer(props) {
         {(siteMode === "store") && 
         <>
             <ambientLight intensity = {1}></ambientLight>
-
-            <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} 
-            modelName={"Roomba.glb"} position={[163, 113, 72]} setCameraTargetTrigger={"trigger4"} />
-
-            
+            <ExplodingModelLoader {...{useStore}} modelName={"Roomba.glb"} materialName={customMaterial} animationIsPlaying={animationTriggerState} 
+            position={[163, 113, 72]} setCameraTargetTrigger={"trigger4"} />
         </>
         }
     </>

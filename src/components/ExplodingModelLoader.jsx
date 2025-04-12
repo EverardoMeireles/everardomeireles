@@ -217,9 +217,9 @@ export const ExplodingModelLoader = React.memo((props) => {
   //Parses a 3D model's corresponding json file to create info circles on the screen
   useEffect(() => {
     if(explodingModelName){
-      parseJson("/models/" + explodingModelName + ".json", "TooltipProperties")
+      parseJson(config.models_path + explodingModelName + ".json", "TooltipProperties")
       .then((data) => {
-        console.log(data)
+        console.log(config.models_path + explodingModelName + ".json", "TooltipProperties")
         addTooltipCirclesData(data);
       })
     }
@@ -227,7 +227,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
-    parseJson("/models/" + removeFileExtensionString(modelName) + ".json", 'ModelProperties')
+    parseJson(config.models_path + removeFileExtensionString(modelName) + ".json", 'ModelProperties')
       .then(modelProperties => {
           setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
           setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);

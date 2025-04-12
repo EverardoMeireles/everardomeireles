@@ -13,7 +13,7 @@ export const ToolTipCircle = (props) => {
     const {objectName = ""} = props;
     const {text = "Sample text"} = props;
     const {size = 30} = props;
-    const {image = config.resource_path + "textures/4x3.png"} = props;
+    const {image = config.resource_path + "/textures/4x3.png"} = props;
     const {pathToShow = "MainMenu"} = props;
     const {rotatingObjectCoordinates = []} = props;
     const {rotatingObjectAxisOfRotation = []} = props;

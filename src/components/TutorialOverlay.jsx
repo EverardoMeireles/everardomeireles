@@ -5,8 +5,8 @@ export const TutorialOverlay = (props) => {
     const useStore = props.useStore;
     const {enable = true} = props;
     const {showOnlyOnce = true} = props;
-    const {topImagePaths = ["textures/tutorial_rotate_video.png", "textures/tutorial_zoom_video.png"]} = props;
-    const {bottomImagePaths = ["textures/tutorial_rotate.png", "textures/tutorial_zoom.png"]} = props;
+    const {topImagePaths = ["/textures/tutorial_rotate_video.png", "/textures/tutorial_zoom_video.png"]} = props;
+    const {bottomImagePaths = ["/textures/tutorial_rotate.png", "/textures/tutorial_zoom.png"]} = props;
     const {imageSize = [260, 216]} = props;
     const {textH1 = "Use left click to rotate, shift + left click to pan and the mouseWheel to zoom"} = props;
     const {textH2 = "Click to go to the page"} = props;

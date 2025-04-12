@@ -1,5 +1,6 @@
 {
-  "homepage": "https://everardomeireles.com",
+  "homepage": "http://localhost/wordpress/wp-content/r3f-viewer/",
+  "homepagee": "https://everardomeireles.com",
   "name": "everardo_site",
   "version": "0.1.0",
   "private": true,

@@ -193,7 +193,7 @@ const useStore = create((set) => ({
   forceDisableRender: false, // will disable the app's render
   setForceDisableRender: (DisableRender) => set(() => ({ forceDisableRender: DisableRender })),
 
-  siteMode: "resume",
+  siteMode: "store",
   setSiteMode: (mode) => set(() => ({ siteMode: mode })),
 
   message: {
@@ -203,6 +203,10 @@ const useStore = create((set) => ({
   setMessage: (type, payload) => set(() => ({
     message: { type, payload }
   })),
+
+  productInformationFromMessage: {},
+  setProductInformationFromMessage: (productInformation) => set(() => ({ productInformationFromMessage: productInformation })),
+  
 }));
 
 function App() {
@@ -222,6 +226,9 @@ function App() {
   const transitionEnded = useStore((state) => state.transitionEnded);
 
   const message = useStore((state) => state.message);
+  const setMessage = useStore((state) => state.setMessage);
+  const setProductInformationFromMessage = useStore((state) => state.setProductInformationFromMessage);
+
 
   const [enableTutorial, setEnableTutorial] = useState(false);
 
@@ -230,7 +237,6 @@ function App() {
   // Load initial main scene
   useEffect(() => {
     setMainScene(scene)
-    console.log(mainScene)
 }, [scene]);
 
   useEffect(() => {
@@ -251,6 +257,10 @@ function App() {
 
   }, [tooltipProperties, setTooltipCirclesData]);
 
+  //////////////////////////////////////
+  ////////// Message handling //////////
+  //////////////////////////////////////
+
   // Handle sending messages to parent
   useEffect(() => {
     if (message?.type && message.payload !== undefined) {
@@ -258,7 +268,26 @@ function App() {
       console.log("📤 Sent message to parent:", message);
     }
   }, [message]);
-  
+
+  // Request product information
+  useEffect(() => {
+  setMessage('REQUEST_PRODUCT_INFORMATION', 'TRUE')
+  window.addEventListener('message', handleMessage);
+
+  }, []);
+
+  // Handle receiving e-comerce product information
+		function handleMessage(event) {
+			if (
+				typeof event.data === 'object' &&
+				event.data.type === 'PRODUCT_INFO' &&
+				event.data.payload
+			) {
+				setProductInformationFromMessage(event.data.payload);
+        console.log(event.data.payload)
+			}
+		}
+
   return (
     <>
     {!forceDisableRender && (

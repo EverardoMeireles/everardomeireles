@@ -13,7 +13,7 @@
     "TooltipProperties":
     {
         "text": "Right text",
-        "image": "textures/4x3.png"
+        "image": "/textures/4x3.png"
     }
   }
 }
