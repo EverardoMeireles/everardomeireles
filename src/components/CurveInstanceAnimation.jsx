@@ -30,7 +30,7 @@ export const CurveInstanceAnimation = React.memo((props) => {
     const object3D = new THREE.Object3D();
 
     // Load the GLTF model
-    const gltf = useLoader(GLTFLoader, config.resource_path + '/models/' + instancedObject);
+    const gltf = useLoader(GLTFLoader, config.resource_path + 'models/' + instancedObject);
 
     const [geometry, setGeometry] = useState(null);
     const [material, setMaterial] = useState(null);

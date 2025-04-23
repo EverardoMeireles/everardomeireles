@@ -1,17 +1,20 @@
 [
-    {
-      "model": "car.glb",
-      "default_material": "car_default_material.glb",
-      "id":63
-    },
-    {
-      "model": "plane.glb",
-      "default_material": "plane_default_material.glb",
-      "id":64
-    },
-    {
-      "model": "tree.glb",
-      "default_material": "tree_default_material.glb",
-      "id":65
-    }
-  ]
+  {
+    "model": "example_model.glb",               "model_comment":            "This is the model that will appear on the page",
+    "default_material": "example_material.glb", "default_material_comment": "This is the model's starting material, its usualy a cube with a material, can leave empty if the model already has a applied material",
+    "id":9999,                                  "id_comment":               "This is the woocomerce product id associated with the 3d viewer's data",
+    "thumbnail_index":2,                        "thumbnail_index_comment":  "This is the thumbnail's index associated with the 3d viewer, if 1, the viewer will appear when the second thumbnail is clicked"
+  },
+  {
+    "model": "plane2.glb",
+    "default_material": "",
+    "id":63,
+    "thumbnail_index":0
+  },
+  {
+    "model": "Roomba.glb",
+    "default_material": "",
+    "id":84,
+    "thumbnail_index":0
+  }
+]

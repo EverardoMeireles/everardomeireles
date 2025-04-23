@@ -3,18 +3,45 @@
     "variations": [
       {
         "type":"model",
-        "message_payload_trigger":"roomba_model_2",
+        "attributes":{
+          "model":"2"
+        },
         "file":"Roomba_alternate.glb"
       },
       {
         "type":"material",
-        "message_payload_trigger":"color_red",
+        "attributes":{
+          "color":"Red",
+          "weight":"5kg"
+        },
         "file":"Roomba_material_1.glb"
+      },
+      {
+        "type":"material",
+        "attributes":{
+          "color":"Red"
+        },
+        "file":"plane_red.glb"
+      },
+      {
+        "type":"material",
+        "attributes":{
+          "color":"Green"
+        },
+        "file":"plane_green.glb"
+      },
+      {
+        "type":"material",
+        "attributes":{
+          "color":"Blue"
+        },
+        "file":"plane_blue.glb"
       }
     ]
   },
 
   "ModelProperties": {
+    "rockingMaxAngle": null,
     "rockingTransitionDuration": 2000,
     "explodingTransitionDuration": 300,
     "childTransitionDuration": 150,
@@ -23,8 +50,9 @@
 
   "TooltipProperties": [
     {
-      "objectName": "Motor_gearbox_1TT1",
+      "objectName": "Elevator",
       "pathToShow": "MainMenu",
+      "textShowMode": "Canvas",
       "text": "Right text",
       "image": "/textures/4x3.png",
       "axisOfRotation": [0, 1, 0],
@@ -32,13 +60,15 @@
       "rotatingObjectNDCRight": 0.5,
       "rotatingObjectNDCTop": 0.25,
       "rotatingObjectNDCBottom": -0.25,
+      "RotatingObjectScale":0.1,
       "circleSize": 30,
       "playPulseAnimation": true,
       "position": [0, 0]
     },
     {
-      "objectName": "Wheel_1_1BB1",
+      "objectName": "Propeller",
       "pathToShow": "MainMenu",
+      "textShowMode": "Page",
       "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
       "image": "AfficheDUT-French.png",
       "axisOfRotation": [0, 0, 1],
@@ -46,6 +76,7 @@
       "rotatingObjectNDCRight": 0.5,
       "rotatingObjectNDCTop": 0.25,
       "rotatingObjectNDCBottom": -0.25,
+      "RotatingObjectScale":0.1,
       "circleSize": 30,
       "playPulseAnimation": false,
       "position": [0, 0]

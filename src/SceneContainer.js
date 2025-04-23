@@ -27,7 +27,7 @@ import { AnimationMixer } from 'three';
 import { customInstanceRotation, customInstanceColor } from "./PathPoints";
 import { TranslationTable } from "./TranslationTable";
 import { ResponsiveTable } from "./Styles";
-import { pollForFilesInTHREECache } from "./Helper";
+import { pollForFilesInTHREECache, removeFileExtensionString } from "./Helper";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 import * as THREE from 'three';
@@ -54,7 +54,7 @@ export function SceneContainer(props) {
     const mainScene = useStore((state) => state.mainScene);
     const siteMode = useStore((state) => state.siteMode);
     const productInformationFromMessage = useStore((state) => state.productInformationFromMessage);
-    
+
     const { gl } = useThree();
     const { mouse } = useThree();
 
@@ -210,13 +210,12 @@ export function SceneContainer(props) {
     //////////////// Functional effects ////////////////
     ////////////////////////////////////////////////////
 
-    const [customMaterial, setCustomMaterial] = useState("");
     // Place trigger code
     useEffect(() => {
         switch (triggers) {
             case 'trigger 9':
                 // console.log("clicked")
-                // setCustomMaterial("NoMaterial.glb")
+                // setCustomMaterial("example_material.glb")
                 break;
           }
        
@@ -289,81 +288,137 @@ export function SceneContainer(props) {
     //     }
     // });
 
-    const [modelsConfiguration, setModelsConfiguration] = useState({});
-    const [modelRecords, setModelRecords] = useState([]);
+    ///////////////////////////
+    // E-comerce integration //
+    ///////////////////////////
 
+    const [modelsConfiguration, setModelsConfiguration] = useState({});
+    const [modelRecords, setModelRecords] = useState({});
+
+    // Store the contents of modelRecords.json in a state
     useEffect(() => {
-      async function loadModels() {
+      async function loadRecords() {
         try {
           // Load the modelRecords.json file
           const recordsResponse = await fetch(`${config.models_path}/modelRecords.json`);
           if (!recordsResponse.ok) {
             throw new Error("Failed to load modelRecords.json");
           }
+
           const records = await recordsResponse.json();
-          // Convert array to object
+          // Convert array to object (keys as indices)
           const objectRecords = records.reduce((acc, record, index) => {
             acc[index] = record;
             return acc;
           }, {});
+          
           setModelRecords(objectRecords);
-          // Create an object to hold all model JSON data
-          const modelsObject = await records.reduce(async (accPromise, record) => {
-            const acc = await accPromise;
-            // Remove the .glb extension to get the base name (e.g. "car")
-            const modelBaseName = record.model.replace(".glb", "");
-            // Build the corresponding JSON filename (e.g. "car.json")
-            const jsonFilename = `${modelBaseName}.json`;
-            const modelResponse = await fetch(`${config.models_path}/${jsonFilename}`);
-            if (!modelResponse.ok) {
-              throw new Error(`Failed to load ${jsonFilename}`);
-            }
-
-            const modelJson = await modelResponse.json();
-            // Combine the record with its corresponding JSON data
-            acc[modelBaseName] = {
-              ...record,
-              data: modelJson,
-            };
-
-            return acc;
-          }, Promise.resolve({}));
-
-          setModelsConfiguration(modelsObject);
         } catch (err) {
-            throw new Error(err);
+          console.error(err);
         }
       }
-
-      loadModels();
-
+  
+      loadRecords();
     }, []);
-
-
-
-
-
-
-
-    const [explodingMaterialName, setExplodingMaterialName] = useState(0);
-    const [explodingModel, setExplodingModel] = useState(0);
-    // modelRecords : Record file(modelRecords.json)
-    // modelsConfiguration : Model configuration files
-    // productInformationFromMessage : Product information sent by CMS
-    
-    // Determine model and material for ExplodingModelLoader
+  
+    // Fetch all json configuration files and pack them all into one state
     useEffect(() => {
-        console.log(modelRecords)
-        console.log(modelsConfiguration)
-        console.log(productInformationFromMessage)
-        
+        async function loadModelsConfiguration() {
+            // Only proceed if modelRecords is not empty
+            if (Object.keys(modelRecords).length === 0) return;
 
-    }, [explodingMaterialName, explodingModel, modelRecords, modelsConfiguration, productInformationFromMessage]);
+            try {
+                // Convert the object to an array to iterate the records easily
+                const recordsArray = Object.values(modelRecords);
 
+                const modelsObject = await recordsArray.reduce(async (accPromise, record) => {
+                const acc = await accPromise;
+                // Remove the .glb extension to get the base name (e.g. "car")
+                const modelBaseName = record.model.replace(".glb", "");
+                // Build the corresponding JSON filename (e.g. "car.json")
+                const jsonFilename = `${modelBaseName}.json`;
+                const modelResponse = await fetch(`${config.models_path}/${jsonFilename}`);
+                if (!modelResponse.ok) {
+                    throw new Error(`Failed to load ${jsonFilename}`);
+                }
+                const modelJson = await modelResponse.json();
 
+                // Combine the record with its corresponding JSON data
+                acc[modelBaseName] = {
+                    ...record,
+                    data: modelJson,
+                };
 
+                return acc;
+                }, Promise.resolve({}));
 
+                setModelsConfiguration(modelsObject);
+            } catch (err) {
+                console.error(err);
+            }
+        }
 
+        loadModelsConfiguration();
+    }, [modelRecords]);
+
+    const [explodingMaterialPath, setExplodingMaterialPath] = useState("");
+    const [explodingModelPath, setExplodingModelPath] = useState("example_model.glb");
+    const [explodingConfigFile, setExplodingConfigFile] = useState("example_model.json");
+
+    // Match the received id from the message to the configuration files(now all in the state ModelsConfiguration) to set product models and materials
+    useEffect(() => {
+        if (productInformationFromMessage && modelsConfiguration && modelRecords && productInformationFromMessage.id) {
+            // Find the configuration entry in modelsConfiguration that matches productInformationFromMessage's id.
+            const matchingModelConfiguration = Object.values(modelsConfiguration).find((record) => record.id === productInformationFromMessage.id);
+            // Remove the "attributes_" prefix and only add the key if its value is not an empty string.
+            if (matchingModelConfiguration) {
+                // Set initial model and material
+                setExplodingModelPath(matchingModelConfiguration.model);
+                setExplodingConfigFile(removeFileExtensionString(matchingModelConfiguration.model) + ".json");
+                if(config.materials_path + matchingModelConfiguration.default_material != ""){
+                    setExplodingMaterialPath(matchingModelConfiguration.default_material);
+                }
+
+                const attrs = productInformationFromMessage.attributes;
+                const normalized = {};
+                for (const key in attrs) {
+                    if (key.startsWith("attribute_")) {
+                        if (attrs[key] !== "") {
+                        normalized[key.slice("attribute_".length)] = attrs[key];
+                        }
+                    }
+                }
+
+                // Match attributes
+                const productAttrs = normalized
+                const variations = matchingModelConfiguration.data.ExternalProperties.variations;
+                let matchedVariation = null;
+                for (const variation of variations) {
+                    let allMatch = true;
+                    for (const key in variation.attributes) {
+                        if (!(key in productAttrs) || variation.attributes[key] !== productAttrs[key]) {
+                            allMatch = false;
+                            break;
+                        }
+                    }
+
+                    if (allMatch) {
+                        matchedVariation = variation;
+                        break;
+                    }
+                }
+                
+                if (matchedVariation) {
+                    const type = matchedVariation.type.toLowerCase();
+                    if (type === "model") {
+                        setExplodingModelPath(matchedVariation.file);
+                    } else if (type === "material") {
+                        setExplodingMaterialPath(matchedVariation.file);
+                    }
+                }
+            }
+        }
+    }, [modelRecords, modelsConfiguration, productInformationFromMessage]);
     return(
     <>
         <Camera {...{useStore}} ></Camera>
@@ -478,8 +533,11 @@ export function SceneContainer(props) {
         {(siteMode === "store") && 
         <>
             <ambientLight intensity = {1}></ambientLight>
-            <ExplodingModelLoader {...{useStore}} modelName={"Roomba.glb"} materialName={customMaterial} animationIsPlaying={animationTriggerState} 
+            {(explodingModelPath != "")
+            &&
+            <ExplodingModelLoader {...{useStore}} modelName={explodingModelPath} materialName={explodingMaterialPath} configFile={explodingConfigFile} animationIsPlaying={animationTriggerState}
             position={[163, 113, 72]} setCameraTargetTrigger={"trigger4"} />
+            }
         </>
         }
     </>

@@ -23,8 +23,8 @@ export const PreloadAssets = (props) => {
     return () => clearTimeout(timer); // Cleanup the timer if the component unmounts
   }, [delay]);
 
-  const texturePaths = texturesToLoad.map(texture => config.resource_path + '/textures/' + texture);
-  const scenePaths = scenesToLoad.map(scene => config.resource_path + '/models/' + scene);
+  const texturePaths = texturesToLoad.map(texture => config.resource_path + 'textures/' + texture);
+  const scenePaths = scenesToLoad.map(scene => config.resource_path + 'models/' + scene);
 
   const textures = useLoader(TextureLoader, startLoading ? texturePaths : []);
   const scenes = useLoader(GLTFLoader, startLoading ? scenePaths : []);

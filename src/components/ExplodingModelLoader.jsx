@@ -12,7 +12,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {animationIsPlaying = false} = props;
 
   const {position = [0, 0, 0]} = props;
-  const {modelName = 'explodingModel.glb'} = props;
+  const {modelName = 'example_model.glb'} = props;
+  const {configFile = 'example_model.json'} = props;
   const {customOrigin = []} = props; // If for any reason the imported scene's position transform is not (0, 0, 0), specify it here
   const {animationStartOnLoad = false} = props;
   const {enableRockingAnimation = true} = props;
@@ -33,8 +34,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   // feature: Swap material
   const {materialName = ""} = props;
 
-  const gltf = useLoader(GLTFLoader, config.resource_path + '/models/' + modelName);
-  const newMaterialGltf = useLoader(GLTFLoader, config.resource_path + '/materials/' + ( (!materialName || materialName == "") ? "NoMaterial.glb" : materialName));
+  const gltf = useLoader(GLTFLoader, config.models_path + modelName);
+  const newMaterialGltf = useLoader(GLTFLoader, config.materials_path + ( (!materialName || materialName == "") ? "example_material.glb" : materialName));
   const { camera, gl } = useThree();
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const cameraState = useStore((state) => state.cameraState);
@@ -54,7 +55,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   // const explodingModelName = useStore((state) => state.explodingModelName);
   const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
   const modifyTooltipCircleData = useStore((state) => state.modifyTooltipCircleData);
-  
+  const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
   const [explodingModelName, setExplodingModelName] = useState(undefined);
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -74,6 +75,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const [rockingTransitionDuration, setRockingTransitionDuration] = useState(rockingDuration);
   const [explodingTransitionDuration, setExplodingTransitionDuration] = useState(explodingDuration);
   const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
+  const [rotatingScale, setRotatingScale] = useState(rotatingObjectScale);
   const [sceneOrigin, setSceneOrigin] = useState([gltf.scene.position.toArray()]);
   const [intersectionPoint, setIntersectionPoint] = useState(null);
   const [objectRotationAnimation, setObjectRotationAnimation] = useState(false);
@@ -197,7 +199,6 @@ export const ExplodingModelLoader = React.memo((props) => {
           // Convert the normalized device coordinates (NDC) to screen space percentages
           const x = (vector.x * 0.5 + 0.5) * 100; // Percentage of width
           const y = (vector.y * -0.5 + 0.5) * 100; // Percentage of height
-
           modifyTooltipCircleData(objectName, {
             position: [x, y]
           });
@@ -206,7 +207,7 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   };
 
-  // Makes the tooltip circles follow the objects and updatethe invisible plane when camera position and rotation values change
+  // Makes the tooltip circles follow the objects and update the invisible plane when camera position and rotation values change
   useEffect(() => {
     updateToolTipCirclePositions();
     planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
@@ -214,20 +215,20 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   }, [cameraState]);
 
-  //Parses a 3D model's corresponding json file to create info circles on the screen
+  //Parses a 3D model's corresponding to a json file to create info circles on the screen
   useEffect(() => {
     if(explodingModelName){
-      parseJson(config.models_path + explodingModelName + ".json", "TooltipProperties")
-      .then((data) => {
-        console.log(config.models_path + explodingModelName + ".json", "TooltipProperties")
-        addTooltipCirclesData(data);
+      parseJson(config.models_path + configFile, "TooltipProperties")
+      .then((TooltipProperties) => {
+        setTooltipCirclesData([])
+        addTooltipCirclesData(TooltipProperties);
       })
     }
   }, [explodingModelName]);
 
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
-    parseJson(config.models_path + removeFileExtensionString(modelName) + ".json", 'ModelProperties')
+    parseJson(config.models_path + configFile, 'ModelProperties')
       .then(modelProperties => {
           setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
           setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
@@ -323,6 +324,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
       const clonedObject = originalObject.clone(true); // Clone the object deeply
       objectToRotate.current = clonedObject;
+      // setRotatingScale(TooltipProperties?.RotatingObjectScale ?? rotatingObjectScale);
 
       var ndcX = 0
       var ndcY = 0
@@ -375,8 +377,8 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [tooltipCurrentObjectNameSelected, isCircleOnLeftSelected, isHoveredCircleOnTop, gltf.scene]);
 
-
-
+  useEffect(() => {
+    setRotatingScale(tooltipCirclesData.find(item => item.objectName === tooltipCurrentObjectNameSelected)?.RotatingObjectScale ?? rotatingObjectScale);  }, [tooltipCurrentObjectNameSelected]);
 
   // ANIMATION END EFFECT: Reset animation flags and invert animationDirection
   useEffect(() => {
@@ -531,7 +533,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       <mesh>
         {/* Render the cloned object directly */}
         {(objectToRotate.current && objectRotationAnimation /*COMMENT && objectRotationAnimation to make the rotating object stay visible on unhover*/) && (
-          <primitive scale = {rotatingObjectScale} object={objectToRotate.current} position={objectToRotate.current.position} />
+          <primitive scale = {rotatingScale} object={objectToRotate.current} position={objectToRotate.current.position} />
         )}
       </mesh>
 

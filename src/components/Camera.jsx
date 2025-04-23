@@ -222,7 +222,7 @@ export const Camera = React.memo((props) => {
 
     // if the target is forced
     useEffect(() => {
-        console.log(forcedCameraTarget)
+        // console.log(forcedCameraTarget)
         if(forcedCameraTarget != [])
         {
             controls.current.target.x = forcedCameraTarget[0]

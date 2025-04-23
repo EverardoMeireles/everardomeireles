@@ -284,7 +284,6 @@ function App() {
 				event.data.payload
 			) {
 				setProductInformationFromMessage(event.data.payload);
-        console.log(event.data.payload)
 			}
 		}
 
@@ -299,15 +298,17 @@ function App() {
         <ToolTipCircle
           key={props.objectName}
           {...{ useStore }}
+          objectName={props.objectName}
           pathToShow={props.pathToShow}
-          position={props.position || [0, 0]}
+          textShowMode={props.textShowMode}
           text={props.text}
           image={props.image}
-          objectName={props.objectName}
-          rotatingObjectCoordinates={[props.rotatingObjectNDCLeft, props.rotatingObjectNDCRight, props.rotatingObjectNDCTop, props.rotatingObjectNDCBottom]}
           rotatingObjectAxisOfRotation={props.axisOfRotation}
+          rotatingObjectCoordinates={[props.rotatingObjectNDCLeft, props.rotatingObjectNDCRight, props.rotatingObjectNDCTop, props.rotatingObjectNDCBottom]}
+          RotatingObjectScale={props.RotatingObjectScale}
           size={props.circleSize}
           playPulseAnimation={props.playPulseAnimation}
+          position={props.position || [0, 0]}
         />
       ))}
       <TutorialOverlay enable = {enableTutorial} {...{useStore}}/>

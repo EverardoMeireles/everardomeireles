@@ -11,14 +11,15 @@ import config from '../config';
 export const ToolTipCircle = (props) => {
     const useStore = props.useStore;
     const {objectName = ""} = props;
-    const {text = "Sample text"} = props;
-    const {size = 30} = props;
-    const {image = config.resource_path + "/textures/4x3.png"} = props;
     const {pathToShow = "MainMenu"} = props;
-    const {rotatingObjectCoordinates = []} = props;
+    const {textShowMode = "Canvas"} = props; //Canvas or Page
+    const {text = "Sample text"} = props;
+    const {image = config.resource_path + "/textures/4x3.png"} = props;
     const {rotatingObjectAxisOfRotation = []} = props;
+    const {rotatingObjectCoordinates = []} = props; // The object's four NDC coordinates (left, right, top, bottom)
+    const {size = 30} = props; // Size of the circle
     const {playPulseAnimation = false} = props;
-    const {position = [30, 40]} = props;
+    const {position = [0, 0]} = props;
 
     const setIsCircleOnLeftSelected = useStore((state) => state.setIsCircleOnLeftSelected);
     const setIsCircleOnTopSelected = useStore((state) => state.setIsCircleOnTopSelected);
@@ -100,29 +101,40 @@ export const ToolTipCircle = (props) => {
     };
 
     const handleMouseEnter = () => {
-        setMessage('3D_TOOLTIP_HOVER', {text:text, image:image}) // Communication with external applications
-        setUpdateViewportArray(true)
-        setUpdateRotatingObjectAxis(true)
-        setTooltipProperties({
-            active:true,
-            text: text,
-            image: image,
-            visible: true
-          });
-        setIsCircleOnLeftSelected(isCircleOnLeft)
-        setIsCircleOnTopSelected(isCircleOnTop)
-        setTooltipCurrentObjectNameSelected(objectName)
+        if(textShowMode == "Canvas"){
+            setUpdateViewportArray(true)
+            setUpdateRotatingObjectAxis(true)
+            setTooltipProperties({
+                active:true,
+                text: text,
+                image: image,
+                visible: true
+            });
+            setIsCircleOnLeftSelected(isCircleOnLeft)
+            setIsCircleOnTopSelected(isCircleOnTop)
+            setTooltipCurrentObjectNameSelected(objectName)
+        }
+        else 
+        if(textShowMode == "Page"){
+            setMessage('3D_TOOLTIP_HOVER', {text:text, image:image}) // Communication with external applications (Set the product description to the text).
+        }
     };
 
     const handleMouseLeave = () => {
-        setUpdateViewportArray(false)
-        setUpdateRotatingObjectAxis(false)
-        setTooltipProperties({
-            active:false,
-            visible: false
-          });
+        if(textShowMode == "Canvas"){
+            setUpdateViewportArray(false)
+            setUpdateRotatingObjectAxis(false)
+            setTooltipProperties({
+                active:false,
+                visible: false
+            });
+        }else 
+        if(textShowMode == "Page"){
+            setMessage('3D_TOOLTIP_HOVER_LEAVE', '') // Communication with external applications (Restores previous content of the product description).
+        }
+
         setTooltipCurrentObjectNameSelected(undefined)
     };
-
+    
     return <div style={circleStyle} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} />;
 };
