@@ -265,7 +265,6 @@ function App() {
   useEffect(() => {
     if (message?.type && message.payload !== undefined) {
       window.parent.postMessage(message, "*");
-      console.log("📤 Sent message to parent:", message);
     }
   }, [message]);
 
@@ -303,9 +302,11 @@ function App() {
           textShowMode={props.textShowMode}
           text={props.text}
           image={props.image}
-          rotatingObjectAxisOfRotation={props.axisOfRotation}
           rotatingObjectCoordinates={[props.rotatingObjectNDCLeft, props.rotatingObjectNDCRight, props.rotatingObjectNDCTop, props.rotatingObjectNDCBottom]}
           RotatingObjectScale={props.RotatingObjectScale}
+          rotatingObjectAxisOfRotation={props.axisOfRotation}
+          rotatingObjectSpeedOfRotation={props.rotatingObjectSpeedOfRotation}
+          rotatingObjectForcePositionOffset={props.rotatingObjectForcePositionOffset}
           size={props.circleSize}
           playPulseAnimation={props.playPulseAnimation}
           position={props.position || [0, 0]}

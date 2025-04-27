@@ -72,7 +72,7 @@ export const ToolTipCircle = (props) => {
         }
     }, [updateViewportArray]);
 
-    // sets the axis that the rotating object will take on the screen
+    // sets the axis that the rotating object will take on the screen TODO:MOVE TO EXPLODINGMODELLOADER????
     useEffect(() => {
         if(updateRotatingObjectAxis){
             if(rotatingObjectAxisOfRotation != undefined){
@@ -125,7 +125,7 @@ export const ToolTipCircle = (props) => {
             setUpdateViewportArray(false)
             setUpdateRotatingObjectAxis(false)
             setTooltipProperties({
-                active:false,
+                active: false,
                 visible: false
             });
         }else 
@@ -133,7 +133,7 @@ export const ToolTipCircle = (props) => {
             setMessage('3D_TOOLTIP_HOVER_LEAVE', '') // Communication with external applications (Restores previous content of the product description).
         }
 
-        setTooltipCurrentObjectNameSelected(undefined)
+        setTooltipCurrentObjectNameSelected(undefined);
     };
     
     return <div style={circleStyle} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} />;

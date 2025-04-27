@@ -14,6 +14,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {position = [0, 0, 0]} = props;
   const {modelName = 'example_model.glb'} = props;
   const {configFile = 'example_model.json'} = props;
+  const {materialName = ""} = props; // feature: Swap material
   const {customOrigin = []} = props; // If for any reason the imported scene's position transform is not (0, 0, 0), specify it here
   const {animationStartOnLoad = false} = props;
   const {enableRockingAnimation = true} = props;
@@ -21,18 +22,15 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {setCameraTargetOnMount = true} = props;
   const {setCameraTargetTrigger = "trigger4"} = props;
 
-  const {rockingMaxAngle = Math.PI / 16} = props;  
+  const {rockingMaxAngle = Math.PI / 16} = props; 
   const {rockingDuration = 2000} = props;
   const {explodingDuration = 2500} = props;
   const {childDuration = 700} = props;
 
+  const {rotatingObjectScale = 3} = props; // Rotating object's scale
   const {rotatingObjectAxisOfRotation = [0, 1, 0]} = props; // Rotating object's axis of rotation
   const {rotatingObjectSpeedOfRotation = 1.2} = props; // Rotating object's speed of rotation
-  const {rotatingObjectScale = 3} = props; // Rotating object's scale
-  const {rotatingObjectForcePositionOffset = {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}} = props; // Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
-
-  // feature: Swap material
-  const {materialName = ""} = props;
+  const {rotatingObjectForcePositionOffset = {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}} = props; // CURRENTLY NOT WORKING Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
 
   const gltf = useLoader(GLTFLoader, config.models_path + modelName);
   const newMaterialGltf = useLoader(GLTFLoader, config.materials_path + ( (!materialName || materialName == "") ? "example_material.glb" : materialName));
@@ -71,14 +69,23 @@ export const ExplodingModelLoader = React.memo((props) => {
   const [childAnimationTick, setChildAnimationTick] = useState(0);
   const [hasChildAnimation, setHasChildAnimation] = useState(false);
 
-  const [rockingAnimationMaxAngle, setAnimationRockingMaxAngle] = useState(rockingMaxAngle);
+  const [explodingObjectPosition, setExplodingObjectPosition] = useState([0, 0, 0]);
+  const [explodingObjectAnimationStartOnLoad, setExplodingObjectAnimationStartOnLoad] = useState(false);
+  const [explodingObjectEnableRockingAnimation, setExplodingObjectEnableRockingAnimation] = useState(true);
+  const [explodingObjectEnableExplodeAnimation, setExplodingObjectEnableExplodeAnimation] = useState(true);
+  const [sceneOrigin, setSceneOrigin] = useState([gltf.scene.position.toArray()]);
+  
   const [rockingTransitionDuration, setRockingTransitionDuration] = useState(rockingDuration);
   const [explodingTransitionDuration, setExplodingTransitionDuration] = useState(explodingDuration);
   const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
   const [rotatingScale, setRotatingScale] = useState(rotatingObjectScale);
-  const [sceneOrigin, setSceneOrigin] = useState([gltf.scene.position.toArray()]);
-  const [intersectionPoint, setIntersectionPoint] = useState(null);
-  const [objectRotationAnimation, setObjectRotationAnimation] = useState(false);
+  const [rotatingAxisOfRotation, setRotatingAxisOfRotation] = useState(rotatingObjectAxisOfRotation);
+  const [rotatingSpeedOfRotation, setRotatingSpeedOfRotation] = useState(rotatingObjectSpeedOfRotation);  
+  const rotatingForcePositionOffset = useRef(rotatingObjectForcePositionOffset); // not a state like the others, the value needs to be updated immediately
+  const rockingAnimationMaxAngle = useRef(rockingMaxAngle); // not a state like the others, the value needs to be updated immediately
+  const objectRotationAnimation = useRef(true); // not a state like the others, the value needs to be updated immediately, enables the rotating object's animation
+
+  const [intersectionPoint, setIntersectionPoint] = useState(null); // Might be usefull for projecting more stuff in the future
 
     // Sets the imported model's origin point, a custom origin for the object if specified in the props
   const rockingAnimationPlayed = useRef(false);
@@ -180,6 +187,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       });
     });
     return currentPositions;
+
   }
   const tooltipProperties = useStore((state) => state.tooltipProperties);
 
@@ -212,7 +220,6 @@ export const ExplodingModelLoader = React.memo((props) => {
     updateToolTipCirclePositions();
     planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
     // console.log(cameraState.position)
-
   }, [cameraState]);
 
   //Parses a 3D model's corresponding to a json file to create info circles on the screen
@@ -226,15 +233,31 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [explodingModelName]);
 
+    // Set the tooltip circle's properties
+    useEffect(() => {
+      const tCircleData = tooltipCirclesData.find(item => item.objectName === tooltipCurrentObjectNameSelected);
+  
+      setRotatingScale(tCircleData?.RotatingObjectScale ?? rotatingObjectScale);
+      setRotatingAxisOfRotation(tCircleData?.axisOfRotation ?? rotatingObjectAxisOfRotation);
+      setRotatingSpeedOfRotation(tCircleData?.rotatingObjectSpeedOfRotation ?? rotatingObjectSpeedOfRotation);
+      rotatingForcePositionOffset.current = tCircleData?.rotatingObjectForcePositionOffset ?? rotatingObjectForcePositionOffset;
+      objectRotationAnimation.current = tCircleData?.rotatingObjectEnable ?? true;
+    }, [tooltipCurrentObjectNameSelected]);
+
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
     parseJson(config.models_path + configFile, 'ModelProperties')
       .then(modelProperties => {
-          setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
-          setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
-          setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
-          setAnimationRockingMaxAngle(modelProperties?.rockingAnimationMaxAngle ?? rockingMaxAngle);
-          setSceneOrigin(modelProperties?.customOrigin ?? (customOrigin.length != 0 ? customOrigin : gltf.scene.position.toArray()));
+        setExplodingObjectPosition(modelProperties?.position ?? position)
+        setExplodingObjectAnimationStartOnLoad(modelProperties?.animationStartOnLoad ?? animationStartOnLoad)
+        setExplodingObjectEnableRockingAnimation(modelProperties?.enableRockingAnimation ?? enableRockingAnimation)
+        setExplodingObjectEnableExplodeAnimation(modelProperties?.enableExplodeAnimation ?? enableExplodeAnimation)
+        setSceneOrigin(modelProperties?.customOrigin ?? (customOrigin.length != 0 ? customOrigin : gltf.scene.position.toArray()));
+        setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
+        setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
+        setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
+        rockingAnimationMaxAngle.current = modelProperties?.rockingMaxAngleDegrees * (Math.PI / 180) ?? rockingMaxAngle; // conversion to radians
+        
       })
       .catch(error => {
         console.error('Error parsing JSON:', error);
@@ -270,16 +293,16 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Automatically starts the animation when the animationStartOnLoad prop is set to true
   useEffect(() => {
-    if(enableRockingAnimation && animationStartOnLoad){
+    if(explodingObjectEnableRockingAnimation && explodingObjectAnimationStartOnLoad){
       setRock(true)
       setIsPlaying(true)
     }
 
-    if(enableExplodeAnimation && animationStartOnLoad){
+    if(explodingObjectEnableExplodeAnimation && explodingObjectAnimationStartOnLoad){
       setExplode(true)
       setIsPlaying(true)
     }
-  }, [animationStartOnLoad]);
+  }, [explodingObjectAnimationStartOnLoad]);
 
   // When model loads, set the initial and desired positions of the animation
   useEffect(() => {
@@ -299,22 +322,22 @@ export const ExplodingModelLoader = React.memo((props) => {
     if (isPlaying && (previousAnimationDirection.current !== animationDirection || previousAnimationDirection.current === null)) {
       setAnimationTick(0); // Reset animation tick when starting
       setChildAnimationTick(0); // Reset child animation tick when starting
-      if (enableRockingAnimation && animationDirection === true) {
+      if (explodingObjectEnableRockingAnimation && animationDirection === true) {
         setRock(true);
-      } else if (enableExplodeAnimation) {
+      } else if (explodingObjectEnableExplodeAnimation) {
         setExplode(true);
       }
       previousAnimationDirection.current = animationDirection; // Set only when animation starts
     } else if (isPlaying && previousAnimationDirection.current === animationDirection) {
       setIsPlaying(false); // Failsafe
     }
-  }, [isPlaying, enableRockingAnimation, enableExplodeAnimation, animationDirection]);
+  }, [isPlaying, explodingObjectEnableRockingAnimation, explodingObjectEnableExplodeAnimation, animationDirection]);
 
   // Trigger animation start
   useEffect(() => {
     const raycaster = new THREE.Raycaster();
-    if (!tooltipCurrentObjectNameSelected) {
-      setObjectRotationAnimation(false);
+    if (!tooltipCurrentObjectNameSelected || objectRotationAnimation.current !=true) {
+      objectRotationAnimation.current = false //setObjectRotationAnimation(false);
     } else {
       const originalObject = gltf.scene.getObjectByName(tooltipCurrentObjectNameSelected);
       if (!originalObject) {
@@ -331,18 +354,19 @@ export const ExplodingModelLoader = React.memo((props) => {
 
       if (isCircleOnLeftSelected) {
         // Place the object on the left side of the viewport
-        ndcX = rotatingObjectForcePositionOffset["left"] != 0 ? rotatingObjectForcePositionOffset["left"] :rotatingObjectViewportArray[0]
+
+        ndcX = rotatingForcePositionOffset.current["left"] != 0 ? rotatingForcePositionOffset.current["left"] : rotatingObjectViewportArray[0]
       } else {
         // Place the object on the right side of the viewport
-        ndcX = rotatingObjectForcePositionOffset["right"] != 0 ? rotatingObjectForcePositionOffset["right"] : rotatingObjectViewportArray[1]
+        ndcX = rotatingForcePositionOffset.current["right"] != 0 ? rotatingForcePositionOffset.current["right"] : rotatingObjectViewportArray[1]
       }
   
       if (isHoveredCircleOnTop) {
         // Place the object on the top side of the viewport
-        ndcY = rotatingObjectForcePositionOffset["bottom"] != 0 ? rotatingObjectForcePositionOffset["bottom"] : rotatingObjectViewportArray[3]
+        ndcY = rotatingForcePositionOffset.current["bottom"] != 0 ? rotatingForcePositionOffset.current["bottom"] : rotatingObjectViewportArray[3]
       } else {
         // Place the object on the bottom side of the viewport
-        ndcY = rotatingObjectForcePositionOffset["top"] != 0 ? rotatingObjectForcePositionOffset["top"] : rotatingObjectViewportArray[2]
+        ndcY = rotatingForcePositionOffset.current["top"] != 0 ? rotatingForcePositionOffset.current["top"] : rotatingObjectViewportArray[2]
       }
 
       ndcX > 1 ? ndcX = 1 : ndcX = ndcX
@@ -370,15 +394,11 @@ export const ExplodingModelLoader = React.memo((props) => {
 
       if (intersects.length > 0) {
         const point = intersects[0].point;
-        setIntersectionPoint(point);
+        setIntersectionPoint(point); // Might be usefull for projecting more stuff in the future
       }
 
-      setObjectRotationAnimation(true);
     }
   }, [tooltipCurrentObjectNameSelected, isCircleOnLeftSelected, isHoveredCircleOnTop, gltf.scene]);
-
-  useEffect(() => {
-    setRotatingScale(tooltipCirclesData.find(item => item.objectName === tooltipCurrentObjectNameSelected)?.RotatingObjectScale ?? rotatingObjectScale);  }, [tooltipCurrentObjectNameSelected]);
 
   // ANIMATION END EFFECT: Reset animation flags and invert animationDirection
   useEffect(() => {
@@ -390,7 +410,6 @@ export const ExplodingModelLoader = React.memo((props) => {
         setInitialPositions(getInitialPositions(gltf));
         setDesiredPositions(getDesiredPositions(getInitialPositions(gltf)));
       } else {
-        console.log(animationDirection);
         const tempInitialPositions = initialPositions;
         setInitialPositions(desiredPositions);
         setDesiredPositions(tempInitialPositions);
@@ -413,21 +432,20 @@ export const ExplodingModelLoader = React.memo((props) => {
     if(isPlaying){
       const adjustedDelta = delta;
 
-      if (rock && enableRockingAnimation && animationTick <= 1 && !rockingAnimationPlayed.current) {
+      if (rock && explodingObjectEnableRockingAnimation && animationTick <= 1 && !rockingAnimationPlayed.current) {
         setAnimationTick(prev => Math.min(prev + (adjustedDelta / (rockingTransitionDuration / 1000)), 1));
         const easedTick = easeInCubic(animationTick);
-  
         gltf.scene.children.forEach((mesh) => {
-          const randomX = (Math.random() - 0.5) * rockingAnimationMaxAngle * easedTick;
-          const randomY = (Math.random() - 0.5) * rockingAnimationMaxAngle * easedTick;
-          const randomZ = (Math.random() - 0.5) * rockingAnimationMaxAngle * easedTick;
+          const randomX = (Math.random() - 0.5) * rockingAnimationMaxAngle.current * easedTick;
+          const randomY = (Math.random() - 0.5) * rockingAnimationMaxAngle.current * easedTick;
+          const randomZ = (Math.random() - 0.5) * rockingAnimationMaxAngle.current * easedTick;
           mesh.rotation.set(randomX, randomY, randomZ);
         });
   
         if (animationTick >= 1) {
           setRock(false);
           rockingAnimationPlayed.current = true;
-          if (enableExplodeAnimation) {
+          if (explodingObjectEnableExplodeAnimation) {
             setExplode(true);
           }
           setAnimationTick(0); // Reset animation tick for the next animation
@@ -437,7 +455,7 @@ export const ExplodingModelLoader = React.memo((props) => {
             mesh.rotation.set(0, 0, 0);
           });
         }
-      } else if (explode && enableExplodeAnimation && animationTick <= 1 && !explodeAnimationPlayed.current) {
+      } else if (explode && explodingObjectEnableExplodeAnimation && animationTick <= 1 && !explodeAnimationPlayed.current) {
         setAnimationTick(prev => Math.min(prev + (adjustedDelta / (explodingTransitionDuration / 1000)), 1));
         const easedTick = animationDirection === true ? easeOutCubic(animationTick) : easeInCubic(animationTick);
   
@@ -500,12 +518,12 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Object rotation animation
   useFrame((state, delta) => {
-    if(objectRotationAnimation){
+    if(objectRotationAnimation.current){
       if (objectToRotate.current){
         // Apply the speed to the axis provided either by the prop or a json file
-        objectToRotate.current.rotation.x += ((rotatingObjectForcedAxisOfRotation != [] ? rotatingObjectForcedAxisOfRotation[0] : rotatingObjectAxisOfRotation[0]) * rotatingObjectSpeedOfRotation) * delta;
-        objectToRotate.current.rotation.y += ((rotatingObjectForcedAxisOfRotation != [] ? rotatingObjectForcedAxisOfRotation[1] : rotatingObjectAxisOfRotation[1]) * rotatingObjectSpeedOfRotation) * delta;
-        objectToRotate.current.rotation.z += ((rotatingObjectForcedAxisOfRotation != [] ? rotatingObjectForcedAxisOfRotation[2] : rotatingObjectAxisOfRotation[2]) * rotatingObjectSpeedOfRotation) * delta;
+        objectToRotate.current.rotation.x += ((rotatingObjectForcedAxisOfRotation != [] ? rotatingObjectForcedAxisOfRotation[0] : rotatingObjectAxisOfRotation[0]) * rotatingSpeedOfRotation) * delta;
+        objectToRotate.current.rotation.y += ((rotatingObjectForcedAxisOfRotation != [] ? rotatingObjectForcedAxisOfRotation[1] : rotatingObjectAxisOfRotation[1]) * rotatingSpeedOfRotation) * delta;
+        objectToRotate.current.rotation.z += ((rotatingObjectForcedAxisOfRotation != [] ? rotatingObjectForcedAxisOfRotation[2] : rotatingObjectAxisOfRotation[2]) * rotatingSpeedOfRotation) * delta;
       }
     }
   });
@@ -529,10 +547,10 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   return (
     <Suspense fallback={null}>
-      <primitive position={position} object={gltf.scene} />
+      <primitive position={explodingObjectPosition} object={gltf.scene} />
       <mesh>
         {/* Render the cloned object directly */}
-        {(objectToRotate.current && objectRotationAnimation /*COMMENT && objectRotationAnimation to make the rotating object stay visible on unhover*/) && (
+        {(objectToRotate.current && objectRotationAnimation.current /*COMMENT && objectRotationAnimation to make the rotating object stay visible on unhover*/) && (
           <primitive scale = {rotatingScale} object={objectToRotate.current} position={objectToRotate.current.position} />
         )}
       </mesh>

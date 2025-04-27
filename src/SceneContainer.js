@@ -535,7 +535,7 @@ export function SceneContainer(props) {
             <ambientLight intensity = {1}></ambientLight>
             {(explodingModelPath != "")
             &&
-            <ExplodingModelLoader {...{useStore}} modelName={explodingModelPath} materialName={explodingMaterialPath} configFile={explodingConfigFile} animationIsPlaying={animationTriggerState}
+            <ExplodingModelLoader {...{useStore}} modelName={"Roomba.glb"/*explodingModelPath*/} materialName={""/*explodingMaterialPath*/} configFile={"Roomba.json"/*explodingConfigFile*/} animationIsPlaying={animationTriggerState}
             position={[163, 113, 72]} setCameraTargetTrigger={"trigger4"} />
             }
         </>

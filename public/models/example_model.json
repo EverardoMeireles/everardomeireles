@@ -20,11 +20,15 @@
   },
 
   "ModelProperties": {
-    "rockingMaxAngle": null, "rockingMaxAngle_comment":"TODO: Find a way to make Math.PI work with this property",
+    "position":[0, 0, 0], "position_comment":" Overwrite the position of the model.",
+    "animationStartOnLoad":false,
+    "enableRockingAnimation":true,
+    "enableExplodeAnimation":true,
+    "customOrigin": [180, 140, 51],
+    "rockingMaxAngleDegrees": null, "rockingMaxAngle_comment":" Value in degrees, it's converted to radians in the background",
     "rockingTransitionDuration": 2000,
     "explodingTransitionDuration": 300,
-    "childTransitionDuration": 150,
-    "customOrigin": [180, 140, 51]
+    "childTransitionDuration": 150
   },
 
   "TooltipProperties": [
@@ -34,16 +38,18 @@
       "textShowMode": "Canvas",
       "text": "Right text",
       "image": "/textures/4x3.png",
-      "rotatingObjectScale": 1,
-      "axisOfRotation": [0, 1, 0],
+      "circleSize": 30,
+      "playPulseAnimation": true,
+      "position": [0, 0], "position_comment":" The circle's position is dynamicaly set by the 'objectName' property in the background, but you can use the 'position' property to force a position if 'objectName' is not valid.",
+      "rotatingObjectEnable": true,
       "rotatingObjectNDCLeft": -0.5,
       "rotatingObjectNDCRight": 0.5,
       "rotatingObjectNDCTop": 0.25,
       "rotatingObjectNDCBottom": -0.25,
-      "RotatingObjectScale":0.1,
-      "circleSize": 30,
-      "playPulseAnimation": true,
-      "position": [0, 0], "position_comment":" The circle's position is dynamicaly set by the 'objectName' property, but you can use the 'position' property to force a position if 'ojectName' is not valid."
+      "RotatingObjectScale": 3,
+      "axisOfRotation": [0, 1, 0],
+      "rotatingObjectSpeedOfRotation": 1.2,
+      "rotatingObjectForcePositionOffset": {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}, "rotatingObjectForcePositionOffset_comment":" !!CURRENTLY NOT WORKING!! Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)."
     }
   ]
 }

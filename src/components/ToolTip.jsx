@@ -53,7 +53,7 @@ export const ToolTip = (props) => {
         width: isDivDisabled ? '0vw':'40vw',
         height: isDivDisabled ? '0vh' : '90vh',
         margin: '5vh',
-        borderRadius: '5px',
+        borderRadius: '50px',
         display: 'flex',
         flexDirection: 'column',
         //alignItems: 'center',
@@ -113,7 +113,7 @@ export const ToolTip = (props) => {
             if (!isVisible) {
                 setIsDivDisabled(true);
             }
-        }} /*onMouseOver={console.log("sqdqsdqsdqsdqsdqsdqsd")}*/>
+        }}>
             <div style={textStyle}>
                 {tooltipProperties.text}
             </div>
