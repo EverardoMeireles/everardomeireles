@@ -30,7 +30,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {rotatingObjectScale = 3} = props; // Rotating object's scale
   const {rotatingObjectAxisOfRotation = [0, 1, 0]} = props; // Rotating object's axis of rotation
   const {rotatingObjectSpeedOfRotation = 1.2} = props; // Rotating object's speed of rotation
-  const {rotatingObjectForcePositionOffset = {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}} = props; // CURRENTLY NOT WORKING Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
+  const {rotatingObjectForcePositionOffset = {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}} = props; // Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
 
   const gltf = useLoader(GLTFLoader, config.models_path + modelName);
   const newMaterialGltf = useLoader(GLTFLoader, config.materials_path + ( (!materialName || materialName == "") ? "example_material.glb" : materialName));
@@ -46,7 +46,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   // const setExplodingModelName = useStore((state) => state.setExplodingModelName);
   const setTooltipCurrentObjectSelected = useStore((state) => state.setTooltipCurrentObjectSelected);
   const rotatingObjectViewportArray = useStore((state) => state.rotatingObjectViewportArray);
-  const rotatingObjectForcedAxisOfRotation = useStore((state) => state.rotatingObjectForcedAxisOfRotation);
   const isCircleOnLeftSelected = useStore((state) => state.isCircleOnLeftSelected);
   const isHoveredCircleOnTop = useStore((state) => state.isHoveredCircleOnTop);
   const tooltipCurrentObjectNameSelected = useStore((state) => state.tooltipCurrentObjectNameSelected);
@@ -242,6 +241,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       setRotatingSpeedOfRotation(tCircleData?.rotatingObjectSpeedOfRotation ?? rotatingObjectSpeedOfRotation);
       rotatingForcePositionOffset.current = tCircleData?.rotatingObjectForcePositionOffset ?? rotatingObjectForcePositionOffset;
       objectRotationAnimation.current = tCircleData?.rotatingObjectEnable ?? true;
+
     }, [tooltipCurrentObjectNameSelected]);
 
   // Set the model's properties by parsing a json or defaults to prop value
@@ -521,9 +521,9 @@ export const ExplodingModelLoader = React.memo((props) => {
     if(objectRotationAnimation.current){
       if (objectToRotate.current){
         // Apply the speed to the axis provided either by the prop or a json file
-        objectToRotate.current.rotation.x += ((rotatingObjectForcedAxisOfRotation != [] ? rotatingObjectForcedAxisOfRotation[0] : rotatingObjectAxisOfRotation[0]) * rotatingSpeedOfRotation) * delta;
-        objectToRotate.current.rotation.y += ((rotatingObjectForcedAxisOfRotation != [] ? rotatingObjectForcedAxisOfRotation[1] : rotatingObjectAxisOfRotation[1]) * rotatingSpeedOfRotation) * delta;
-        objectToRotate.current.rotation.z += ((rotatingObjectForcedAxisOfRotation != [] ? rotatingObjectForcedAxisOfRotation[2] : rotatingObjectAxisOfRotation[2]) * rotatingSpeedOfRotation) * delta;
+        objectToRotate.current.rotation.x += (rotatingAxisOfRotation[0] * rotatingSpeedOfRotation) * delta;
+        objectToRotate.current.rotation.y += (rotatingAxisOfRotation[1] * rotatingSpeedOfRotation) * delta;
+        objectToRotate.current.rotation.z += (rotatingAxisOfRotation[2] * rotatingSpeedOfRotation) * delta;
       }
     }
   });

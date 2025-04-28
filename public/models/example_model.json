@@ -49,7 +49,7 @@
       "RotatingObjectScale": 3,
       "axisOfRotation": [0, 1, 0],
       "rotatingObjectSpeedOfRotation": 1.2,
-      "rotatingObjectForcePositionOffset": {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}, "rotatingObjectForcePositionOffset_comment":" !!CURRENTLY NOT WORKING!! Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)."
+      "rotatingObjectForcePositionOffset": {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}, "rotatingObjectForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)."
     }
   ]
 }

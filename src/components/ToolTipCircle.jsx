@@ -31,7 +31,6 @@ export const ToolTipCircle = (props) => {
     const setTooltipCurrentObjectNameSelected = useStore((state) => state.setTooltipCurrentObjectNameSelected);
     const tooltipCurrentObjectSelected = useStore((state) => state.tooltipCurrentObjectSelected);
     const setRotatingObjectViewportArray = useStore((state) => state.setRotatingObjectViewportArray);
-    const setRotatingObjectForcedAxisOfRotation = useStore((state) => state.setRotatingObjectForcedAxisOfRotation);
     const setMessage = useStore((state) => state.setMessage);
     
     const [isVisible, setIsVisible] = useState(false);
@@ -71,18 +70,6 @@ export const ToolTipCircle = (props) => {
             }
         }
     }, [updateViewportArray]);
-
-    // sets the axis that the rotating object will take on the screen TODO:MOVE TO EXPLODINGMODELLOADER????
-    useEffect(() => {
-        if(updateRotatingObjectAxis){
-            if(rotatingObjectAxisOfRotation != undefined){
-                setRotatingObjectForcedAxisOfRotation(rotatingObjectAxisOfRotation)
-            }
-            else{
-                setRotatingObjectForcedAxisOfRotation([])
-            }
-        }
-    }, [updateRotatingObjectAxis]);
 
     const circleStyle = {
         position: 'fixed',

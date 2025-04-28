@@ -178,9 +178,6 @@ const useStore = create((set) => ({
       return { rotatingObjectViewportArray: newArray };
     }), // Define the NDC viewport coordinates(-1 to 1) that the rotating object is supposed to be on the left, right, top, bottom sides. Usage: setRotatingObjectViewportArray(1, 0.75)
 
-  rotatingObjectForcedAxisOfRotation: [], // the axis that the rotating object will rotate when its tooltip circle is hovered, takes a three element array
-  setRotatingObjectForcedAxisOfRotation: (axis) => set(() => ({ rotatingObjectForcedAxisOfRotation: axis })),
-
   forcedCameraTarget: [], // will force the camera's rotation pivot if not empty
   setForcedCameraTarget: (target) => set(() => ({ forcedCameraTarget: target })),
 
