@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Suspense, useEffect, useState, useRef } from 'react';
 import * as THREE from 'three';
 import React from 'react';
-import { parseJson, removeFileExtensionString, easeInCubic, easeOutCubic } from "../Helper";
+import { parseJson, removeFileExtensionString, easeInCubic, easeOutCubic, createArchCurve } from "../Helper";
 import config from '../config';
 
 export const ExplodingModelLoader = React.memo((props) => {
@@ -30,12 +30,13 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {rotatingObjectScale = 3} = props; // Rotating object's scale
   const {rotatingObjectAxisOfRotation = [0, 1, 0]} = props; // Rotating object's axis of rotation
   const {rotatingObjectSpeedOfRotation = 1.2} = props; // Rotating object's speed of rotation
-  const {rotatingObjectForcePositionOffset = {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}} = props; // Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
+  const {rotatingObjectForcePositionOffset = {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}} = props; // Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
 
   const gltf = useLoader(GLTFLoader, config.models_path + modelName);
   const newMaterialGltf = useLoader(GLTFLoader, config.materials_path + ( (!materialName || materialName == "") ? "example_material.glb" : materialName));
+
   const { camera, gl } = useThree();
-  const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
+
   const cameraState = useStore((state) => state.cameraState);
   const animationDirection = useStore((state) => state.animationDirection);
   const setAnimationDirection = useStore((state) => state.setAnimationDirection);
@@ -44,17 +45,17 @@ export const ExplodingModelLoader = React.memo((props) => {
   const triggers = useStore((state) => state.triggers);
   const setTrigger = useStore((state) => state.setTrigger);
   // const setExplodingModelName = useStore((state) => state.setExplodingModelName);
-  const setTooltipCurrentObjectSelected = useStore((state) => state.setTooltipCurrentObjectSelected);
-  const rotatingObjectViewportArray = useStore((state) => state.rotatingObjectViewportArray);
   const isCircleOnLeftSelected = useStore((state) => state.isCircleOnLeftSelected);
   const isHoveredCircleOnTop = useStore((state) => state.isHoveredCircleOnTop);
   const tooltipCurrentObjectNameSelected = useStore((state) => state.tooltipCurrentObjectNameSelected);
   // const explodingModelName = useStore((state) => state.explodingModelName);
+  const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
   const modifyTooltipCircleData = useStore((state) => state.modifyTooltipCircleData);
   const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
+  const setForcedCameraPathCurve = useStore((state) => state.setForcedCameraPathCurve);
   const [explodingModelName, setExplodingModelName] = useState(undefined);
-
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [rock, setRock] = useState(false);
   const [explode, setExplode] = useState(false);
@@ -79,10 +80,16 @@ export const ExplodingModelLoader = React.memo((props) => {
   const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
   const [rotatingScale, setRotatingScale] = useState(rotatingObjectScale);
   const [rotatingAxisOfRotation, setRotatingAxisOfRotation] = useState(rotatingObjectAxisOfRotation);
-  const [rotatingSpeedOfRotation, setRotatingSpeedOfRotation] = useState(rotatingObjectSpeedOfRotation);  
-  const rotatingForcePositionOffset = useRef(rotatingObjectForcePositionOffset); // not a state like the others, the value needs to be updated immediately
-  const rockingAnimationMaxAngle = useRef(rockingMaxAngle); // not a state like the others, the value needs to be updated immediately
-  const objectRotationAnimation = useRef(true); // not a state like the others, the value needs to be updated immediately, enables the rotating object's animation
+  const [rotatingSpeedOfRotation, setRotatingSpeedOfRotation] = useState(rotatingObjectSpeedOfRotation);
+  const rotatingForcePositionOffset = useRef(rotatingObjectForcePositionOffset);
+  const rockingAnimationMaxAngle = useRef(rockingMaxAngle); // How drastic will the 'shaking' of the animation be
+  const objectRotationAnimation = useRef(true); // Enables the rotating object's animation
+  const objectFocusPoint = useRef([0, 0, 0]); // The point that the camera will transition to if the object is focused on(if circle is clicked)
+  const objectFocusPointDistance = useRef(0); // The distance from the focus point, that the camera will transition to
+  const objectFront = useRef([1, 0, 0]); // The 'front' of the object for the object focusing feature
+  const objectCameraTarget = useRef([0, 0, 0]);
+  const archWidth = useRef(1); // How wide must the transition's curve be when the object is focused
+  
 
   const [intersectionPoint, setIntersectionPoint] = useState(null); // Might be usefull for projecting more stuff in the future
 
@@ -188,7 +195,6 @@ export const ExplodingModelLoader = React.memo((props) => {
     return currentPositions;
 
   }
-  const tooltipProperties = useStore((state) => state.tooltipProperties);
 
   // Makes the tooltip circles follow the objects when camera position and rotation values change
   const updateToolTipCirclePositions = () => {
@@ -214,6 +220,12 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   };
 
+  // Use the tooltipCurrentObjectNameSelected in a local context
+  const currentSelectedObjectName = useRef(undefined);
+  useEffect(() => {
+    currentSelectedObjectName.current = tooltipCurrentObjectNameSelected
+  }, [tooltipCurrentObjectNameSelected])
+
   // Makes the tooltip circles follow the objects and update the invisible plane when camera position and rotation values change
   useEffect(() => {
     updateToolTipCirclePositions();
@@ -232,17 +244,23 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [explodingModelName]);
 
+    const rotatingObjectWorldPosition = useRef(new THREE.Vector3())
     // Set the tooltip circle's properties
     useEffect(() => {
-      const tCircleData = tooltipCirclesData.find(item => item.objectName === tooltipCurrentObjectNameSelected);
-  
+      const tCircleData = tooltipCirclesData.find(item => item.objectName === currentSelectedObjectName.current);
+      rotatingObjectWorldPosition.current = currentSelectedObjectName.current == undefined ? rotatingObjectWorldPosition.current : gltf.scene.getObjectByName(currentSelectedObjectName.current)?.getWorldPosition(new THREE.Vector3());
+      
       setRotatingScale(tCircleData?.RotatingObjectScale ?? rotatingObjectScale);
       setRotatingAxisOfRotation(tCircleData?.axisOfRotation ?? rotatingObjectAxisOfRotation);
       setRotatingSpeedOfRotation(tCircleData?.rotatingObjectSpeedOfRotation ?? rotatingObjectSpeedOfRotation);
       rotatingForcePositionOffset.current = tCircleData?.rotatingObjectForcePositionOffset ?? rotatingObjectForcePositionOffset;
       objectRotationAnimation.current = tCircleData?.rotatingObjectEnable ?? true;
-
-    }, [tooltipCurrentObjectNameSelected]);
+      objectFocusPoint.current =  tCircleData?.rotatingObjectFocusPoint ?? rotatingObjectWorldPosition.current ?? undefined
+      objectFocusPointDistance.current = tCircleData?.rotatingObjectFocusPointDistance ?? 0;
+      objectFront.current = tCircleData?.rotatingObjectFront ?? [1, 0, 0];
+      objectCameraTarget.current =  tCircleData?.rotatingObjectCameraTargetPoint ?? rotatingObjectWorldPosition.current.toArray() ?? [0, 0, 0];
+      archWidth.current = tCircleData?.rotatingObjectCameraArchWidth ?? 10
+    }, [currentSelectedObjectName.current]);
 
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
@@ -336,12 +354,12 @@ export const ExplodingModelLoader = React.memo((props) => {
   // Trigger animation start
   useEffect(() => {
     const raycaster = new THREE.Raycaster();
-    if (!tooltipCurrentObjectNameSelected || objectRotationAnimation.current !=true) {
+    if (!currentSelectedObjectName.current || objectRotationAnimation.current !=true) {
       objectRotationAnimation.current = false //setObjectRotationAnimation(false);
     } else {
-      const originalObject = gltf.scene.getObjectByName(tooltipCurrentObjectNameSelected);
+      const originalObject = gltf.scene.getObjectByName(currentSelectedObjectName.current);
       if (!originalObject) {
-        console.warn(`Object '${tooltipCurrentObjectNameSelected}' not found in gltf scene.`);
+        console.warn(`Object '${currentSelectedObjectName.current}' not found in gltf scene.`);
         return;
       }
 
@@ -354,19 +372,18 @@ export const ExplodingModelLoader = React.memo((props) => {
 
       if (isCircleOnLeftSelected) {
         // Place the object on the left side of the viewport
-
-        ndcX = rotatingForcePositionOffset.current["left"] != 0 ? rotatingForcePositionOffset.current["left"] : rotatingObjectViewportArray[0]
+        ndcX = rotatingForcePositionOffset.current["left"]
       } else {
         // Place the object on the right side of the viewport
-        ndcX = rotatingForcePositionOffset.current["right"] != 0 ? rotatingForcePositionOffset.current["right"] : rotatingObjectViewportArray[1]
+        ndcX = rotatingForcePositionOffset.current["right"]
       }
   
       if (isHoveredCircleOnTop) {
         // Place the object on the top side of the viewport
-        ndcY = rotatingForcePositionOffset.current["bottom"] != 0 ? rotatingForcePositionOffset.current["bottom"] : rotatingObjectViewportArray[3]
+        ndcY = rotatingForcePositionOffset.current["bottom"]
       } else {
         // Place the object on the bottom side of the viewport
-        ndcY = rotatingForcePositionOffset.current["top"] != 0 ? rotatingForcePositionOffset.current["top"] : rotatingObjectViewportArray[2]
+        ndcY = rotatingForcePositionOffset.current["top"]
       }
 
       ndcX > 1 ? ndcX = 1 : ndcX = ndcX
@@ -398,7 +415,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       }
 
     }
-  }, [tooltipCurrentObjectNameSelected, isCircleOnLeftSelected, isHoveredCircleOnTop, gltf.scene]);
+  }, [currentSelectedObjectName.current, isCircleOnLeftSelected, isHoveredCircleOnTop, gltf.scene]);
 
   // ANIMATION END EFFECT: Reset animation flags and invert animationDirection
   useEffect(() => {
@@ -545,9 +562,63 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [materialName, newMaterialGltf, gltf]);
 
+  const archCurve = useRef(new THREE.CatmullRomCurve3( [        
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0)]));
+
+  const frameCount = useRef(0);  // frame counter
+  // Update the arch's transition curve
+  useFrame((state, delta) => {
+    // Increment the frame count
+    // console.log(rotatingObjectWorldPosition.current)
+    if(currentSelectedObjectName.current){
+      frameCount.current += 1;
+      // Only update archCurve.current every 5 frames
+      if (frameCount.current >= 5) {
+        archCurve.current = createArchCurve(objectFront.current, objectFocusPointDistance.current, objectFocusPoint.current, camera, archWidth.current);
+        frameCount.current = 0;  // Reset the frame count after updating
+      }
+    }
+  });
+
+  useEffect(() => {
+    const handleMouseClick = (event) => {
+      console.log(currentSelectedObjectName.current);
+
+      if(currentSelectedObjectName.current){
+
+        console.log(archCurve.current);
+        setForcedCameraPathCurve(archCurve.current)
+        console.log(objectCameraTarget.current)
+        setForcedCameraTarget(objectCameraTarget.current)
+      }
+    };
+
+    window.addEventListener('click', handleMouseClick);
+  }, [])
+
+  // debug tube geometry for visualizing the transition curve
+  function TubeCurve({
+    curve,
+    tubularSegments = 64,
+    radius = 0.1,
+    radialSegments = 8,
+    closed = false,
+  }) {
+    return (
+      <mesh>
+        <tubeGeometry
+          args={[curve, tubularSegments, radius, radialSegments, closed]}
+        />
+        <meshBasicMaterial wireframe={true} />
+      </mesh>
+    )
+  }
+
   return (
     <Suspense fallback={null}>
-      <primitive position={explodingObjectPosition} object={gltf.scene} />
+      <primitive position={explodingObjectPosition} object={gltf.scene} origin={sceneOrigin}/>
       <mesh>
         {/* Render the cloned object directly */}
         {(objectToRotate.current && objectRotationAnimation.current /*COMMENT && objectRotationAnimation to make the rotating object stay visible on unhover*/) && (
@@ -560,6 +631,14 @@ export const ExplodingModelLoader = React.memo((props) => {
         <planeGeometry  /*scale={new THREE.Vector3(15,15,15)} */args={[150,150]} />
         <meshBasicMaterial color={0xffffff} side={THREE.DoubleSide} transparent opacity={0} />
       </mesh>
+
+      <TubeCurve
+        curve={archCurve.current}
+        tubularSegments={8}
+        radius={0.2}
+        radialSegments={8}
+      />
+
     </Suspense>
   );
 });

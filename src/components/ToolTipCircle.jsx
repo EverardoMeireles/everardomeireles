@@ -30,7 +30,6 @@ export const ToolTipCircle = (props) => {
     const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
     const setTooltipCurrentObjectNameSelected = useStore((state) => state.setTooltipCurrentObjectNameSelected);
     const tooltipCurrentObjectSelected = useStore((state) => state.tooltipCurrentObjectSelected);
-    const setRotatingObjectViewportArray = useStore((state) => state.setRotatingObjectViewportArray);
     const setMessage = useStore((state) => state.setMessage);
     
     const [isVisible, setIsVisible] = useState(false);
@@ -49,27 +48,6 @@ export const ToolTipCircle = (props) => {
             setIsVisible(false);
         }
     }, [desired_path, transitionEnded]);
-
-    // sets the positions that the rotating object will take on the screen
-    useEffect(() => {
-        if(updateViewportArray){
-            if(rotatingObjectCoordinates[0] != undefined){
-                setRotatingObjectViewportArray(0, rotatingObjectCoordinates[0])
-            }
-    
-            if(rotatingObjectCoordinates[1] != undefined){
-                setRotatingObjectViewportArray(1, rotatingObjectCoordinates[1])
-            }
-    
-            if(rotatingObjectCoordinates[2] != undefined){
-                setRotatingObjectViewportArray(2, rotatingObjectCoordinates[2])
-            }
-    
-            if(rotatingObjectCoordinates[3] != undefined){
-                setRotatingObjectViewportArray(3, rotatingObjectCoordinates[3])
-            }
-        }
-    }, [updateViewportArray]);
 
     const circleStyle = {
         position: 'fixed',

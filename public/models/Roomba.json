@@ -36,14 +36,15 @@
       "playPulseAnimation": true,
       "position": [0, 0],
       "rotatingObjectEnable": true,
-      "rotatingObjectNDCLeft": -0.5,
-      "rotatingObjectNDCRight": 0.5,
-      "rotatingObjectNDCTop": 0.25,
-      "rotatingObjectNDCBottom": -0.25,
       "RotatingObjectScale": 3,
       "axisOfRotation": [0, 1, 0],
       "rotatingObjectSpeedOfRotation": 2,
-      "rotatingObjectForcePositionOffset": {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}
+      "rotatingObjectForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25},
+      "rotatingObjectFront": [0, 1, 0],
+      "rotatingObjectFocusPoint": [171, 137, 55],
+      "rotatingObjectFocusPointDistance": 8,
+      "rotatingObjectCameraTargetPoint": [200, 137, 54],
+      "rotatingObjectCameraArchWidth": 20
     },
     {
       "objectName": "Wheel_1_1BB1",
@@ -54,11 +55,7 @@
       "circleSize": 30,
       "playPulseAnimation": false,
       "position": [0, 0],
-      "rotatingObjectEnable": true,
-      "rotatingObjectNDCLeft": -0.5,
-      "rotatingObjectNDCRight": 0.5,
-      "rotatingObjectNDCTop": 0.25,
-      "rotatingObjectNDCBottom": -0.25
+      "rotatingObjectEnable": true
     }
   ]
 }

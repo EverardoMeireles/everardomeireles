@@ -17,6 +17,9 @@ const useStore = create((set) => ({
   mainScene: undefined,
   setMainScene: (loaded) => set(() => ({ mainScene: loaded })),
 
+  forceDisableRender: false, // will disable the app's render
+  setForceDisableRender: (DisableRender) => set(() => ({ forceDisableRender: DisableRender })),
+
   raycasterEnabled: true,
   setRaycasterEnabled: (loaded) => set(() => ({ raycasterEnabled: loaded })),
 
@@ -32,11 +35,11 @@ const useStore = create((set) => ({
   currentGraphicalMode: config.default_graphical_setting,
   setGraphicalMode: (mode) => set(() => ({ currentGraphicalMode: mode })),
 
-  currentLanguage: "Portuguese",
-  setLanguage: (language) => set(() => ({ currentLanguage: language })),
-
   enableDynamicGraphicalModeSetting: true,
   setEnableDynamicGraphicalModeSetting: (trueOrFalse) => set(() => ({ enableDynamicGraphicalModeSetting: trueOrFalse })),
+
+  currentLanguage: "Portuguese",
+  setLanguage: (language) => set(() => ({ currentLanguage: language })),
 
   currentCameraMovements: { zoom: true, pan: true, rotate: true },
   setcurrentCameraMovements: (cameraMovements) => set(() => ({ currentCameraMovements: cameraMovements })),
@@ -49,6 +52,26 @@ const useStore = create((set) => ({
 
   panDirectionalEdgethreshold: 150,
   setPanDirectionalEdgethreshold: (threshold) => set(() => ({ panDirectionalEdgethreshold: threshold })),
+
+  cameraState: {
+    position: [0, 0, 0],
+    rotation: [0, 0, 0],
+  },
+  setCameraState: (position, rotation) => set(() => ({
+    cameraState: { position, rotation }
+  })),
+
+  cameraStateTracking: false,
+  setCameraStateTracking: (tracking) => set(() => ({ cameraStateTracking: tracking })),
+
+  forcedCameraTarget: [], // will force the camera's rotation pivot if not empty
+  setForcedCameraTarget: (target) => set(() => ({ forcedCameraTarget: target })),
+
+  forcedCameraPathCurve: new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, 0)]), // custom camera curve path
+  setForcedCameraPathCurve: (curve) => set(() => ({ forcedCameraPathCurve: curve })),
 
   alertProperties: {
     active: false,
@@ -66,9 +89,6 @@ const useStore = create((set) => ({
       ...newProperties
     }
   })),
-
-  currentSkillHovered: "Python", // try to put this on the component itself
-  setSkillHovered: (skill) => set(() => ({ currentSkillHovered: skill })),
 
   mouseClicked: false,
   toggleMouseClicked: () => set((state) => ({ mouseClicked: !state.mouseClicked })),
@@ -112,9 +132,6 @@ const useStore = create((set) => ({
 
   tooltipCirclesData: [],
   setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data })),
-  // addTooltipCirclesData: (newData) => set((state) => ({
-  //   tooltipCirclesData: [...state.tooltipCirclesData, ...newData] // Add new data without overwriting
-  // })),
   addTooltipCirclesData: (newData) => set((state) => { // Add new data, in case of duplicate keys, the object will be overwritten
     const updatedData = [...state.tooltipCirclesData];
     newData.forEach(newItem => {
@@ -147,16 +164,22 @@ const useStore = create((set) => ({
   tooltipCurrentObjectNameSelected: undefined,
   setTooltipCurrentObjectNameSelected: (object) => set(() => ({ tooltipCurrentObjectNameSelected: object })),
 
-  cameraState: {
-    position: [0, 0, 0],
-    rotation: [0, 0, 0],
+  message: {
+    type: undefined,
+    payload: undefined,
   },
-  setCameraState: (position, rotation) => set(() => ({
-    cameraState: { position, rotation }
+  setMessage: (type, payload) => set(() => ({
+    message: { type, payload }
   })),
 
-  cameraStateTracking: false,
-  setCameraStateTracking: (tracking) => set(() => ({ cameraStateTracking: tracking })),
+  productInformationFromMessage: {},
+  setProductInformationFromMessage: (productInformation) => set(() => ({ productInformationFromMessage: productInformation })),
+  
+  currentSkillHovered: "Python", // try to put this on the component itself
+  setSkillHovered: (skill) => set(() => ({ currentSkillHovered: skill })),
+
+  siteMode: "store",
+  setSiteMode: (mode) => set(() => ({ siteMode: mode })),
 
   animationTriggerState: false,
   setAnimationTriggerState: (playing) => set(() => ({ animationTriggerState: playing })),
@@ -169,41 +192,6 @@ const useStore = create((set) => ({
 
   explodeAnimationEnded: false,
   setExplodeAnimationEnded: (ended) => set(() => ({ explodeAnimationEnded: ended })),
-
-  rotatingObjectViewportArray: [-0.5, 0.5, 0.25, -0.25],
-  setRotatingObjectViewportArray: (index, value) =>
-    set((state) => {
-      const newArray = [...state.rotatingObjectViewportArray];
-      newArray[index] = value;
-      return { rotatingObjectViewportArray: newArray };
-    }), // Define the NDC viewport coordinates(-1 to 1) that the rotating object is supposed to be on the left, right, top, bottom sides. Usage: setRotatingObjectViewportArray(1, 0.75)
-
-  forcedCameraTarget: [], // will force the camera's rotation pivot if not empty
-  setForcedCameraTarget: (target) => set(() => ({ forcedCameraTarget: target })),
-
-  forcedCameraPathCurve: new THREE.CatmullRomCurve3([        
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, 0)]), // custom camera curve path
-  setForcedCameraPathCurve: (curve) => set(() => ({ forcedCameraPathCurve: curve })),
-
-  forceDisableRender: false, // will disable the app's render
-  setForceDisableRender: (DisableRender) => set(() => ({ forceDisableRender: DisableRender })),
-
-  siteMode: "store",
-  setSiteMode: (mode) => set(() => ({ siteMode: mode })),
-
-  message: {
-    type: undefined,
-    payload: undefined,
-  },
-  setMessage: (type, payload) => set(() => ({
-    message: { type, payload }
-  })),
-
-  productInformationFromMessage: {},
-  setProductInformationFromMessage: (productInformation) => set(() => ({ productInformationFromMessage: productInformation })),
-  
 }));
 
 function App() {

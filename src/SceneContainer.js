@@ -419,6 +419,24 @@ export function SceneContainer(props) {
             }
         }
     }, [modelRecords, modelsConfiguration, productInformationFromMessage]);
+
+    function TubeCurve({
+        curve,
+        tubularSegments = 64,
+        radius = 0.1,
+        radialSegments = 8,
+        closed = false,
+      }) {
+        return (
+          <mesh>
+            <tubeGeometry
+              args={[curve, tubularSegments, radius, radialSegments, closed]}
+            />
+            <meshBasicMaterial wireframe={true} />
+          </mesh>
+        )
+      }
+
     return(
     <>
         <Camera {...{useStore}} ></Camera>
@@ -540,6 +558,16 @@ export function SceneContainer(props) {
             }
         </>
         }
+
+{/* <TubeCurve
+        curve={    new THREE.CatmullRomCurve3( [        
+                new THREE.Vector3(188, 145, 58),
+                new THREE.Vector3(12, 35, -73),
+                new THREE.Vector3(13, 35, -15)])}
+        tubularSegments={8}
+        radius={0.2}
+        radialSegments={8}
+      /> */}
     </>
     );
 }

@@ -48,6 +48,40 @@ export function smoothStep(x) {
     return Sn;
 }
 
+  export function createArchCurve(
+    direction = [1, 0, 0],
+    distance = 1,
+    targetObjectPos,
+    camera,
+    archWidth = 1
+  ) {
+    // 1. direction → normalized Vector3 * distance
+    const dirVec = direction.isVector3
+      ? direction.clone()
+      : new THREE.Vector3(...direction)
+    const offset = dirVec.normalize().multiplyScalar(distance)
+  
+    // 2. get object world position and compute end point
+    // const worldPos = new THREE.Vector3()
+    // targetObjectPos.getWorldPosition(worldPos)
+
+    const worldPos = (Array.isArray(targetObjectPos) ? new THREE.Vector3(...targetObjectPos) : targetObjectPos) ?? new THREE.Vector3(0, 0, 0)
+
+    const endPos = worldPos.clone().add(offset)
+    // 3. get camera world position (start)
+    const startPos = new THREE.Vector3()
+    camera.getWorldPosition(startPos)
+  
+    // 4. two midpoints lifted by archWidth
+    const p1 = startPos.clone().lerp(endPos, 0.25)
+    p1.y += archWidth
+    const p2 = startPos.clone().lerp(endPos, 0.75)
+    p2.y += archWidth
+  
+    // 5. build and return the Catmull-Rom curve
+    return new THREE.CatmullRomCurve3([startPos, p1, p2, endPos])
+  }
+
 // increase or decrease the graphics settings
 export function increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, higherOrLower) {
     const totalModes = Object.keys(graphicsModes).length;
