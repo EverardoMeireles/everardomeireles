@@ -470,7 +470,6 @@ export function SceneContainer(props) {
             <OrbitingMenu {...{ useStore }} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]} />
             )}
 
-            {(desired_path.includes("ProfessionalExpProjects")) && 
             <>
                 <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["prospere_itb_presentation"]} lettersPerUnit = {5} textModelMenu = "ProfessionalExpProjects0"     scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
                 <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["drim_presentation"]} textModelMenu = "ProfessionalExpProjects1"                                  scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
@@ -485,7 +484,6 @@ export function SceneContainer(props) {
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
             </>
-            }
             
             {/* {(desired_path=="Skills" && transitionEnded) &&
             <FloatingTextSkills {...{useStore}} initialPosition = {[-9, 30, -15]} textPosition = {FloatingTextSkillsPosition} /> 
