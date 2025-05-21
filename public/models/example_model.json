@@ -50,7 +50,8 @@
       "rotatingObjectFocusPoint": [171, 137, 55], "rotatingObjectFocusPoint_comment":" The point that the camera will transition to if the object is focused on(if circle is clicked)",
       "rotatingObjectFocusPointDistance": 0, "rotatingObjectFocusPointDistance_comment":" The distance from the focus point, that the camera will transition to",
       "rotatingObjectCameraTargetPoint": [171, 127, 55], "rotatingObjectCameraLooktAtPoint_comment":" The point that the camera will rotate around and look at when the object is focused on",
-      "rotatingObjectCameraArchWidth": 10, "rotatingObjectCameraArchWidth_comment": "How wide must the transition's curve be when the object is focused"
+      "rotatingObjectCameraArchWidth": 10, "rotatingObjectCameraArchWidth_comment": "How wide must the transition's curve be when the object is focused",
+      "rotatingObjectCameraCurveDirection":"", "rotatingObjectCameraCurveDirection_comment": "Determine in which direction the transition arch will curve, accepts both 3d arrays(ie: [1, 0, 0] or plain english(ie: 'up', 'down', 'left', 'right'))"
     }
   ]
 }

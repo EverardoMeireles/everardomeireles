@@ -48,38 +48,65 @@ export function smoothStep(x) {
     return Sn;
 }
 
-  export function createArchCurve(
+export function createArchCurve(
     direction = [1, 0, 0],
     distance = 1,
     targetObjectPos,
     camera,
-    archWidth = 1
+    archWidth = 1,
+    curveDirection = "up" // Accepts string or array/vector
   ) {
     // 1. direction → normalized Vector3 * distance
-    const dirVec = direction.isVector3
-      ? direction.clone()
-      : new THREE.Vector3(...direction)
-    const offset = dirVec.normalize().multiplyScalar(distance)
+    const dirVec = direction.isVector3 ? direction.clone() : new THREE.Vector3(...direction);
+    const offset = dirVec.normalize().multiplyScalar(distance);
   
     // 2. get object world position and compute end point
-    // const worldPos = new THREE.Vector3()
-    // targetObjectPos.getWorldPosition(worldPos)
-
-    const worldPos = (Array.isArray(targetObjectPos) ? new THREE.Vector3(...targetObjectPos) : targetObjectPos) ?? new THREE.Vector3(0, 0, 0)
-
-    const endPos = worldPos.clone().add(offset)
+    const worldPos = Array.isArray(targetObjectPos)
+      ? new THREE.Vector3(...targetObjectPos)
+      : targetObjectPos ?? new THREE.Vector3(0, 0, 0);
+  
+    const endPos = worldPos.clone().add(offset);
+  
     // 3. get camera world position (start)
-    const startPos = new THREE.Vector3()
-    camera.getWorldPosition(startPos)
+    const startPos = new THREE.Vector3();
+    camera.getWorldPosition(startPos);
   
-    // 4. two midpoints lifted by archWidth
-    const p1 = startPos.clone().lerp(endPos, 0.25)
-    p1.y += archWidth
-    const p2 = startPos.clone().lerp(endPos, 0.75)
-    p2.y += archWidth
+    // 4. Determine curve direction based on curveDirection type
+    let directionVec = new THREE.Vector3(0, 0, 0); // Default vector
   
-    // 5. build and return the Catmull-Rom curve
-    return new THREE.CatmullRomCurve3([startPos, p1, p2, endPos])
+    if (typeof curveDirection === "string") {
+      // Handle string-based curveDirection
+      switch (curveDirection) {
+        case "up":
+          directionVec.set(0, 1, 0); // Curve upwards
+          break;
+        case "down":
+          directionVec.set(0, -1, 0); // Curve downwards
+          break;
+        case "left":
+          directionVec.set(-1, 0, 0); // Curve left
+          break;
+        case "right":
+          directionVec.set(1, 0, 0); // Curve right
+          break;
+        default:
+          console.warn("Invalid curve direction, using default 'up'");
+          directionVec.set(0, 1, 0); // Default curve upwards
+      }
+    } else if (Array.isArray(curveDirection) || curveDirection instanceof THREE.Vector3) {
+      // Handle array-based or Vector3-based curveDirection
+      directionVec = new THREE.Vector3(...curveDirection); // Convert array to Vector3
+    }
+  
+    // 5. Adjust midpoints based on the direction vector
+    const p1 = startPos.clone().lerp(endPos, 0.25);
+    p1.add(directionVec.clone().multiplyScalar(archWidth)); // Use directionVec for curvature
+  
+    const p2 = startPos.clone().lerp(endPos, 0.75);
+    p2.add(directionVec.clone().multiplyScalar(archWidth)); // Similarly adjust second midpoint
+  
+    // 6. Return the Catmull-Rom curve
+    return new THREE.CatmullRomCurve3([startPos, p1, p2, endPos]);
   }
 
 // increase or decrease the graphics settings

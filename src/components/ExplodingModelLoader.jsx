@@ -89,7 +89,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const objectFront = useRef([1, 0, 0]); // The 'front' of the object for the object focusing feature
   const objectCameraTarget = useRef([0, 0, 0]);
   const archWidth = useRef(1); // How wide must the transition's curve be when the object is focused
-  
+  const curveDirection = useRef([1, 0, 0]); // How wide must the transition's curve be when the object is focused
+
 
   const [intersectionPoint, setIntersectionPoint] = useState(null); // Might be usefull for projecting more stuff in the future
 
@@ -259,7 +260,8 @@ export const ExplodingModelLoader = React.memo((props) => {
       objectFocusPointDistance.current = tCircleData?.rotatingObjectFocusPointDistance ?? 0;
       objectFront.current = tCircleData?.rotatingObjectFront ?? [1, 0, 0];
       objectCameraTarget.current =  tCircleData?.rotatingObjectCameraTargetPoint ?? rotatingObjectWorldPosition.current.toArray() ?? [0, 0, 0];
-      archWidth.current = tCircleData?.rotatingObjectCameraArchWidth ?? 10
+      archWidth.current = tCircleData?.rotatingObjectCameraArchWidth ?? 10;
+      curveDirection.current = tCircleData?.rotatingObjectCameraCurveDirection ?? [1, 0, 0]
     }, [currentSelectedObjectName.current]);
 
   // Set the model's properties by parsing a json or defaults to prop value
@@ -576,7 +578,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       frameCount.current += 1;
       // Only update archCurve.current every 5 frames
       if (frameCount.current >= 5) {
-        archCurve.current = createArchCurve(objectFront.current, objectFocusPointDistance.current, objectFocusPoint.current, camera, archWidth.current);
+        archCurve.current = createArchCurve(objectFront.current, objectFocusPointDistance.current, objectFocusPoint.current, camera, archWidth.current, curveDirection.current);
         frameCount.current = 0;  // Reset the frame count after updating
       }
     }

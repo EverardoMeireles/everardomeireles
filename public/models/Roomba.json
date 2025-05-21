@@ -44,7 +44,8 @@
       "rotatingObjectFocusPoint": [171, 137, 55],
       "rotatingObjectFocusPointDistance": 8,
       "rotatingObjectCameraTargetPoint": [200, 137, 54],
-      "rotatingObjectCameraArchWidth": 20
+      "rotatingObjectCameraArchWidth": 20,
+      "rotatingObjectCameraCurveDirection": "left"
     },
     {
       "objectName": "Wheel_1_1BB1",
