@@ -23,7 +23,7 @@ export function FadingText(props) {
 
     const TextMaterialRef = useRef();
     const [fadeFactor, setFadeFactor] = useState(-1); //1 or -1
-    const [playAnimation, setPlayAnimation] = useState(false); //1 or -1
+    const [playAnimation, setPlayAnimation] = useState(false); //true or false
     const [materialOpacity, setMaterialOpacity] = useState(0);
 
     const transitionEnded = useStore((state) => state.transitionEnded);

@@ -178,7 +178,7 @@ const useStore = create((set) => ({
   currentSkillHovered: "Python", // try to put this on the component itself
   setSkillHovered: (skill) => set(() => ({ currentSkillHovered: skill })),
 
-  siteMode: "store",
+  siteMode: "resume",
   setSiteMode: (mode) => set(() => ({ siteMode: mode })),
 
   animationTriggerState: false,
@@ -270,6 +270,11 @@ function App() {
 				setProductInformationFromMessage(event.data.payload);
 			}
 		}
+    
+    // exposes the store to the global context to change states on chrome devtools
+    if (typeof window !== "undefined") {
+      window.useStore = useStore;
+    }
 
   return (
     <>
