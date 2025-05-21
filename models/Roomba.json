@@ -1,9 +1,29 @@
 {
+  "ExternalProperties": {
+    "variations": [
+      {
+        "type":"model",
+        "message_payload_trigger":"roomba_model_2",
+        "file":"Roomba_alternate.glb"
+      },
+      {
+        "type":"material",
+        "message_payload_trigger":"color_red",
+        "file":"Roomba_material_1.glb"
+      }
+    ]
+  },
+
   "ModelProperties": {
+    "positionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn":[0, 0, 0],
+    "animationStartOnLoad":true,
+    "enableRockingAnimation":true,
+    "enableExplodeAnimation":true,
+    "customOrigin": [180, 140, 51],
+    "rockingMaxAngleDegrees": 10,
     "rockingTransitionDuration": 2000,
-    "explodingTransitionDuration": 300,
-    "childTransitionDuration": 150,
-    "customOrigin": [180, 140, 51]
+    "explodingTransitionDuration": 2000,
+    "childTransitionDuration": 1500
   },
 
   "TooltipProperties": [
@@ -11,15 +31,21 @@
       "objectName": "Motor_gearbox_1TT1",
       "pathToShow": "MainMenu",
       "text": "Right text",
-      "image": "textures/4x3.png",
-      "axisOfRotation": [0, 1, 0],
-      "rotatingObjectNDCLeft": -0.5,
-      "rotatingObjectNDCRight": 0.5,
-      "rotatingObjectNDCTop": 0.25,
-      "rotatingObjectNDCBottom": -0.25,
+      "image": "/textures/4x3.png",
       "circleSize": 30,
       "playPulseAnimation": true,
-      "position": [0, 0]
+      "position": [0, 0],
+      "rotatingObjectEnable": true,
+      "RotatingObjectScale": 3,
+      "axisOfRotation": [0, 1, 0],
+      "rotatingObjectSpeedOfRotation": 2,
+      "rotatingObjectForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25},
+      "rotatingObjectFront": [0, 1, 0],
+      "rotatingObjectFocusPoint": [171, 137, 55],
+      "rotatingObjectFocusPointDistance": 8,
+      "AAAAAAAAAAAAAAAAAAAAAAAArotatingObjectCameraTargetPoint": [200, 137, 54],
+      "rotatingObjectCameraArchWidth": 20,
+      "rotatingObjectCameraCurveDirection": "left"
     },
     {
       "objectName": "Wheel_1_1BB1",
@@ -27,14 +53,10 @@
       "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
       "image": "AfficheDUT-French.png",
       "axisOfRotation": [0, 0, 1],
-
-      "rotatingObjectNDCLeft": -0.5,
-      "rotatingObjectNDCRight": 0.5,
-      "rotatingObjectNDCTop": 0.25,
-      "rotatingObjectNDCBottom": -0.25,
       "circleSize": 30,
       "playPulseAnimation": false,
-      "position": [0, 0]
+      "position": [0, 0],
+      "rotatingObjectEnable": true
     }
   ]
 }

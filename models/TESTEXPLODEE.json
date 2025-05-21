@@ -11,7 +11,7 @@
         "objectName": "Motor_gearbox_1TT1",
         "pathToShow": "MainMenu",
         "text": "Right text",
-        "image": "textures/4x3.png",
+        "image": "/textures/4x3.png",
         "axisOfRotation": [0, 1, 0],
         "rotatingObjectNDCLeft": -0.5,
         "rotatingObjectNDCRight": 0.5,
