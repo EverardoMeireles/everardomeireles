@@ -21,8 +21,8 @@ export const Camera = React.memo((props) => {
     const setCameraState = useStore((state) => state.setCameraState);
     const cameraStateTracking = useStore((state) => state.cameraStateTracking);
     const forcedCameraTarget = useStore((state) => state.forcedCameraTarget);
-    const forcedCameraPathCurve = useStore((state) => state.forcedCameraPathCurve);
-    const setForcedCameraPathCurve = useStore((state) => state.setForcedCameraPathCurve);
+    const forcedCameraMovePathCurve = useStore((state) => state.forcedCameraMovePathCurve);
+    const setForcedCameraMovePathCurve = useStore((state) => state.setForcedCameraMovePathCurve);
     const triggers = useStore((state) => state.triggers);
 
     const updateCallNow = useRef(false);
@@ -233,11 +233,11 @@ export const Camera = React.memo((props) => {
 
     // if the camera path is forced, reset the animation tick
     useEffect(() => {
-        if(!compareCurves(forcedCameraPathCurve, nullCurve) && tick != 0){
+        if(!compareCurves(forcedCameraMovePathCurve, nullCurve) && tick != 0){
             tick = 0;
-            curve = forcedCameraPathCurve
+            curve = forcedCameraMovePathCurve
         }
-    }, [forcedCameraPathCurve]);
+    }, [forcedCameraMovePathCurve]);
 
     // Set the transition speed if specified in PathPoints.jsx
     function setCustomSpeed(currentTick, path_speeds){

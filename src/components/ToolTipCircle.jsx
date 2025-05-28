@@ -15,9 +15,7 @@ export const ToolTipCircle = (props) => {
     const {textShowMode = "Canvas"} = props; //Canvas or Page
     const {text = "Sample text"} = props;
     const {image = config.resource_path + "/textures/4x3.png"} = props;
-    const {rotatingObjectAxisOfRotation = []} = props;
-    const {rotatingObjectCoordinates = []} = props; // The object's four NDC coordinates (left, right, top, bottom)
-    const {size = 30} = props; // Size of the circle
+    const {circleSize = 30} = props; // Size of the circle
     const {playPulseAnimation = false} = props;
     const {position = [0, 0]} = props;
 
@@ -26,15 +24,11 @@ export const ToolTipCircle = (props) => {
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
     const desired_path = useStore((state) => state.desired_path);
     const transitionEnded = useStore((state) => state.transitionEnded);
-    const explodeAnimationEnded = useStore((state) => state.explodeAnimationEnded);
     const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
     const setTooltipCurrentObjectNameSelected = useStore((state) => state.setTooltipCurrentObjectNameSelected);
-    const tooltipCurrentObjectSelected = useStore((state) => state.tooltipCurrentObjectSelected);
     const setMessage = useStore((state) => state.setMessage);
     
     const [isVisible, setIsVisible] = useState(false);
-    const [updateViewportArray, setUpdateViewportArray] = useState(false);
-    const [updateRotatingObjectAxis, setUpdateRotatingObjectAxis] = useState(false);
 
     const isCircleOnLeft = position[0] < 50; // Since it's a percentage
     const isCircleOnTop = position[1] < 50; // Since it's a percentage
@@ -53,8 +47,8 @@ export const ToolTipCircle = (props) => {
         position: 'fixed',
         left: `${position[0]}vw`,
         top: `${position[1]}vh`,
-        width: `${size}px`,
-        height: `${size}px`,
+        width: `${circleSize}px`,
+        height: `${circleSize}px`,
         borderRadius: '50%',
         cursor: 'pointer',
         zIndex: 900,
@@ -67,8 +61,6 @@ export const ToolTipCircle = (props) => {
 
     const handleMouseEnter = () => {
         if(textShowMode == "Canvas"){
-            setUpdateViewportArray(true)
-            setUpdateRotatingObjectAxis(true)
             setTooltipProperties({
                 active:true,
                 text: text,
@@ -79,7 +71,7 @@ export const ToolTipCircle = (props) => {
             setIsCircleOnTopSelected(isCircleOnTop)
             setTooltipCurrentObjectNameSelected(objectName)
         }
-        else 
+        else
         if(textShowMode == "Page"){
             setMessage('3D_TOOLTIP_HOVER', {text:text, image:image}) // Communication with external applications (Set the product description to the text).
         }
@@ -87,13 +79,11 @@ export const ToolTipCircle = (props) => {
 
     const handleMouseLeave = () => {
         if(textShowMode == "Canvas"){
-            setUpdateViewportArray(false)
-            setUpdateRotatingObjectAxis(false)
             setTooltipProperties({
                 active: false,
                 visible: false
             });
-        }else 
+        }else
         if(textShowMode == "Page"){
             setMessage('3D_TOOLTIP_HOVER_LEAVE', '') // Communication with external applications (Restores previous content of the product description).
         }

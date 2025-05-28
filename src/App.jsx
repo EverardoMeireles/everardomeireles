@@ -67,11 +67,11 @@ const useStore = create((set) => ({
   forcedCameraTarget: [], // will force the camera's rotation pivot if not empty
   setForcedCameraTarget: (target) => set(() => ({ forcedCameraTarget: target })),
 
-  forcedCameraPathCurve: new THREE.CatmullRomCurve3([
+  forcedCameraMovePathCurve: new THREE.CatmullRomCurve3([
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, 0)]), // custom camera curve path
-  setForcedCameraPathCurve: (curve) => set(() => ({ forcedCameraPathCurve: curve })),
+  setForcedCameraMovePathCurve: (curve) => set(() => ({ forcedCameraMovePathCurve: curve })), // Will move the camera according to the provided THREE.CatmullRomCurve3
 
   alertProperties: {
     active: false,
@@ -178,17 +178,11 @@ const useStore = create((set) => ({
   currentSkillHovered: "Python", // try to put this on the component itself
   setSkillHovered: (skill) => set(() => ({ currentSkillHovered: skill })),
 
-  siteMode: "resume",
+  siteMode: "store",
   setSiteMode: (mode) => set(() => ({ siteMode: mode })),
 
   animationTriggerState: false,
   setAnimationTriggerState: (playing) => set(() => ({ animationTriggerState: playing })),
-
-  animationDirection: true,
-  setAnimationDirection: (direction) => set(() => ({ animationDirection: direction })),
-
-  explodingModelName: "", // will force the camera's rotation pivot if not empty
-  setExplodingModelName: (name) => set(() => ({ explodingModelName: name })),
 
   explodeAnimationEnded: false,
   setExplodeAnimationEnded: (ended) => set(() => ({ explodeAnimationEnded: ended })),
@@ -199,15 +193,12 @@ function App() {
 
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
-  const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
   const tooltipProperties = useStore((state) => state.tooltipProperties);
   const forceDisableRender = useStore((state) => state.forceDisableRender);
-  const mainScene = useStore((state) => state.mainScene);
   const setMainScene = useStore((state) => state.setMainScene);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
-  const explodingModelName = useStore((state) => state.explodingModelName);
   const transitionEnded = useStore((state) => state.transitionEnded);
 
   const message = useStore((state) => state.message);
@@ -281,7 +272,7 @@ function App() {
     {!forceDisableRender && (
       <>
       <Alert {...{ useStore }} />
-      <ToolTip showOnlyOnce = {true} {...{ useStore }} text={tooltipProperties.text} image={tooltipProperties.image} visible={tooltipProperties.visible} position={[30, 40]} />
+      <ToolTip {...{ useStore }} text={tooltipProperties.text} image={tooltipProperties.image} visible={tooltipProperties.visible} position={[30, 40]} />
       {/* Create info circles on the screen */}
       {tooltipCirclesData?.length > 0 && tooltipCirclesData?.map((props) => (
         <ToolTipCircle
@@ -292,12 +283,7 @@ function App() {
           textShowMode={props.textShowMode}
           text={props.text}
           image={props.image}
-          rotatingObjectCoordinates={[props.rotatingObjectNDCLeft, props.rotatingObjectNDCRight, props.rotatingObjectNDCTop, props.rotatingObjectNDCBottom]}
-          RotatingObjectScale={props.RotatingObjectScale}
-          rotatingObjectAxisOfRotation={props.axisOfRotation}
-          rotatingObjectSpeedOfRotation={props.rotatingObjectSpeedOfRotation}
-          rotatingObjectForcePositionOffset={props.rotatingObjectForcePositionOffset}
-          size={props.circleSize}
+          circleSize={props.circleSize}
           playPulseAnimation={props.playPulseAnimation}
           position={props.position || [0, 0]}
         />
