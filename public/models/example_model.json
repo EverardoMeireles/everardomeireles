@@ -21,14 +21,22 @@
 
   "ModelProperties": {
     "position":[0, 0, 0], "position_comment":" Overwrite the position of the model.",
+    "customOrigin": [180, 140, 51], "customOrigin_comment":" Overwrite the scene's origin point",
+
     "animationStartOnLoad":false, "animationStartOnLoad_comment":" Start the animation right away",
     "enableRockingAnimation":true, "enableRockingAnimation_comment":" Turn the rocking animation on or off",
     "enableExplodeAnimation":true, "enableExplodeAnimation_comment":" Turn the exploding animation on or off",
-    "customOrigin": [180, 140, 51], "customOrigin_comment":" Overwrite the scene's origin point",
     "rockingMaxAngleDegrees": null, "rockingMaxAngle_comment":" Value in degrees, it's converted to radians in the background",
     "rockingTransitionDuration": 2000, "rockingTransitionDuration_comment":" In milliseconds",
     "explodingTransitionDuration": 300, "explodingTransitionDuration_comment":" In milliseconds",
-    "childTransitionDuration": 150, "childTransitionDuration_comment":" In milliseconds"
+    "childTransitionDuration": 150, "childTransitionDuration_comment":" In milliseconds",
+
+    "enableRotationAnimation": true, "enableRotationAnimation_comment":" Enable an animation where the model rotates?",
+      "rotationAnimationSpeed": 0.5, "rotationAnimationSpeed_comment":" The speed of the animation described above",
+      "rotationAnimationWhenToStop": "onScreenMouseHover", "rotationAnimationWhenToStop_comment":"When the animation should stop: onScreenMouseHover, onMouseDown, never",
+      "resetInitialRotation": true, "resetInitialRotation_comment":" Whether the model should display a animation returning to its original rotation value before stopping",
+      "resetInitialRotationAnimationSpeed": 8, "resetInitialRotationAnimationSpeed_comment":" The speed of the animation described above",
+      "restartAnimationAfterStop": true, "restartAnimationAfterStop_comment":" After the conditions for stopping the animation are no longer fulfilled, restart the animation?"
   },
 
   "ObjectProperties": [

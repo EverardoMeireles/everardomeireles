@@ -33,6 +33,13 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {focusedObjectCloneSpeedOfRotation = 1.2} = props; // Rotating object's speed of rotation
   const {focusedObjectCloneForcePositionOffset = {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}} = props; // Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
 
+  const {enableMainObjectRotationAnimation = true} = props; // R
+  const {mainObjectRotationAnimationRotationSpeed = 0.5} = props; // R
+  const {mainObjectRotationAnimationWhenToStop = "onScreenMouseHover"} = props; // R
+  const {mainObjectRotationAnimationResetInitialRotation = true} = props; // R
+  const {mainObjectRotationAnimationResetInitialRotationAnimationSpeed = 8} = props; // R
+  const {mainObjectRotationAnimationRestartAnimationAfterStop = true} = props; // R
+
 // ------------------------------------------------------------------------------------ //
   // Should these values not be specified in the model's config files, these default values will be applied
   const focusedObjectFrontDefault = [1, 0, 0];
@@ -43,10 +50,11 @@ export const ExplodingModelLoader = React.memo((props) => {
   const focusedObjectArchCurveDirectionDefault = [1, 0, 0];
 
   const gltf = useLoader(GLTFLoader, config.models_path + modelName);
-  const newMaterialGltf = useLoader(GLTFLoader, config.materials_path + ( (!materialName || materialName == "") ? "example_material.glb" : materialName));
 
   const { camera, gl } = useThree();
 
+
+  const isCanvasHovered = useStore((state) => state.isCanvasHovered);
   const cameraState = useStore((state) => state.cameraState);
   const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
   const transitionEnded = useStore((state) => state.transitionEnded);
@@ -60,11 +68,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const modifyTooltipCircleData = useStore((state) => state.modifyTooltipCircleData);
   const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
   const setForcedCameraMovePathCurve = useStore((state) => state.setForcedCameraMovePathCurve);
-  
-  const [animationDirectionForward, setAnimationDirectionForward] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [rock, setRock] = useState(false);
-  const [explode, setExplode] = useState(false);
+  const isMouseDown = useStore((state) => state.isMouseDown);
+
 
   const [initialPositions, setInitialPositions] = useState({});
   const [desiredPositions, setDesiredPositions] = useState({});
@@ -79,13 +84,11 @@ export const ExplodingModelLoader = React.memo((props) => {
   const [explodingObjectAnimationStartOnLoad, setExplodingObjectAnimationStartOnLoad] = useState(false);
   const [explodingObjectEnableRockingAnimation, setExplodingObjectEnableRockingAnimation] = useState(true);
   const [explodingObjectEnableExplodeAnimation, setExplodingObjectEnableExplodeAnimation] = useState(true);
-  const [sceneOrigin, setSceneOrigin] = useState([gltf.scene.position.toArray()]);
-  
-  const [rockingTransitionDuration, setRockingTransitionDuration] = useState(rockingDuration);
-  const [explodingTransitionDuration, setExplodingTransitionDuration] = useState(explodingDuration);
-  const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
+  const [sceneOrigin, setSceneOrigin] = useState([gltf.scene.position.toArray()]); // Sets the imported model's origin point, a custom origin for the object if specified in the props
+
 
   const [intersectionPoint, setIntersectionPoint] = useState(null); // Might be usefull for projecting more stuff in front of the camera in the future, ???use useRef???
+
 
   const rockingAnimationMaxAngle = useRef(undefined); // How drastic will the 'shaking' of the animation be
   const foCloneScale = useRef(undefined);
@@ -100,14 +103,10 @@ export const ExplodingModelLoader = React.memo((props) => {
   const foArchWidth = useRef(1); // How wide must the transition's curve be when the object is focused
   const foArchcurveDirection = useRef([1, 0, 0]); // How wide must the transition's curve be when the object is focused
 
-
-    // Sets the imported model's origin point, a custom origin for the object if specified in the props
   const rockingAnimationPlayed = useRef(false);
   const explodeAnimationPlayed = useRef(false);
   const childAnimationPlayed = useRef(false);
   const previousAnimationDirection = useRef(null);
-  const objectToRotate = useRef();
-  const planeRef = useRef(new THREE.Object3D()); // Ref for the plane geometry
 
   var currentGlobalState = useThree();
   const cameraViewportSize = new THREE.Vector2(); // create once and reuse it
@@ -191,18 +190,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
     return newPositions;
   }
-  
-  function getChildrenInitialPositions(model) {
-    let currentPositions = {};
 
-    model.scene.children.forEach((mesh) => {
-      mesh.children.forEach((child) => {
-        currentPositions[child.name] = child.position.clone(); // Use clone to create a copy for children
-      });
-    });
-    return currentPositions;
-
-  }
 
   // Makes the tooltip circles follow the objects when camera position and rotation values change
   const updateToolTipCirclePositions = () => {
@@ -228,18 +216,42 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   };
 
-  // Use the tooltipCurrentObjectNameSelected in a local context
-  const currentSelectedObjectName = useRef(undefined);
-  useEffect(() => {
-    currentSelectedObjectName.current = tooltipCurrentObjectNameSelected
-  }, [tooltipCurrentObjectNameSelected])
-
   // Makes the tooltip circles follow the objects and update the invisible plane when camera position and rotation values change
   useEffect(() => {
     updateToolTipCirclePositions();
     planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
     // console.log(cameraState.position)
   }, [cameraState]);
+
+  // Use the tooltipCurrentObjectNameSelected in a local context
+  const currentSelectedObjectName = useRef(undefined);
+  useEffect(() => {
+    currentSelectedObjectName.current = tooltipCurrentObjectNameSelected
+  }, [tooltipCurrentObjectNameSelected])
+
+  // Force change the camera's target on component mount
+  useEffect(() => {
+    if (setCameraTargetOnMount) {
+      setForcedCameraTarget(sceneOrigin);
+      setTrigger(setCameraTargetTrigger, false);
+    }
+  }, []);
+
+  // Change the camera's target on trigger
+  useEffect(() => {
+    if(triggers[setCameraTargetTrigger]){
+      setForcedCameraTarget(sceneOrigin)
+      setTrigger(setCameraTargetTrigger, false)
+    }
+  }, [transitionEnded]);
+
+  /////////////////////////////////////////////////////////////
+  /// Sets properties by with props or by json config files ///
+  /////////////////////////////////////////////////////////////
+
+  const [rockingTransitionDuration, setRockingTransitionDuration] = useState(rockingDuration);
+  const [explodingTransitionDuration, setExplodingTransitionDuration] = useState(explodingDuration);
+  const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
 
   //Parses a 3D model's corresponding to a json file to create info circles on the screen
   useEffect(() => {
@@ -253,7 +265,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   }, [modelName]);
 
   const focusedObjectWorldPosition = useRef(new THREE.Vector3())
-
   // Set the tooltip circle's properties
   useEffect(() => {
     const tCircleData = tooltipCirclesData.find(item => item.objectName === currentSelectedObjectName.current);
@@ -272,6 +283,13 @@ export const ExplodingModelLoader = React.memo((props) => {
     foCloneAxisOfRotation.current = tCircleData?.focusedObjectCloneAxisOfRotation ?? focusedObjectCloneAxisOfRotation;
     foCloneSpeedOfRotation.current = tCircleData?.focusedObjectCloneSpeedOfRotation ?? focusedObjectCloneSpeedOfRotation;
     foCloneForcePositionOffset.current = tCircleData?.focusedObjectCloneForcePositionOffset ?? focusedObjectCloneForcePositionOffset;
+
+    enableRotationAnimation.current = tCircleData?.enableRotationAnimation ?? enableMainObjectRotationAnimation;
+    rotationAnimationSpeed.current = tCircleData?.rotationAnimationSpeed ?? mainObjectRotationAnimationRotationSpeed;
+    rotationAnimationWhenToStop.current = tCircleData?.rotationAnimationWhenToStop ?? mainObjectRotationAnimationWhenToStop;
+    resetInitialRotation.current = tCircleData?.resetInitialRotation ?? mainObjectRotationAnimationResetInitialRotation;
+    resetInitialRotationAnimationSpeed.current = tCircleData?.resetInitialRotationAnimationSpeed ?? mainObjectRotationAnimationResetInitialRotationAnimationSpeed;
+    restartAnimationAfterStop.current = tCircleData?.restartAnimationAfterStop ?? mainObjectRotationAnimationRestartAnimationAfterStop;
   }, [currentSelectedObjectName.current]);
 
   // Set the model's properties by parsing a json or defaults to prop value
@@ -294,78 +312,89 @@ export const ExplodingModelLoader = React.memo((props) => {
       });
   }, [modelName]);
 
-  // Force change the camera's target on component mount
+  /////////////////////////////////////
+  /// Main model rotation animation ///
+  /////////////////////////////////////
+
+  const enableRotationAnimation = useRef(undefined);
+  const rotationAnimationSpeed = useRef(undefined);
+  const rotationAnimationWhenToStop = useRef(undefined); // "onScreenMouseHover", "onMouseDown", "never"
+  const resetInitialRotation = useRef(undefined);
+  const resetInitialRotationAnimationSpeed = useRef(undefined);
+  const restartAnimationAfterStop = useRef(undefined);
+
+  const startRotationAnimation = useRef(false);
+  const initialRotation = useRef(new THREE.Euler());
+  const restoringRotation = useRef(false);
+
+  const modelRef = useRef();
+
   useEffect(() => {
-    if (setCameraTargetOnMount) {
-      setForcedCameraTarget(sceneOrigin);
-      setTrigger(setCameraTargetTrigger, false);
-    }
-  }, []);
-
-  // Change the camera's target on trigger
-  useEffect(() => {
-    if(triggers[setCameraTargetTrigger]){
-      setForcedCameraTarget(sceneOrigin)
-      setTrigger(setCameraTargetTrigger, false)
-    }
-  }, [transitionEnded]);
-
-  // Starts the animation when the animationIsPlaying prop is set to true
-  useEffect(() => {
-    if(animationIsPlaying){
-      setIsPlaying(true)
-    }
-    else{
-      setIsPlaying(false)
-    }
-
-  }, [animationIsPlaying]);
-
-  // Automatically starts the animation when the animationStartOnLoad prop is set to true
-  useEffect(() => {
-    if(explodingObjectEnableRockingAnimation && explodingObjectAnimationStartOnLoad){
-      setRock(true)
-      setIsPlaying(true)
-    }
-
-    if(explodingObjectEnableExplodeAnimation && explodingObjectAnimationStartOnLoad){
-      setExplode(true)
-      setIsPlaying(true)
-    }
-  }, [explodingObjectAnimationStartOnLoad]);
-
-  // When model loads, set the initial and desired positions of the animation
-  useEffect(() => {
-    if (gltf) {
-      const initialPositions = getInitialPositions(gltf);
-      const desiredPositions = getDesiredPositions(initialPositions);
-      const childInitialPositions = getChildrenInitialPositions(gltf);
-      setInitialPositions(initialPositions);
-      setDesiredPositions(desiredPositions);
-      setChildInitialPositions(childInitialPositions);
+    if (modelRef.current) {
+      initialRotation.current.copy(modelRef.current.rotation);
     }
   }, [gltf]);
 
-  // Control the animations using the isPlaying state(set either by the animationIsPlaying or the animationStartOnLoad props)
-  useEffect(() => {
-    if (isPlaying && (previousAnimationDirection.current !== animationDirectionForward || previousAnimationDirection.current === null)) {
-      setAnimationTick(0); // Reset animation tick when starting
-      setChildAnimationTick(0); // Reset child animation tick when starting
-      if (explodingObjectEnableRockingAnimation && animationDirectionForward === true) {
-        setRock(true);
-      } else if (explodingObjectEnableExplodeAnimation) {
-        setExplode(true);
+  useFrame((state, delta) => {
+    console.log(enableRotationAnimation.current)
+    if(enableRotationAnimation.current){
+      const model = modelRef.current;
+
+      if (!model) return;
+      // Stops animation if mouse is down
+      if(rotationAnimationWhenToStop.current == "onMouseDown" && isMouseDown){
+        startRotationAnimation.current = false;
       }
-      previousAnimationDirection.current = animationDirectionForward; // Set only when animation starts
-    } else if (isPlaying && previousAnimationDirection.current === animationDirectionForward) {
-      setIsPlaying(false); // Failsafe
+
+      if(rotationAnimationWhenToStop.current == "onScreenMouseHover" && isCanvasHovered){
+        startRotationAnimation.current = false;
+      }
+      
+      // Animate
+      if (startRotationAnimation.current) {
+        model.rotation.y += rotationAnimationSpeed.current * delta;
+      }
+
+      if (resetInitialRotation.current && !startRotationAnimation.current) {
+        restoringRotation.current = true;
+      }
+
+      if (!startRotationAnimation.current && restoringRotation.current) {
+        const currentY = THREE.MathUtils.euclideanModulo(model.rotation.y, Math.PI * 2);
+        const targetY = THREE.MathUtils.euclideanModulo(initialRotation.current.y, Math.PI * 2);
+
+        model.rotation.y = THREE.MathUtils.lerp(
+          currentY,
+          targetY,
+          resetInitialRotationAnimationSpeed.current * delta
+        );
+
+        const diff = Math.abs(model.rotation.y - initialRotation.current.y);
+        if (diff < 0.001) {
+          model.rotation.copy(initialRotation.current);
+          restoringRotation.current = false;
+        }
+      }
+
+      if (restartAnimationAfterStop.current && !startRotationAnimation.current
+        &&
+        ((resetInitialRotation && restoringRotation.current == false) || (!resetInitialRotation))) {
+          startRotationAnimation.current = true;
+      }
     }
-  }, [isPlaying, explodingObjectEnableRockingAnimation, explodingObjectEnableExplodeAnimation, animationDirectionForward]);
+  });
+
+  /////////////////////////////////////////
+  /// Focused object rotation animation ///
+  /////////////////////////////////////////
+
+  const objectToRotate = useRef();
+  const planeRef = useRef(new THREE.Object3D()); // Ref for the plane geometry
 
   // Trigger animation start
   useEffect(() => {
     const raycaster = new THREE.Raycaster();
-    if (!currentSelectedObjectName.current || foCloneEnable.current !=true) {
+    if (!currentSelectedObjectName.current || foCloneEnable.current != true) {
       foCloneEnable.current = false
     } else {
       const originalObject = gltf.scene.getObjectByName(currentSelectedObjectName.current);
@@ -403,7 +432,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
       const ndc = new THREE.Vector3(ndcX, ndcY, -1)
       raycaster.setFromCamera(ndc, camera);
-      // UNCOMENT THIS if you want to see the casted ray
+      // DEBUG: UNCOMENT THIS if you want to see the casted ray
       // currentGlobalState.scene.add(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 300, 0xff0000) );
       const intersects = raycaster.intersectObject(planeRef.current, true);
       const midpoint = new THREE.Vector3();
@@ -427,10 +456,82 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [currentSelectedObjectName.current, isCircleOnLeftSelected, isHoveredCircleOnTop, gltf.scene]);
 
+    // Focused object rotation animation
+  useFrame((state, delta) => {
+    if(foCloneEnable.current){
+      if (objectToRotate.current){
+        // Apply the speed to the axis provided either by the prop or a json file
+        objectToRotate.current.rotation.x += (foCloneAxisOfRotation.current[0] * foCloneSpeedOfRotation.current) * delta;
+        objectToRotate.current.rotation.y += (foCloneAxisOfRotation.current[1] * foCloneSpeedOfRotation.current) * delta;
+        objectToRotate.current.rotation.z += (foCloneAxisOfRotation.current[2] * foCloneSpeedOfRotation.current) * delta;
+      }
+    }
+  });
+
+  /////////////////////////////////////////////////////////
+  /// Rocking, exploding and child exploding animations ///
+  /////////////////////////////////////////////////////////
+
+  const [animationDirectionForward, setAnimationDirectionForward] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [rock, setRock] = useState(false);
+  const [explode, setExplode] = useState(false);
+
+  function getChildrenInitialPositions(model) {
+    let currentPositions = {};
+
+    model.scene.children.forEach((mesh) => {
+      mesh.children.forEach((child) => {
+        currentPositions[child.name] = child.position.clone(); // Use clone to create a copy for children
+      });
+    });
+    return currentPositions;
+  }
+
+  // Automatically starts the animation when the animationStartOnLoad prop is set to true
+  useEffect(() => {
+    if(explodingObjectEnableRockingAnimation && explodingObjectAnimationStartOnLoad){
+      setRock(true)
+      setIsPlaying(true)
+    }
+
+    if(explodingObjectEnableExplodeAnimation && explodingObjectAnimationStartOnLoad){
+      setExplode(true)
+      setIsPlaying(true)
+    }
+  }, [explodingObjectAnimationStartOnLoad]);
+
+  // When model loads, set the initial and desired positions of the the objects for the exploding animation
+  useEffect(() => {
+    if (gltf) {
+      const initialPositions = getInitialPositions(gltf);
+      const desiredPositions = getDesiredPositions(initialPositions);
+      const childInitialPositions = getChildrenInitialPositions(gltf);
+      setInitialPositions(initialPositions);
+      setDesiredPositions(desiredPositions);
+      setChildInitialPositions(childInitialPositions);
+    }
+  }, [gltf]);
+
+  // Control the animations using the isPlaying state(set either by the animationIsPlaying or the animationStartOnLoad props)
+  useEffect(() => {
+    if (isPlaying && (previousAnimationDirection.current !== animationDirectionForward || previousAnimationDirection.current === null)) {
+      setAnimationTick(0); // Reset animation tick when starting
+      setChildAnimationTick(0); // Reset child animation tick when starting
+      if (explodingObjectEnableRockingAnimation && animationDirectionForward === true) {
+        setRock(true);
+      } else if (explodingObjectEnableExplodeAnimation) {
+        setExplode(true);
+      }
+      previousAnimationDirection.current = animationDirectionForward; // Set only when animation starts
+    } else if (isPlaying && previousAnimationDirection.current === animationDirectionForward) {
+      setIsPlaying(false); // Failsafe
+    }
+  }, [isPlaying, explodingObjectEnableRockingAnimation, explodingObjectEnableExplodeAnimation, animationDirectionForward]);
+
   // ANIMATION END EFFECT: Reset animation flags and invert animationDirectionForward
   useEffect(() => {
     if (!isPlaying && (rockingAnimationPlayed.current || explodeAnimationPlayed.current || childAnimationPlayed.current)) {
-      
       // Swap initialPositions and desiredPositions based on whether or not we're reversing the animation
       if (animationDirectionForward === false) {
         console.log(animationDirectionForward);
@@ -453,6 +554,17 @@ export const ExplodingModelLoader = React.memo((props) => {
       setChildAnimationTick(0);
     }
   }, [isPlaying, animationDirectionForward, setAnimationDirectionForward]);
+
+  // Starts the animation when the animationIsPlaying prop is set to true
+  useEffect(() => {
+    if(animationIsPlaying){
+      setIsPlaying(true)
+    }
+    else{
+      setIsPlaying(false)
+    }
+
+  }, [animationIsPlaying]);
 
   // Animation
   useFrame((state, delta) => {
@@ -543,34 +655,9 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   });
 
-  // Object rotation animation
-  useFrame((state, delta) => {
-    if(foCloneEnable.current){
-      if (objectToRotate.current){
-        // Apply the speed to the axis provided either by the prop or a json file
-        objectToRotate.current.rotation.x += (foCloneAxisOfRotation.current[0] * foCloneSpeedOfRotation.current) * delta;
-        objectToRotate.current.rotation.y += (foCloneAxisOfRotation.current[1] * foCloneSpeedOfRotation.current) * delta;
-        objectToRotate.current.rotation.z += (foCloneAxisOfRotation.current[2] * foCloneSpeedOfRotation.current) * delta;
-      }
-    }
-  });
-
-  // Material change feature
-  useEffect(() => {
-    if (materialName != "" && materialName && newMaterialGltf && gltf) {
-      const newMaterial = newMaterialGltf.scene.children.find(child => child.isMesh)?.material;
-
-      if (newMaterial) {
-        // Traverse the main scene to apply the new material to each mesh
-        gltf.scene.traverse((child) => {
-          if (child.isMesh) {
-            child.material = newMaterial;
-            child.material.needsUpdate = true;
-          }
-        });
-      }
-    }
-  }, [materialName, newMaterialGltf, gltf]);
+  //////////////////////////////////
+  /// Focusing on object feature ///
+  //////////////////////////////////
 
   const archCurve = useRef(new THREE.CatmullRomCurve3( [        
     new THREE.Vector3(0, 0, 0),
@@ -585,7 +672,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       frameCount.current += 1;
       // Only update archCurve.current every 5 frames
       if (frameCount.current >= 5) {
-        archCurve.current = createArchCurve(foFront.current, foFocusEndPointDistance.current, foFocusPoint.current, camera, foArchWidth.current, foArchcurveDirection.current);
+        archCurve.current = createArchCurve(foFront.current, foFocusPoint.current, foFocusEndPointDistance.current, camera, foArchWidth.current, foArchcurveDirection.current);
         frameCount.current = 0;  // Reset the frame count after updating
       }
     }
@@ -593,13 +680,11 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   useEffect(() => {
     const handleMouseClick = (event) => {
-      console.log(currentSelectedObjectName.current);
-
       if(currentSelectedObjectName.current){
 
         console.log(archCurve.current);
-        setForcedCameraMovePathCurve(archCurve.current)
-        setForcedCameraTarget(foCameraTargetPoint.current)
+        setForcedCameraMovePathCurve(archCurve.current) // Starts the camera transition
+        setForcedCameraTarget(foCameraTargetPoint.current) // Makes the camera follow the object
       }
     };
 
@@ -624,9 +709,35 @@ export const ExplodingModelLoader = React.memo((props) => {
     )
   }
 
+  ///////////////////////////////
+  /// Material change feature ///
+  ///////////////////////////////
+
+  const newMaterialGltf = useLoader(GLTFLoader, config.materials_path + ( (!materialName || materialName == "") ? "example_material.glb" : materialName));
+  // Material change feature
+  useEffect(() => {
+    if (materialName != "" && materialName && newMaterialGltf && gltf) {
+      const newMaterial = newMaterialGltf.scene.children.find(child => child.isMesh)?.material;
+
+      if (newMaterial) {
+        // Traverse the main scene to apply the new material to each mesh
+        gltf.scene.traverse((child) => {
+          if (child.isMesh) {
+            child.material = newMaterial;
+            child.material.needsUpdate = true;
+          }
+        });
+      }
+    }
+  }, [materialName, newMaterialGltf, gltf]);
+
+  /////////////////
+  /// Rendering ///
+  /////////////////
+
   return (
     <Suspense fallback={null}>
-      <primitive position={explodingObjectPosition} object={gltf.scene} origin={sceneOrigin}/>
+      <primitive ref={modelRef} position={explodingObjectPosition} object={gltf.scene} origin={sceneOrigin}/>
       <mesh>
         {/* Render the cloned object directly */}
         {(objectToRotate.current && foCloneEnable.current /*COMMENT && objectRotationAnimation to make the rotating object stay visible on unhover*/) && (

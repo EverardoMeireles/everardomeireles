@@ -90,8 +90,13 @@ const useStore = create((set) => ({
     }
   })),
 
-  mouseClicked: false,
+  isCanvasHovered: false,
+  setIsCanvasHovered: (hovered) => set(() => ({ isCanvasHovered: hovered })),
+  mouseClicked: false,
   toggleMouseClicked: () => set((state) => ({ mouseClicked: !state.mouseClicked })),
+
+  isMouseDown: false,
+  setIsMouseDown: () => set((state) => ({ isMouseDown: !state.isMouseDown })),
 
   currentObjectClicked: "",
   setCurrentObjectClicked: (object) => set(() => ({ currentObjectClicked: object })),
@@ -190,7 +195,9 @@ const useStore = create((set) => ({
 
 function App() {
   THREE.Cache.enabled = true;
-
+  
+  const setIsMouseDown = useStore((state) => state.setIsMouseDown);
+  const setIsCanvasHovered = useStore((state) => state.setIsCanvasHovered);
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
   const tooltipProperties = useStore((state) => state.tooltipProperties);
@@ -204,7 +211,6 @@ function App() {
   const message = useStore((state) => state.message);
   const setMessage = useStore((state) => state.setMessage);
   const setProductInformationFromMessage = useStore((state) => state.setProductInformationFromMessage);
-
 
   const [enableTutorial, setEnableTutorial] = useState(false);
 
@@ -291,7 +297,12 @@ function App() {
       <TutorialOverlay enable = {enableTutorial} {...{useStore}}/>
       <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} />
       <Suspense>
-        <Canvas onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
+        <Canvas 
+          onPointerDown={() => setIsMouseDown(true)}
+          onPointerUp={() => setIsMouseDown(false)}
+          onPointerEnter={() => setIsCanvasHovered(true)}
+          onPointerLeave={() => setIsCanvasHovered(false)}
+          onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
           <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
         </Canvas>
       </Suspense>

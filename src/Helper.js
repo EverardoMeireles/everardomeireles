@@ -48,22 +48,23 @@ export function smoothStep(x) {
     return Sn;
 }
 
+// Create a curved THREE.CatmullRomCurve3 from the camera to a target position
 export function createArchCurve(
-    direction = [1, 0, 0],
-    distance = 1,
-    targetObjectPos,
-    camera,
+    frontDirection = [1, 0, 0], // the direction of the "front" of the object
+    targetPosition, // The end position of the curve
+    distance = 1, // the offset distance from the target position, if the end point of the curve needs to be more far away from the camera's perspective
+    camera, // Camera reference
     archWidth = 1,
-    curveDirection = "up" // Accepts string or array/vector
+    curveDirection = "up" // Accepts string or array/vector (ie: "up", "down", "left", "right" or [0, 1, 0], [0, -1, 0], [-1, 0, 0], [1, 0, 0])
   ) {
-    // 1. direction → normalized Vector3 * distance
-    const dirVec = direction.isVector3 ? direction.clone() : new THREE.Vector3(...direction);
+    // 1. frontDirection → normalized Vector3 * distance
+    const dirVec = frontDirection.isVector3 ? frontDirection.clone() : new THREE.Vector3(...frontDirection);
     const offset = dirVec.normalize().multiplyScalar(distance);
   
     // 2. get object world position and compute end point
-    const worldPos = Array.isArray(targetObjectPos)
-      ? new THREE.Vector3(...targetObjectPos)
-      : targetObjectPos ?? new THREE.Vector3(0, 0, 0);
+    const worldPos = Array.isArray(targetPosition)
+      ? new THREE.Vector3(...targetPosition)
+      : targetPosition ?? new THREE.Vector3(0, 0, 0);
   
     const endPos = worldPos.clone().add(offset);
   
@@ -71,7 +72,7 @@ export function createArchCurve(
     const startPos = new THREE.Vector3();
     camera.getWorldPosition(startPos);
   
-    // 4. Determine curve direction based on curveDirection type
+    // 4. Determine curve frontDirection based on curveDirection type
     let directionVec = new THREE.Vector3(0, 0, 0); // Default vector
   
     if (typeof curveDirection === "string") {
@@ -90,7 +91,7 @@ export function createArchCurve(
           directionVec.set(1, 0, 0); // Curve right
           break;
         default:
-          console.warn("Invalid curve direction, using default 'up'");
+          console.warn("Invalid curve frontDirection, using default 'up'");
           directionVec.set(0, 1, 0); // Default curve upwards
       }
     } else if (Array.isArray(curveDirection) || curveDirection instanceof THREE.Vector3) {
@@ -98,7 +99,7 @@ export function createArchCurve(
       directionVec = new THREE.Vector3(...curveDirection); // Convert array to Vector3
     }
   
-    // 5. Adjust midpoints based on the direction vector
+    // 5. Adjust midpoints based on the frontDirection vector
     const p1 = startPos.clone().lerp(endPos, 0.25);
     p1.add(directionVec.clone().multiplyScalar(archWidth)); // Use directionVec for curvature
   

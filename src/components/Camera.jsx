@@ -440,7 +440,7 @@ function compareCurves(curve1, curve2) {
             <PerspectiveCamera ref = {cam} makeDefault fov = {75}>
             {/* <HtmlDreiMenu {...{useStore}}></HtmlDreiMenu> */}
             </PerspectiveCamera>
-            <OrbitControls mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
+            <OrbitControls makeDefault mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
         </>
     )
 });

@@ -16,14 +16,23 @@
 
   "ModelProperties": {
     "positionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn":[0, 0, 0],
-    "animationStartOnLoad":true,
+    "customOrigin": [180, 140, 51],
+
+    "animationStartOnLoad":false,
     "enableRockingAnimation":true,
     "enableExplodeAnimation":true,
-    "customOrigin": [180, 140, 51],
+    
     "rockingMaxAngleDegrees": 10,
     "rockingTransitionDuration": 2000,
     "explodingTransitionDuration": 2000,
-    "childTransitionDuration": 1500
+    "childTransitionDuration": 1500,
+
+    "enableRotationAnimation": true,
+    "rotationAnimationSpeed": 0.5,
+    "rotationAnimationWhenToStop": "onScreenMouseHover",
+    "resetInitialRotation": true,
+    "resetInitialRotationAnimationSpeed": 8,
+    "restartAnimationAfterStop": true
   },
 
   "ObjectProperties": [
