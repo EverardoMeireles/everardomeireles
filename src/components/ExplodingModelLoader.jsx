@@ -39,6 +39,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {mainObjectRotationAnimationResetInitialRotation = true} = props; // R
   const {mainObjectRotationAnimationResetInitialRotationAnimationSpeed = 8} = props; // R
   const {mainObjectRotationAnimationRestartAnimationAfterStop = true} = props; // R
+  const {stopMainObjectRotationAnimation = undefined} = props; // A trigger that will be able to stop the animation from outside the component
+  const {mainObjectRotationAnimationIsPlayingTrigger = undefined} = props; // The trigger that will be set to true when the animation stops
 
 // ------------------------------------------------------------------------------------ //
   // Should these values not be specified in the model's config files, these default values will be applied
@@ -191,6 +193,21 @@ export const ExplodingModelLoader = React.memo((props) => {
     return newPositions;
   }
 
+  // Change the camera's target on trigger
+  useEffect(() => {
+    if(triggers[setCameraTargetTrigger]){
+      setForcedCameraTarget(sceneOrigin)
+      setTrigger(setCameraTargetTrigger, false)
+    }
+  }, [transitionEnded]);
+
+  // Force change the camera's target on component mount
+  useEffect(() => {
+    if (setCameraTargetOnMount) {
+      setForcedCameraTarget(sceneOrigin);
+      setTrigger(setCameraTargetTrigger, false); // necessary?
+    }
+  }, []);
 
   // Makes the tooltip circles follow the objects when camera position and rotation values change
   const updateToolTipCirclePositions = () => {
@@ -228,22 +245,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     currentSelectedObjectName.current = tooltipCurrentObjectNameSelected
   }, [tooltipCurrentObjectNameSelected])
-
-  // Force change the camera's target on component mount
-  useEffect(() => {
-    if (setCameraTargetOnMount) {
-      setForcedCameraTarget(sceneOrigin);
-      setTrigger(setCameraTargetTrigger, false);
-    }
-  }, []);
-
-  // Change the camera's target on trigger
-  useEffect(() => {
-    if(triggers[setCameraTargetTrigger]){
-      setForcedCameraTarget(sceneOrigin)
-      setTrigger(setCameraTargetTrigger, false)
-    }
-  }, [transitionEnded]);
 
   /////////////////////////////////////////////////////////////
   /// Sets properties by with props or by json config files ///
@@ -335,8 +336,16 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [gltf]);
 
+  // Stops the animation with a trigger prop
+  // useEffect(() => {
+  //   if(stopMainObjectRotationAnimation){
+  //     startRotationAnimation.current = false;
+  //   }else{
+  //     // startRotationAnimation.current = true;
+  //   }
+  // }, [stopMainObjectRotationAnimation]);
+
   useFrame((state, delta) => {
-    console.log(enableRotationAnimation.current)
     if(enableRotationAnimation.current){
       const model = modelRef.current;
 
@@ -350,9 +359,19 @@ export const ExplodingModelLoader = React.memo((props) => {
         startRotationAnimation.current = false;
       }
       
+      // Stops the animation externaly with a prop
+      if(stopMainObjectRotationAnimation){
+        startRotationAnimation.current = false;
+      }
+
       // Animate
       if (startRotationAnimation.current) {
         model.rotation.y += rotationAnimationSpeed.current * delta;
+
+        if(!triggers[mainObjectRotationAnimationIsPlayingTrigger]){
+          // Set a trigger for parent control
+          setTrigger(mainObjectRotationAnimationIsPlayingTrigger, true)
+        }
       }
 
       if (resetInitialRotation.current && !startRotationAnimation.current) {
@@ -383,6 +402,13 @@ export const ExplodingModelLoader = React.memo((props) => {
       }
     }
   });
+
+  // Set a trigger for parent control
+  useEffect(() => {
+    if(mainObjectRotationAnimationIsPlayingTrigger != undefined && !startRotationAnimation.current){
+      setTrigger(mainObjectRotationAnimationIsPlayingTrigger, false)
+    }
+  }, [startRotationAnimation.current]);
 
   /////////////////////////////////////////
   /// Focused object rotation animation ///
