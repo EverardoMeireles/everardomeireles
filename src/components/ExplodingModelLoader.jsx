@@ -284,13 +284,6 @@ export const ExplodingModelLoader = React.memo((props) => {
     foCloneAxisOfRotation.current = tCircleData?.focusedObjectCloneAxisOfRotation ?? focusedObjectCloneAxisOfRotation;
     foCloneSpeedOfRotation.current = tCircleData?.focusedObjectCloneSpeedOfRotation ?? focusedObjectCloneSpeedOfRotation;
     foCloneForcePositionOffset.current = tCircleData?.focusedObjectCloneForcePositionOffset ?? focusedObjectCloneForcePositionOffset;
-
-    enableRotationAnimation.current = tCircleData?.enableRotationAnimation ?? enableMainObjectRotationAnimation;
-    rotationAnimationSpeed.current = tCircleData?.rotationAnimationSpeed ?? mainObjectRotationAnimationRotationSpeed;
-    rotationAnimationWhenToStop.current = tCircleData?.rotationAnimationWhenToStop ?? mainObjectRotationAnimationWhenToStop;
-    resetInitialRotation.current = tCircleData?.resetInitialRotation ?? mainObjectRotationAnimationResetInitialRotation;
-    resetInitialRotationAnimationSpeed.current = tCircleData?.resetInitialRotationAnimationSpeed ?? mainObjectRotationAnimationResetInitialRotationAnimationSpeed;
-    restartAnimationAfterStop.current = tCircleData?.restartAnimationAfterStop ?? mainObjectRotationAnimationRestartAnimationAfterStop;
   }, [currentSelectedObjectName.current]);
 
   // Set the model's properties by parsing a json or defaults to prop value
@@ -306,7 +299,12 @@ export const ExplodingModelLoader = React.memo((props) => {
         setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
         setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
         rockingAnimationMaxAngle.current = modelProperties?.rockingMaxAngleDegrees * (Math.PI / 180) ?? rockingMaxAngle; // conversion to radians
-        
+            enableRotationAnimation.current = modelProperties?.enableRotationAnimation ?? enableMainObjectRotationAnimation;
+        rotationAnimationSpeed.current = modelProperties?.rotationAnimationSpeed ?? mainObjectRotationAnimationRotationSpeed;
+        rotationAnimationWhenToStop.current = modelProperties?.rotationAnimationWhenToStop ?? mainObjectRotationAnimationWhenToStop;
+        resetInitialRotation.current = modelProperties?.resetInitialRotation ?? mainObjectRotationAnimationResetInitialRotation;
+        resetInitialRotationAnimationSpeed.current = modelProperties?.resetInitialRotationAnimationSpeed ?? mainObjectRotationAnimationResetInitialRotationAnimationSpeed;
+        restartAnimationAfterStop.current = modelProperties?.restartAnimationAfterStop ?? mainObjectRotationAnimationRestartAnimationAfterStop;
       })
       .catch(error => {
         console.error('Error parsing JSON:', error);
@@ -336,15 +334,6 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [gltf]);
 
-  // Stops the animation with a trigger prop
-  // useEffect(() => {
-  //   if(stopMainObjectRotationAnimation){
-  //     startRotationAnimation.current = false;
-  //   }else{
-  //     // startRotationAnimation.current = true;
-  //   }
-  // }, [stopMainObjectRotationAnimation]);
-
   useFrame((state, delta) => {
     if(enableRotationAnimation.current){
       const model = modelRef.current;
@@ -359,7 +348,7 @@ export const ExplodingModelLoader = React.memo((props) => {
         startRotationAnimation.current = false;
       }
       
-      // Stops the animation externaly with a prop
+      // Stops the animation externaly
       if(stopMainObjectRotationAnimation){
         startRotationAnimation.current = false;
       }

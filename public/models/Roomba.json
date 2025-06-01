@@ -28,11 +28,11 @@
     "childTransitionDuration": 1500,
 
     "enableRotationAnimation": true,
-    "rotationAnimationSpeed": 0.5,
-    "rotationAnimationWhenToStop": "onScreenMouseHover",
-    "resetInitialRotation": true,
-    "resetInitialRotationAnimationSpeed": 8,
-    "restartAnimationAfterStop": true
+      "rotationAnimationSpeed": 0.5,
+      "rotationAnimationWhenToStop": "onScreenMouseHover",
+      "resetInitialRotation": true,
+      "resetInitialRotationAnimationSpeed": 8,
+      "restartAnimationAfterStop": true
   },
 
   "ObjectProperties": [

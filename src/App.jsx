@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./components/HudMenu";
@@ -92,7 +92,8 @@ const useStore = create((set) => ({
 
   isCanvasHovered: false,
   setIsCanvasHovered: (hovered) => set(() => ({ isCanvasHovered: hovered })),
-  mouseClicked: false,
+
+  mouseClicked: false,
   toggleMouseClicked: () => set((state) => ({ mouseClicked: !state.mouseClicked })),
 
   isMouseDown: false,
@@ -273,6 +274,28 @@ function App() {
       window.useStore = useStore;
     }
 
+  // Console logs the current fps
+  function FPSLogger() {
+    const frameCount = useRef(0);
+    const timeAccumulator = useRef(0);
+
+    useFrame((state, delta) => {
+      frameCount.current += 1;
+      timeAccumulator.current += delta;
+
+      if (timeAccumulator.current >= 1.0) {
+        const fps = frameCount.current / timeAccumulator.current;
+        console.log(`FPS: ${fps.toFixed(1)}`);
+
+        // Reset counters
+        frameCount.current = 0;
+        timeAccumulator.current = 0;
+      }
+    });
+
+    return null; // No visual component
+  }
+
   return (
     <>
     {!forceDisableRender && (
@@ -304,6 +327,8 @@ function App() {
           onPointerLeave={() => setIsCanvasHovered(false)}
           onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
           <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
+                  <FPSLogger />
+
         </Canvas>
       </Suspense>
       </>

@@ -437,6 +437,9 @@ export function SceneContainer(props) {
         )
       }
 
+          const [trig, setTrig] = useState(false);
+
+
     return(
     <>
         <Camera {...{useStore}} ></Camera>
@@ -552,7 +555,7 @@ export function SceneContainer(props) {
             {(explodingModelPath != "")
             &&
             <ExplodingModelLoader {...{useStore}} modelName={"Roomba.glb"/*explodingModelPath*/} materialName={""/*explodingMaterialPath*/} configFile={"Roomba.json"/*explodingConfigFile*/} animationIsPlaying={animationTriggerState}
-            position={[175, 135, 50]} setCameraTargetTrigger={"trigger4"} mainObjectRotationAnimationIsPlayingTrigger={"trigger5"} />
+            position={[175, 135, 50]} setCameraTargetTrigger={"trigger4"} stopMainObjectRotationAnimation={trig} mainObjectRotationAnimationIsPlayingTrigger={"trigger5"} />
             }
         </>
         }
