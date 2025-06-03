@@ -16,17 +16,26 @@
 
   "ModelProperties": {
     "positionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn":[0, 0, 0],
-    "animationStartOnLoad":true,
+    "customOrigin": [180, 140, 51],
+
+    "animationStartOnLoad":false,
     "enableRockingAnimation":true,
     "enableExplodeAnimation":true,
-    "customOrigin": [180, 140, 51],
+    
     "rockingMaxAngleDegrees": 10,
     "rockingTransitionDuration": 2000,
     "explodingTransitionDuration": 2000,
-    "childTransitionDuration": 1500
+    "childTransitionDuration": 1500,
+
+    "enableRotationAnimation": true,
+      "rotationAnimationSpeed": 0.5,
+      "rotationAnimationWhenToStop": "onScreenMouseHover",
+      "resetInitialRotation": true,
+      "resetInitialRotationAnimationSpeed": 8,
+      "restartAnimationAfterStop": true
   },
 
-  "TooltipProperties": [
+  "ObjectProperties": [
     {
       "objectName": "Motor_gearbox_1TT1",
       "pathToShow": "MainMenu",
@@ -35,28 +44,31 @@
       "circleSize": 30,
       "playPulseAnimation": true,
       "position": [0, 0],
-      "rotatingObjectEnable": true,
-      "RotatingObjectScale": 3,
-      "axisOfRotation": [0, 1, 0],
-      "rotatingObjectSpeedOfRotation": 2,
-      "rotatingObjectForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25},
-      "rotatingObjectFront": [0, 1, 0],
-      "rotatingObjectFocusPoint": [171, 137, 55],
-      "rotatingObjectFocusPointDistance": 8,
-      "AAAAAAAAAAAAAAAAAAAAAAAArotatingObjectCameraTargetPoint": [200, 137, 54],
-      "rotatingObjectCameraArchWidth": 20,
-      "rotatingObjectCameraCurveDirection": "left"
+      "focusedObjectFront": [0, 1, 0],
+      "focusedObjectFocusPoint": [171, 137, 55],
+      "focusedObjectFocusEndPointDistance": 8,
+      "AAAAAAAAAAAAAAAAAAAAAAAAfocusedObjectCameraTargetPoint": [200, 137, 54],
+      "focusedObjectArchWidth": 20,
+      "focusedObjectArchCurveDirection": "left",
+      "focusedObjectCloneEnable": true,
+      "focusedObjectCloneScale": 3,
+      "focusedObjectCloneAxisOfRotation": [0, 1, 0],
+      "focusedObjectCloneSpeedOfRotation": 2,
+      "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}
+      
     },
     {
       "objectName": "Wheel_1_1BB1",
       "pathToShow": "MainMenu",
       "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
       "image": "AfficheDUT-French.png",
-      "axisOfRotation": [0, 0, 1],
       "circleSize": 30,
       "playPulseAnimation": false,
       "position": [0, 0],
-      "rotatingObjectEnable": true
+      "focusedObjectCloneEnable": true,
+      "focusedObjectCloneAxisOfRotation": [0, 0, 1]
+
     }
   ]
 }
+  

@@ -21,17 +21,25 @@
 
   "ModelProperties": {
     "position":[0, 0, 0], "position_comment":" Overwrite the position of the model.",
+    "customOrigin": [180, 140, 51], "customOrigin_comment":" Overwrite the scene's origin point",
+
     "animationStartOnLoad":false, "animationStartOnLoad_comment":" Start the animation right away",
     "enableRockingAnimation":true, "enableRockingAnimation_comment":" Turn the rocking animation on or off",
     "enableExplodeAnimation":true, "enableExplodeAnimation_comment":" Turn the exploding animation on or off",
-    "customOrigin": [180, 140, 51], "customOrigin_comment":" Overwrite the scene's origin point",
     "rockingMaxAngleDegrees": null, "rockingMaxAngle_comment":" Value in degrees, it's converted to radians in the background",
     "rockingTransitionDuration": 2000, "rockingTransitionDuration_comment":" In milliseconds",
     "explodingTransitionDuration": 300, "explodingTransitionDuration_comment":" In milliseconds",
-    "childTransitionDuration": 150, "childTransitionDuration_comment":" In milliseconds"
+    "childTransitionDuration": 150, "childTransitionDuration_comment":" In milliseconds",
+
+    "enableRotationAnimation": true, "enableRotationAnimation_comment":" Enable an animation where the model rotates?",
+      "rotationAnimationSpeed": 0.5, "rotationAnimationSpeed_comment":" The speed of the animation described above",
+      "rotationAnimationWhenToStop": "onScreenMouseHover", "rotationAnimationWhenToStop_comment":"When the animation should stop: onScreenMouseHover, onMouseDown, never",
+      "resetInitialRotation": true, "resetInitialRotation_comment":" Whether the model should display a animation returning to its original rotation value before stopping",
+      "resetInitialRotationAnimationSpeed": 8, "resetInitialRotationAnimationSpeed_comment":" The speed of the animation described above",
+      "restartAnimationAfterStop": true, "restartAnimationAfterStop_comment":" After the conditions for stopping the animation are no longer fulfilled, restart the animation?"
   },
 
-  "TooltipProperties": [
+  "ObjectProperties": [
     {
       "objectName": "Motor_gearbox_1TT5645645645645641", "objectName_comment":" The name of the 3D object that the circle will follow, it will follow the object's origin, so don't forget to set it.",
       "pathToShow": "MainMenu",
@@ -41,17 +49,17 @@
       "circleSize": 30, "circleSize_comment":" The size if the tooltip circle",
       "playPulseAnimation": true, "playPulseAnimation_comment":" The animation around the circle",
       "position": [0, 0], "position_comment":" The circle's position is dynamicaly set by the 'objectName' property in the background, but you can use the 'position' property to force a position if 'objectName' is not valid.",
-      "rotatingObjectEnable": true, "rotatingObjectEnable_comment":" The size if the tooltip circle",
-      "RotatingObjectScale": 3, "RotatingObjectScale_comment":" The scale of the rotating object",
-      "axisOfRotation": [0, 1, 0], "axisOfRotation_comment":" The axis in which the rotating object rotates",
-      "rotatingObjectSpeedOfRotation": 1.2, "rotatingObjectSpeedOfRotation_comment":" The speed that the rotating object rotates",
-      "rotatingObjectForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}, "rotatingObjectForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom).",
-      "rotatingObjectFront": [1, 0, 0], "rotatingObjectFront_comment":" The 'front' of the object for the object focusing feature",
-      "rotatingObjectFocusPoint": [171, 137, 55], "rotatingObjectFocusPoint_comment":" The point that the camera will transition to if the object is focused on(if circle is clicked)",
-      "rotatingObjectFocusPointDistance": 0, "rotatingObjectFocusPointDistance_comment":" The distance from the focus point, that the camera will transition to",
-      "rotatingObjectCameraTargetPoint": [171, 127, 55], "rotatingObjectCameraLooktAtPoint_comment":" The point that the camera will rotate around and look at when the object is focused on",
-      "rotatingObjectCameraArchWidth": 10, "rotatingObjectCameraArchWidth_comment": "How wide must the transition's curve be when the object is focused",
-      "rotatingObjectCameraCurveDirection":"", "rotatingObjectCameraCurveDirection_comment": "Determine in which direction the transition arch will curve, accepts both 3d arrays(ie: [1, 0, 0] or plain english(ie: 'up', 'down', 'left', 'right'))"
+      "focusedObjectFront": [1, 0, 0], "focusedObjectFront_comment":" The 'front' of the object for the object focusing feature",
+      "focusedObjectFocusPoint": [171, 137, 55], "focusedObjectFocusPoint_comment":" The point that the camera will transition to if the object is focused on(if circle is clicked)",
+      "focusedObjectFocusEndPointDistance": 0, "focusedObjectFocusEndPointDistance_comment":" The distance from the focus point, that the camera will transition to",
+      "focusedObjectCameraTargetPoint": [171, 127, 55], "focusedObjectCameraTargetPoint_comment":" The point that the camera will rotate around and look at when the object is focused on",
+      "focusedObjectArchWidth": 10, "focusedObjectArchWidth_comment": "How wide must the transition's curve be when the object is focused",
+      "focusedObjectArchCurveDirection":"", "focusedObjectArchCurveDirection_comment": "Determine in which direction the transition arch will curve, accepts both 3d arrays(ie: [1, 0, 0] or plain english(ie: 'up', 'down', 'left', 'right'))",
+      "focusedObjectCloneEnable": false, "focusedObjectCloneEnable_comment":" The size if the tooltip circle",
+      "focusedObjectCloneScale": 3, "focusedObjectCloneScale_comment":" The scale of the rotating object",
+      "focusedObjectCloneAxisOfRotation": [0, 1, 0], "focusedObjectCloneAxisOfRotation_comment":" The axis in which the rotating object rotates",
+      "focusedObjectCloneSpeedOfRotation": 1.2, "focusedObjectCloneSpeedOfRotation_comment":" The speed that the rotating object rotates",
+      "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}, "focusedObjectCloneForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)."
     }
   ]
 }

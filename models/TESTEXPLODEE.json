@@ -6,18 +6,16 @@
       "customOrigin": [180, 140, 51]
     },
 
-    "TooltipProperties": [
+    "ObjectProperties": [
       {
         "objectName": "Motor_gearbox_1TT1",
         "pathToShow": "MainMenu",
         "text": "Right text",
         "image": "/textures/4x3.png",
-        "axisOfRotation": [0, 1, 0],
-        "rotatingObjectNDCLeft": -0.5,
-        "rotatingObjectNDCRight": 0.5,
-        "rotatingObjectNDCTop": 0.25,
-        "rotatingObjectNDCBottom": -0.25,
         "circleSize": 30,
+        
+        "focusedObjectCloneAxisOfRotation": [0, 1, 0],
+        "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}, "focusedObjectCloneForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom).",
         "playPulseAnimation": true
       },
       {
@@ -25,14 +23,10 @@
         "pathToShow": "MainMenu",
         "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
         "image": "AfficheDUT-French.png",
-        "axisOfRotation": [0, 0, 1],
-
-        "rotatingObjectNDCLeft": -0.5,
-        "rotatingObjectNDCRight": 0.5,
-        "rotatingObjectNDCTop": 0.25,
-        "rotatingObjectNDCBottom": -0.25,
         "circleSize": 30,
-        "playPulseAnimation": false
+        "playPulseAnimation": false,
+        "focusedObjectCloneAxisOfRotation": [0, 0, 1],
+        "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}, "focusedObjectCloneForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom).",
       }
     ]
   }

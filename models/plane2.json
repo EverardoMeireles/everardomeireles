@@ -52,7 +52,7 @@
     "childTransitionDuration": 150
   },
 
-  "TooltipProperties": [
+  "ObjectProperties": [
     {
       "objectName": "Elevator",
       "pathToShow": "MainMenu",
@@ -62,11 +62,11 @@
       "circleSize": 30,
       "playPulseAnimation": true,
       "position": [0, 0],
-      "rotatingObjectEnable": true,
-      "RotatingObjectScale":0.1,
-      "axisOfRotation": [0, 1, 0],
-      "rotatingObjectSpeedOfRotation": 2,
-      "rotatingObjectForcePositionOffset": {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}
+      "focusedObjectCloneEnable": true,
+      "focusedObjectCloneScale":0.1,
+      "focusedObjectCloneAxisOfRotation": [0, 1, 0],
+      "focusedObjectCloneSpeedOfRotation": 2,
+      "focusedObjectCloneForcePositionOffset": {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}
     }
   ]
 }
