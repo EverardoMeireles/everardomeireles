@@ -4,17 +4,18 @@ import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera, calcPosFromAngles } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";
 import { HtmlDreiMenu } from "./HtmlDreiMenu"; // eslint-disable-line no-unused-vars
-import { smoothStep, roundToDecimalPlace, hasSignificantChange } from "../Helper";
+import { smoothStep, roundToDecimalPlace, hasSignificantChange, createArchCurve } from "../Helper";
 
 // revisit custom camera lookat mode and simpleLookatMode
 export const Camera = React.memo((props) => {
     const useStore = props.useStore;
-    const desired_path = useStore((state) => state.desired_path);
+    const {transitionSpeed = 0.01} = props;
+
     const setTransitionEnded = useStore((state) => state.setTransitionEnded);
+    const transitionEnded = useStore((state) => state.transitionEnded);
     const currentCameraMovements = useStore((state) => state.currentCameraMovements);
     const setcurrentCameraMovements = useStore((state) => state.setcurrentCameraMovements);
     const currentCameraMode = useStore((state) => state.currentCameraMode);
-    const transitionEnded = useStore((state) => state.transitionEnded);
     const panDirectionalEdgethreshold = useStore((state) => state.panDirectionalEdgethreshold);
     const panDirectionalAxis = useStore((state) => state.panDirectionalAxis);
     const setTrigger = useStore((state) => state.setTrigger);
@@ -22,24 +23,22 @@ export const Camera = React.memo((props) => {
     const cameraStateTracking = useStore((state) => state.cameraStateTracking);
     const forcedCameraTarget = useStore((state) => state.forcedCameraTarget);
     const forcedCameraMovePathCurve = useStore((state) => state.forcedCameraMovePathCurve);
-    const setForcedCameraMovePathCurve = useStore((state) => state.setForcedCameraMovePathCurve);
     const triggers = useStore((state) => state.triggers);
+
+    const didMount = useRef(false);
 
     const updateCallNow = useRef(false);
     const cam = useRef(undefined);
     const controls = useRef();
-    const current_path = useRef("StartingPoint");
-    const current_lookat = useRef(new THREE.Vector3(0,3,2))
+    // const current_path = useRef("StartingPoint");
+    const current_lookat = useRef(new THREE.Vector3(0,0,0))
 
     const isMouseNearEdge = useRef(false);
     
-    const defaultCameraSpeed = 0.35
-
     const keyboardControlsSpeed = 0.4;
-    // const currentPoint = getCurve(current_path.current, current_path.current).points[0];
-    const currentPoint = CreateNavigationCurve(current_path.current, current_path.current, 15).points[0];
 
-    const gravitationalPullPoint = currentPoint == null ? firstPoint : currentPoint; // the point to return to in panDirectional mode
+    // console.log(forcedCameraMovePathCurve);
+    const gravitationalPullPoint = forcedCameraMovePathCurve?.points[forcedCameraMovePathCurve.points.length - 1] ?? new THREE.Vector3(0,0,0) // the point to return to in panDirectional mode
     const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
     const pullInterval = 10; // How often the pull is applied in milliseconds
 
@@ -48,36 +47,14 @@ export const Camera = React.memo((props) => {
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, 0)])
 
-    // let curve = getCurve(current_path.current, desired_path);
-    let curve = CreateNavigationCurve(current_path.current, desired_path, 15);
+    const curve = useRef(nullCurve);
+    const cameraTarget = useRef([0, 0, 0]);
 
-    let pathPointsLookat;
-    let smooth;
+    let smoothStepTick;
     let sub_points;
     let deltaArray = new Array();
     let deltaAverage = 0;
-    let transitionIncrement;
-    let concat_paths;
-    let tick = current_path.current !== desired_path ? 0:1
-    // let tick = 0
-
-
-
-    // used in custom camera lookat
-    const desired_lookat_dict = (time) => { // eslint-disable-line no-unused-vars
-        let nextLookat;
-        Object.keys(pathPointsLookat[concat_paths]).forEach((time_key) => time >= time_key ? nextLookat = pathPointsLookat[concat_paths][time_key] : undefined);
-        return nextLookat;
-    };
-
-    // if no custom lookat path, look directly into the destination until transition ends
-    if(path_points_lookat_dict[current_path.current + "-" + desired_path] !== undefined){
-        pathPointsLookat = path_points_lookat_dict;
-        concat_paths = current_path.current + "-" + desired_path;
-    }else{
-        pathPointsLookat = path_points_simple_lookat_dict;
-        concat_paths = desired_path;
-    }
+    let tick = useRef(1)
 
     // Change camera mode
     const [cameraMode, setCameraMode] = useState(null);
@@ -220,36 +197,17 @@ export const Camera = React.memo((props) => {
         }
     }, [currentCameraMode, transitionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // if the target is forced
-    useEffect(() => {
-        // console.log(forcedCameraTarget)
-        if(forcedCameraTarget != [])
-        {
-            controls.current.target.x = forcedCameraTarget[0]
-            controls.current.target.y = forcedCameraTarget[1]
-            controls.current.target.z = forcedCameraTarget[2]
-        }
-    }, [forcedCameraTarget]);
+    // Set the transition speed if a if a tick, speed value pair is provided
+    // function setCustomSpeed(currentTick, path_speeds){
+    //     var tickKey = Number(currentTick.toPrecision(13));
+    //     var currentKey = Object.keys(path_speeds).find(key => key >= tickKey);
+    //     // if currentKey on last element of path_speeds, default to last element
+    //     if(currentKey === undefined){
+    //         currentKey = Object.keys(path_speeds).pop();
+    //     }
 
-    // if the camera path is forced, reset the animation tick
-    useEffect(() => {
-        if(!compareCurves(forcedCameraMovePathCurve, nullCurve) && tick != 0){
-            tick = 0;
-            curve = forcedCameraMovePathCurve
-        }
-    }, [forcedCameraMovePathCurve]);
-
-    // Set the transition speed if specified in PathPoints.jsx
-    function setCustomSpeed(currentTick, path_speeds){
-        var tickKey = Number(currentTick.toPrecision(13));
-        var currentKey = Object.keys(path_speeds).find(key => key >= tickKey);
-        // if currentKey on last element of path_speeds, default to last element
-        if(currentKey === undefined){
-            currentKey = Object.keys(path_speeds).pop();
-        }
-
-        return path_speeds[currentKey];
-    }
+    //     return path_speeds[currentKey];
+    // }
 
     function calculateDeltaAverage(delta){
         deltaArray.push(delta)
@@ -257,50 +215,75 @@ export const Camera = React.memo((props) => {
         return sum / deltaArray.length;
     }
 
-    // Sets values after the camera movement is done 
-    function updateCall(state){
-        if(updateCallNow.current){
-            setTransitionEnded(true);
-            updateCallNow.current = false;
-            current_path.current = desired_path;
-            controls.current.enabled = true;
-            state.events.enabled = true;
+    // if the target is forced
+    useEffect(() => {
+        console.log("AAZEAZEAZEAZE")
+
+        // console.log(forcedCameraTarget)
+        if(forcedCameraTarget != [])
+        {
+            controls.current.target.x = forcedCameraTarget[0]
+            controls.current.target.y = forcedCameraTarget[1]
+            controls.current.target.z = forcedCameraTarget[2]
         }
-    }
+        console.log("AAZEAZEAZEAZE")
+
+    }, [forcedCameraTarget]);
+
+    // if the camera path is forced, reset the animation tick
+    useEffect(() => {
+        if (!didMount.current) {
+            didMount.current = true;
+            return;
+        }
+console.log("AAZEAZEAZEAZE")
+        curve.current = forcedCameraMovePathCurve;
+        cameraTarget.current = forcedCameraTarget;
+        tick.current = 0;
+
+    }, [forcedCameraMovePathCurve]);
 
     // Moves the camera every frame when the desired path changes
-    useFrame((state, delta) => (tick < 1 ? (
+    useFrame((state, delta) => (tick.current < 1 ? (
         deltaAverage = deltaArray[10] == undefined ? calculateDeltaAverage(delta) : deltaAverage,
         updateCallNow.current = true,
         state.events.enabled = false,
         controls.current.enabled = false,
-
         // If there's a custom transition speed configured, apply it
-        transitionIncrement = (path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : defaultCameraSpeed) * deltaAverage,
-        tick += transitionIncrement,
+        // transitionIncrement = (path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : defaultCameraSpeed) * deltaAverage,
+        tick.current += transitionSpeed,
 
         // Smooth out the movement
-        smooth = smoothStep(tick), 
-        
-        // Determines the next point for the camera to look at
-        current_lookat.current.lerp(forcedCameraTarget.length ==0 ? pathPointsLookat[concat_paths][Object.keys(pathPointsLookat[concat_paths])] : new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]), 0.03),
-        state.camera.lookAt(current_lookat.current),
-        // console.log(tick),
+        smoothStepTick = smoothStep(tick.current),
 
+        // Determines the next point for the camera to look at
+        current_lookat.current.lerp(new THREE.Vector3(cameraTarget.current.x, cameraTarget.current.y, cameraTarget.current.z), 0.03),
+        console.log(cameraTarget.current.x),
+
+        state.camera.lookAt(current_lookat.current),
         // Updates the orbitcontrol's target
         controls.current.target.x = current_lookat.current.x,
         controls.current.target.y = current_lookat.current.y,
         controls.current.target.z = current_lookat.current.z,
 
         // Get the current point along the curve
-        sub_points = curve.getPointAt(smooth), 
-
+        sub_points = curve.current.getPointAt(smoothStepTick), 
         // Updates the camera's position
         state.camera.position.x = sub_points.x,
         state.camera.position.y = sub_points.y,
         state.camera.position.z = sub_points.z
-    ) : (updateCall(state)/*, console.log("current_path.current: " + current_path.current), console.log("        desired_path: " + desired_path)*/)
+    ) : (updateCall(state))
     ));
+
+    // Sets values after the camera movement is done 
+    function updateCall(state){
+        if(updateCallNow.current){
+            setTransitionEnded(true);
+            updateCallNow.current = false;
+            controls.current.enabled = true;
+            state.events.enabled = true;
+        }
+    }
 
 // useFrame((delta)=>{
 //     console.log(controls.current.target)

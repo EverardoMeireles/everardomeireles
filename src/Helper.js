@@ -48,7 +48,7 @@ export function smoothStep(x) {
     return Sn;
 }
 
-// Create a curved THREE.CatmullRomCurve3 from the camera to a target position
+// Create a THREE.CatmullRomCurve3 curve from the camera to a target position
 export function createArchCurve(
     frontDirection = [1, 0, 0], // the direction of the "front" of the object
     targetPosition, // The end position of the curve

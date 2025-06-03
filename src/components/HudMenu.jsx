@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TranslationTable } from "../TranslationTable";
 import { HudMenuStyles } from "../Styles";
 import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue } from "../Helper";
 import config from '../config';
+import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "../PathPoints";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 // has jsx HudMenuStyles
@@ -21,6 +22,11 @@ export function HudMenu(props) {
     const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
     const enableDynamicGraphicalModeSetting = useStore((state) => state.enableDynamicGraphicalModeSetting);
     const setEnableDynamicGraphicalModeSetting = useStore((state) => state.setEnableDynamicGraphicalModeSetting);
+    const setTransitionEnded = useStore((state) => state.setTransitionEnded);
+    const transitionEnded = useStore((state) => state.transitionEnded);
+    const setForcedCameraMovePathCurve = useStore((state) => state.setForcedCameraMovePathCurve);
+    const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
+
     // const animationTriggerState = useStore((state) => state.animationTriggerState);
     // const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
 
@@ -61,6 +67,43 @@ export function HudMenu(props) {
 
         return () => clearTimeout(timer);
     }, [currentGraphicalMode, enableDynamicGraphicalModeSetting]);
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+/// Make the camera transition when the url changes(when one of the buttons are clicked) ///
+////////////////////////////////////////////////////////////////////////////////////////////
+
+    const currentPath = useRef("MainMenu");
+    const desiredPath = useRef("MainMenu");
+    useEffect(() => {
+    const handlePopState = (event) => {
+        const href = event.currentTarget.location.href;
+        const urlPath = href.slice(href.indexOf('#') + 1);
+
+        if (desiredPath.current !== urlPath) {
+            desiredPath.current = urlPath;
+            console.log(path_points_even_more_simple_lookat_dict[desiredPath.current])
+            setForcedCameraTarget(path_points_even_more_simple_lookat_dict[desiredPath.current])
+            setForcedCameraMovePathCurve(overrideCurves[currentPath.current + "-" + desiredPath.current]);
+            // console.log(forcedCameraMovePathCurve)
+            setTransitionEnded(false);
+        }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+        window.removeEventListener('popstate', handlePopState);
+    };
+}, []);
+    
+
+    // Once the transition is over, set the new current path position
+    useEffect(() => {
+        currentPath.current = desiredPath.current;
+        setTransitionEnded(true);
+    }, [transitionEnded]);
+
 
     return(
     <>

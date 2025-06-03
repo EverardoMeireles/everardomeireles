@@ -10,7 +10,6 @@ import { FloatingTextSkills } from "./components/FloatingTextSkills";
 import { FadingText } from "./components/FadingText";
 import { useFrame, useThree, useLoader } from "@react-three/fiber"; // eslint-disable-line no-unused-vars
 import { VideoLoader } from "./components/VideoLoader";
-import { PathNavigation } from "./components/PathNavigation";
 import { GraphicalModeSetter2 } from "./components/GraphicalModeSetter2";
 import { FadingTitle } from "./components/FadingTitle";
 import { Raycaster } from "./components/Raycaster";
@@ -450,7 +449,6 @@ export function SceneContainer(props) {
                 ///////////////////// */}
 
             <PreloadAssets {...{useStore}} delay={4000} texturesToLoad={["AfficheDUT-French.png", "AfficheDUT-Portuguese.png", "AfficheEDHC-French.png", "AfficheEDHC-Portuguese.png", "AfficheMicrolins1-French.png", "AfficheMicrolins1-Portuguese.png", "AfficheMicrolins2-French.png", "AfficheMicrolins2-Portuguese.png", "AfficheUNIRN-French.png", "AfficheUNIRN-Portuguese.png"]} scenesToLoad={[]}></PreloadAssets>
-            <PathNavigation {...{useStore}} possiblePaths = {["MainMenu", "Education", "Skills", "ProfessionalExpProjects0"]} />
             {/* <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10} /> */}
             {(config.check_graphics)
             && 

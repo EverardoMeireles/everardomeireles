@@ -11,24 +11,24 @@ function estimateMiddlePoint(start, end, distance) {
 // Point where the initial transition ends
 export const firstPoint = new THREE.Vector3(194, 150, 63);
 
-export function CreateNavigationCurve(from, to, distance){
-    if(overrideCurves[from + "-" + to] !== undefined)
-    {
-        return overrideCurves[from + "-" + to]
-    }
-    var navigationCurve
-    var startingPoint =  menu_points[from]
-    var endingPoint = menu_points[to]
-    var midPoint = estimateMiddlePoint(startingPoint, endingPoint, distance)
+// export function CreateNavigationCurve(from, to, distance){
+//     if(overrideCurves[from + "-" + to] !== undefined)
+//     {
+//         return overrideCurves[from + "-" + to]
+//     }
+//     var navigationCurve
+//     var startingPoint =  menu_points[from]
+//     var endingPoint = menu_points[to]
+//     var midPoint = estimateMiddlePoint(startingPoint, endingPoint, distance)
 
-    if(from == to){
-        return new THREE.CatmullRomCurve3([startingPoint, startingPoint, startingPoint])
-    }
+//     if(from == to){
+//         return new THREE.CatmullRomCurve3([startingPoint, startingPoint, startingPoint])
+//     }
 
-    // calculate midpoint
-    navigationCurve = new THREE.CatmullRomCurve3([startingPoint, midPoint, endingPoint])
-    return navigationCurve
-}
+//     // calculate midpoint
+//     navigationCurve = new THREE.CatmullRomCurve3([startingPoint, midPoint, endingPoint])
+//     return navigationCurve
+// }
 
 // export function getCurve(to, from){
 //     let returnPath, start, middle, end;
@@ -67,10 +67,6 @@ export const menu_points = {
     "ProfessionalExpProjects10": new THREE.Vector3(-6, 44, -116),
     "ProfessionalExpProjects11": new THREE.Vector3(-23, 44, -89),
 }
-
-
-
-
 
 // Force predefined curves for menu navigation, if the curve is defines here, it will override CreateNavigationCurve()
 export const overrideCurves = {
@@ -1365,6 +1361,38 @@ export const path_points_simple_lookat_dict = {
 
     "ProfessionalExpProjects11": {
         0: new THREE.Vector3(-14, 46, -92)},
+}
+
+export const path_points_even_more_simple_lookat_dict = {
+    "MainMenu": new THREE.Vector3(34, 21, -52),
+
+    "Education": new THREE.Vector3(-23, 97.5, 27),
+        
+    "Skills": new THREE.Vector3(0, 35, -15),
+
+    "ProfessionalExpProjects0": new THREE.Vector3(0, 5, -82),
+
+    "ProfessionalExpProjects1": new THREE.Vector3(11, 6, -95),
+
+    "ProfessionalExpProjects2": new THREE.Vector3(-3, 6, -108),
+
+    "ProfessionalExpProjects3": new THREE.Vector3(-14, 6, -93),
+
+    "ProfessionalExpProjects4": new THREE.Vector3(0, 26, -82),
+
+    "ProfessionalExpProjects5": new THREE.Vector3(11, 26, -94),
+
+    "ProfessionalExpProjects6": new THREE.Vector3(-1, 26, -108),
+
+    "ProfessionalExpProjects7": new THREE.Vector3(-14, 26, -92),
+
+    "ProfessionalExpProjects8": new THREE.Vector3(0, 46, -82),
+
+    "ProfessionalExpProjects9": new THREE.Vector3(11, 46, -94),
+
+    "ProfessionalExpProjects10": new THREE.Vector3(-1, 46, -108),
+
+    "ProfessionalExpProjects11": new THREE.Vector3(-14, 46, -92),
 }
 
 export const path_points_experience_menu_location = {

@@ -184,7 +184,7 @@ const useStore = create((set) => ({
   currentSkillHovered: "Python", // try to put this on the component itself
   setSkillHovered: (skill) => set(() => ({ currentSkillHovered: skill })),
 
-  siteMode: "store",
+  siteMode: "resume",
   setSiteMode: (mode) => set(() => ({ siteMode: mode })),
 
   animationTriggerState: false,
@@ -327,7 +327,7 @@ function App() {
           onPointerLeave={() => setIsCanvasHovered(false)}
           onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
           <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
-                  <FPSLogger />
+          {/* <FPSLogger /> */}
 
         </Canvas>
       </Suspense>
