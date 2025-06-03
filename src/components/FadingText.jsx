@@ -1,11 +1,11 @@
-import { Suspense, useCallback, useRef, useState, useEffect } from "react";
+import React, { Suspense, useCallback, useRef, useState, useEffect } from "react";
 import { useFrame } from '@react-three/fiber';
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
 import config from '../config';
 
-export function FadingText(props) {
+export const FadingText = (props) => {
     const useStore = props.useStore;
 
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
@@ -112,4 +112,6 @@ export function FadingText(props) {
                 </Text>
         </group>
     );
-}
+};
+
+FadingText.displayName = "FadingText";

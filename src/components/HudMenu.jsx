@@ -26,6 +26,7 @@ export function HudMenu(props) {
     const transitionEnded = useStore((state) => state.transitionEnded);
     const setForcedCameraMovePathCurve = useStore((state) => state.setForcedCameraMovePathCurve);
     const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
+    const setDesiredPath = useStore((state) => state.setDesiredPath);
 
     // const animationTriggerState = useStore((state) => state.animationTriggerState);
     // const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
@@ -83,6 +84,8 @@ export function HudMenu(props) {
         if (desiredPath.current !== urlPath) {
             desiredPath.current = urlPath;
             console.log(path_points_even_more_simple_lookat_dict[desiredPath.current])
+            setDesiredPath(desiredPath)
+
             setForcedCameraTarget(path_points_even_more_simple_lookat_dict[desiredPath.current])
             setForcedCameraMovePathCurve(overrideCurves[currentPath.current + "-" + desiredPath.current]);
             // console.log(forcedCameraMovePathCurve)

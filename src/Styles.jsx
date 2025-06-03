@@ -42,9 +42,9 @@ export const ResponsiveTable = {
     },
     
     "Widescreen":{
-        "fadingTitlePosition0": [170, 148, 58],
+        "fadingTitlePosition0": [170, 146, 56],
         "fadingTitleScale0": 17,
-        "fadingTitlePosition1": [170, 146, 59.5],
+        "fadingTitlePosition1": [170, 144, 57.5],
         "fadingTitleScale1": 17,
         "fadingTextPosition0": [0, 3, -82],
         "fadingTextScale0": 2,

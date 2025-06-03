@@ -217,7 +217,6 @@ export const Camera = React.memo((props) => {
 
     // if the target is forced
     useEffect(() => {
-        console.log("AAZEAZEAZEAZE")
 
         // console.log(forcedCameraTarget)
         if(forcedCameraTarget != [])
@@ -226,7 +225,6 @@ export const Camera = React.memo((props) => {
             controls.current.target.y = forcedCameraTarget[1]
             controls.current.target.z = forcedCameraTarget[2]
         }
-        console.log("AAZEAZEAZEAZE")
 
     }, [forcedCameraTarget]);
 
@@ -236,7 +234,6 @@ export const Camera = React.memo((props) => {
             didMount.current = true;
             return;
         }
-console.log("AAZEAZEAZEAZE")
         curve.current = forcedCameraMovePathCurve;
         cameraTarget.current = forcedCameraTarget;
         tick.current = 0;
@@ -258,7 +255,6 @@ console.log("AAZEAZEAZEAZE")
 
         // Determines the next point for the camera to look at
         current_lookat.current.lerp(new THREE.Vector3(cameraTarget.current.x, cameraTarget.current.y, cameraTarget.current.z), 0.03),
-        console.log(cameraTarget.current.x),
 
         state.camera.lookAt(current_lookat.current),
         // Updates the orbitcontrol's target
@@ -427,3 +423,5 @@ function compareCurves(curve1, curve2) {
         </>
     )
 });
+
+Camera.displayName = "Camera";

@@ -29,15 +29,15 @@ export const PreloadAssets = (props) => {
   const textures = useLoader(TextureLoader, startLoading ? texturePaths : []);
   const scenes = useLoader(GLTFLoader, startLoading ? scenePaths : []);
 
-  // console.log("loaded textures!", textures);
-  // console.log("loaded models!", scenes);
   useEffect(() => {
     if (startLoading) {
-      console.log("loaded textures!", textures);
-      console.log("loaded models!", scenes);
+      // console.log("loaded textures!", textures);
+      // console.log("loaded models!", scenes);
       setPreloadDone(true)
     }
   }, [startLoading, textures, scenes]);
 
   return null;
 };
+
+PreloadAssets.displayName = "PreloadAssets";

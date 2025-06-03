@@ -40,7 +40,7 @@ export const GraphicalModeSetter = React.memo((props) => {
         }
         // Sets the graphical mode
         if(HardwareAccelerationCheckPassed){
-            console.log("GRAPHICS index: " + gpuTier.tier);
+            // console.log("GRAPHICS index: " + gpuTier.tier);
             setGraphicalMode(graphicsModes[gpuTier.tier]);
         }else{
             window.location.href = "HardwareAcceleration.html?fps=0";

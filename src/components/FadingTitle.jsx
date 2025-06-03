@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useState, useRef, useEffect } from "react";
+import React, { Suspense, useCallback, useState, useRef, useEffect } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
@@ -6,7 +6,7 @@ import { oneOrZero } from "../Helper";
 import { useFrame } from "@react-three/fiber";
 import config from '../config';
 
-export function FadingTitle(props) {
+export const FadingTitle = React.memo((props) => {
     const {text = "Everardo Meireles"} = props;
     const {textColor = "#000000"} = props; 
     const {fadeDuration = 1000} = props;
@@ -23,7 +23,6 @@ export function FadingTitle(props) {
 
     const TextMaterialRef = useRef(); 
     const timerRef = useRef(null);
-
     // start
     useEffect(()=>{
         if (delay !== 0) {
@@ -63,4 +62,6 @@ export function FadingTitle(props) {
             </Text>
         </group>
     );
-}
+});
+
+FadingTitle.displayName = "FadingTitle"

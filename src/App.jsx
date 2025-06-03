@@ -327,7 +327,7 @@ function App() {
           onPointerLeave={() => setIsCanvasHovered(false)}
           onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
           <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
-          {/* <FPSLogger /> */}
+          <FPSLogger />
 
         </Canvas>
       </Suspense>
