@@ -3,7 +3,7 @@ const config = {
     resource_path: process.env.PUBLIC_URL,
     materials_path: process.env.PUBLIC_URL + "/materials/",
     show_html_menu_graphics_toggle: true,
-    check_graphics: true,
+    check_graphics: false,
     default_graphical_setting: "normal"
 };
 
