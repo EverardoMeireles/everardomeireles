@@ -8,17 +8,20 @@ export const FadingText = React.memo((props) => {
     const useStore = props.useStore;
 
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
-    const {textModelMenu = "MainMenu"} = props;
     const {textColor = "#000000"} = props;
     const {initialPosition = [0, 0, 0]} = props;
-    const {PlaneSize = [7, 6.7]} = props;
+    const {planeSize = [7, 6.7]} = props;
     const {rotation = Math.PI/2} = props;
     const {scale = 1.5} = props;
     const {textPositionOffset = [0, -0.5, 0.2]} = props;
     const {manualLineBreaks = false} = props; // true if your input text already contains line breaks('\n')
-    const {maxCharsBeforeLineBreak = PlaneSize[0] * 7} = props; // if manualLineBreaks is false, how many characters before a line break on the previous word, default is the length of the plane times the normal length of a roboto font character
+    const {maxCharsBeforeLineBreak = planeSize[0] * 7} = props; // if manualLineBreaks is false, how many characters before a line break on the previous word, default is the length of the plane times the normal length of a roboto font character
     const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
     const {fadeDuration = 1000} = props;
+    const {textIsVisible = false} = props;
+    const {textIsVisibleByTransitionDestination = false} = props;
+    const {textIsVisibleByTransitionDestinationWaitForTransitionEnd = false} = props;
+    const {transitionDestinationToShowText = "MainMenu"} = props;
 
     const TextMaterialRef = useRef();
     const [fadeFactor, setFadeFactor] = useState(-1); //1 or -1
@@ -26,26 +29,34 @@ export const FadingText = React.memo((props) => {
     const [materialOpacity, setMaterialOpacity] = useState(0);
 
     const transitionEnded = useStore((state) => state.transitionEnded);
-    const desired_path = useStore((state) => state.desired_path);
-    const current_path = useRef("");
+    const transitionDestination = useStore((state) => state.transitionDestination);
+    const currentTransitionDestination = useRef("");
 
     const iScale= useMemo(() => [3, 3, 3], []);
-    // Fade-in animation
+
+    // Activate the animation
     useEffect(() => {
-        if(transitionEnded && desired_path == textModelMenu && current_path.current != desired_path){
+        if((textIsVisibleByTransitionDestination && transitionDestination == transitionDestinationToShowText 
+            && (textIsVisibleByTransitionDestinationWaitForTransitionEnd && transitionEnded || !textIsVisibleByTransitionDestinationWaitForTransitionEnd)
+            &&  currentTransitionDestination.current != transitionDestination) // ????????? Keep this condition ??????????
+            || (!textIsVisibleByTransitionDestination && textIsVisible))
+        {
             setPlayAnimation(true) //invert play animation state
         }
         
-        if(desired_path != textModelMenu){
+        if((textIsVisibleByTransitionDestination && transitionDestination != transitionDestinationToShowText)
+            || (!textIsVisibleByTransitionDestination && !textIsVisible))
+        {
             setPlayAnimation(true)
             setFadeFactor(-1)
         }
         
-    },[desired_path, transitionEnded])
+    },[transitionDestination, transitionEnded])
 
+    // Fade in and out animation
     useFrame((state, delta)=> {
         if(playAnimation){
-            current_path.current = desired_path;
+            currentTransitionDestination.current = transitionDestination;
             if ((materialOpacity <= 1 && fadeFactor == 1) || (materialOpacity >= 0 && fadeFactor == -1)) {
                 setMaterialOpacity(TextMaterialRef.current.opacity + ((delta / (fadeDuration / 1000))*fadeFactor))
             }else{
@@ -104,7 +115,7 @@ export const FadingText = React.memo((props) => {
                     font={font}
                     scale={iScale}
                     anchorX="left"
-                    position = {[-(PlaneSize[1]/2) + textPositionOffset[2], (PlaneSize[0]/2) + textPositionOffset[1],  0]}
+                    position = {[-(planeSize[1]/2) + textPositionOffset[2], (planeSize[0]/2) + textPositionOffset[1],  0]}
                 >
                 
                 {manualLineBreaks ? textToFade : injectLineBreaks(textToFade)}

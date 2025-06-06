@@ -10,11 +10,12 @@ export const OrbitingMenu = React.memo((props) => {
     const {orbitDistance = 1.5} = props;
     const {visible = true} = props;
     const {enable = false} = props;
+    const {transitionDestinationToRestrictKeyboardControl = "MainMenu"} = props;
 
     const {fadeInDuration = 300} = props;
 
     const transitionEnded = useStore((state) => state.transitionEnded);
-    const desired_path = useStore((state) => state.desired_path);
+    const transitionDestination = useStore((state) => state.transitionDestination);
     const currentLanguage = useStore((state) => state.currentLanguage);
 
     const [hovered0, setHover0] = useState(false);
@@ -163,19 +164,20 @@ export const OrbitingMenu = React.memo((props) => {
 
     useEffect(()=>{
         window.addEventListener("keydown", (event) => {
-            if(!clicked.current && desired_path == "Education" && transitionEnded){
-                clicked.current = true;
-                setRotation(0);
+            if(!clicked.current && transitionDestination == transitionDestinationToRestrictKeyboardControl && transitionEnded){
                 switch(event.code) {
                     case "ArrowLeft":
                         setOrbitDirection(-1);
-
+                        clicked.current = true;
+                        setRotation(0);
                     break;
                     case "ArrowRight":
                         setOrbitDirection(1);
-
+                        clicked.current = true;
+                        setRotation(0);
                     break;
                 }
+
             }
         });
     });

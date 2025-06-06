@@ -4,7 +4,7 @@ import create from 'zustand';
 
 test('The correct number of 3D text lines are rendered', async () => {
     const useStore = create(() => ({
-        desired_path: "MainMenu",
+        transitionDestination: "MainMenu",
         transitionEnded: false
     }))
 

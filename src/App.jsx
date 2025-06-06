@@ -26,8 +26,9 @@ const useStore = create((set) => ({
   preloadDone: false,
   setPreloadDone: (preloaded) => set(() => ({ preloadDone: preloaded })),
 
-  desired_path: "MainMenu",
-  setDesiredPath: (desired) => set(() => ({ desired_path: desired })),
+  // The named position that the transition is aiming to go
+  transitionDestination: "MainMenu",
+  setDesiredPath: (desired) => set(() => ({ transitionDestination: desired })),
 
   transitionEnded: false,
   setTransitionEnded: (ended) => set(() => ({ transitionEnded: ended })),
@@ -296,6 +297,8 @@ function App() {
     return null; // No visual component
   }
 
+  const circlesAreVisible = useRef();
+
   return (
     <>
     {!forceDisableRender && (
@@ -308,13 +311,15 @@ function App() {
           key={props.objectName}
           {...{ useStore }}
           objectName={props.objectName}
-          pathToShow={props.pathToShow}
+          transitionDestinationToShowCircles={props.transitionDestinationToShowCircles}
           textShowMode={props.textShowMode}
           text={props.text}
           image={props.image}
           circleSize={props.circleSize}
           playPulseAnimation={props.playPulseAnimation}
           position={props.position || [0, 0]}
+          circlesAreVisibleByTransitionDestination = {true}
+          circlesAreVisibleByTransitionDestinationWaitForTransitionEnd = {true}
         />
       ))}
       <TutorialOverlay enable = {enableTutorial} {...{useStore}}/>

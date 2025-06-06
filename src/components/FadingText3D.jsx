@@ -18,11 +18,11 @@ export function FadingText3D(props) {
     const {scale = 1.5} = props;
     const {textPositionOffset = [0, -0.5, 0.2]} = props;
 
-    const {transitionEnded, desired_path} = props.useStore();
+    const {transitionEnded, transitionDestination} = props.useStore();
 
     // Fade in and out animation
     const springFade = useSpring({
-        opacity: (transitionEnded && desired_path === textModelMenu) ? 1 : 0,
+        opacity: (transitionEnded && transitionDestination === textModelMenu) ? 1 : 0,
         config: {
             duration:transitionDuration
         }

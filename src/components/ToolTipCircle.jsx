@@ -11,7 +11,10 @@ import config from '../config';
 export const ToolTipCircle = (props) => {
     const useStore = props.useStore;
     const {objectName = ""} = props;
-    const {pathToShow = "MainMenu"} = props;
+    const {circlesAreVisible = false} = props; // Whether to show the circles or not
+    const {circlesAreVisibleByTransitionDestination = false} = props; // Should the visibility of the circle be toggled automatically by the camera transition?
+    const {circlesAreVisibleByTransitionDestinationWaitForTransitionEnd = false} = props; // if circlesAreVisibleByTransitionDestination is true, should it happen after the transition ends?
+    const {transitionDestinationToShowCircles = "MainMenu"} = props;
     const {textShowMode = "Canvas"} = props; //Canvas or Page
     const {text = "Sample text"} = props;
     const {image = config.resource_path + "/textures/4x3.png"} = props;
@@ -19,10 +22,11 @@ export const ToolTipCircle = (props) => {
     const {playPulseAnimation = false} = props;
     const {position = [0, 0]} = props;
 
+
     const setIsCircleOnLeftSelected = useStore((state) => state.setIsCircleOnLeftSelected);
     const setIsCircleOnTopSelected = useStore((state) => state.setIsCircleOnTopSelected);
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
-    const desired_path = useStore((state) => state.desired_path);
+    const transitionDestination = useStore((state) => state.transitionDestination);
     const transitionEnded = useStore((state) => state.transitionEnded);
     const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
     const setTooltipCurrentObjectNameSelected = useStore((state) => state.setTooltipCurrentObjectNameSelected);
@@ -34,14 +38,16 @@ export const ToolTipCircle = (props) => {
     const isCircleOnTop = position[1] < 50; // Since it's a percentage
     
     useEffect(() => {
-        if(desired_path == pathToShow && transitionEnded){
+        if(    (circlesAreVisibleByTransitionDestination && transitionDestination == transitionDestinationToShowCircles 
+            && (circlesAreVisibleByTransitionDestinationWaitForTransitionEnd && transitionEnded || !circlesAreVisibleByTransitionDestinationWaitForTransitionEnd))
+            || circlesAreVisible){
             setCameraStateTracking(true)
             setIsVisible(true);
         }else{
             setCameraStateTracking(false)
             setIsVisible(false);
         }
-    }, [desired_path, transitionEnded]);
+    }, [transitionDestination, transitionEnded]);
 
     const circleStyle = {
         position: 'fixed',

@@ -11,10 +11,10 @@ export function FadingSlideShowModel(props) {
     const {PlaneSize = [10, 10]} = props;
     const {imageTexture = 'placeHolderImage.png'} = props;
 
-    const {transitionEnded, desired_path} = props.useStore();
+    const {transitionEnded, transitionDestination} = props.useStore();
 
     const springFade = useSpring({
-        opacity: (transitionEnded && desired_path === textModelMenu) ? 1 : 0,
+        opacity: (transitionEnded && transitionDestination === textModelMenu) ? 1 : 0,
         config: {
             duration:transitionDuration
         }

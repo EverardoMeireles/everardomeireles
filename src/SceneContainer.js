@@ -36,7 +36,7 @@ import config from './config';
 export const SceneContainer = React.memo((props) => {
     const useStore = props.useStore;
 
-    const desired_path = useStore((state) => state.desired_path);
+    const transitionDestination = useStore((state) => state.transitionDestination);
     const transitionEnded = useStore((state) => state.transitionEnded);
     const currentSkillHovered = useStore((state) => state.currentSkillHovered);
     const currentLanguage = useStore((state) => state.currentLanguage);
@@ -228,7 +228,7 @@ export const SceneContainer = React.memo((props) => {
         setTrigger("trigger4", false)
         setForcedCameraTarget([])
         // setTrigger("forceTransitionSpeedTrigger", true)
-        switch (desired_path) {
+        switch (transitionDestination) {
             case 'MainMenu':
                 // For now, the ExplodingModelLoader appears in the MainMenu
                 // Trigger change in the camera's target
@@ -236,7 +236,7 @@ export const SceneContainer = React.memo((props) => {
                 break;
           }
        
-    }, [desired_path]);
+    }, [transitionDestination]);
 
     // Place conditions for when the mouse is clicked here:
     useEffect(() => {
@@ -525,12 +525,12 @@ export const SceneContainer = React.memo((props) => {
     const isOrbitingMenuVisible = useRef(false)
 
     useEffect(() => {
-        if(desired_path === "Education" && transitionEnded){
+        if(transitionDestination === "Education" && transitionEnded){
             isOrbitingMenuVisible.current = true;
         }else{
             isOrbitingMenuVisible.current = false;
         }
-    }, [desired_path, transitionEnded]);
+    }, [transitionDestination, transitionEnded]);
 
     return(
     <>
@@ -556,30 +556,30 @@ export const SceneContainer = React.memo((props) => {
 
             {/* <Environment files = {config.resource_path + "/textures/dikhololo_night_1k.hdr"} background /> */}
             {/* <Environment files = {config.resource_path + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} /> */}
-            {(desired_path === "Education") 
+            {(transitionDestination === "Education") 
             && (
-            <OrbitingMenu {...{ useStore }} visible={isOrbitingMenuVisible.current} orbitDistance={7.5} orbitCenterPosition={orbitCenterPosition} />
+            <OrbitingMenu {...{ useStore }} transitionDestinationToRestrictKeyboardControl = {"Education"} visible={isOrbitingMenuVisible.current} orbitDistance={7.5} orbitCenterPosition={orbitCenterPosition} />
                         )}
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} 
                 text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {2000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} 
                 text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {2600} transitionDuration = {1500} />
             <>
-                <FadingText {...{useStore}} textToFade = {TranslationTable0} lettersPerUnit = {5} textModelMenu = "ProfessionalExpProjects0"     scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable1} textModelMenu = "ProfessionalExpProjects1"                                  scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable2} textModelMenu = "ProfessionalExpProjects2"                               scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable3} textModelMenu = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {fadingTextScale3} initialPosition = {fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor={"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable4} textModelMenu = "ProfessionalExpProjects4" lettersPerUnit = {9}             scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable5} textModelMenu = "ProfessionalExpProjects5" lettersPerUnit = {7}             scale = {fadingTextScale5} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                {/* <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
+                <FadingText {...{useStore}} textToFade = {TranslationTable0} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects0" lettersPerUnit = {5}  scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable1} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects1"                       scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable2} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects2"                       scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI}       textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable3} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {fadingTextScale3} initialPosition = {fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable4} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects4" lettersPerUnit = {9}  scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable5} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects5" lettersPerUnit = {7}  scale = {fadingTextScale5} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                {/* <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
             </>
             
-            {/* {(desired_path=="Skills" && transitionEnded) &&
+            {/* {(transitionDestination=="Skills" && transitionEnded) &&
             <FloatingTextSkills {...{useStore}} initialPosition = {[-9, 30, -15]} textPosition = {FloatingTextSkillsPosition} /> 
             } */}
 

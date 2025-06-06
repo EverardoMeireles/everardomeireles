@@ -42,7 +42,6 @@
   "ObjectProperties": [
     {
       "objectName": "Motor_gearbox_1TT5645645645645641", "objectName_comment":" The name of the 3D object that the circle will follow, it will follow the object's origin, so don't forget to set it.",
-      "pathToShow": "MainMenu",
       "textShowMode": "Canvas", "textShowMode_comment":" Is the text shown in the product page(Page) or in the 3D scene(Canvas)?",
       "text": "Right text", "text_comment":" The text to be shown",
       "image": "/textures/4x3.png", "image_comment":" The image to be shown alongside the text(for now only in Canvas mode)",

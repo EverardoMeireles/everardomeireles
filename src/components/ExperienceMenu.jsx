@@ -13,16 +13,16 @@ export function ExperienceMenu(props) {
     const {textColor = "#062d69"} = props;
     const {transitionDuration = 1000} = props;
 
-    const {setDesiredPath, setTransitionEnded, desired_path} = props.useStore();
+    const {setDesiredPath, setTransitionEnded, transitionDestination} = props.useStore();
 
-    const isPathExperienceMenu = desired_path.includes("ProfessionalExpProjects"); // is the user going to the professional experience and projects
+    const isPathExperienceMenu = transitionDestination.includes("ProfessionalExpProjects"); // is the user going to the professional experience and projects
 
     let rotation = Math.PI;
     let position = [0, 0, 0];
 
     if(isPathExperienceMenu){
-        rotation = path_points_experience_menu_location[desired_path]["rotation"]
-        position = path_points_experience_menu_location[desired_path]["position"]
+        rotation = path_points_experience_menu_location[transitionDestination]["rotation"]
+        position = path_points_experience_menu_location[transitionDestination]["position"]
     }
 
     const spring = useSpring({

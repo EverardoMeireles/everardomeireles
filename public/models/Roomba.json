@@ -38,7 +38,6 @@
   "ObjectProperties": [
     {
       "objectName": "Motor_gearbox_1TT1",
-      "pathToShow": "MainMenu",
       "text": "Right text",
       "image": "/textures/4x3.png",
       "circleSize": 30,
@@ -59,7 +58,6 @@
     },
     {
       "objectName": "Wheel_1_1BB1",
-      "pathToShow": "MainMenu",
       "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
       "image": "AfficheDUT-French.png",
       "circleSize": 30,

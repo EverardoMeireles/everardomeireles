@@ -55,7 +55,6 @@
   "ObjectProperties": [
     {
       "objectName": "Elevator",
-      "pathToShow": "MainMenu",
       "textShowMode": "Canvas",
       "text": "Right text",
       "image": "/textures/4x3.png",

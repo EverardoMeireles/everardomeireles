@@ -16,8 +16,6 @@ export const FadingTitle = React.memo((props) => {
     const {delay = 0} = props;
     const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
-    const {transitionEnded, desired_path} = props.useStore();
-
     const [startFade, setStartFade] = useState(false);
     const [materialOpacity, setMaterialOpacity] = useState(0);
 
