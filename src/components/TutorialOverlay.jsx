@@ -17,30 +17,64 @@ export const TutorialOverlay = (props) => {
     
     const setTutorialClosed = useStore((state) => state.setTutorialClosed);
 
+    // Close tutorial when the user uses OrbitControls
+    useEffect(() => {
+        const handleUserInput = () => {
+            if (!visible) return;
+            setVisible(false);
+            const handleUserInputTimeout = setTimeout(() => {
+                setShouldRender(false);
+                setTutorialClosed(true);
+            }, 1000);
+
+            return () => clearTimeout(handleUserInputTimeout);
+
+        };
+
+        const handlePointerDown = () => handleUserInput();
+        const handleWheel = () => handleUserInput();
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+                handleUserInput();
+            }
+        };
+
+        window.addEventListener("pointerdown", handlePointerDown);
+        window.addEventListener("wheel", handleWheel);
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("pointerdown", handlePointerDown);
+            window.removeEventListener("wheel", handleWheel);
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+}, [visible]);
+
     useEffect(() => {
         const tutorialShown = localStorage.getItem('tutorialShown');
-        // console.log(tutorialShown)
         if ((enable && showOnlyOnce && tutorialShown !== "true") || (enable && !showOnlyOnce)) {
             setShouldRender(true);
-            const timer = setTimeout(() => {
-            // if(!showOnlyOnce || tutorialShown !== 'true'){
+            const tutorialShownTimeout = setTimeout(() => {
                 setVisible(true);
                 // local cache
                 localStorage.setItem('tutorialShown', 'true');
-            // }
         }, 10);
 
         // Cleanup function to clear the timeout if the component unmounts
-        return () => clearTimeout(timer);
+        return () => clearTimeout(tutorialShownTimeout);
         }
     }, [enable]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleClick = () => {
         setVisible(false);
-        setTimeout(() => {
+        const handleClickTimeout = setTimeout(() => {
+
         setShouldRender(false);
         setTutorialClosed(true);
         }, 1000); // This duration should match the CSS transition duration
+        
+        return () => clearTimeout(handleClickTimeout);
+
     };
 
     const topImages = [];
@@ -50,10 +84,10 @@ export const TutorialOverlay = (props) => {
         topImagePaths.forEach((path, index) => {
             topImages.push(
                 <img
-                    src={config.resource_path + "/" + path}
+                    src={config.resource_path + path}
                     key={`topImage-${index}`}
                     alt={`Top Tutorial ${index}`}
-                    style={{ width: imageSize[0], height: imageSize[1] }}
+                    style={{ width: imageSize[0], height: imageSize[1], pointerEvents: 'none' }}
                 />
             );
         });
@@ -61,10 +95,10 @@ export const TutorialOverlay = (props) => {
         bottomImagePaths.forEach((path, index) => {
             bottomImages.push(
                 <img
-                    src={config.resource_path + "/" + path}
+                    src={config.resource_path + path}
                     key={`bottomImage-${index}`}
                     alt={`Bottom Tutorial ${index}`}
-                    style={{ width: imageSize[0], height: imageSize[1] }}
+                    style={{ width: imageSize[0], height: imageSize[1], pointerEvents: 'none' }}
                 />
             );
         });
@@ -85,6 +119,8 @@ export const TutorialOverlay = (props) => {
         zIndex: 9999,
         opacity: visible ? 1 : 0,
         transition: 'opacity 1s ease',
+        pointerEvents: 'none', // 🔽 this allows canvas to receive input
+
     };
 
     const contentStyle = {
@@ -95,12 +131,14 @@ export const TutorialOverlay = (props) => {
         flexDirection: 'column',
         alignItems: 'center', // Center horizontally
         gap: '20px', // Adds space between the top and bottom image groups
-    };
+        pointerEvents: 'none', // 🔼 re-enable for content
 
+    };
     const imageRowStyle = {
         display: 'flex',
         flexDirection: 'row',
         gap: '10px', // Adds space between the images in each row
+        pointerEvents: 'none' // 🔽 allows drag to go through image
     };
 
     return (
