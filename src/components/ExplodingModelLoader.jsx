@@ -776,3 +776,5 @@ export const ExplodingModelLoader = React.memo((props) => {
     </Suspense>
   );
 });
+
+ExplodingModelLoader.displayName = "ExplodingModelLoader";

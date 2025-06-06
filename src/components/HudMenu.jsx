@@ -83,12 +83,9 @@ export function HudMenu(props) {
 
         if (desiredPath.current !== urlPath) {
             desiredPath.current = urlPath;
-            console.log(path_points_even_more_simple_lookat_dict[desiredPath.current])
             setDesiredPath(desiredPath)
-
             setForcedCameraTarget(path_points_even_more_simple_lookat_dict[desiredPath.current])
             setForcedCameraMovePathCurve(overrideCurves[currentPath.current + "-" + desiredPath.current]);
-            // console.log(forcedCameraMovePathCurve)
             setTransitionEnded(false);
         }
     };

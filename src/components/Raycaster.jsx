@@ -56,3 +56,5 @@ export const Raycaster = React.memo((props) => {
         </group>
     );
 });
+
+Raycaster.displayName = "Raycaster";

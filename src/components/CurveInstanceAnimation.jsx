@@ -195,3 +195,5 @@ export const CurveInstanceAnimation = React.memo((props) => {
     </>
     );
 });
+
+CurveInstanceAnimation.displayName = "CurveInstanceAnimation";

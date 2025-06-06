@@ -111,3 +111,6 @@ export const InstanceLoader = React.memo((props) => {
         </>
     );
 });
+
+
+InstanceLoader.displayName = "InstanceLoader";

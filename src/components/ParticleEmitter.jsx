@@ -30,7 +30,7 @@ export const ParticleEmitter = React.memo((props) => {
     imageNames.map(name => `${config.resource_path}/textures/${name}`),
     [imageNames]
   );
-
+  
   ////////////////////////////////////////
   // Load Textures using TextureLoader. //
   ////////////////////////////////////////
@@ -292,3 +292,5 @@ const ParticleGroup = (props) => {
     </instancedMesh>
   );
 };
+
+ParticleEmitter.displayName = "ParticleEmitter";

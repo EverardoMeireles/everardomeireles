@@ -1,11 +1,10 @@
-import React, { Suspense, useCallback, useRef, useState, useEffect } from "react";
+import React, { Suspense, useCallback, useRef, useState, useEffect, useMemo } from "react";
 import { useFrame } from '@react-three/fiber';
-import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
 import config from '../config';
 
-export const FadingText = (props) => {
+export const FadingText = React.memo((props) => {
     const useStore = props.useStore;
 
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
@@ -30,6 +29,7 @@ export const FadingText = (props) => {
     const desired_path = useStore((state) => state.desired_path);
     const current_path = useRef("");
 
+    const iScale= useMemo(() => [3, 3, 3], []);
     // Fade-in animation
     useEffect(() => {
         if(transitionEnded && desired_path == textModelMenu && current_path.current != desired_path){
@@ -102,7 +102,7 @@ export const FadingText = (props) => {
         >
                 <Text
                     font={font}
-                    scale={[3, 3, 3]}
+                    scale={iScale}
                     anchorX="left"
                     position = {[-(PlaneSize[1]/2) + textPositionOffset[2], (PlaneSize[0]/2) + textPositionOffset[1],  0]}
                 >
@@ -112,6 +112,6 @@ export const FadingText = (props) => {
                 </Text>
         </group>
     );
-};
+});
 
 FadingText.displayName = "FadingText";

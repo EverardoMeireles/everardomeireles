@@ -104,3 +104,5 @@ export const GraphicalModeSetter2 = React.memo((props) => {
         }
     })
 })
+
+GraphicalModeSetter2.displayName = "GraphicalModeSetter2";

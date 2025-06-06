@@ -35,3 +35,5 @@ export const AlertText3D = React.memo((props) => {
         </>
     );
 })
+
+AlertText3D.displayName = "AlertText3D";

@@ -226,3 +226,5 @@ export const OrbitingMenu = React.memo((props) => {
         </mesh>
     )
 })
+
+OrbitingMenu.displayName = "OrbitingMenu";

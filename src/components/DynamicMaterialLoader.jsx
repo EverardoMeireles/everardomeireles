@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import config from '../config';
 
@@ -104,5 +104,12 @@ export const DynamicMaterialLoader = React.memo((props) => {
     }
   }, [sceneRef, currentMaterial, forceLowResTrigger, forceMidResTrigger, forceHighResTrigger, loadedMaterials]);
 
+  const memoizedChild = useMemo(() => {
   return React.cloneElement(children, { ref: sceneRef });
+}, [children]);
+
+  return memoizedChild;
 });
+
+
+DynamicMaterialLoader.displayName = "DynamicMaterialLoader";

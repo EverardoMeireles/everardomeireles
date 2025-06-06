@@ -245,3 +245,5 @@ export const CurveLightAnimation = React.memo((props) => {
     </>
   );
 });
+
+CurveLightAnimation.displayName = "CurveLightAnimation";

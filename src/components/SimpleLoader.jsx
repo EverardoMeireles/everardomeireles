@@ -6,7 +6,7 @@ import React from "react";
 import { TextureLoader } from 'three';
 import config from '../config';
 
-export const SimpleLoader = forwardRef((props, ref) => {
+export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const useStore = props.useStore;
     const {position = [0, 0, 0]} = props;
     const {scene = undefined} = props; // the scene
@@ -46,8 +46,6 @@ export const SimpleLoader = forwardRef((props, ref) => {
 
     // Feature : Set children object's custom UVs
     const { customObjectsUvs = {} } = props; // if there are child objects with more than 1 uv map and you want to set one in particular, specify the object's name and the uv's index. EX:{"Book":2}
-
-
 
     //////////////////////////////////////////////////////////
     ///////////// Variables, states and refs /////////////////
@@ -430,4 +428,6 @@ export const SimpleLoader = forwardRef((props, ref) => {
         <primitive ref={ref} position={position} object={scene.scene} />
     </Suspense>
     )
-})
+}));
+
+SimpleLoader.displayName = "SimpleLoader";

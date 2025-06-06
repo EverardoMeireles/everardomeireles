@@ -1,5 +1,5 @@
 import { Environment } from "@react-three/drei";
-import { Suspense, useState, useEffect, useRef, useMemo  } from "react";
+import React, { Suspense, useState, useEffect, useRef, useMemo  } from "react";
 import { Camera } from "./components/Camera";
 import { SimpleLoader } from "./components/SimpleLoader";
 import { OrbitingPointLight } from './components/OrbitingPointLights';
@@ -33,7 +33,7 @@ import * as THREE from 'three';
 
 import config from './config';
 
-export function SceneContainer(props) {
+export const SceneContainer = React.memo((props) => {
     const useStore = props.useStore;
 
     const desired_path = useStore((state) => state.desired_path);
@@ -59,11 +59,13 @@ export function SceneContainer(props) {
     const { mouse } = useThree();
 
     let mixer;
-    const [animTime, setAnimTime] = useState(0);
+
+    const animTimeRef = useRef(0);
+
 
     const [forceLowresMaterial, setForceLowresMaterial] = useState(false);
     const [forceMidresMaterial, setForceMidresMaterial] = useState(false);
-    const [forceHighResMaterial, setForceHighResMaterial] = useState(true);
+    const [forceHighResMaterial, setForceHighResMaterial] = useState(false);
 
     const [enableMaterialSwap, setEnableMaterialSwap] = useState(false);
 
@@ -197,7 +199,7 @@ export function SceneContainer(props) {
         const delta = clock.getDelta(); // Time since last frame
         mixer.update(delta); // Update mixer with delta time
         requestAnimationFrame(tick); // Continue the loop
-        setAnimTime(action.time.toFixed(2))
+        animTimeRef.current = action.time.toFixed(2)
         };
 
         tick(); // Start the loop
@@ -437,7 +439,23 @@ export function SceneContainer(props) {
         )
       }
 
-          const [trig, setTrig] = useState(false);
+    const [trig, setTrig] = useState(false);
+
+    //////////////////////////////////
+    // Temporary initial transition //
+    //////////////////////////////////
+    
+    // Temporary useEffect to initialize the position and lookat
+    useEffect(() => {
+        const tempCurve = new THREE.CatmullRomCurve3([
+                new THREE.Vector3(278, 206, -6),
+                new THREE.Vector3(260, 190, 18),
+                new THREE.Vector3(199, 150, 46)])
+
+  
+        setForcedCameraTarget(new THREE.Vector3(45, 21, -50))
+        setForcedCameraMovePathCurve(tempCurve);
+    }, []);
 
     //////////////////////////
     // Memoization of props //
@@ -458,17 +476,48 @@ export function SceneContainer(props) {
 
     const scenesToLoad = useMemo(() => [], []);
 
-    // Temporary useEffect to initialize the position and lookat
-    useEffect(() => {
-        const tempCurve = new THREE.CatmullRomCurve3([
-                new THREE.Vector3(278, 206, -6),
-                new THREE.Vector3(260, 190, 18),
-                new THREE.Vector3(199, 150, 46)])
+    const orbitCenterPosition = useMemo(() => [-17, 97, 27], []);
 
-  
-        setForcedCameraTarget(new THREE.Vector3(45, 21, -50))
-        setForcedCameraMovePathCurve(tempCurve);
-    }, []);
+    const TranslationTable0 = useMemo(() => TranslationTable[currentLanguage]["prospere_itb_presentation"], []);
+    const TranslationTable1 = useMemo(() => TranslationTable[currentLanguage]["drim_presentation"], []);
+    const TranslationTable2 = useMemo(() => TranslationTable[currentLanguage]["everial_presentation"], []);
+    const TranslationTable3 = useMemo(() => TranslationTable[currentLanguage]["bresil_ecobuggy_presentation"], []);
+    const TranslationTable4 = useMemo(() => TranslationTable[currentLanguage]["efn1_presentation"], []);
+    const TranslationTable5 = useMemo(() => TranslationTable[currentLanguage]["efn2_presentation"], []);
+
+    const initialPosition = useMemo(() => [-2, 75, 32], []);
+
+    const objectsRevealTriggers = useMemo(() => ({"Wardrobe001":"trigger3"}), []);
+    const animationTimesToTrigger = useMemo(() => ({"CharacterAction": 0.50}), []);
+    const animationTriggerNames = useMemo(() => ({"CharacterAction": "trigger2"}), []);
+    const animationToPlay = useMemo(() => ["LampAction.001","RopeAction"], []);
+    const animationTrigger = useMemo(() => triggers["trigger1"], []);
+    const hoverAffectedObjects = useMemo(() => ["LeftDoor","RightDoor", "MainBody"], []);
+    const hoverLinkedObjects = useMemo(() => [["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]], []);
+
+    const objectLinkPosition1 = useMemo(() => [48, 89, -49], []);
+    const objectLinkScale = useMemo(() => [1, 1, 1], []);
+
+    const stableOrbitingPointLightParticleEmitterAndPointLightAnimation = useMemo(() => [
+        <ParticleEmitter key="particles" {...{useStore}} imageNames={["fire.png", "fire2.png"]} count={15} speed={10} initialSize={10}
+            maxSizeOverLifespan={15} fadeInOut={true} faceCamera={false} faceCameraFrameCheck={80}
+            faceCameraAxisLock={[1, 1, 1]} instanceMaxRandomDelay={10} lifespan={0.3}
+            spread={3} position={[0, -1, 0]} rotation={[0, 1, 0]} direction={[0, 1, 0]} />,
+
+        <PointLightAnimation key="pointlight" position={[0, 0, 0]} colors={[0x773502, 0xff8c00, 0xffd700]}
+            colorFrameIntervals={[7, 5, 6]} randomIntensitiyMargin={[0.05, 0.1]}
+            enableRandomColorFrameIntervals={true} />,
+        <OrbitingPointLight key="OrbitingPointLight" lightColor = {0xb8774f} orbitDirection = {[0, 1, 0]} orbitSpeed = {0.007} orbitAxis = {"x"} 
+            orbitDistance = {50} orbitCenterPosition = {[0,20,0]} lightIntensivity = {1} />
+    ], []);
+
+        const stableSimpleLoader = useMemo(() => 
+                    <SimpleLoader  {...{useStore}} scene={mainScene} objectsRevealTriggers={objectsRevealTriggers} 
+                    animationToPlay={animationToPlay} loopMode={"Loop"} animationTrigger={animationTrigger} 
+                    animationTimesToTrigger={animationTimesToTrigger} animationTriggerNames={animationTriggerNames} 
+                    hoverAffectedObjects={hoverAffectedObjects} hoverLinkedObjects={hoverLinkedObjects} />
+    , []);
+
 
 
     return(
@@ -480,7 +529,7 @@ export function SceneContainer(props) {
                 //System components//
                 ///////////////////// */}
 
-            <PreloadAssets {...{useStore}} delay={4000} texturesToLoad={["AfficheDUT-French.png", "AfficheDUT-Portuguese.png", "AfficheEDHC-French.png", "AfficheEDHC-Portuguese.png", "AfficheMicrolins1-French.png", "AfficheMicrolins1-Portuguese.png", "AfficheMicrolins2-French.png", "AfficheMicrolins2-Portuguese.png", "AfficheUNIRN-French.png", "AfficheUNIRN-Portuguese.png"]} scenesToLoad={[]}></PreloadAssets>
+            <PreloadAssets {...{useStore}} delay={4000} texturesToLoad={texturesToLoad} scenesToLoad={scenesToLoad}></PreloadAssets>
             {/* <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10} /> */}
             {(config.check_graphics)
             && 
@@ -497,19 +546,19 @@ export function SceneContainer(props) {
             {/* <Environment files = {config.resource_path + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} /> */}
             {(desired_path === "Education") 
             && (
-            <OrbitingMenu {...{ useStore }} orbitDistance={7.5} orbitCenterPosition={[-17, 97, 27]} />
+            <OrbitingMenu {...{ useStore }} orbitDistance={7.5} orbitCenterPosition={orbitCenterPosition} />
             )}
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} 
                 text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {2000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} 
                 text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {2600} transitionDuration = {1500} />
             <>
-                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["prospere_itb_presentation"]} lettersPerUnit = {5} textModelMenu = "ProfessionalExpProjects0"     scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["drim_presentation"]} textModelMenu = "ProfessionalExpProjects1"                                  scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["everial_presentation"]} textModelMenu = "ProfessionalExpProjects2"                               scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["bresil_ecobuggy_presentation"]} textModelMenu = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {fadingTextScale3} initialPosition = {fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor={"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["efn1_presentation"]} textModelMenu = "ProfessionalExpProjects4" lettersPerUnit = {9}             scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable[currentLanguage]["efn2_presentation"]} textModelMenu = "ProfessionalExpProjects5" lettersPerUnit = {7}             scale = {fadingTextScale5} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable0} lettersPerUnit = {5} textModelMenu = "ProfessionalExpProjects0"     scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable1} textModelMenu = "ProfessionalExpProjects1"                                  scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable2} textModelMenu = "ProfessionalExpProjects2"                               scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable3} textModelMenu = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {fadingTextScale3} initialPosition = {fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor={"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable4} textModelMenu = "ProfessionalExpProjects4" lettersPerUnit = {9}             scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText {...{useStore}} textToFade = {TranslationTable5} textModelMenu = "ProfessionalExpProjects5" lettersPerUnit = {7}             scale = {fadingTextScale5} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
                 {/* <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText {...{useStore}} textModelMenu="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
@@ -538,27 +587,23 @@ export function SceneContainer(props) {
             modelName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} /> */}
             <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
             forceLowResTrigger={forceLowresMaterial} forceMidResTrigger={forceMidresMaterial} forceHighResTrigger={forceHighResMaterial}>
-                <SimpleLoader  {...{useStore}} scene={mainScene} objectsRevealTriggers={{"Wardrobe001":"trigger3"}} 
-                    animationToPlay={["LampAction.001","RopeAction"]} loopMode={"Loop"} animationTrigger={triggers["trigger1"]} 
-                    animationTimesToTrigger={{"CharacterAction": 0.50}} animationTriggerNames={{"CharacterAction": "trigger2"}} 
-                    hoverAffectedObjects={["LeftDoor","RightDoor", "MainBody"]} 
-                    hoverLinkedObjects={[["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]]} />
+                {stableSimpleLoader}
+                {/* <SimpleLoader  {...{useStore}} scene={mainScene} objectsRevealTriggers={objectsRevealTriggers} 
+                    animationToPlay={animationToPlay} loopMode={"Loop"} animationTrigger={animationTrigger} 
+                    animationTimesToTrigger={animationTimesToTrigger} animationTriggerNames={animationTriggerNames} 
+                    hoverAffectedObjects={hoverAffectedObjects} hoverLinkedObjects={hoverLinkedObjects} /> */}
             </DynamicMaterialLoader>
             {(currentGraphicalMode !== "potato")
             &&
             <>
-                <ObjectLink position={[48, 89, -49]} scale={[1, 1, 1]} scene={mainScene} linkedObjectName = {"Lamp"} >
+                <ObjectLink position={objectLinkPosition1} scale={objectLinkScale} scene={mainScene} linkedObjectName = {"Lamp"} >
                     {/* <pointLight position={ [46, 83, -47]} color={0xb8774f}></pointLight> */}
-                    <OrbitingPointLight lightColor = {0xb8774f} orbitDirection = {[0, 1, 0]} orbitSpeed = {0.007} orbitAxis = {"x"} 
-                        orbitDistance = {50} orbitCenterPosition = {[0,20,0]} lightIntensivity = {1} />
-                    <ParticleEmitter {...{useStore}} imageNames={["fire.png", "fire2.png"]} count={15} speed={10} initialSize={10}
-                        maxSizeOverLifespan={15} fadeInOut={true} faceCamera = {false} faceCameraFrameCheck = {80} faceCameraAxisLock = {[1, 1, 1]}
-                        instanceMaxRandomDelay = {10} lifespan={0.3} spread={3} position={[0, -1, 0]} rotation={[0, 1, 0]} direction={[0, 1, 0]} />
-                    <PointLightAnimation position={[0, 0, 0]} colors={[0x773502, 0xff8c00, 0xffd700]} colorFrameIntervals={[7, 5, 6]}
-                        randomIntensitiyMargin={[0.05, 0.1]} enableRandomColorFrameIntervals = {true}/>
+ 
+                    {stableOrbitingPointLightParticleEmitterAndPointLightAnimation}
+
                 </ObjectLink>
                 
-                <InstanceLoader instancedObject={"Book.glb"} initialPosition = {[-2, 75, 32]} directionX = {0} directionY = {0} 
+                <InstanceLoader instancedObject={"Book.glb"} initialPosition = {initialPosition} directionX = {0} directionY = {0} 
                     directionZ = {-1} customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} 
                     distanceBetweenInstances={3} />
             </>
@@ -601,4 +646,6 @@ export function SceneContainer(props) {
       /> */}
     </>
     );
-}
+});
+
+SceneContainer.displayName = "SceneContainer";

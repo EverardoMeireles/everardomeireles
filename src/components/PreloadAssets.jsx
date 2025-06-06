@@ -4,7 +4,7 @@ import { TextureLoader } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import config from '../config';
 
-export const PreloadAssets = (props) => {
+export const PreloadAssets = React.memo((props) => {
   const useStore = props.useStore;
 
   const {texturesToLoad = ["image1.jpg", "image2.jpg"]} = props;
@@ -38,6 +38,6 @@ export const PreloadAssets = (props) => {
   }, [startLoading, textures, scenes]);
 
   return null;
-};
+});
 
 PreloadAssets.displayName = "PreloadAssets";

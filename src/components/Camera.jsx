@@ -9,7 +9,7 @@ import { smoothStep, roundToDecimalPlace, hasSignificantChange, createArchCurve 
 // revisit custom camera lookat mode and simpleLookatMode
 export const Camera = React.memo((props) => {
     const useStore = props.useStore;
-    const {transitionSpeed = 0.01} = props;
+    const {transitionSpeed = 0.5} = props;
 
     const setTransitionEnded = useStore((state) => state.setTransitionEnded);
     const transitionEnded = useStore((state) => state.transitionEnded);
@@ -52,8 +52,6 @@ export const Camera = React.memo((props) => {
 
     let smoothStepTick;
     let sub_points;
-    let deltaArray = new Array();
-    let deltaAverage = 0;
     let tick = useRef(1)
 
     // Change camera mode
@@ -209,12 +207,6 @@ export const Camera = React.memo((props) => {
     //     return path_speeds[currentKey];
     // }
 
-    function calculateDeltaAverage(delta){
-        deltaArray.push(delta)
-        const sum = deltaArray.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-        return sum / deltaArray.length;
-    }
-
     // if the target is forced
     useEffect(() => {
 
@@ -242,13 +234,12 @@ export const Camera = React.memo((props) => {
 
     // Moves the camera every frame when the desired path changes
     useFrame((state, delta) => (tick.current < 1 ? (
-        deltaAverage = deltaArray[10] == undefined ? calculateDeltaAverage(delta) : deltaAverage,
         updateCallNow.current = true,
         state.events.enabled = false,
         controls.current.enabled = false,
         // If there's a custom transition speed configured, apply it
         // transitionIncrement = (path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : defaultCameraSpeed) * deltaAverage,
-        tick.current += transitionSpeed,
+        tick.current += transitionSpeed * delta,
 
         // Smooth out the movement
         smoothStepTick = smoothStep(tick.current),
