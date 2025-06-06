@@ -237,8 +237,7 @@ export const Camera = React.memo((props) => {
         updateCallNow.current = true,
         state.events.enabled = false,
         controls.current.enabled = false,
-        // If there's a custom transition speed configured, apply it
-        // transitionIncrement = (path_points_speed[current_path.current + "-" + desired_path] !== undefined ? setCustomSpeed(tick, path_points_speed[current_path.current + "-" + desired_path]) : defaultCameraSpeed) * deltaAverage,
+        
         tick.current += transitionSpeed * delta,
 
         // Smooth out the movement

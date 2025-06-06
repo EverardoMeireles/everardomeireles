@@ -83,7 +83,7 @@ export function HudMenu(props) {
 
         if (desiredPath.current !== urlPath) {
             desiredPath.current = urlPath;
-            setDesiredPath(desiredPath)
+            setDesiredPath(desiredPath.current)
             setForcedCameraTarget(path_points_even_more_simple_lookat_dict[desiredPath.current])
             setForcedCameraMovePathCurve(overrideCurves[currentPath.current + "-" + desiredPath.current]);
             setTransitionEnded(false);
@@ -101,7 +101,6 @@ export function HudMenu(props) {
     // Once the transition is over, set the new current path position
     useEffect(() => {
         currentPath.current = desiredPath.current;
-        setTransitionEnded(true);
     }, [transitionEnded]);
 
 

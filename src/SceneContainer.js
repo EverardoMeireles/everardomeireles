@@ -289,7 +289,7 @@ export const SceneContainer = React.memo((props) => {
     //         accuFramesForFPS.current = 0;
     //     }
     // });
-
+    
     ///////////////////////////
     // E-comerce integration //
     ///////////////////////////
@@ -462,16 +462,20 @@ export const SceneContainer = React.memo((props) => {
     //////////////////////////
 
     const texturesToLoad = useMemo(() => [
-        "AfficheDUT-French.png",
-        "AfficheDUT-Portuguese.png",
-        "AfficheEDHC-French.png",
-        "AfficheEDHC-Portuguese.png",
-        "AfficheMicrolins1-French.png",
-        "AfficheMicrolins1-Portuguese.png",
-        "AfficheMicrolins2-French.png",
-        "AfficheMicrolins2-Portuguese.png",
-        "AfficheUNIRN-French.png",
-        "AfficheUNIRN-Portuguese.png"
+        "AfficheDUT-French.jpg",
+        "AfficheDUT-Portuguese.jpg",
+        "AfficheEDHC-French.jpg",
+        "AfficheEDHC-Portuguese.jpg",
+        "AfficheMicrolins1-French.jpg",
+        "AfficheMicrolins1-Portuguese.jpg",
+        "AfficheMicrolins2-French.jpg",
+        "AfficheMicrolins2-Portuguese.jpg",
+        "AfficheUNIRN-French.jpg",
+        "AfficheUNIRN-Portuguese.jpg",
+        "AfficheOrtBTS-French.jpg",
+        "AfficheOrtBTS-Portuguese.jpg",
+        "AfficheOrt3CSI-French.jpg",
+        "AfficheOrt3CSI-Portuguese.jpg"
     ], []);
 
     const scenesToLoad = useMemo(() => [], []);
@@ -518,7 +522,15 @@ export const SceneContainer = React.memo((props) => {
                     hoverAffectedObjects={hoverAffectedObjects} hoverLinkedObjects={hoverLinkedObjects} />
     , []);
 
+    const isOrbitingMenuVisible = useRef(false)
 
+    useEffect(() => {
+        if(desired_path === "Education" && transitionEnded){
+            isOrbitingMenuVisible.current = true;
+        }else{
+            isOrbitingMenuVisible.current = false;
+        }
+    }, [desired_path, transitionEnded]);
 
     return(
     <>
@@ -546,8 +558,8 @@ export const SceneContainer = React.memo((props) => {
             {/* <Environment files = {config.resource_path + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} /> */}
             {(desired_path === "Education") 
             && (
-            <OrbitingMenu {...{ useStore }} orbitDistance={7.5} orbitCenterPosition={orbitCenterPosition} />
-            )}
+            <OrbitingMenu {...{ useStore }} visible={isOrbitingMenuVisible.current} orbitDistance={7.5} orbitCenterPosition={orbitCenterPosition} />
+                        )}
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} 
                 text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {2000} transitionDuration = {1500} />
             <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} 

@@ -1,6 +1,5 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useFrame, useLoader } from '@react-three/fiber';
-import {useSpring, a} from '@react-spring/three';
 import * as THREE from "three";
 import config from '../config';
 
@@ -10,10 +9,13 @@ export const OrbitingMenu = React.memo((props) => {
     const {planeSize = [5, 5]} = props;
     const {orbitDistance = 1.5} = props;
     const {visible = true} = props;
+    const {enable = false} = props;
+
     const {fadeInDuration = 300} = props;
 
     const transitionEnded = useStore((state) => state.transitionEnded);
     const desired_path = useStore((state) => state.desired_path);
+    const currentLanguage = useStore((state) => state.currentLanguage);
 
     const [hovered0, setHover0] = useState(false);
     const [hovered1, setHover1] = useState(false);
@@ -28,11 +30,6 @@ export const OrbitingMenu = React.memo((props) => {
     const orbitSpeed = 1;
     const rotationRadians = (2 * Math.PI) / 8;
     let leftOverRadians = rotationRadians - rotation;
-
-    const springColor = useSpring({
-        color0: hovered0 ? "white" : "blue",
-        color1: hovered1 ? "white" : "blue"
-    });
 
     const planeRef0 = useRef();
     const planeRef1 = useRef();
@@ -54,14 +51,22 @@ export const OrbitingMenu = React.memo((props) => {
 
     const planeRefArray = useRef([planeRef0, planeRef1, planeRef2, planeRef3, planeRef4, planeRef5, planeRef6, planeRef7])
 
-    useFrame((state, delta)=> {
-        planeRefArray.current.forEach((planeRef) => {
-            if (planeRef.current.material.opacity < 1) {
-                planeRef.current.material.opacity = planeRef.current.material.opacity + (delta / (fadeInDuration / 1000))
-                // console.log(planeRef.current.material.opacity)
-            }
-        })
-    })
+    const matRef0 = useRef();
+    const matRef1 = useRef();
+
+    const color0 = useRef(new THREE.Color("blue"));
+    const color1 = useRef(new THREE.Color("blue"));
+
+    const targetColor0 = useRef(new THREE.Color("blue"));
+    const targetColor1 = useRef(new THREE.Color("blue"));
+
+    useEffect(() => {
+        targetColor0.current.set(hovered0 ? "white" : "blue");
+    }, [hovered0]);
+
+    useEffect(() => {
+        targetColor1.current.set(hovered1 ? "white" : "blue");
+    }, [hovered1]);
 
     useEffect(() => {
         planeReff0.current.rotateY(Math.PI / 2);
@@ -92,15 +97,46 @@ export const OrbitingMenu = React.memo((props) => {
         planeRef7.current.position.x = -orbitDistance;
     },[]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    const planetexture0 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheEDHC-Portuguese.png');
-    const planetexture1 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheUNIRN-Portuguese.png');
-    const planetexture2 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheDUT-Portuguese.png');
-    const planetexture3 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/ortAfficheBTS-French.png');
-    const planetexture4 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/ortAffiche3CSI-French.png');
-    const planetexture5 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheMicrolins1-Portuguese.png');
-    const planetexture6 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheMicrolins2-Portuguese.png');
+    const planetexture0 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheEDHC-' + currentLanguage + '.jpg');
+    const planetexture1 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheUNIRN-' + currentLanguage + '.jpg');
+    const planetexture2 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheDUT-' + currentLanguage + '.jpg');
+    const planetexture3 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheOrtBTS-' + currentLanguage + '.jpg');
+    const planetexture4 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheOrt3CSI-' + currentLanguage + '.jpg');
+    const planetexture5 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheMicrolins1-' + currentLanguage + '.jpg');
+    const planetexture6 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheMicrolins2-' + currentLanguage + '.jpg');
     // const texture = useLoader(THREE.TextureLoader, config.resource_path +'./textures/')
 
+    // Animation for the directional arrows
+    useFrame((_, delta) => {
+        color0.current.lerp(targetColor0.current, delta * 4); // Adjust speed if needed
+        color1.current.lerp(targetColor1.current, delta * 4);
+
+        if (matRef0.current) matRef0.current.color.copy(color0.current);
+        if (matRef1.current) matRef1.current.color.copy(color1.current);
+    });
+
+    // Reset opacity
+    useEffect(() => {
+        if(!visible){
+            planeRefArray.current.forEach((planeRef) => {
+                if (planeRef.current.material.opacity >= 1) {
+                    planeRef.current.material.opacity = 0
+                }
+            })
+        }
+    }, [visible]);
+
+    // Animation fade in
+    useFrame((state, delta)=> {
+        if(visible){
+            planeRefArray.current.forEach((planeRef) => {
+                if (planeRef.current.material.opacity < 1) {
+                    planeRef.current.material.opacity = planeRef.current.material.opacity + (delta / (fadeInDuration / 1000))
+                }
+            })
+        }
+    })
+    // Animation orbiting
     useFrame((state, delta) => {
         if(Math.abs(rotation) <= rotationRadians){
             setRotation(rotation + ((delta) * (orbitSpeed * orbitDirection)));
@@ -125,7 +161,6 @@ export const OrbitingMenu = React.memo((props) => {
         }
     });
 
-    // THERE ARE PROBLEMS WITH KEYBOARD CONTROLS, THAT IF STATEMENT IS NOT WORKING
     useEffect(()=>{
         window.addEventListener("keydown", (event) => {
             if(!clicked.current && desired_path == "Education" && transitionEnded){
@@ -134,14 +169,11 @@ export const OrbitingMenu = React.memo((props) => {
                 switch(event.code) {
                     case "ArrowLeft":
                         setOrbitDirection(-1);
-    
-                        // console.log("left")
+
                     break;
                     case "ArrowRight":
                         setOrbitDirection(1);
-                        // setClicked(true)
-                        // setRotation(0)
-                            // console.log("right")
+
                     break;
                 }
             }
@@ -163,7 +195,7 @@ export const OrbitingMenu = React.memo((props) => {
             scale = {0.5}
             position = {[-12.5, -2.5, 0.5]}>
                 <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
-                <a.meshBasicMaterial visible={visible} color = {springColor.color0} />
+                <meshBasicMaterial ref={matRef0} visible={visible} color={color0.current} />
             </mesh>
 
             <mesh
@@ -179,7 +211,7 @@ export const OrbitingMenu = React.memo((props) => {
             scale = {0.5}
             position = {[-12.5, -2.5, -0.5]}>
                 <coneGeometry args = {[0.5, 1.25, 10, 1]}></coneGeometry>
-                <a.meshBasicMaterial visible={visible} color={springColor.color1} />
+                <meshBasicMaterial ref={matRef1} visible={visible} color={color1.current} />
             </mesh>
 
             <Suspense>
@@ -228,3 +260,5 @@ export const OrbitingMenu = React.memo((props) => {
 })
 
 OrbitingMenu.displayName = "OrbitingMenu";
+
+
