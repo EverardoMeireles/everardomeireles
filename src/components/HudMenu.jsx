@@ -27,6 +27,7 @@ export function HudMenu(props) {
     const setForcedCameraMovePathCurve = useStore((state) => state.setForcedCameraMovePathCurve);
     const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
     const setDesiredPath = useStore((state) => state.setDesiredPath);
+    const modifyTooltipCircleData = useStore((state) => state.modifyTooltipCircleData);
 
     // const animationTriggerState = useStore((state) => state.animationTriggerState);
     // const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
@@ -84,7 +85,7 @@ export function HudMenu(props) {
         if (desiredPath.current !== urlPath) {
             desiredPath.current = urlPath;
             setDesiredPath(desiredPath.current)
-            setForcedCameraTarget(path_points_even_more_simple_lookat_dict[desiredPath.current])
+            setForcedCameraTarget(path_points_even_more_simple_lookat_dict[desiredPath.current].toArray())
             setForcedCameraMovePathCurve(overrideCurves[currentPath.current + "-" + desiredPath.current]);
             setTransitionEnded(false);
         }
@@ -98,11 +99,22 @@ export function HudMenu(props) {
 }, []);
     
 
+    /////////////
+    /// DEBUG ///
+    /////////////
+    
     // Once the transition is over, set the new current path position
     useEffect(() => {
         currentPath.current = desiredPath.current;
     }, [transitionEnded]);
 
+    function test(){
+        console.log("Arrow pressed")
+
+        // modifyTooltipCircleData("Motor_gearbox_1TT1", {
+        //     circleIsVisible: true
+        // });
+    }
 
     return(
     <>
@@ -122,8 +134,8 @@ export function HudMenu(props) {
                     }}>Auto</div>
 
                 {/* Graphical mode arrows */}
-                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1); setEnableDynamicGraphicalModeSetting(false)}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
-                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1); setEnableDynamicGraphicalModeSetting(false)}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
+                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1); setEnableDynamicGraphicalModeSetting(false); test()}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
+                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1); setEnableDynamicGraphicalModeSetting(false); test()}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
                 
                 {/* Graphical mode indicator */}
                 {graphicalLevelIndicatorIsEnabled && <img 

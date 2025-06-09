@@ -100,6 +100,9 @@ const useStore = create((set) => ({
   isMouseDown: false,
   setIsMouseDown: () => set((state) => ({ isMouseDown: !state.isMouseDown })),
 
+  isDragging: false,
+  setIsDragging: (dragging) => set(() => ({ isDragging: dragging })),
+
   currentObjectClicked: "",
   setCurrentObjectClicked: (object) => set(() => ({ currentObjectClicked: object })),
 
@@ -185,7 +188,7 @@ const useStore = create((set) => ({
   currentSkillHovered: "Python", // try to put this on the component itself
   setSkillHovered: (skill) => set(() => ({ currentSkillHovered: skill })),
 
-  siteMode: "resume",
+  siteMode: "store",
   setSiteMode: (mode) => set(() => ({ siteMode: mode })),
 
   animationTriggerState: false,
@@ -198,13 +201,16 @@ const useStore = create((set) => ({
 function App() {
   THREE.Cache.enabled = true;
   
-  const setIsMouseDown = useStore((state) => state.setIsMouseDown);
   const setIsCanvasHovered = useStore((state) => state.setIsCanvasHovered);
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
   const tooltipProperties = useStore((state) => state.tooltipProperties);
   const forceDisableRender = useStore((state) => state.forceDisableRender);
   const setMainScene = useStore((state) => state.setMainScene);
+  const setIsDragging = useStore((state) => state.setIsDragging);
+  const isDragging = useStore((state) => state.isDragging);
+  const setIsMouseDown = useStore((state) => state.setIsMouseDown);
+  const isMouseDown = useStore((state) => state.isMouseDown);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
@@ -297,7 +303,34 @@ function App() {
     return null; // No visual component
   }
 
-  const circlesAreVisible = useRef();
+  const mouseDownPosition = useRef({ x: 0, y: 0 });
+
+  // Tracks actual drag distance after pointer down
+  useEffect(() => {
+    const handlePointerMove = (e) => {
+      if (!isMouseDown) return;
+
+      const dx = e.clientX - mouseDownPosition.current.x;
+      const dy = e.clientY - mouseDownPosition.current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance > 5) {
+        setIsDragging(true);
+      }
+    };
+
+    const handlePointerUp = () => {
+
+    setIsDragging(false);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [isMouseDown]);
 
   return (
     <>
@@ -311,30 +344,39 @@ function App() {
           key={props.objectName}
           {...{ useStore }}
           objectName={props.objectName}
-          transitionDestinationToShowCircles={props.transitionDestinationToShowCircles}
           textShowMode={props.textShowMode}
           text={props.text}
           image={props.image}
           circleSize={props.circleSize}
           playPulseAnimation={props.playPulseAnimation}
           position={props.position || [0, 0]}
-          circlesAreVisibleByTransitionDestination = {true}
-          circlesAreVisibleByTransitionDestinationWaitForTransitionEnd = {true}
+          circleIsVisible = {props.circleIsVisible}
+          isFocusable = {props.isFocusable}
+          focusTarget = {props.focusTarget}
+          focusGroup = {props.focusGroup}
         />
       ))}
       <TutorialOverlay enable = {enableTutorial} {...{useStore}}/>
       <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} />
       <Suspense>
-        <Canvas 
-          onPointerDown={() => setIsMouseDown(true)}
-          onPointerUp={() => setIsMouseDown(false)}
-          onPointerEnter={() => setIsCanvasHovered(true)}
-          onPointerLeave={() => setIsCanvasHovered(false)}
-          onClick={() => useStore.getState().toggleMouseClicked()} dpr={1} /*dpr={0.3} style={{ width: '60vw', height: '60vh' }}*/>
-          <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
-          <FPSLogger />
 
-        </Canvas>
+      <Canvas
+        onPointerDown={(e) => {
+          setIsMouseDown(true);
+          mouseDownPosition.current = { x: e.clientX, y: e.clientY };
+          setIsDragging(false);
+        }}
+        onPointerUp={() => {
+          setIsMouseDown(false);
+        }}
+        onPointerEnter={() => setIsCanvasHovered(true)}
+        onPointerLeave={() => setIsCanvasHovered(false)}
+        dpr={1}
+      >
+      <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
+                {/* <FPSLogger /> */}
+
+      </Canvas>
       </Suspense>
       </>
       )}

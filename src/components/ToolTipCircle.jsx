@@ -11,10 +11,7 @@ import config from '../config';
 export const ToolTipCircle = (props) => {
     const useStore = props.useStore;
     const {objectName = ""} = props;
-    const {circlesAreVisible = false} = props; // Whether to show the circles or not
-    const {circlesAreVisibleByTransitionDestination = false} = props; // Should the visibility of the circle be toggled automatically by the camera transition?
-    const {circlesAreVisibleByTransitionDestinationWaitForTransitionEnd = false} = props; // if circlesAreVisibleByTransitionDestination is true, should it happen after the transition ends?
-    const {transitionDestinationToShowCircles = "MainMenu"} = props;
+    const {circleIsVisible = false} = props; // Whether to show the circles or not
     const {textShowMode = "Canvas"} = props; //Canvas or Page
     const {text = "Sample text"} = props;
     const {image = config.resource_path + "/textures/4x3.png"} = props;
@@ -26,6 +23,7 @@ export const ToolTipCircle = (props) => {
     const setIsCircleOnLeftSelected = useStore((state) => state.setIsCircleOnLeftSelected);
     const setIsCircleOnTopSelected = useStore((state) => state.setIsCircleOnTopSelected);
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
+    const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
     const transitionDestination = useStore((state) => state.transitionDestination);
     const transitionEnded = useStore((state) => state.transitionEnded);
     const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
@@ -36,18 +34,14 @@ export const ToolTipCircle = (props) => {
 
     const isCircleOnLeft = position[0] < 50; // Since it's a percentage
     const isCircleOnTop = position[1] < 50; // Since it's a percentage
-    
+
     useEffect(() => {
-        if(    (circlesAreVisibleByTransitionDestination && transitionDestination == transitionDestinationToShowCircles 
-            && (circlesAreVisibleByTransitionDestinationWaitForTransitionEnd && transitionEnded || !circlesAreVisibleByTransitionDestinationWaitForTransitionEnd))
-            || circlesAreVisible){
-            setCameraStateTracking(true)
+        if(circleIsVisible){
             setIsVisible(true);
         }else{
-            setCameraStateTracking(false)
             setIsVisible(false);
         }
-    }, [transitionDestination, transitionEnded]);
+    }, [tooltipCirclesData]);
 
     const circleStyle = {
         position: 'fixed',

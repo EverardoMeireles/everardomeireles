@@ -26,10 +26,13 @@
     "animationStartOnLoad":false, "animationStartOnLoad_comment":" Start the animation right away",
     "enableRockingAnimation":true, "enableRockingAnimation_comment":" Turn the rocking animation on or off",
     "enableExplodeAnimation":true, "enableExplodeAnimation_comment":" Turn the exploding animation on or off",
+
     "rockingMaxAngleDegrees": null, "rockingMaxAngle_comment":" Value in degrees, it's converted to radians in the background",
     "rockingTransitionDuration": 2000, "rockingTransitionDuration_comment":" In milliseconds",
     "explodingTransitionDuration": 300, "explodingTransitionDuration_comment":" In milliseconds",
     "childTransitionDuration": 150, "childTransitionDuration_comment":" In milliseconds",
+
+    "showCirclesAfterExplodingAnimation": true, "showCirclesAfterExplodingAnimation_comment":" If true, all tooltip circles appear automatically after the explode animation finishes. If false, visibility is set right after the scene loads.",
 
     "enableRotationAnimation": true, "enableRotationAnimation_comment":" Enable an animation where the model rotates?",
       "rotationAnimationSpeed": 0.5, "rotationAnimationSpeed_comment":" The speed of the animation described above",
@@ -37,6 +40,7 @@
       "resetInitialRotation": true, "resetInitialRotation_comment":" Whether the model should display a animation returning to its original rotation value before stopping",
       "resetInitialRotationAnimationSpeed": 8, "resetInitialRotationAnimationSpeed_comment":" The speed of the animation described above",
       "restartAnimationAfterStop": true, "restartAnimationAfterStop_comment":" After the conditions for stopping the animation are no longer fulfilled, restart the animation?"
+
   },
 
   "ObjectProperties": [
@@ -58,7 +62,12 @@
       "focusedObjectCloneScale": 3, "focusedObjectCloneScale_comment":" The scale of the rotating object",
       "focusedObjectCloneAxisOfRotation": [0, 1, 0], "focusedObjectCloneAxisOfRotation_comment":" The axis in which the rotating object rotates",
       "focusedObjectCloneSpeedOfRotation": 1.2, "focusedObjectCloneSpeedOfRotation_comment":" The speed that the rotating object rotates",
-      "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}, "focusedObjectCloneForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)."
+      "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}, "focusedObjectCloneForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom).",
+      "isFocusable":"", "isFocusable_comment":" Whether the object can be focused by clicking its circle. Set to false to disable focus transitions for this object.",
+      "focusTarget":"", "focusTarget_comment":" Identifier used to group focusable objects. Used to show/hide related tooltip circles when one object is focused.",
+      "focusGroup":"",  "focusGroup_comment":" Defines the group this object belongs to. If another object has a matching focusTarget, this object will be visible when that one is selected.",
+
+      "showCirclesAfterFocusAnimation": true, "showCirclesAfterFocusAnimation_comment":" if true, only shows the circles after the camera transition is finished"
     }
   ]
 }

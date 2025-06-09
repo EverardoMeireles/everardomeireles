@@ -48,6 +48,14 @@ export function smoothStep(x) {
     return Sn;
 }
 
+// Checks if a curve is valid(all its points are not the same)
+export function isCurveDegenerate(curve) {
+  if (curve.points.length === 0) return true;
+
+  const first = curve.points[0];
+  return curve.points.every(p => p.equals(first));
+}
+
 // Create a THREE.CatmullRomCurve3 curve from the camera to a target position
 export function createArchCurve(
     frontDirection = [1, 0, 0], // the direction of the "front" of the object
@@ -157,7 +165,7 @@ export async function parseJson(filePath, objectToGet = null) {
         const jsonData = await response.json();
         if (objectToGet) {
             if (jsonData[objectToGet]) {
-                console.log("json found!")
+                // console.log("json found!")
                 return jsonData[objectToGet];
             } else {
                 console.log(`${objectToGet} not found in the JSON.`);

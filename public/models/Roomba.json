@@ -18,7 +18,7 @@
     "positionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn":[0, 0, 0],
     "customOrigin": [180, 140, 51],
 
-    "animationStartOnLoad":false,
+    "animationStartOnLoad":true,
     "enableRockingAnimation":true,
     "enableExplodeAnimation":true,
     
@@ -27,7 +27,9 @@
     "explodingTransitionDuration": 2000,
     "childTransitionDuration": 1500,
 
-    "enableRotationAnimation": true,
+    "showCirclesAfterExplodingAnimation": false,
+
+    "enableRotationAnimation": false,
       "rotationAnimationSpeed": 0.5,
       "rotationAnimationWhenToStop": "onScreenMouseHover",
       "resetInitialRotation": true,
@@ -46,15 +48,17 @@
       "focusedObjectFront": [0, 1, 0],
       "focusedObjectFocusPoint": [171, 137, 55],
       "focusedObjectFocusEndPointDistance": 8,
-      "AAAAAAAAAAAAAAAAAAAAAAAAfocusedObjectCameraTargetPoint": [200, 137, 54],
-      "focusedObjectArchWidth": 20,
+      "AAAAAAAAAAfocusedObjectCameraTargetPoint": [200, 137, 54],
+      "focusedObjectArchWidth": 5,
       "focusedObjectArchCurveDirection": "left",
       "focusedObjectCloneEnable": true,
       "focusedObjectCloneScale": 3,
       "focusedObjectCloneAxisOfRotation": [0, 1, 0],
       "focusedObjectCloneSpeedOfRotation": 2,
-      "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}
-      
+      "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25},
+      "focusGroup": "",
+      "focusTarget": ""
+
     },
     {
       "objectName": "Wheel_1_1BB1",
@@ -64,7 +68,68 @@
       "playPulseAnimation": false,
       "position": [0, 0],
       "focusedObjectCloneEnable": true,
-      "focusedObjectCloneAxisOfRotation": [0, 0, 1]
+      "focusedObjectCloneAxisOfRotation": [0, 0, 1],
+      "focusTarget": "",
+      "showCirclesAfterFocusAnimation": false
+
+
+    },
+    {
+      "objectName": "Gearbox_body_0BB1",
+      "text": "G0",
+      "image": "AfficheDUT-French.png",
+      "position": [0, 0],
+      "isFocusable": true,
+      "focusTarget": "GearBox",
+      "focusGroup": "", 
+
+      "showCirclesAfterFocusAnimation": false,
+      "REMINDER":" AFTER, DO THE CHILD ANIMATION THING"
+
+    },
+    {
+      "objectName": "Gear_1_0TL1",
+      "text": "G1",
+      "image": "AfficheDUT-French.png",
+      "circleSize": 30,
+      "playPulseAnimation": false,
+      "position": [0, 0],
+      "isFocusable": false,
+      "focusTarget": "",
+      "focusGroup": "GearBox", 
+
+      "showCirclesAfterFocusAnimation": false,
+      "REMINDER":" AFTER, DO THE CHILD ANIMATION THING"
+
+    },
+    {
+      "objectName": "Gear_2_1TT1",
+      "text": "G2",
+      "image": "AfficheDUT-French.png",
+      "circleSize": 30,
+      "playPulseAnimation": false,
+      "position": [0, 0],
+      "isFocusable": false,
+      "focusTarget": "",
+      "focusGroup": "GearBox", 
+
+      "showCirclesAfterFocusAnimation": false,
+      "REMINDER":" AFTER, DO THE CHILD ANIMATION THING"
+
+    },
+    {
+      "objectName": "Gear_3_2TR1",
+      "text": "G3",
+      "image": "AfficheDUT-French.png",
+      "circleSize": 30,
+      "playPulseAnimation": false,
+      "position": [0, 0],
+      "isFocusable": false,
+      "focusTarget": "",
+      "focusGroup": "GearBox", 
+
+      "showCirclesAfterFocusAnimation": false,
+      "REMINDER":" AFTER, DO THE CHILD ANIMATION THING"
 
     }
   ]

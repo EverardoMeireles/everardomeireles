@@ -26,6 +26,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {rockingDuration = 2000} = props;
   const {explodingDuration = 2500} = props;
   const {childDuration = 700} = props;
+  const {showCirclesAfterExplodingAnimation = true} = props; // If true, all tooltip circles appear automatically after the explode animation finishes. If false, visibility is set right after the scene loads.
 
   const {focusedObjectCloneEnable = true} = props; // Rotating object's scale
   const {focusedObjectCloneScale = 3} = props; // Rotating object's scale
@@ -48,8 +49,13 @@ export const ExplodingModelLoader = React.memo((props) => {
   const focusedObjectFocusPointDefault = [0, 0, 0];
   const focusedObjectFocusEndPointDistanceDefault = 8;
   const focusedObjectCameraTargetPointDefault = [0, 0, 0];
-  const focusedObjectArchWidthDefault = 10;
+  const focusedObjectArchWidthDefault = 5;
   const focusedObjectArchCurveDirectionDefault = [1, 0, 0];
+
+  const isFocusableDefault = true;
+  const focusTargetDefault = "";
+  const focusGroupDefault = "";
+  const showCirclesAfterFocusAnimationDefault = true;
 
   const gltf = useLoader(GLTFLoader, config.models_path + modelName);
 
@@ -70,13 +76,16 @@ export const ExplodingModelLoader = React.memo((props) => {
   const modifyTooltipCircleData = useStore((state) => state.modifyTooltipCircleData);
   const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
   const setForcedCameraMovePathCurve = useStore((state) => state.setForcedCameraMovePathCurve);
+  const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
+  const isDragging = useStore((state) => state.isDragging);
   const isMouseDown = useStore((state) => state.isMouseDown);
-
 
   const [initialPositions, setInitialPositions] = useState({});
   const [desiredPositions, setDesiredPositions] = useState({});
   const [childInitialPositions, setChildInitialPositions] = useState({});
   const [childDesiredPositions, setChildDesiredPositions] = useState({});
+
+  const [shouldRenderClone, setShouldRenderClone] = useState(false);
 
   const [animationTick, setAnimationTick] = useState(0);
   const [childAnimationTick, setChildAnimationTick] = useState(0);
@@ -91,8 +100,8 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   const [intersectionPoint, setIntersectionPoint] = useState(null); // Might be usefull for projecting more stuff in front of the camera in the future, ???use useRef???
 
-
   const rockingAnimationMaxAngle = useRef(undefined); // How drastic will the 'shaking' of the animation be
+  const allObjectsShowCirclesAfterExplodingAnimation = useRef(undefined); // If true, all tooltip circles appear automatically after the explode animation finishes. If false, visibility is set right after the scene loads.
   const foCloneScale = useRef(undefined);
   const foCloneAxisOfRotation = useRef(undefined);
   const foCloneSpeedOfRotation = useRef(undefined);
@@ -104,6 +113,11 @@ export const ExplodingModelLoader = React.memo((props) => {
   const foCameraTargetPoint = useRef([0, 0, 0]);
   const foArchWidth = useRef(1); // How wide must the transition's curve be when the object is focused
   const foArchcurveDirection = useRef([1, 0, 0]); // How wide must the transition's curve be when the object is focused
+
+  const isFocusable = useRef(undefined); // Whether the object can be focused by clicking its circle. Set to false to disable focus transitions for this object.
+  const focusTarget = useRef(undefined); // Identifier used to group focusable objects. Used to show/hide related tooltip circles when one object is focused.
+  const focusGroup = useRef(undefined); // Defines the group this object belongs to. If another object has a matching focusTarget, this object will be visible when that one is selected.
+  const showCirclesAfterFocusAnimation = useRef(undefined); // if true, only shows the circles after the camera transition is finished
 
   const rockingAnimationPlayed = useRef(false);
   const explodeAnimationPlayed = useRef(false);
@@ -209,10 +223,108 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, []);
 
+  /////////////////////////////
+  /// Circles configuration ///
+  /////////////////////////////
+
+  useFrame((state,delta) => {
+      // console.log(animationTick)
+      // console.log(foCloneEnable.current)
+  })
+
+  // Perform a one-time visibility update of the circles right after component mount should the allObjectsShowCirclesAfterExplodingAnimation flag be false
+  const oneTimeTooltipCirclesDataUpdate = useRef();
+  useEffect(() => {
+    if(!allObjectsShowCirclesAfterExplodingAnimation.current){
+      const intervalId = setInterval(() => {
+          oneTimeTooltipCirclesDataUpdate.current = true;
+          updateToolTipCirclePositions();
+          updateToolTipCircleVisibility();
+          clearInterval(intervalId);
+      }, 10);
+
+      return () => clearInterval(intervalId); // clean up on unmount
+    }
+  }, [oneTimeTooltipCirclesDataUpdate.current]);
+
+  // Shows the circles after the exploding animation has played should the allObjectsShowCirclesAfterExplodingAnimation flag be true
+  useEffect(() => {
+    if(allObjectsShowCirclesAfterExplodingAnimation.current && explodeAnimationPlayed.current){
+      updateToolTipCircleVisibility()
+    }
+  }, [allObjectsShowCirclesAfterExplodingAnimation.current, explodeAnimationPlayed.current]);
+
+  const updateFlag = useRef(false);
+  const currentSelectedObjectNameUpdateFlag = useRef("");
+  useEffect(() => {
+    const handleFlagVisibilityMouseClick = (event) => {
+      if(currentSelectedObjectName.current && isFocusable.current){
+        updateFlag.current = true;
+        currentSelectedObjectNameUpdateFlag.current = currentSelectedObjectName.current;
+      }
+    };
+
+    window.addEventListener('click', handleFlagVisibilityMouseClick);
+  }, [])
+
+  // Use recorded values to determine the circle's visibility when a circle is clicked
+  useEffect(() => {
+    const selectedObject = tooltipCirclesData.find(item => item.objectName === currentSelectedObjectNameUpdateFlag.current);
+    if(updateFlag.current && selectedObject){
+      console.log(currentSelectedObjectNameUpdateFlag.current)
+      if ((selectedObject.showCirclesAfterFocusAnimation && transitionEnded) || (!selectedObject.showCirclesAfterFocusAnimation)) {
+        currentSelectedObjectNameUpdateFlag.current = "";
+        updateToolTipCircleVisibility(selectedObject)
+        updateFlag.current = false
+      }
+    }
+  }, [updateFlag.current, transitionEnded])
+
+  // See if user dragged the mouse around...
+  const hasDraggedMouse = useRef(false);
+  useEffect(() => {
+    if (isDragging) {
+      hasDraggedMouse.current = true;
+    }
+  }, [isDragging]);
+
+  // ...If so, ignore, if they clicked the screen, update visibility values
+  useEffect(() => {
+    if (!isMouseDown) {
+      if (!hasDraggedMouse.current) {
+        updateToolTipCircleVisibility();
+      }
+
+      hasDraggedMouse.current = false; // always reset on mouse up
+    }
+  }, [isMouseDown]);
+
+  // Make visible the tooltips that have a focus group to be shown, or don't have any
+  function updateToolTipCircleVisibility(selectedObject = "") {
+    tooltipCirclesData.forEach(item => {
+      let shouldBeVisible = false;
+      console.log(selectedObject)
+      if (selectedObject && selectedObject.focusTarget != "") {
+        // Case: focusTarget is a non-empty string
+        shouldBeVisible = item.focusGroup === selectedObject.focusTarget;
+      } else {
+        // Case: focusTarget is "", null, or undefined
+        shouldBeVisible =
+          item.focusGroup === "" ||
+          item.focusGroup === null ||
+          item.focusGroup === undefined;
+      }
+
+      modifyTooltipCircleData(item.objectName, {
+        circleIsVisible: shouldBeVisible
+      });
+    });
+  }
+
   // Makes the tooltip circles follow the objects when camera position and rotation values change
   const updateToolTipCirclePositions = () => {
     let positions = [];
-    if(tooltipCirclesData){
+    if(tooltipCirclesData && tooltipCirclesData.length != 0){
       tooltipCirclesData.forEach((data) => {
         const objectName = data.objectName; 
         const object = gltf.scene.getObjectByName(objectName); // pass object as a parameter
@@ -233,11 +345,14 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   };
 
+  // Activate camera state tracking on mount so the circles can accompany the camera's state changes(also used in updating the planeRef's position)
+  useEffect(() => {
+    setCameraStateTracking(true)
+  }, []);
+
   // Makes the tooltip circles follow the objects and update the invisible plane when camera position and rotation values change
   useEffect(() => {
     updateToolTipCirclePositions();
-    planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
-    // console.log(cameraState.position)
   }, [cameraState]);
 
   // Use the tooltipCurrentObjectNameSelected in a local context
@@ -279,7 +394,14 @@ export const ExplodingModelLoader = React.memo((props) => {
     foArchWidth.current = tCircleData?.focusedObjectArchWidth ?? focusedObjectArchWidthDefault;
     foArchcurveDirection.current = tCircleData?.focusedObjectArchCurveDirection ?? focusedObjectArchCurveDirectionDefault;
 
+    isFocusable.current = tCircleData?.isFocusable ?? isFocusableDefault;
+    focusTarget.current = tCircleData?.focusTarget ?? focusTargetDefault;
+    focusGroup.current = tCircleData?.focusGroup ?? focusGroupDefault;
+    
+    showCirclesAfterFocusAnimation.current = tCircleData?.showCirclesAfterFocusAnimation ?? showCirclesAfterFocusAnimationDefault;
+
     foCloneEnable.current = tCircleData?.focusedObjectCloneEnable ?? focusedObjectCloneEnable;
+    setShouldRenderClone(true);
     foCloneScale.current = tCircleData?.focusedObjectCloneScale ?? focusedObjectCloneScale;
     foCloneAxisOfRotation.current = tCircleData?.focusedObjectCloneAxisOfRotation ?? focusedObjectCloneAxisOfRotation;
     foCloneSpeedOfRotation.current = tCircleData?.focusedObjectCloneSpeedOfRotation ?? focusedObjectCloneSpeedOfRotation;
@@ -298,8 +420,9 @@ export const ExplodingModelLoader = React.memo((props) => {
         setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
         setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
         setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
+        allObjectsShowCirclesAfterExplodingAnimation.current = modelProperties?.showCirclesAfterExplodingAnimation ?? showCirclesAfterExplodingAnimation;
         rockingAnimationMaxAngle.current = modelProperties?.rockingMaxAngleDegrees * (Math.PI / 180) ?? rockingMaxAngle; // conversion to radians
-            enableRotationAnimation.current = modelProperties?.enableRotationAnimation ?? enableMainObjectRotationAnimation;
+        enableRotationAnimation.current = modelProperties?.enableRotationAnimation ?? enableMainObjectRotationAnimation;
         rotationAnimationSpeed.current = modelProperties?.rotationAnimationSpeed ?? mainObjectRotationAnimationRotationSpeed;
         rotationAnimationWhenToStop.current = modelProperties?.rotationAnimationWhenToStop ?? mainObjectRotationAnimationWhenToStop;
         resetInitialRotation.current = modelProperties?.resetInitialRotation ?? mainObjectRotationAnimationResetInitialRotation;
@@ -361,6 +484,8 @@ export const ExplodingModelLoader = React.memo((props) => {
           // Set a trigger for parent control
           setTrigger(mainObjectRotationAnimationIsPlayingTrigger, true)
         }
+
+        updateToolTipCirclePositions();
       }
 
       if (resetInitialRotation.current && !startRotationAnimation.current) {
@@ -370,7 +495,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       if (!startRotationAnimation.current && restoringRotation.current) {
         const currentY = THREE.MathUtils.euclideanModulo(model.rotation.y, Math.PI * 2);
         const targetY = THREE.MathUtils.euclideanModulo(initialRotation.current.y, Math.PI * 2);
-
+        
         model.rotation.y = THREE.MathUtils.lerp(
           currentY,
           targetY,
@@ -382,6 +507,8 @@ export const ExplodingModelLoader = React.memo((props) => {
           model.rotation.copy(initialRotation.current);
           restoringRotation.current = false;
         }
+
+        updateToolTipCirclePositions();
       }
 
       if (restartAnimationAfterStop.current && !startRotationAnimation.current
@@ -406,11 +533,17 @@ export const ExplodingModelLoader = React.memo((props) => {
   const objectToRotate = useRef();
   const planeRef = useRef(new THREE.Object3D()); // Ref for the plane geometry
 
+  // Update the invisible plane when camera position and rotation values change
+  useEffect(() => {
+    planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
+  }, [cameraState]);
+
   // Trigger animation start
   useEffect(() => {
     const raycaster = new THREE.Raycaster();
     if (!currentSelectedObjectName.current || foCloneEnable.current != true) {
       foCloneEnable.current = false
+      setShouldRenderClone(false);
     } else {
       const originalObject = gltf.scene.getObjectByName(currentSelectedObjectName.current);
       if (!originalObject) {
@@ -667,6 +800,8 @@ export const ExplodingModelLoader = React.memo((props) => {
         });
         childAnimationPlayed.current = true; // Mark child animation as played to prevent re-execution
       }
+
+      updateToolTipCirclePositions()
     }
   });
 
@@ -693,11 +828,10 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   });
 
+  // Triggers the focusing animation by clicking on focusable circles
   useEffect(() => {
     const handleMouseClick = (event) => {
-      if(currentSelectedObjectName.current){
-
-        console.log(archCurve.current);
+      if(currentSelectedObjectName.current && isFocusable.current){
         setForcedCameraMovePathCurve(archCurve.current) // Starts the camera transition
         setForcedCameraTarget(foCameraTargetPoint.current) // Makes the camera follow the object
       }
@@ -755,7 +889,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       <primitive ref={modelRef} position={explodingObjectPosition} object={gltf.scene} origin={sceneOrigin}/>
       <mesh>
         {/* Render the cloned object directly */}
-        {(objectToRotate.current && foCloneEnable.current /*COMMENT && objectRotationAnimation to make the rotating object stay visible on unhover*/) && (
+        {(objectToRotate.current && shouldRenderClone/*COMMENT && objectRotationAnimation to make the rotating object stay visible on unhover*/) && (
           <primitive scale = {foCloneScale.current} object={objectToRotate.current} position={objectToRotate.current.position} />
         )}
       </mesh>

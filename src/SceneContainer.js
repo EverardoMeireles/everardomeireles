@@ -225,14 +225,9 @@ export const SceneContainer = React.memo((props) => {
 
     // Place transition code
     useEffect(() => {
-        setTrigger("trigger4", false)
-        setForcedCameraTarget([])
-        // setTrigger("forceTransitionSpeedTrigger", true)
         switch (transitionDestination) {
             case 'MainMenu':
-                // For now, the ExplodingModelLoader appears in the MainMenu
-                // Trigger change in the camera's target
-                setTrigger("trigger4", true)
+                
                 break;
           }
        
@@ -447,14 +442,17 @@ export const SceneContainer = React.memo((props) => {
     
     // Temporary useEffect to initialize the position and lookat
     useEffect(() => {
-        const tempCurve = new THREE.CatmullRomCurve3([
+        if(siteMode == "resume"){
+            const tempCurve = new THREE.CatmullRomCurve3([
                 new THREE.Vector3(278, 206, -6),
                 new THREE.Vector3(260, 190, 18),
                 new THREE.Vector3(199, 150, 46)])
-
-  
-        setForcedCameraTarget(new THREE.Vector3(45, 21, -50))
-        setForcedCameraMovePathCurve(tempCurve);
+    
+            setForcedCameraTarget([45, 21, -50])
+            setForcedCameraMovePathCurve(tempCurve);
+        }else{
+            setForcedCameraTarget([166, 137, 49])
+        }
     }, []);
 
     //////////////////////////
@@ -534,7 +532,7 @@ export const SceneContainer = React.memo((props) => {
 
     return(
     <>
-        <Camera {...{useStore}} ></Camera>
+        <Camera {...{useStore}} position = {[195, 146, 55]} ></Camera>
         {(siteMode === "resume") && 
         <>
             {/* /////////////////////
@@ -593,17 +591,9 @@ export const SceneContainer = React.memo((props) => {
             <ambientLight intensity = {0.1}></ambientLight>
             }
 
-            {/* <ExplodingModelLoader {...{useStore}} animationIsPlaying={animationTriggerState} sceneName={"Roomba.glb"} 
-            position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} /> */}
-            {/* <ExplodingModelLoader {...{useStore}} materialName={customMaterial} animationIsPlaying={animationTriggerState} 
-            modelName={"Roomba.glb"} position={[163, 110, 72]} setCameraTargetTrigger={"trigger4"} /> */}
             <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
             forceLowResTrigger={forceLowresMaterial} forceMidResTrigger={forceMidresMaterial} forceHighResTrigger={forceHighResMaterial}>
                 {stableSimpleLoader}
-                {/* <SimpleLoader  {...{useStore}} scene={mainScene} objectsRevealTriggers={objectsRevealTriggers} 
-                    animationToPlay={animationToPlay} loopMode={"Loop"} animationTrigger={animationTrigger} 
-                    animationTimesToTrigger={animationTimesToTrigger} animationTriggerNames={animationTriggerNames} 
-                    hoverAffectedObjects={hoverAffectedObjects} hoverLinkedObjects={hoverLinkedObjects} /> */}
             </DynamicMaterialLoader>
             {(currentGraphicalMode !== "potato")
             &&

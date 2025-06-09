@@ -1,15 +1,16 @@
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed, CreateNavigationCurve, firstPoint} from "../PathPoints";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera, calcPosFromAngles } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";
 import { HtmlDreiMenu } from "./HtmlDreiMenu"; // eslint-disable-line no-unused-vars
-import { smoothStep, roundToDecimalPlace, hasSignificantChange, createArchCurve } from "../Helper";
+import { smoothStep, roundToDecimalPlace, hasSignificantChange, createArchCurve, isCurveDegenerate } from "../Helper";
 
 // revisit custom camera lookat mode and simpleLookatMode
 export const Camera = React.memo((props) => {
     const useStore = props.useStore;
     const {transitionSpeed = 0.5} = props;
+    const {position = [0, 0, 0]} = props;
 
     const setTransitionEnded = useStore((state) => state.setTransitionEnded);
     const transitionEnded = useStore((state) => state.transitionEnded);
@@ -29,6 +30,8 @@ export const Camera = React.memo((props) => {
 
     const updateCallNow = useRef(false);
     const cam = useRef(undefined);
+    const { camera, events } = useThree();
+    
     const controls = useRef();
     // const current_path = useRef("StartingPoint");
     const current_lookat = useRef(new THREE.Vector3(0,0,0))
@@ -55,7 +58,7 @@ export const Camera = React.memo((props) => {
     let tick = useRef(1)
 
     // Change camera mode
-    const [cameraMode, setCameraMode] = useState(null);
+    const [cameraMode, setCameraMode] = useState({LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE, RIGHT: THREE.MOUSE.RIGHT});
     useEffect(()=>{
         if(currentCameraMode === "NormalMovement" && transitionEnded){
             setcurrentCameraMovements({"zoom":true, "pan":true, "rotate":true});
@@ -209,16 +212,29 @@ export const Camera = React.memo((props) => {
 
     // if the target is forced
     useEffect(() => {
+        if (!didMount.current) {
+            didMount.current = true;
+            return;
+        }
 
-        // console.log(forcedCameraTarget)
         if(forcedCameraTarget != [])
         {
+            console.log("EIOAZ0PEIAZPOEOPAZEI")
             controls.current.target.x = forcedCameraTarget[0]
             controls.current.target.y = forcedCameraTarget[1]
             controls.current.target.z = forcedCameraTarget[2]
         }
+        cameraTarget.current = forcedCameraTarget;
 
     }, [forcedCameraTarget]);
+
+    // if the camera path is forced, reset the animation tick
+    // useEffect(() => {
+    //     if (!didMount.current) {
+    //         didMount.current = true;
+    //         return;
+    //     }
+    // }, [forcedCameraTarget]);
 
     // if the camera path is forced, reset the animation tick
     useEffect(() => {
@@ -226,10 +242,12 @@ export const Camera = React.memo((props) => {
             didMount.current = true;
             return;
         }
-        curve.current = forcedCameraMovePathCurve;
-        cameraTarget.current = forcedCameraTarget;
-        tick.current = 0;
 
+        // Only starts a transition on valid curves
+        if(!isCurveDegenerate(forcedCameraMovePathCurve)){
+            curve.current = forcedCameraMovePathCurve;
+            tick.current = 0;
+        }
     }, [forcedCameraMovePathCurve]);
 
     // Moves the camera every frame when the desired path changes
@@ -244,10 +262,12 @@ export const Camera = React.memo((props) => {
         smoothStepTick = smoothStep(tick.current),
 
         // Determines the next point for the camera to look at
-        current_lookat.current.lerp(new THREE.Vector3(cameraTarget.current.x, cameraTarget.current.y, cameraTarget.current.z), 0.03),
+        current_lookat.current.lerp(new THREE.Vector3(cameraTarget.current[0], cameraTarget.current[1], cameraTarget.current[2]), 0.03),
 
         state.camera.lookAt(current_lookat.current),
         // Updates the orbitcontrol's target
+        // console.log(controls.current.target),
+        // console.log(cameraTarget.current),
         controls.current.target.x = current_lookat.current.x,
         controls.current.target.y = current_lookat.current.y,
         controls.current.target.z = current_lookat.current.z,
@@ -271,8 +291,8 @@ export const Camera = React.memo((props) => {
         }
     }
 
-// useFrame((delta)=>{
-//     console.log(controls.current.target)
+// useFrame((state,delta)=>{
+//     console.log(forcedCameraTarget)
 // })
 
 // Function to compare arrays of Vector3
@@ -352,6 +372,7 @@ function compareCurves(curve1, curve2) {
         });
     });
 
+    // Update camera state
     useEffect(() => {
         if (!cameraStateTracking) return;
 
@@ -406,7 +427,7 @@ function compareCurves(curve1, curve2) {
 
     return(
         <>
-            <PerspectiveCamera ref = {cam} makeDefault fov = {75}>
+            <PerspectiveCamera makeDefault ref = {cam} position = {position} target={[0,0,0]} fov = {75}>
             {/* <HtmlDreiMenu {...{useStore}}></HtmlDreiMenu> */}
             </PerspectiveCamera>
             <OrbitControls makeDefault mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
