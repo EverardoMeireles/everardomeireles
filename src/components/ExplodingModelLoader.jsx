@@ -56,6 +56,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const focusTargetDefault = "";
   const focusGroupDefault = "";
   const showCirclesAfterFocusAnimationDefault = true;
+  const waitForFocusBeforeExplodeAnimationDefault = true;
 
   const gltf = useLoader(GLTFLoader, config.models_path + modelName);
 
@@ -66,6 +67,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const cameraState = useStore((state) => state.cameraState);
   const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
   const transitionEnded = useStore((state) => state.transitionEnded);
+  const setTransitionEnded = useStore((state) => state.setTransitionEnded);
   const triggers = useStore((state) => state.triggers);
   const setTrigger = useStore((state) => state.setTrigger);
   const isCircleOnLeftSelected = useStore((state) => state.isCircleOnLeftSelected);
@@ -88,8 +90,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   const [shouldRenderClone, setShouldRenderClone] = useState(false);
 
   const [animationTick, setAnimationTick] = useState(0);
-  const [childAnimationTick, setChildAnimationTick] = useState(0);
-  const [hasChildAnimation, setHasChildAnimation] = useState(false);
 
   const [explodingObjectPosition, setExplodingObjectPosition] = useState([0, 0, 0]);
   const [explodingObjectAnimationStartOnLoad, setExplodingObjectAnimationStartOnLoad] = useState(false);
@@ -101,7 +101,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const [intersectionPoint, setIntersectionPoint] = useState(null); // Might be usefull for projecting more stuff in front of the camera in the future, ???use useRef???
 
   const rockingAnimationMaxAngle = useRef(undefined); // How drastic will the 'shaking' of the animation be
-  const allObjectsShowCirclesAfterExplodingAnimation = useRef(undefined); // If true, all tooltip circles appear automatically after the explode animation finishes. If false, visibility is set right after the scene loads.
+  const showCirclesAfterExplodingAnimationRef = useRef(undefined); // If true, all tooltip circles appear automatically after the explode animation finishes. If false, visibility is set right after the scene loads.
   const foCloneScale = useRef(undefined);
   const foCloneAxisOfRotation = useRef(undefined);
   const foCloneSpeedOfRotation = useRef(undefined);
@@ -118,11 +118,13 @@ export const ExplodingModelLoader = React.memo((props) => {
   const focusTarget = useRef(undefined); // Identifier used to group focusable objects. Used to show/hide related tooltip circles when one object is focused.
   const focusGroup = useRef(undefined); // Defines the group this object belongs to. If another object has a matching focusTarget, this object will be visible when that one is selected.
   const showCirclesAfterFocusAnimation = useRef(undefined); // if true, only shows the circles after the camera transition is finished
+  const waitForFocusBeforeExplodeAnimation = useRef(undefined); // if true, only shows the circles after the camera transition is finished
 
   const rockingAnimationPlayed = useRef(false);
   const explodeAnimationPlayed = useRef(false);
-  const childAnimationPlayed = useRef(false);
   const previousAnimationDirection = useRef(null);
+
+  const tooltipCirclesDatajsonParsed = useRef(false);
 
   var currentGlobalState = useThree();
   const cameraViewportSize = new THREE.Vector2(); // create once and reuse it
@@ -223,151 +225,15 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, []);
 
-  /////////////////////////////
-  /// Circles configuration ///
-  /////////////////////////////
-
-  useFrame((state,delta) => {
-      // console.log(animationTick)
-      // console.log(foCloneEnable.current)
-  })
-
-  // Perform a one-time visibility update of the circles right after component mount should the allObjectsShowCirclesAfterExplodingAnimation flag be false
-  const oneTimeTooltipCirclesDataUpdate = useRef();
-  useEffect(() => {
-    if(!allObjectsShowCirclesAfterExplodingAnimation.current){
-      const intervalId = setInterval(() => {
-          oneTimeTooltipCirclesDataUpdate.current = true;
-          updateToolTipCirclePositions();
-          updateToolTipCircleVisibility();
-          clearInterval(intervalId);
-      }, 10);
-
-      return () => clearInterval(intervalId); // clean up on unmount
-    }
-  }, [oneTimeTooltipCirclesDataUpdate.current]);
-
-  // Shows the circles after the exploding animation has played should the allObjectsShowCirclesAfterExplodingAnimation flag be true
-  useEffect(() => {
-    if(allObjectsShowCirclesAfterExplodingAnimation.current && explodeAnimationPlayed.current){
-      updateToolTipCircleVisibility()
-    }
-  }, [allObjectsShowCirclesAfterExplodingAnimation.current, explodeAnimationPlayed.current]);
-
-  const updateFlag = useRef(false);
-  const currentSelectedObjectNameUpdateFlag = useRef("");
-  useEffect(() => {
-    const handleFlagVisibilityMouseClick = (event) => {
-      if(currentSelectedObjectName.current && isFocusable.current){
-        updateFlag.current = true;
-        currentSelectedObjectNameUpdateFlag.current = currentSelectedObjectName.current;
-      }
-    };
-
-    window.addEventListener('click', handleFlagVisibilityMouseClick);
-  }, [])
-
-  // Use recorded values to determine the circle's visibility when a circle is clicked
-  useEffect(() => {
-    const selectedObject = tooltipCirclesData.find(item => item.objectName === currentSelectedObjectNameUpdateFlag.current);
-    if(updateFlag.current && selectedObject){
-      console.log(currentSelectedObjectNameUpdateFlag.current)
-      if ((selectedObject.showCirclesAfterFocusAnimation && transitionEnded) || (!selectedObject.showCirclesAfterFocusAnimation)) {
-        currentSelectedObjectNameUpdateFlag.current = "";
-        updateToolTipCircleVisibility(selectedObject)
-        updateFlag.current = false
-      }
-    }
-  }, [updateFlag.current, transitionEnded])
-
-  // See if user dragged the mouse around...
-  const hasDraggedMouse = useRef(false);
-  useEffect(() => {
-    if (isDragging) {
-      hasDraggedMouse.current = true;
-    }
-  }, [isDragging]);
-
-  // ...If so, ignore, if they clicked the screen, update visibility values
-  useEffect(() => {
-    if (!isMouseDown) {
-      if (!hasDraggedMouse.current) {
-        updateToolTipCircleVisibility();
-      }
-
-      hasDraggedMouse.current = false; // always reset on mouse up
-    }
-  }, [isMouseDown]);
-
-  // Make visible the tooltips that have a focus group to be shown, or don't have any
-  function updateToolTipCircleVisibility(selectedObject = "") {
-    tooltipCirclesData.forEach(item => {
-      let shouldBeVisible = false;
-      console.log(selectedObject)
-      if (selectedObject && selectedObject.focusTarget != "") {
-        // Case: focusTarget is a non-empty string
-        shouldBeVisible = item.focusGroup === selectedObject.focusTarget;
-      } else {
-        // Case: focusTarget is "", null, or undefined
-        shouldBeVisible =
-          item.focusGroup === "" ||
-          item.focusGroup === null ||
-          item.focusGroup === undefined;
-      }
-
-      modifyTooltipCircleData(item.objectName, {
-        circleIsVisible: shouldBeVisible
-      });
-    });
-  }
-
-  // Makes the tooltip circles follow the objects when camera position and rotation values change
-  const updateToolTipCirclePositions = () => {
-    let positions = [];
-    if(tooltipCirclesData && tooltipCirclesData.length != 0){
-      tooltipCirclesData.forEach((data) => {
-        const objectName = data.objectName; 
-        const object = gltf.scene.getObjectByName(objectName); // pass object as a parameter
-
-        if (object) {
-          const vector = new THREE.Vector3();
-          object.getWorldPosition(vector);
-          vector.project(camera);
-
-          // Convert the normalized device coordinates (NDC) to screen space percentages
-          const x = (vector.x * 0.5 + 0.5) * 100; // Percentage of width
-          const y = (vector.y * -0.5 + 0.5) * 100; // Percentage of height
-          modifyTooltipCircleData(objectName, {
-            position: [x, y]
-          });
-        }
-      });
-    }
-  };
-
-  // Activate camera state tracking on mount so the circles can accompany the camera's state changes(also used in updating the planeRef's position)
-  useEffect(() => {
-    setCameraStateTracking(true)
-  }, []);
-
-  // Makes the tooltip circles follow the objects and update the invisible plane when camera position and rotation values change
-  useEffect(() => {
-    updateToolTipCirclePositions();
-  }, [cameraState]);
+  /////////////////////////////////////////////////////////////
+  /// Sets properties by with props or by json config files ///
+  /////////////////////////////////////////////////////////////
 
   // Use the tooltipCurrentObjectNameSelected in a local context
   const currentSelectedObjectName = useRef(undefined);
   useEffect(() => {
     currentSelectedObjectName.current = tooltipCurrentObjectNameSelected
   }, [tooltipCurrentObjectNameSelected])
-
-  /////////////////////////////////////////////////////////////
-  /// Sets properties by with props or by json config files ///
-  /////////////////////////////////////////////////////////////
-
-  const [rockingTransitionDuration, setRockingTransitionDuration] = useState(rockingDuration);
-  const [explodingTransitionDuration, setExplodingTransitionDuration] = useState(explodingDuration);
-  const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
 
   //Parses a 3D model's corresponding to a json file to create info circles on the screen
   useEffect(() => {
@@ -376,6 +242,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       .then((ObjectProperties) => {
         setTooltipCirclesData([])
         addTooltipCirclesData(ObjectProperties);
+        tooltipCirclesDatajsonParsed.current = true;
       })
     }
   }, [modelName]);
@@ -384,6 +251,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   // Set the tooltip circle's properties
   useEffect(() => {
     const tCircleData = tooltipCirclesData.find(item => item.objectName === currentSelectedObjectName.current);
+    console.log(gltf.scene)
     focusedObjectWorldPosition.current = currentSelectedObjectName.current == undefined ? focusedObjectWorldPosition.current : gltf.scene.getObjectByName(currentSelectedObjectName.current)?.getWorldPosition(new THREE.Vector3());
     
     foFront.current = tCircleData?.focusedObjectFront ?? focusedObjectFrontDefault;
@@ -399,6 +267,8 @@ export const ExplodingModelLoader = React.memo((props) => {
     focusGroup.current = tCircleData?.focusGroup ?? focusGroupDefault;
     
     showCirclesAfterFocusAnimation.current = tCircleData?.showCirclesAfterFocusAnimation ?? showCirclesAfterFocusAnimationDefault;
+    
+    waitForFocusBeforeExplodeAnimation.current = tCircleData?.waitForFocusBeforeExplodeAnimation ?? waitForFocusBeforeExplodeAnimationDefault;
 
     foCloneEnable.current = tCircleData?.focusedObjectCloneEnable ?? focusedObjectCloneEnable;
     setShouldRenderClone(true);
@@ -420,7 +290,7 @@ export const ExplodingModelLoader = React.memo((props) => {
         setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
         setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
         setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
-        allObjectsShowCirclesAfterExplodingAnimation.current = modelProperties?.showCirclesAfterExplodingAnimation ?? showCirclesAfterExplodingAnimation;
+        showCirclesAfterExplodingAnimationRef.current = modelProperties?.showCirclesAfterExplodingAnimation ?? showCirclesAfterExplodingAnimation;
         rockingAnimationMaxAngle.current = modelProperties?.rockingMaxAngleDegrees * (Math.PI / 180) ?? rockingMaxAngle; // conversion to radians
         enableRotationAnimation.current = modelProperties?.enableRotationAnimation ?? enableMainObjectRotationAnimation;
         rotationAnimationSpeed.current = modelProperties?.rotationAnimationSpeed ?? mainObjectRotationAnimationRotationSpeed;
@@ -616,26 +486,18 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   });
 
-  /////////////////////////////////////////////////////////
-  /// Rocking, exploding and child exploding animations ///
-  /////////////////////////////////////////////////////////
+  /////////////////////////////////////
+  /// Rocking, exploding animations ///
+  /////////////////////////////////////
 
   const [animationDirectionForward, setAnimationDirectionForward] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [rock, setRock] = useState(false);
   const [explode, setExplode] = useState(false);
-
-  function getChildrenInitialPositions(model) {
-    let currentPositions = {};
-
-    model.scene.children.forEach((mesh) => {
-      mesh.children.forEach((child) => {
-        currentPositions[child.name] = child.position.clone(); // Use clone to create a copy for children
-      });
-    });
-    return currentPositions;
-  }
-
+  const [rockingTransitionDuration, setRockingTransitionDuration] = useState(rockingDuration);
+  const [explodingTransitionDuration, setExplodingTransitionDuration] = useState(explodingDuration);
+  const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
+  
   // Automatically starts the animation when the animationStartOnLoad prop is set to true
   useEffect(() => {
     if(explodingObjectEnableRockingAnimation && explodingObjectAnimationStartOnLoad){
@@ -654,18 +516,14 @@ export const ExplodingModelLoader = React.memo((props) => {
     if (gltf) {
       const initialPositions = getInitialPositions(gltf);
       const desiredPositions = getDesiredPositions(initialPositions);
-      const childInitialPositions = getChildrenInitialPositions(gltf);
       setInitialPositions(initialPositions);
       setDesiredPositions(desiredPositions);
-      setChildInitialPositions(childInitialPositions);
     }
   }, [gltf]);
 
   // Control the animations using the isPlaying state(set either by the animationIsPlaying or the animationStartOnLoad props)
   useEffect(() => {
     if (isPlaying && (previousAnimationDirection.current !== animationDirectionForward || previousAnimationDirection.current === null)) {
-      setAnimationTick(0); // Reset animation tick when starting
-      setChildAnimationTick(0); // Reset child animation tick when starting
       if (explodingObjectEnableRockingAnimation && animationDirectionForward === true) {
         setRock(true);
       } else if (explodingObjectEnableExplodeAnimation) {
@@ -679,29 +537,25 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // ANIMATION END EFFECT: Reset animation flags and invert animationDirectionForward
   useEffect(() => {
-    if (!isPlaying && (rockingAnimationPlayed.current || explodeAnimationPlayed.current || childAnimationPlayed.current)) {
-      // Swap initialPositions and desiredPositions based on whether or not we're reversing the animation
-      if (animationDirectionForward === false) {
-        console.log(animationDirectionForward);
-        setInitialPositions(getInitialPositions(gltf));
-        setDesiredPositions(getDesiredPositions(getInitialPositions(gltf)));
-      } else {
-        const tempInitialPositions = initialPositions;
-        setInitialPositions(desiredPositions);
-        setDesiredPositions(tempInitialPositions);
-      } 
+      if (!isPlaying && (rockingAnimationPlayed.current || explodeAnimationPlayed.current)) {
+        if (animationDirectionForward === false) {
+          console.log(animationDirectionForward);
+          setInitialPositions(getInitialPositions(gltf));
+          setDesiredPositions(getDesiredPositions(getInitialPositions(gltf)));
+        } else {
+          const tempInitialPositions = initialPositions;
+          setInitialPositions(desiredPositions);
+          setDesiredPositions(tempInitialPositions);
+        } 
 
-      // Reset values for next animation
-      setAnimationDirectionForward(animationDirectionForward === true ? false : true); // Correctly update the animation direction
-      setRock(false);
-      setExplode(false);
-      rockingAnimationPlayed.current = false;
-      explodeAnimationPlayed.current = false;
-      childAnimationPlayed.current = false;
-      setAnimationTick(0);
-      setChildAnimationTick(0);
-    }
-  }, [isPlaying, animationDirectionForward, setAnimationDirectionForward]);
+        setAnimationDirectionForward(animationDirectionForward === true ? false : true);
+        setRock(false);
+        setExplode(false);
+        rockingAnimationPlayed.current = false;
+        explodeAnimationPlayed.current = false;
+        setAnimationTick(0);
+      }
+    }, [isPlaying, animationDirectionForward, setAnimationDirectionForward]);
 
   // Starts the animation when the animationIsPlaying prop is set to true
   useEffect(() => {
@@ -715,7 +569,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   }, [animationIsPlaying]);
 
   // Animation
-  useFrame((state, delta) => {
+ useFrame((state, delta) => {
     if(isPlaying){
       const adjustedDelta = delta;
 
@@ -728,16 +582,15 @@ export const ExplodingModelLoader = React.memo((props) => {
           const randomZ = (Math.random() - 0.5) * rockingAnimationMaxAngle.current * easedTick;
           mesh.rotation.set(randomX, randomY, randomZ);
         });
-  
+
         if (animationTick >= 1) {
           setRock(false);
           rockingAnimationPlayed.current = true;
           if (explodingObjectEnableExplodeAnimation) {
             setExplode(true);
           }
-          setAnimationTick(0); // Reset animation tick for the next animation
-  
-          // Reset rotations to initial values
+          setAnimationTick(0);
+
           gltf.scene.children.forEach((mesh) => {
             mesh.rotation.set(0, 0, 0);
           });
@@ -745,65 +598,237 @@ export const ExplodingModelLoader = React.memo((props) => {
       } else if (explode && explodingObjectEnableExplodeAnimation && animationTick <= 1 && !explodeAnimationPlayed.current) {
         setAnimationTick(prev => Math.min(prev + (adjustedDelta / (explodingTransitionDuration / 1000)), 1));
         const easedTick = animationDirectionForward === true ? easeOutCubic(animationTick) : easeInCubic(animationTick);
-  
+
         Object.keys(initialPositions).forEach((name) => {
           const initialPos = initialPositions[name];
           const desiredPos = desiredPositions[name];
           const currentPos = new THREE.Vector3().lerpVectors(initialPos, desiredPos, easedTick);
           gltf.scene.getObjectByName(name).position.copy(currentPos);
         });
-  
+
         if (animationTick >= 1) {
           setExplode(false);
           explodeAnimationPlayed.current = true;
-          updateToolTipCirclePositions(); // Ensure we update the tooltip positions after the first explode animation
-  
-          // Check if there are objects with children
-          if (!childAnimationPlayed.current && animationDirectionForward === true) {
-            const childInitialPositions = getChildrenInitialPositions(gltf);
-            if (Object.keys(childInitialPositions).length > 0) {
-              const childDesiredPositions = getDesiredPositions(childInitialPositions);
-              setChildInitialPositions(childInitialPositions);
-              setChildDesiredPositions(childDesiredPositions);
-              setHasChildAnimation(true);
-              setChildAnimationTick(0); // Reset child animation tick
-            } else {
-              setIsPlaying(false); // Set isPlaying to false if no child animation
-            }
-          } else {
-            setIsPlaying(false); // Set isPlaying to false if child animation already played
-          }
+          updateToolTipCirclePositions();
         }
-      } else if (hasChildAnimation && childAnimationTick <= 1 && !childAnimationPlayed.current && animationDirectionForward === true) {
-        setChildAnimationTick(prev => Math.min(prev + (adjustedDelta / (childTransitionDuration / 1000)), 1));
-        const easedTick = animationDirectionForward === true ? easeOutCubic(childAnimationTick) : easeInCubic(childAnimationTick);
-  
-        Object.keys(childInitialPositions).forEach((name) => {
-          const initialPos = childInitialPositions[name];
-          const desiredPos = childDesiredPositions[name];
-          const currentPos = new THREE.Vector3().lerpVectors(initialPos, desiredPos, easedTick);
-          gltf.scene.getObjectByName(name).position.copy(currentPos);
-        });
-  
-        if (childAnimationTick >= 1) {
-          setHasChildAnimation(false);
-          childAnimationPlayed.current = true;
-          updateToolTipCirclePositions(); // Ensure we update the tooltip positions after child animations end
-          setIsPlaying(false); // Set isPlaying to false after child animation
-        }
-      }
-  
-      // When reversing the animation, reset child positions
-      if (animationDirectionForward === false && !childAnimationPlayed.current) {
-        Object.keys(childInitialPositions).forEach((name) => {
-          gltf.scene.getObjectByName(name).position.copy(childInitialPositions[name]);
-        });
-        childAnimationPlayed.current = true; // Mark child animation as played to prevent re-execution
       }
 
-      updateToolTipCirclePositions()
+      updateToolTipCirclePositions();
     }
   });
+
+  /////////////////////////////////
+  /// Child exploding animation ///
+  /////////////////////////////////
+
+  const [childAnimationTick, setChildAnimationTick] = useState(0);
+  const [hasChildAnimation, setHasChildAnimation] = useState(false);
+
+  useFrame((state, delta) => {
+    if (hasChildAnimation && childAnimationTick <= 1) {
+      setChildAnimationTick(prev => Math.min(prev + (delta / (childTransitionDuration / 1000)), 1));
+      const easedTick = easeOutCubic(childAnimationTick);
+
+      Object.keys(childInitialPositions).forEach((name) => {
+        const initialPos = childInitialPositions[name];
+        const desiredPos = childDesiredPositions[name];
+        const currentPos = new THREE.Vector3().lerpVectors(initialPos, desiredPos, easedTick);
+        gltf.scene.getObjectByName(name).position.copy(currentPos);
+      });
+
+      if (childAnimationTick >= 1) {
+        setHasChildAnimation(false);
+        updateToolTipCirclePositions();
+      }
+    }
+  });
+
+  const childAnimationUpdateFlag = useRef(false);
+  const childAnimationCurrentSelectedObjectNameUpdateFlag = useRef("");
+  // Child animation mouse event
+  useEffect(() => {
+    const handleObjectChildAnimationMouseClick = (event) => {
+      if(currentSelectedObjectName.current && isFocusable.current){
+        childAnimationUpdateFlag.current = true;
+        childAnimationCurrentSelectedObjectNameUpdateFlag.current = currentSelectedObjectName.current;
+      }
+    };
+
+    window.addEventListener('click', handleObjectChildAnimationMouseClick);
+  }, [])
+
+  // Use recorded values to determine whether child objects should animate when a circle is clicked
+  useEffect(() => {
+    const selectedObject = tooltipCirclesData.find(item => item.objectName === childAnimationCurrentSelectedObjectNameUpdateFlag.current);
+    if(childAnimationUpdateFlag.current && selectedObject && transitionEnded){
+      if (selectedObject.waitForFocusBeforeExplodeAnimation && gltf.scene.getObjectByName(selectedObject.objectName).children.length > 0) {
+        const childInitialPositions = getChildrenInitialPositions(gltf, [selectedObject.objectName]);
+        const childDesiredPositions = getDesiredPositions(childInitialPositions);
+        setChildInitialPositions(childInitialPositions);
+        setChildDesiredPositions(childDesiredPositions);
+        setHasChildAnimation(true);
+        setChildAnimationTick(0);
+        childAnimationUpdateFlag.current = false;
+        childAnimationCurrentSelectedObjectNameUpdateFlag.current = "";
+      }
+    }
+  }, [childAnimationUpdateFlag.current, transitionEnded]);
+
+  // Right off the bat, explode all objects with children whose waitForFocusBeforeExplodeAnimation flag equal false
+  useEffect(() => {
+    if(tooltipCirclesData.length != 0){
+      const eligibleItems = tooltipCirclesData.filter((item) => item.waitForFocusBeforeExplodeAnimation !== true);
+      const parentArray = eligibleItems.map(item => item.objectName);
+      const childInitialPositions = getChildrenInitialPositions(gltf, parentArray);
+      const childDesiredPositions = getDesiredPositions(childInitialPositions);
+      setChildInitialPositions(childInitialPositions);
+      setChildDesiredPositions(childDesiredPositions);
+      setHasChildAnimation(true);
+      setChildAnimationTick(0);
+    }
+  }, [explodeAnimationPlayed.current]);
+
+  function getChildrenInitialPositions(model, parentArray = []) {
+    const currentPositions = {};
+    model.scene.children.forEach((mesh) => {
+      // Only include meshes whose name matches an entry in the parentArray
+      if (!parentArray.includes(mesh.name)) return;
+
+      mesh.children.forEach((child) => {
+        currentPositions[child.name] = child.position.clone();
+      });
+    });
+
+    return currentPositions;
+  }
+
+  /////////////////////////////
+  /// Circles configuration ///
+  /////////////////////////////
+
+  useFrame((state,delta) => {
+      // console.log(animationTick)
+      // console.log(foCloneEnable.current)
+  })
+
+  // Perform a one-time visibility update of the circles right after component mount should the showCirclesAfterExplodingAnimationRef flag be false
+  const oneTimeTooltipCirclesDataUpdate = useRef();
+  useEffect(() => {
+    if(!showCirclesAfterExplodingAnimationRef.current){
+      oneTimeTooltipCirclesDataUpdate.current = true;
+      updateToolTipCirclePositions();
+      updateToolTipCircleVisibility();
+
+    }
+  }, [tooltipCirclesDatajsonParsed.current]);
+
+  // Shows the circles after the exploding animation has played should the showCirclesAfterExplodingAnimationRef flag be true
+  useEffect(() => {
+    if(showCirclesAfterExplodingAnimationRef.current && explodeAnimationPlayed.current){
+      updateToolTipCircleVisibility()
+    }
+  }, [showCirclesAfterExplodingAnimationRef.current, explodeAnimationPlayed.current]);
+
+  const visibilityUpdateFlag = useRef(false);
+  const currentSelectedObjectNameUpdateFlag = useRef("");
+  // Visibility mouse event
+  useEffect(() => {
+    const handleFlagVisibilityMouseClick = (event) => {
+      if(currentSelectedObjectName.current && isFocusable.current){
+        visibilityUpdateFlag.current = true;
+        currentSelectedObjectNameUpdateFlag.current = currentSelectedObjectName.current;
+      }
+    };
+
+    window.addEventListener('click', handleFlagVisibilityMouseClick);
+  }, [])
+
+  // Use recorded values to determine the circle's visibility and whether chil objects should animate when a circle is clicked
+  useEffect(() => {
+    const selectedObject = tooltipCirclesData.find(item => item.objectName === currentSelectedObjectNameUpdateFlag.current);
+    if(visibilityUpdateFlag.current && selectedObject){
+      if ((selectedObject.showCirclesAfterFocusAnimation && transitionEnded) || (!selectedObject.showCirclesAfterFocusAnimation)) {
+        currentSelectedObjectNameUpdateFlag.current = "";
+        updateToolTipCircleVisibility(selectedObject);
+        visibilityUpdateFlag.current = false;
+      }
+    }
+  }, [visibilityUpdateFlag.current, transitionEnded]);
+
+  // See if user dragged the mouse around...
+  const hasDraggedMouse = useRef(false);
+  useEffect(() => {
+    if (isDragging) {
+      hasDraggedMouse.current = true;
+    }
+  }, [isDragging]);
+
+  // ...If so, ignore, if they clicked the screen, update visibility values
+  useEffect(() => {
+    if (!isMouseDown) {
+      if (!hasDraggedMouse.current) {
+        updateToolTipCircleVisibility();
+      }
+
+      hasDraggedMouse.current = false; // always reset on mouse up
+    }
+  }, [isMouseDown]);
+
+  // Make visible the tooltips that have a focus group to be shown, or don't have any
+  function updateToolTipCircleVisibility(selectedObject = "") {
+    console.log(tooltipCirclesData[0])
+    tooltipCirclesData.forEach(item => {
+      let shouldBeVisible = false;
+      if (selectedObject && selectedObject.focusTarget != "") {
+        // Case: focusTarget is a non-empty string
+        shouldBeVisible = item.focusGroup === selectedObject.focusTarget;
+      } else {
+        // Case: focusTarget is "", null, or undefined
+        shouldBeVisible =
+          item.focusGroup === "" ||
+          item.focusGroup === null ||
+          item.focusGroup === undefined;
+      }
+
+      modifyTooltipCircleData(item.objectName, {
+        circleIsVisible: shouldBeVisible
+      });
+    });
+  }
+
+  // Makes the tooltip circles follow the objects when camera position and rotation values change
+  const updateToolTipCirclePositions = () => {
+    let positions = [];
+    if(tooltipCirclesData && tooltipCirclesData.length != 0){
+      tooltipCirclesData.forEach((data) => {
+        const objectName = data.objectName; 
+        const object = gltf.scene.getObjectByName(objectName); // pass object as a parameter
+
+        if (object) {
+          const vector = new THREE.Vector3();
+          object.getWorldPosition(vector);
+          vector.project(camera);
+
+          // Convert the normalized device coordinates (NDC) to screen space percentages
+          const x = (vector.x * 0.5 + 0.5) * 100; // Percentage of width
+          const y = (vector.y * -0.5 + 0.5) * 100; // Percentage of height
+          modifyTooltipCircleData(objectName, {
+            position: [x, y]
+          });
+        }
+      });
+    }
+  };
+
+  // Activate camera state tracking on mount so the circles can accompany the camera's state changes(also used in updating the planeRef's position)
+  useEffect(() => {
+    setCameraStateTracking(true)
+  }, []);
+
+  // Makes the tooltip circles follow the objects and update the invisible plane when camera position and rotation values change
+  useEffect(() => {
+    updateToolTipCirclePositions();
+  }, [cameraState]);
 
   //////////////////////////////////
   /// Focusing on object feature ///
@@ -828,10 +853,11 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   });
 
-  // Triggers the focusing animation by clicking on focusable circles
+  // Triggers the focusing animation by clicking on circles
   useEffect(() => {
     const handleMouseClick = (event) => {
       if(currentSelectedObjectName.current && isFocusable.current){
+        setTransitionEnded(false)
         setForcedCameraMovePathCurve(archCurve.current) // Starts the camera transition
         setForcedCameraTarget(foCameraTargetPoint.current) // Makes the camera follow the object
       }

@@ -82,11 +82,27 @@
       "isFocusable": true,
       "focusTarget": "GearBox",
       "focusGroup": "", 
-
-      "showCirclesAfterFocusAnimation": false,
-      "REMINDER":" AFTER, DO THE CHILD ANIMATION THING"
+      "waitForFocusBeforeExplodeAnimation": true,
+      "showCirclesAfterFocusAnimation": true
 
     },
+
+
+
+        {
+      "objectName": "LUL_0BB1",
+      "text": "G0",
+      "image": "AfficheDUT-French.png",
+      "position": [0, 0],
+      "isFocusable": true,
+      "focusTarget": "GearBox",
+      "focusGroup": "", 
+      "waitForFocusBeforeExplodeAnimation": true,
+      "showCirclesAfterFocusAnimation": true
+
+    },
+
+
     {
       "objectName": "Gear_1_0TL1",
       "text": "G1",
@@ -98,8 +114,7 @@
       "focusTarget": "",
       "focusGroup": "GearBox", 
 
-      "showCirclesAfterFocusAnimation": false,
-      "REMINDER":" AFTER, DO THE CHILD ANIMATION THING"
+      "showCirclesAfterFocusAnimation": false
 
     },
     {
@@ -113,8 +128,7 @@
       "focusTarget": "",
       "focusGroup": "GearBox", 
 
-      "showCirclesAfterFocusAnimation": false,
-      "REMINDER":" AFTER, DO THE CHILD ANIMATION THING"
+      "showCirclesAfterFocusAnimation": false
 
     },
     {
@@ -128,8 +142,7 @@
       "focusTarget": "",
       "focusGroup": "GearBox", 
 
-      "showCirclesAfterFocusAnimation": false,
-      "REMINDER":" AFTER, DO THE CHILD ANIMATION THING"
+      "showCirclesAfterFocusAnimation": false
 
     }
   ]

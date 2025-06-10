@@ -219,7 +219,6 @@ export const Camera = React.memo((props) => {
 
         if(forcedCameraTarget != [])
         {
-            console.log("EIOAZ0PEIAZPOEOPAZEI")
             controls.current.target.x = forcedCameraTarget[0]
             controls.current.target.y = forcedCameraTarget[1]
             controls.current.target.z = forcedCameraTarget[2]
