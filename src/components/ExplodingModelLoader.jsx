@@ -126,6 +126,8 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   const tooltipCirclesDatajsonParsed = useRef(false);
 
+  const objectsThatHaveExploded = useRef([]);
+
   var currentGlobalState = useThree();
   const cameraViewportSize = new THREE.Vector2(); // create once and reuse it
   currentGlobalState.gl.getSize(cameraViewportSize)
@@ -139,75 +141,116 @@ export const ExplodingModelLoader = React.memo((props) => {
     return currentPositions;
   }
 
-  function getDesiredPositions(currentPositions) {
-    let zIndexTable = {
-      0: -1,
-      1: 0,
-      2: 1
-    };
+  // function getDesiredPositions(currentPositions) {
+  //   let zIndexTable = {
+  //     0: -1,
+  //     1: 0,
+  //     2: 1
+  //   };
 
-    let nameSubstring = '';
-    let DirectionValue = '';
-    let zIndexValue = 0;
-    let incrementValue = 0;
-    let incrementVector = new THREE.Vector3(0, 0, 0);
-    let newPositions = {};
+  //   let nameSubstring = '';
+  //   let DirectionValue = '';
+  //   let zIndexValue = 0;
+  //   let incrementValue = 0;
+  //   let incrementVector = new THREE.Vector3(0, 0, 0);
+  //   let newPositions = {};
 
-    Object.keys(currentPositions).forEach((name) => {
-      nameSubstring = name.slice(-4); // take the 4 characters at the end of the model's name to extract the values
-      zIndexValue = zIndexTable[parseInt(nameSubstring[0], 10)];
-      DirectionValue = nameSubstring[1] + nameSubstring[2];
-      incrementValue = parseInt(nameSubstring[3], 10);
+  //   Object.keys(currentPositions).forEach((name) => {
+  //     nameSubstring = name.slice(-4); // take the 4 characters at the end of the model's name to extract the values
+  //     zIndexValue = zIndexTable[parseInt(nameSubstring[0], 10)];
+  //     DirectionValue = nameSubstring[1] + nameSubstring[2];
+  //     incrementValue = parseInt(nameSubstring[3], 10);
 
-      switch (DirectionValue) {
-        case 'TL':
-          incrementVector = new THREE.Vector3(-1, 1, zIndexValue);
-          break;
+  //     switch (DirectionValue) {
+  //       case 'TL':
+  //         incrementVector = new THREE.Vector3(-1, 1, zIndexValue);
+  //         break;
 
-        case 'TT':
-          incrementVector = new THREE.Vector3(0, 1, zIndexValue);
-          break;
+  //       case 'TT':
+  //         incrementVector = new THREE.Vector3(0, 1, zIndexValue);
+  //         break;
 
-        case 'TR':
-          incrementVector = new THREE.Vector3(1, 1, zIndexValue);
-          break;
+  //       case 'TR':
+  //         incrementVector = new THREE.Vector3(1, 1, zIndexValue);
+  //         break;
 
-        case 'LL':
-          incrementVector = new THREE.Vector3(-1, 0, zIndexValue);
-          break;
+  //       case 'LL':
+  //         incrementVector = new THREE.Vector3(-1, 0, zIndexValue);
+  //         break;
 
-        case 'MM':
-          incrementVector = new THREE.Vector3(0, 0, zIndexValue);
-          break;
+  //       case 'MM':
+  //         incrementVector = new THREE.Vector3(0, 0, zIndexValue);
+  //         break;
 
-        case 'RR':
-          incrementVector = new THREE.Vector3(1, 0, zIndexValue);
-          break;
+  //       case 'RR':
+  //         incrementVector = new THREE.Vector3(1, 0, zIndexValue);
+  //         break;
 
-        case 'BL':
-          incrementVector = new THREE.Vector3(-1, -1, zIndexValue);
-          break;
+  //       case 'BL':
+  //         incrementVector = new THREE.Vector3(-1, -1, zIndexValue);
+  //         break;
 
-        case 'BB':
-          incrementVector = new THREE.Vector3(0, -1, zIndexValue);
-          break;
+  //       case 'BB':
+  //         incrementVector = new THREE.Vector3(0, -1, zIndexValue);
+  //         break;
 
-        case 'BR':
-          incrementVector = new THREE.Vector3(1, -1, zIndexValue);
-          break;
+  //       case 'BR':
+  //         incrementVector = new THREE.Vector3(1, -1, zIndexValue);
+  //         break;
 
-        default:
-          incrementVector = new THREE.Vector3(0, 0, 0);
-      }
+  //       default:
+  //         incrementVector = new THREE.Vector3(0, 0, 0);
+  //     }
 
-      // Clone the current position to avoid mutating the original object
-      let newPosition = currentPositions[name].clone();
+  //     // Clone the current position to avoid mutating the original object
+  //     let newPosition = currentPositions[name].clone();
 
-      newPositions[name] = newPosition.add(incrementVector.multiplyScalar(incrementValue * 4));
-    });
+  //     newPositions[name] = newPosition.add(incrementVector.multiplyScalar(incrementValue * 4));
+  //   });
 
-    return newPositions;
-  }
+  //   return newPositions;
+  // }
+
+  function getDesiredPositions(currentPositions, directionForward = true) {
+  const zIndexTable = {
+    0: -1,
+    1: 0,
+    2: 1,
+  };
+
+  const newPositions = {};
+
+  Object.keys(currentPositions).forEach((name) => {
+    // parse name suffix: [z][D][D][n], e.g. "1TR3"
+    const nameSubstring = name.slice(-4);
+    const zIndexValue = zIndexTable[parseInt(nameSubstring[0], 10)];
+    const DirectionValue = nameSubstring[1] + nameSubstring[2];
+    const incrementValue = parseInt(nameSubstring[3], 10);
+
+    let incrementVector;
+    switch (DirectionValue) {
+      case 'TL': incrementVector = new THREE.Vector3(-1,  1, zIndexValue); break;
+      case 'TT': incrementVector = new THREE.Vector3( 0,  1, zIndexValue); break;
+      case 'TR': incrementVector = new THREE.Vector3( 1,  1, zIndexValue); break;
+      case 'LL': incrementVector = new THREE.Vector3(-1,  0, zIndexValue); break;
+      case 'MM': incrementVector = new THREE.Vector3( 0,  0, zIndexValue); break;
+      case 'RR': incrementVector = new THREE.Vector3( 1,  0, zIndexValue); break;
+      case 'BL': incrementVector = new THREE.Vector3(-1, -1, zIndexValue); break;
+      case 'BB': incrementVector = new THREE.Vector3( 0, -1, zIndexValue); break;
+      case 'BR': incrementVector = new THREE.Vector3( 1, -1, zIndexValue); break;
+      default:   incrementVector = new THREE.Vector3( 0,  0, 0);         break;
+    }
+
+    // clone so we don’t mutate the original
+    const newPosition = currentPositions[name].clone();
+
+    // if directionForward is false, invert the movement
+    const scalar = incrementValue * 4 * (directionForward ? 1 : -1);
+    newPositions[name] = newPosition.add(incrementVector.multiplyScalar(scalar));
+  });
+
+  return newPositions;
+}
 
   // Change the camera's target on trigger
   useEffect(() => {
@@ -251,7 +294,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   // Set the tooltip circle's properties
   useEffect(() => {
     const tCircleData = tooltipCirclesData.find(item => item.objectName === currentSelectedObjectName.current);
-    console.log(gltf.scene)
     focusedObjectWorldPosition.current = currentSelectedObjectName.current == undefined ? focusedObjectWorldPosition.current : gltf.scene.getObjectByName(currentSelectedObjectName.current)?.getWorldPosition(new THREE.Vector3());
     
     foFront.current = tCircleData?.focusedObjectFront ?? focusedObjectFrontDefault;
@@ -269,7 +311,7 @@ export const ExplodingModelLoader = React.memo((props) => {
     showCirclesAfterFocusAnimation.current = tCircleData?.showCirclesAfterFocusAnimation ?? showCirclesAfterFocusAnimationDefault;
     
     waitForFocusBeforeExplodeAnimation.current = tCircleData?.waitForFocusBeforeExplodeAnimation ?? waitForFocusBeforeExplodeAnimationDefault;
-
+    
     foCloneEnable.current = tCircleData?.focusedObjectCloneEnable ?? focusedObjectCloneEnable;
     setShouldRenderClone(true);
     foCloneScale.current = tCircleData?.focusedObjectCloneScale ?? focusedObjectCloneScale;
@@ -486,18 +528,18 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   });
 
-  /////////////////////////////////////
-  /// Rocking, exploding animations ///
-  /////////////////////////////////////
+  /////////////////////////////////////////////////////
+  /// Main model's rocking and exploding animations ///
+  /////////////////////////////////////////////////////
 
   const [animationDirectionForward, setAnimationDirectionForward] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false); // Set isPlaying manually back to true to reverse the animation
   const [rock, setRock] = useState(false);
   const [explode, setExplode] = useState(false);
   const [rockingTransitionDuration, setRockingTransitionDuration] = useState(rockingDuration);
   const [explodingTransitionDuration, setExplodingTransitionDuration] = useState(explodingDuration);
   const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
-  
+
   // Automatically starts the animation when the animationStartOnLoad prop is set to true
   useEffect(() => {
     if(explodingObjectEnableRockingAnimation && explodingObjectAnimationStartOnLoad){
@@ -539,7 +581,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
       if (!isPlaying && (rockingAnimationPlayed.current || explodeAnimationPlayed.current)) {
         if (animationDirectionForward === false) {
-          console.log(animationDirectionForward);
           setInitialPositions(getInitialPositions(gltf));
           setDesiredPositions(getDesiredPositions(getInitialPositions(gltf)));
         } else {
@@ -607,8 +648,15 @@ export const ExplodingModelLoader = React.memo((props) => {
         });
 
         if (animationTick >= 1) {
+          // Adds the exploded objects to the exploded objects array
+          Object.keys(desiredPositions).forEach((name) => {
+            if (!objectsThatHaveExploded.current.includes(name)) {
+              objectsThatHaveExploded.current.push(name);
+            }
+          });
           setExplode(false);
           explodeAnimationPlayed.current = true;
+          setIsPlaying(false);
           updateToolTipCirclePositions();
         }
       }
@@ -622,22 +670,37 @@ export const ExplodingModelLoader = React.memo((props) => {
   /////////////////////////////////
 
   const [childAnimationTick, setChildAnimationTick] = useState(0);
-  const [hasChildAnimation, setHasChildAnimation] = useState(false);
+  const [childAnimationEnable, setChildAnimationEnable] = useState(false);
+  const childAnimationIsPlaying = useRef(false);
 
+  // Animation, rewind included
   useFrame((state, delta) => {
-    if (hasChildAnimation && childAnimationTick <= 1) {
+    if (childAnimationEnable && childAnimationTick <= 1) {
+      childAnimationIsPlaying.current = true;
+      updateToolTipCirclePositions();
       setChildAnimationTick(prev => Math.min(prev + (delta / (childTransitionDuration / 1000)), 1));
-      const easedTick = easeOutCubic(childAnimationTick);
 
       Object.keys(childInitialPositions).forEach((name) => {
         const initialPos = childInitialPositions[name];
         const desiredPos = childDesiredPositions[name];
+        const easedTick = easeOutCubic(childAnimationTick);
         const currentPos = new THREE.Vector3().lerpVectors(initialPos, desiredPos, easedTick);
         gltf.scene.getObjectByName(name).position.copy(currentPos);
       });
 
       if (childAnimationTick >= 1) {
-        setHasChildAnimation(false);
+        childAnimationIsPlaying.current = false;
+
+        // If the exploded objects dont exist in the exploded objects array, Add them, if they do, remove them.
+        Object.keys(childDesiredPositions).forEach((name) => {
+          if (objectsThatHaveExploded.current.includes(name)) {
+            objectsThatHaveExploded.current = objectsThatHaveExploded.current.filter(el => el !== name);  
+          }else{
+            objectsThatHaveExploded.current.push(name);
+          }
+        });
+
+        setChildAnimationEnable(false);
         updateToolTipCirclePositions();
       }
     }
@@ -645,10 +708,11 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   const childAnimationUpdateFlag = useRef(false);
   const childAnimationCurrentSelectedObjectNameUpdateFlag = useRef("");
+  const previousChildAnimationCurrentSelectedObjectNameUpdateFlag = useRef("");
   // Child animation mouse event
   useEffect(() => {
     const handleObjectChildAnimationMouseClick = (event) => {
-      if(currentSelectedObjectName.current && isFocusable.current){
+      if(!childAnimationIsPlaying.current && currentSelectedObjectName.current && isFocusable.current){
         childAnimationUpdateFlag.current = true;
         childAnimationCurrentSelectedObjectNameUpdateFlag.current = currentSelectedObjectName.current;
       }
@@ -657,18 +721,44 @@ export const ExplodingModelLoader = React.memo((props) => {
     window.addEventListener('click', handleObjectChildAnimationMouseClick);
   }, [])
 
+  // Use recorded values to reverse the exploding animation of an object if a different object is clicked
+  useEffect(() => {
+    const selectedObject = tooltipCirclesData.find(item => item.objectName === previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current);
+    const childInitialPositions = getChildrenInitialPositions(gltf, [selectedObject?.objectName]);
+    const childNames = Object.keys(childInitialPositions);
+    const allHaveExploded = childNames.every(name => objectsThatHaveExploded.current.includes(name));
+    if(childAnimationUpdateFlag.current && selectedObject){
+      if(allHaveExploded && (childAnimationCurrentSelectedObjectNameUpdateFlag.current != previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current)){
+
+        const animationForwards = !allHaveExploded;
+
+        const childDesiredPositions = getDesiredPositions(childInitialPositions, animationForwards);
+        setChildInitialPositions(childInitialPositions);
+        setChildDesiredPositions(childDesiredPositions);
+        setChildAnimationEnable(true);
+        setChildAnimationTick(0);
+      }
+    }
+  }, [childAnimationUpdateFlag.current]);
+
   // Use recorded values to determine whether child objects should animate when a circle is clicked
   useEffect(() => {
     const selectedObject = tooltipCirclesData.find(item => item.objectName === childAnimationCurrentSelectedObjectNameUpdateFlag.current);
+    const childInitialPositions = getChildrenInitialPositions(gltf, [selectedObject?.objectName]);
+    const childNames = Object.keys(childInitialPositions);
+    const allHaveExploded = childNames.every(name => objectsThatHaveExploded.current.includes(name));
     if(childAnimationUpdateFlag.current && selectedObject && transitionEnded){
       if (selectedObject.waitForFocusBeforeExplodeAnimation && gltf.scene.getObjectByName(selectedObject.objectName).children.length > 0) {
-        const childInitialPositions = getChildrenInitialPositions(gltf, [selectedObject.objectName]);
-        const childDesiredPositions = getDesiredPositions(childInitialPositions);
+
+        const animationForwards = !allHaveExploded;
+
+        const childDesiredPositions = getDesiredPositions(childInitialPositions, animationForwards);
         setChildInitialPositions(childInitialPositions);
         setChildDesiredPositions(childDesiredPositions);
-        setHasChildAnimation(true);
+        setChildAnimationEnable(true);
         setChildAnimationTick(0);
         childAnimationUpdateFlag.current = false;
+        previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current = childAnimationCurrentSelectedObjectNameUpdateFlag.current;
         childAnimationCurrentSelectedObjectNameUpdateFlag.current = "";
       }
     }
@@ -676,14 +766,15 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Right off the bat, explode all objects with children whose waitForFocusBeforeExplodeAnimation flag equal false
   useEffect(() => {
-    if(tooltipCirclesData.length != 0){
-      const eligibleItems = tooltipCirclesData.filter((item) => item.waitForFocusBeforeExplodeAnimation !== true);
+    const eligibleItems = tooltipCirclesData.filter((item) => Object.prototype.hasOwnProperty.call(item, 'waitForFocusBeforeExplodeAnimation') && item.waitForFocusBeforeExplodeAnimation !== true);
+    if(explodeAnimationPlayed.current && animationDirectionForward && tooltipCirclesData.length != 0 && eligibleItems.length != 0){
       const parentArray = eligibleItems.map(item => item.objectName);
       const childInitialPositions = getChildrenInitialPositions(gltf, parentArray);
       const childDesiredPositions = getDesiredPositions(childInitialPositions);
+
       setChildInitialPositions(childInitialPositions);
       setChildDesiredPositions(childDesiredPositions);
-      setHasChildAnimation(true);
+      setChildAnimationEnable(true);
       setChildAnimationTick(0);
     }
   }, [explodeAnimationPlayed.current]);
@@ -702,14 +793,38 @@ export const ExplodingModelLoader = React.memo((props) => {
     return currentPositions;
   }
 
+  //////////////////////////////
+  /// Reverse all animations ///
+  //////////////////////////////
+
+  const reverseAllExplosionAnimations = useRef(false);
+  // Reverse all exploding animations
+  useEffect(() => {
+    if(reverseAllExplosionAnimations.current){
+      // Reset child animations
+      // Return parents that have children inside objectThatHaveExploded.current
+      const parentArray = objectsThatHaveExploded.current.filter(name => {
+        const obj = gltf.scene.getObjectByName(name);
+        return (obj && obj.children.some(child => objectsThatHaveExploded.current.includes(child.name)));
+      });
+
+      const childInitialPositions = getChildrenInitialPositions(gltf, parentArray);
+      const childDesiredPositions = getDesiredPositions(childInitialPositions, false);
+
+      setChildInitialPositions(childInitialPositions);
+      setChildDesiredPositions(childDesiredPositions);
+      setChildAnimationEnable(true);
+      setChildAnimationTick(0);
+
+      // Reset main animation
+      setIsPlaying(true);
+      reverseAllExplosionAnimations.current = false;
+    }
+  }, [reverseAllExplosionAnimations.current]);
+
   /////////////////////////////
   /// Circles configuration ///
   /////////////////////////////
-
-  useFrame((state,delta) => {
-      // console.log(animationTick)
-      // console.log(foCloneEnable.current)
-  })
 
   // Perform a one-time visibility update of the circles right after component mount should the showCirclesAfterExplodingAnimationRef flag be false
   const oneTimeTooltipCirclesDataUpdate = useRef();
@@ -734,7 +849,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   // Visibility mouse event
   useEffect(() => {
     const handleFlagVisibilityMouseClick = (event) => {
-      if(currentSelectedObjectName.current && isFocusable.current){
+      if(!childAnimationIsPlaying.current && currentSelectedObjectName.current && isFocusable.current){
         visibilityUpdateFlag.current = true;
         currentSelectedObjectNameUpdateFlag.current = currentSelectedObjectName.current;
       }
@@ -776,7 +891,6 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Make visible the tooltips that have a focus group to be shown, or don't have any
   function updateToolTipCircleVisibility(selectedObject = "") {
-    console.log(tooltipCirclesData[0])
     tooltipCirclesData.forEach(item => {
       let shouldBeVisible = false;
       if (selectedObject && selectedObject.focusTarget != "") {
@@ -840,6 +954,7 @@ export const ExplodingModelLoader = React.memo((props) => {
     new THREE.Vector3(0, 0, 0)]));
 
   const frameCount = useRef(0);  // frame counter
+
   // Update the arch's transition curve
   useFrame((state, delta) => {
     // Increment the frame count
@@ -856,7 +971,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   // Triggers the focusing animation by clicking on circles
   useEffect(() => {
     const handleMouseClick = (event) => {
-      if(currentSelectedObjectName.current && isFocusable.current){
+      if(!childAnimationIsPlaying.current && currentSelectedObjectName.current && isFocusable.current){
         setTransitionEnded(false)
         setForcedCameraMovePathCurve(archCurve.current) // Starts the camera transition
         setForcedCameraTarget(foCameraTargetPoint.current) // Makes the camera follow the object

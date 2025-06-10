@@ -66,7 +66,7 @@
       "isFocusable":"", "isFocusable_comment":" Whether the object can be focused by clicking its circle. Set to false to disable focus transitions for this object.",
       "focusTarget":"", "focusTarget_comment":" Identifier used to group focusable objects. Used to show/hide related tooltip circles when one object is focused.",
       "focusGroup":"",  "focusGroup_comment":" Defines the group this object belongs to. If another object has a matching focusTarget, this object will be visible when that one is selected.",
-      "waitForFocusBeforeExplodeAnimation" : true,"showCirclesAfterFocusAnimation_comment":" Wait for this object to be focused on before playing the explode animation of its children and the appearance of their circles, useless if object has no children",
+      "waitForFocusBeforeExplodeAnimation" : true, "waitForFocusBeforeExplodeAnimation_comment":" Wait for this object to be focused on before playing the explode animation of its children and the appearance of their circles, useless if object has no children",
       "showCirclesAfterFocusAnimation": true, "showCirclesAfterFocusAnimation_comment":" if true, only shows the circles after the camera transition is finished"
     }
   ]

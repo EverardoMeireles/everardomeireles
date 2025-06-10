@@ -29,7 +29,7 @@
 
     "showCirclesAfterExplodingAnimation": false,
 
-    "enableRotationAnimation": false,
+    "enableRotationAnimation": true,
       "rotationAnimationSpeed": 0.5,
       "rotationAnimationWhenToStop": "onScreenMouseHover",
       "resetInitialRotation": true,
@@ -79,6 +79,7 @@
       "text": "G0",
       "image": "AfficheDUT-French.png",
       "position": [0, 0],
+      "focusedObjectFocusPoint": [179, 138, 42],
       "isFocusable": true,
       "focusTarget": "GearBox",
       "focusGroup": "", 
@@ -86,9 +87,6 @@
       "showCirclesAfterFocusAnimation": true
 
     },
-
-
-
         {
       "objectName": "LUL_0BB1",
       "text": "G0",
@@ -101,8 +99,6 @@
       "showCirclesAfterFocusAnimation": true
 
     },
-
-
     {
       "objectName": "Gear_1_0TL1",
       "text": "G1",
