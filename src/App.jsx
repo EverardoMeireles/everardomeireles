@@ -128,7 +128,6 @@ const useStore = create((set) => ({
     visible: false,
     type: 'Success',
     displaySide: 'topRight',
-    duration: 5,
     transitionDuration: 0.5,
     text: 'Lorem Ipsum Dolor!',
     image: ""
@@ -337,7 +336,7 @@ function App() {
     {!forceDisableRender && (
       <>
       <Alert {...{ useStore }} />
-      <ToolTip {...{ useStore }} text={tooltipProperties.text} image={tooltipProperties.image} visible={tooltipProperties.visible} position={[30, 40]} />
+      <ToolTip {...{ useStore }} transitionDuration={0.5} />
       {/* Create info circles on the screen */}
       {tooltipCirclesData?.length > 0 && tooltipCirclesData?.map((props) => (
         <ToolTipCircle
