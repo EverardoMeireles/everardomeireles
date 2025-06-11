@@ -57,6 +57,7 @@ export const ToolTipCircle = (props) => {
         background: 'radial-gradient(circle, rgba(255,255,255,1) 20%, rgba(255,255,255,0.6) 40%, rgba(255,255,255,0) 60%)',
         animation: playPulseAnimation ?'pulsate 2s infinite ease-in-out' : "",
         boxShadow: '0 0 10px 10px rgba(255, 255, 255, 0.5), 0 0 15px 15px rgba(255, 255, 255, 0.3), 0 0 20px 20px rgba(255, 255, 255, 0.1)',
+        pointerEvents: isVisible ? 'auto' : 'none',
     };
 
     const handleMouseEnter = () => {
