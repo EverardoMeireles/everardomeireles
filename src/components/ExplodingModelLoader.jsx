@@ -29,7 +29,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {showCirclesAfterExplodingAnimation = true} = props; // If true, all tooltip circles appear automatically after the explode animation finishes. If false, visibility is set right after the scene loads.
 
   const {focusedObjectCloneEnable = true} = props; // Rotating object's scale
-  const {focusedObjectCloneScale = 3} = props; // Rotating object's scale
+  const {focusedObjectCloneScale = 1} = props; // Rotating object's scale
   const {focusedObjectCloneAxisOfRotation = [0, 1, 0]} = props; // Rotating object's axis of rotation
   const {focusedObjectCloneSpeedOfRotation = 1.2} = props; // Rotating object's speed of rotation
   const {focusedObjectCloneForcePositionOffset = {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}} = props; // Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
@@ -71,7 +71,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const triggers = useStore((state) => state.triggers);
   const setTrigger = useStore((state) => state.setTrigger);
   const isCircleOnLeftSelected = useStore((state) => state.isCircleOnLeftSelected);
-  const isHoveredCircleOnTop = useStore((state) => state.isHoveredCircleOnTop);
+  const isCircleOnTopSelected = useStore((state) => state.isCircleOnTopSelected);
   const tooltipCurrentObjectNameSelected = useStore((state) => state.tooltipCurrentObjectNameSelected);
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
   const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
@@ -96,7 +96,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const [explodingObjectAnimationStartOnLoad, setExplodingObjectAnimationStartOnLoad] = useState(false);
   const [explodingObjectEnableRockingAnimation, setExplodingObjectEnableRockingAnimation] = useState(true);
   const [explodingObjectEnableExplodeAnimation, setExplodingObjectEnableExplodeAnimation] = useState(true);
-  const [sceneOrigin, setSceneOrigin] = useState([gltf.scene.position.toArray()]); // Sets the imported model's origin point, a custom origin for the object if specified in the props
+  // const [sceneOrigin, setSceneOrigin] = useState([gltf.scene.position.toArray()]); // Sets the imported model's origin point, a custom origin for the object if specified in the props
+ const [sceneOrigin, setSceneOrigin] = useState(gltf.scene.position.toArray());
 
 
   const [intersectionPoint, setIntersectionPoint] = useState(null); // Might be usefull for projecting more stuff in front of the camera in the future, ???use useRef???
@@ -451,18 +452,34 @@ export const ExplodingModelLoader = React.memo((props) => {
   /////////////////////////////////////////
 
   const objectToRotate = useRef();
-  const planeRef = useRef(new THREE.Object3D()); // Ref for the plane geometry
+  const planeRef = useRef(new THREE.Object3D());
+  const distanceRef = useRef(5); // how far in front of the camera you want the plane
 
-  // Update the invisible plane when camera position and rotation values change
+  // Drive position & rotation whenever the camera moves:
   useEffect(() => {
-    planeRef.current.rotation.setFromVector3(currentGlobalState.camera.rotation)
-  }, [cameraState]);
+    if (!planeRef.current) return;
+
+    // compute once when cameraState changes
+    const dir = new THREE.Vector3();
+
+    // Get the forward direction of the camera
+    camera.getWorldDirection(dir);
+
+    // Position the plane at camera.position + dir * distance
+    planeRef.current.position
+      .copy(camera.position)
+      .add(dir.multiplyScalar(distanceRef.current));
+
+    // Align the plane’s orientation with the camera
+    planeRef.current.quaternion.copy(camera.quaternion);
+
+  }, [cameraState, camera]);
 
   // Trigger animation start
   useEffect(() => {
     const raycaster = new THREE.Raycaster();
     if (!currentSelectedObjectName.current || foCloneEnable.current != true) {
-      foCloneEnable.current = false
+      foCloneEnable.current = false;
       setShouldRenderClone(false);
     } else {
       const originalObject = gltf.scene.getObjectByName(currentSelectedObjectName.current);
@@ -485,12 +502,12 @@ export const ExplodingModelLoader = React.memo((props) => {
         ndcX = foCloneForcePositionOffset.current["right"]
       }
   
-      if (isHoveredCircleOnTop) {
+      if (isCircleOnTopSelected) {
         // Place the object on the top side of the viewport
         ndcY = foCloneForcePositionOffset.current["bottom"]
       } else {
         // Place the object on the bottom side of the viewport
-        ndcY =foCloneForcePositionOffset.current["top"]
+        ndcY = foCloneForcePositionOffset.current["top"]
       }
 
       ndcX > 1 ? ndcX = 1 : ndcX = ndcX
@@ -513,7 +530,6 @@ export const ExplodingModelLoader = React.memo((props) => {
         objectToRotate.current.position.x = midpoint.x;
         objectToRotate.current.position.y = midpoint.y;
         objectToRotate.current.position.z = midpoint.z;
-        
       }
 
       if (intersects.length > 0) {
@@ -522,7 +538,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       }
 
     }
-  }, [currentSelectedObjectName.current, isCircleOnLeftSelected, isHoveredCircleOnTop, gltf.scene]);
+  }, [currentSelectedObjectName.current, isCircleOnLeftSelected, isCircleOnTopSelected, gltf.scene]);
 
     // Focused object rotation animation
   useFrame((state, delta) => {
@@ -604,7 +620,7 @@ export const ExplodingModelLoader = React.memo((props) => {
         explodeAnimationPlayed.current = false;
         setAnimationTick(0);
       }
-    }, [isPlaying, animationDirectionForward, setAnimationDirectionForward]);
+  }, [isPlaying, animationDirectionForward, setAnimationDirectionForward]);
 
   // Starts the animation when the animationIsPlaying prop is set to true
   useEffect(() => {
@@ -1020,7 +1036,7 @@ export const ExplodingModelLoader = React.memo((props) => {
         <tubeGeometry
           args={[curve, tubularSegments, radius, radialSegments, closed]}
         />
-        <meshBasicMaterial wireframe={true} />
+        <meshBasicMaterial wireframe={false} />
       </mesh>
     )
   }
@@ -1062,8 +1078,8 @@ export const ExplodingModelLoader = React.memo((props) => {
       </mesh>
 
       {/* Create a plane in front of the camera for the raycaster to collide with */}
-      <mesh ref={planeRef} position={sceneOrigin} >
-        <planeGeometry  /*scale={new THREE.Vector3(15,15,15)} */args={[150,150]} />
+      <mesh ref={planeRef} /*position={sceneOrigin} */>
+        <planeGeometry args={[20, 20]} />
         <meshBasicMaterial color={0xffffff} side={THREE.DoubleSide} transparent opacity={0} />
       </mesh>
 

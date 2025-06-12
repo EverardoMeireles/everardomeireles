@@ -12,7 +12,7 @@ export const ToolTip = (props) => {
 
   const tooltipProperties = useStore((state) => state.tooltipProperties);
   const setTooltipProperties = useStore((state) => state.setTooltipProperties);
-  const isCircleOnLeft = useStore((state) => state.isCircleOnLeft);
+  const isCircleOnLeftSelected = useStore((state) => state.isCircleOnLeftSelected);
 
   const [isVisible, setIsVisible] = useState(false);
   const [isDivDisabled, setIsDivDisabled] = useState(true);
@@ -30,7 +30,7 @@ export const ToolTip = (props) => {
       timeoutId = setTimeout(() => {
         setIsVisible(false);
         setTooltipProperties({ active: false });
-      }, displaySec * 1000);
+      }, displaySec * 50000); // Stay on screen a long time before disappearing on its own(see if there are leaks)
     } else {
       setIsVisible(false);
     }
@@ -67,8 +67,8 @@ export const ToolTip = (props) => {
     opacity:  isVisible ?   1  : 0,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     color: '#FFF',
-    right: isCircleOnLeft ? 0 : 'auto',
-    left:  isCircleOnLeft ? 'auto' : 0,
+    right: isCircleOnLeftSelected ? 0 : 'auto',
+    left:  isCircleOnLeftSelected ? 'auto' : 0,
     pointerEvents: 'none',
   };
 

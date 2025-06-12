@@ -24,12 +24,9 @@ export const ToolTipCircle = (props) => {
     const setIsCircleOnTopSelected = useStore((state) => state.setIsCircleOnTopSelected);
     const setTooltipProperties = useStore((state) => state.setTooltipProperties);
     const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
-    const transitionDestination = useStore((state) => state.transitionDestination);
-    const transitionEnded = useStore((state) => state.transitionEnded);
-    const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
     const setTooltipCurrentObjectNameSelected = useStore((state) => state.setTooltipCurrentObjectNameSelected);
     const setMessage = useStore((state) => state.setMessage);
-    
+
     const [isVisible, setIsVisible] = useState(false);
 
     const isCircleOnLeft = position[0] < 50; // Since it's a percentage
@@ -68,6 +65,7 @@ export const ToolTipCircle = (props) => {
                 image: image,
                 visible: true
             });
+
             setIsCircleOnLeftSelected(isCircleOnLeft)
             setIsCircleOnTopSelected(isCircleOnTop)
             setTooltipCurrentObjectNameSelected(objectName)

@@ -168,7 +168,7 @@ const useStore = create((set) => ({
   setIsCircleOnLeftSelected: (isLeft) => set(() => ({ isCircleOnLeftSelected: isLeft })),
 
   isCircleOnTopSelected: false,
-  setIsCircleOnTopSelected: (isTop) => set(() => ({ isHoveredCircleOnTop: isTop })),
+  setIsCircleOnTopSelected: (isTop) => set(() => ({ isCircleOnTopSelected: isTop })),
 
   tooltipCurrentObjectNameSelected: undefined,
   setTooltipCurrentObjectNameSelected: (object) => set(() => ({ tooltipCurrentObjectNameSelected: object })),
