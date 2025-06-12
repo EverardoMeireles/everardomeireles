@@ -265,8 +265,6 @@ export const Camera = React.memo((props) => {
 
         state.camera.lookAt(current_lookat.current),
         // Updates the orbitcontrol's target
-        // console.log(controls.current.target),
-        // console.log(cameraTarget.current),
         controls.current.target.x = current_lookat.current.x,
         controls.current.target.y = current_lookat.current.y,
         controls.current.target.z = current_lookat.current.z,
@@ -283,6 +281,12 @@ export const Camera = React.memo((props) => {
     // Sets values after the camera movement is done 
     function updateCall(state){
         if(updateCallNow.current){
+            // If fps is too low, the camera's target might not end up where it should after transition, force it.
+            if(controls.current.target.toArray() != forcedCameraTarget){
+                controls.current.target = new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]);
+                state.camera.lookAt(forcedCameraTarget)
+            }
+
             setTransitionEnded(true);
             updateCallNow.current = false;
             controls.current.enabled = true;
