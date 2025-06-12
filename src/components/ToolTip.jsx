@@ -69,6 +69,7 @@ export const ToolTip = (props) => {
     color: '#FFF',
     right: isCircleOnLeft ? 0 : 'auto',
     left:  isCircleOnLeft ? 'auto' : 0,
+    pointerEvents: 'none',
   };
 
   const textStyle = {

@@ -374,12 +374,19 @@ export const ExplodingModelLoader = React.memo((props) => {
       const model = modelRef.current;
 
       if (!model) return;
+
       // Stops animation if mouse is down
       if(rotationAnimationWhenToStop.current == "onMouseDown" && isMouseDown){
         startRotationAnimation.current = false;
       }
 
       if(rotationAnimationWhenToStop.current == "onScreenMouseHover" && isCanvasHovered){
+        startRotationAnimation.current = false;
+      }
+
+      console.log(tooltipCurrentObjectNameSelected)
+      // Stops animation if a circle is hovered
+      if(tooltipCurrentObjectNameSelected){
         startRotationAnimation.current = false;
       }
       
