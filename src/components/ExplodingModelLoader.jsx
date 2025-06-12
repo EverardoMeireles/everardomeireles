@@ -81,6 +81,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
   const isDragging = useStore((state) => state.isDragging);
   const isMouseDown = useStore((state) => state.isMouseDown);
+  const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
 
   const [initialPositions, setInitialPositions] = useState({});
   const [desiredPositions, setDesiredPositions] = useState({});
@@ -664,7 +665,6 @@ export const ExplodingModelLoader = React.memo((props) => {
           setExplode(false);
           explodeAnimationPlayed.current = true;
           setIsPlaying(false);
-          updateToolTipCirclePositions();
         }
       }
 
@@ -708,7 +708,6 @@ export const ExplodingModelLoader = React.memo((props) => {
         });
 
         setChildAnimationEnable(false);
-        updateToolTipCirclePositions();
       }
     }
   });
@@ -917,29 +916,49 @@ export const ExplodingModelLoader = React.memo((props) => {
     });
   }
 
-  // Makes the tooltip circles follow the objects when camera position and rotation values change
-  const updateToolTipCirclePositions = () => {
-    let positions = [];
-    if(tooltipCirclesData && tooltipCirclesData.length != 0){
-      tooltipCirclesData.forEach((data) => {
-        const objectName = data.objectName; 
-        const object = gltf.scene.getObjectByName(objectName); // pass object as a parameter
+  const circlePositionUpdatePixelInterval = useRef(0.3);
+  useEffect(() => {
+    switch(currentGraphicalMode) {
+      case "potato":
+        circlePositionUpdatePixelInterval.current = 1;
+      break;
+      case "potatoPremium":
+        circlePositionUpdatePixelInterval.current = 0.5;
 
-        if (object) {
-          const vector = new THREE.Vector3();
-          object.getWorldPosition(vector);
-          vector.project(camera);
+      break;
+      case "normal":
+        circlePositionUpdatePixelInterval.current = 0.3;
 
-          // Convert the normalized device coordinates (NDC) to screen space percentages
-          const x = (vector.x * 0.5 + 0.5) * 100; // Percentage of width
-          const y = (vector.y * -0.5 + 0.5) * 100; // Percentage of height
-          modifyTooltipCircleData(objectName, {
-            position: [x, y]
-          });
-        }
-      });
+      break;
+      case "high":
+        circlePositionUpdatePixelInterval.current = 0.1;
+
+      break;
+      default:
+        circlePositionUpdatePixelInterval.current = 0.3;
     }
-  };
+  }, [currentGraphicalMode]);
+
+  // Makes the tooltip circles follow the objects and update the invisible plane when camera position and rotation values change
+  function updateToolTipCirclePositions() {
+    tooltipCirclesData.forEach(data => {
+      const obj = gltf.scene.getObjectByName(data.objectName);
+      if (!obj) return;
+
+      const vec = new THREE.Vector3();
+      obj.getWorldPosition(vec);
+      vec.project(camera);
+
+      const x = (vec.x * 0.5 + 0.5) * 100;
+      const y = (vec.y * -0.5 + 0.5) * 100;
+      
+      // only update if difference in new and old position is greater than a certain pixel interval
+      const [oldX, oldY] = data.position || [null, null];
+      if (oldX === null || Math.hypot(oldX - x, oldY - y) > circlePositionUpdatePixelInterval.current) {
+        modifyTooltipCircleData(data.objectName, { position: [x, y] });
+      }
+    });
+  }
 
   // Activate camera state tracking on mount so the circles can accompany the camera's state changes(also used in updating the planeRef's position)
   useEffect(() => {
