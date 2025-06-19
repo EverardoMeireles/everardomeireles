@@ -41,7 +41,7 @@
     {
       "objectName": "Motor_gearbox_1TT1",
       "text": "Right text",
-      "image": "AfficheEDHC-French.jpg",
+      "image": "back_arrow.png",
       "circleSize": 30,
       "playPulseAnimation": true,
       "position": [0, 0],
@@ -84,7 +84,7 @@
       "focusedObjectCloneScale": 0.2,
       "isFocusable": true,
       "focusTarget": "GearBox",
-      "focusGroup": "", 
+      "focusGroup": "",
       "waitForFocusBeforeExplodeAnimation": true,
       "showCirclesAfterFocusAnimation": true
 

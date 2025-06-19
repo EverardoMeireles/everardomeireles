@@ -94,6 +94,15 @@ const useStore = create((set) => ({
   isCanvasHovered: false,
   setIsCanvasHovered: (hovered) => set(() => ({ isCanvasHovered: hovered })),
 
+  showReturnButton: true,
+  setShowReturnButton: (show) => set(() => ({ showReturnButton: show })),
+
+  isReturnButtonPressed: false,
+  setIsReturnButtonPressed: (pressed) => set(() => ({ isReturnButtonPressed: pressed })),
+
+  returnButtonPosition: [50, 50],
+  setReturnButtonPosition: (position) => set(() => ({ returnButtonPosition: position })),
+
   mouseClicked: false,
   toggleMouseClicked: () => set((state) => ({ mouseClicked: !state.mouseClicked })),
 
@@ -210,6 +219,9 @@ function App() {
   const isDragging = useStore((state) => state.isDragging);
   const setIsMouseDown = useStore((state) => state.setIsMouseDown);
   const isMouseDown = useStore((state) => state.isMouseDown);
+  const setIsReturnButtonPressed = useStore((state) => state.setIsReturnButtonPressed);
+  const returnButtonPosition = useStore((state) => state.returnButtonPosition);
+  const showReturnButton = useStore((state) => state.showReturnButton);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
@@ -356,7 +368,28 @@ function App() {
         />
       ))}
       <TutorialOverlay enable = {enableTutorial} {...{useStore}}/>
-      <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} />
+      {/* <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} /> */}
+      {/* <img  src={"textures/back_arrow.png"} width="64" height="64" /> */}
+      <img
+            src="textures/back_arrow.png"
+            width={64}
+            height={64}
+            style={{
+              position: 'fixed',
+              left:   `${returnButtonPosition[0]}px`,
+              top:    `${returnButtonPosition[1]}px`,
+              cursor: 'pointer',
+              opacity: showReturnButton ? 1 : 0,
+              userSelect: 'none',
+              cursor:'pointer',
+              zIndex: 100000
+            }}
+            // press state
+            onMouseDown={()  => setIsReturnButtonPressed(true)}
+            onMouseUp={()    => setIsReturnButtonPressed(false)}
+            // drag to reposition
+            alt="Return"
+      />
       <Suspense>
 
       <Canvas
