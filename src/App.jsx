@@ -386,6 +386,8 @@ function App() {
               top:    `${returnButtonPosition[1]}px`,
               cursor: 'pointer',
               opacity: showReturnButton ? 1 : 0,
+                  transition: 'opacity 0.5s ease',
+
               userSelect: 'none',
               cursor:'pointer',
               zIndex: 100000
