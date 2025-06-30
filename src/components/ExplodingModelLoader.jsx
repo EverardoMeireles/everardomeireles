@@ -43,6 +43,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {stopMainObjectRotationAnimation = undefined} = props; // A trigger that will be able to stop the animation from outside the component
   const {mainObjectRotationAnimationIsPlayingTrigger = undefined} = props; // The trigger that will be set to true when the animation stops
 
+  const {tubeCurveDebugMode = false} = props; // Show the transition curve when circles are hovered
+  
 // ------------------------------------------------------------------------------------ //
   // Should these values not be specified in the model's config files, these default values will be applied
   const focusedObjectFrontDefault = [1, 0, 0];
@@ -82,6 +84,9 @@ export const ExplodingModelLoader = React.memo((props) => {
   const isDragging = useStore((state) => state.isDragging);
   const isMouseDown = useStore((state) => state.isMouseDown);
   const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
+  const isReturnButtonPressed = useStore((state) => state.isReturnButtonPressed);
+  const setShowReturnButton = useStore((state) => state.setShowReturnButton);
+  const setForcedCameraPosition = useStore((state) => state.setForcedCameraPosition);
 
   const [initialPositions, setInitialPositions] = useState({});
   const [desiredPositions, setDesiredPositions] = useState({});
@@ -97,10 +102,12 @@ export const ExplodingModelLoader = React.memo((props) => {
   const [explodingObjectEnableRockingAnimation, setExplodingObjectEnableRockingAnimation] = useState(true);
   const [explodingObjectEnableExplodeAnimation, setExplodingObjectEnableExplodeAnimation] = useState(true);
   // const [sceneOrigin, setSceneOrigin] = useState([gltf.scene.position.toArray()]); // Sets the imported model's origin point, a custom origin for the object if specified in the props
- const [sceneOrigin, setSceneOrigin] = useState(gltf.scene.position.toArray());
+  const [sceneOrigin, setSceneOrigin] = useState(gltf.scene.position.toArray());
 
 
   const [intersectionPoint, setIntersectionPoint] = useState(null); // Might be usefull for projecting more stuff in front of the camera in the future, ???use useRef???
+
+  const [forcedCameraPositionArray, setForcedCameraPositionArray] = useState(undefined);
 
   const rockingAnimationMaxAngle = useRef(undefined); // How drastic will the 'shaking' of the animation be
   const showCirclesAfterExplodingAnimationRef = useRef(undefined); // If true, all tooltip circles appear automatically after the explode animation finishes. If false, visibility is set right after the scene loads.
@@ -334,6 +341,8 @@ export const ExplodingModelLoader = React.memo((props) => {
         setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
         setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
         setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
+        console.log(modelProperties?.forcedCameraPosition)
+        setForcedCameraPositionArray(modelProperties?.forcedCameraPosition)
         showCirclesAfterExplodingAnimationRef.current = modelProperties?.showCirclesAfterExplodingAnimation ?? showCirclesAfterExplodingAnimation;
         rockingAnimationMaxAngle.current = modelProperties?.rockingMaxAngleDegrees * (Math.PI / 180) ?? rockingMaxAngle; // conversion to radians
         enableRotationAnimation.current = modelProperties?.enableRotationAnimation ?? enableMainObjectRotationAnimation;
@@ -731,6 +740,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const childAnimationUpdateFlag = useRef(false);
   const childAnimationCurrentSelectedObjectNameUpdateFlag = useRef("");
   const previousChildAnimationCurrentSelectedObjectNameUpdateFlag = useRef("");
+
   // Child animation mouse event
   useEffect(() => {
     const handleObjectChildAnimationMouseClick = (event) => {
@@ -751,7 +761,6 @@ export const ExplodingModelLoader = React.memo((props) => {
     const allHaveExploded = childNames.every(name => objectsThatHaveExploded.current.includes(name));
     if(childAnimationUpdateFlag.current && selectedObject){
       if(allHaveExploded && (childAnimationCurrentSelectedObjectNameUpdateFlag.current != previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current)){
-
         const animationForwards = !allHaveExploded;
 
         const childDesiredPositions = getDesiredPositions(childInitialPositions, animationForwards);
@@ -934,6 +943,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   const circlePositionUpdatePixelInterval = useRef(0.3);
   useEffect(() => {
+    console.log(currentGraphicalMode)
     switch(currentGraphicalMode) {
       case "potato":
         circlePositionUpdatePixelInterval.current = 1;
@@ -1017,6 +1027,7 @@ export const ExplodingModelLoader = React.memo((props) => {
         setTransitionEnded(false)
         setForcedCameraMovePathCurve(archCurve.current) // Starts the camera transition
         setForcedCameraTarget(foCameraTargetPoint.current) // Makes the camera follow the object
+        setShowReturnButton(true);
       }
     };
 
@@ -1063,6 +1074,42 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   }, [materialName, newMaterialGltf, gltf]);
 
+  /////////////////////////////
+  /// Force camera position ///
+  /////////////////////////////
+
+  useEffect(() => {
+    if (forcedCameraPositionArray) {
+      console.log("forced")
+      setForcedCameraPosition(forcedCameraPositionArray);
+
+    }
+  }, [forcedCameraPositionArray, tooltipCirclesDatajsonParsed.current]);
+
+  //////////////////////////////
+  /// Return button handling ///
+  //////////////////////////////
+
+  // Return to initial position
+  useEffect(() => {
+    if (isReturnButtonPressed) {
+      setShowReturnButton(false);
+      setTransitionEnded(false);
+      console.log(forcedCameraPositionArray)
+      setForcedCameraMovePathCurve(createArchCurve([1, 0, 0], forcedCameraPositionArray ?? config.default_Camera_starting_position, 0, camera,));
+      updateToolTipCircleVisibility()
+      setForcedCameraTarget(sceneOrigin);
+
+      if(!explodingObjectAnimationStartOnLoad){
+        reverseAllExplosionAnimations.current = true;
+      }else{
+        childAnimationUpdateFlag.current = true;
+        childAnimationCurrentSelectedObjectNameUpdateFlag.current = currentSelectedObjectName.current;
+      }
+
+    }
+  }, [isReturnButtonPressed]);
+
   /////////////////
   /// Rendering ///
   /////////////////
@@ -1083,13 +1130,14 @@ export const ExplodingModelLoader = React.memo((props) => {
         <meshBasicMaterial color={0xffffff} side={THREE.DoubleSide} transparent opacity={0} />
       </mesh>
 
+      {(tubeCurveDebugMode) && 
       <TubeCurve
         curve={archCurve.current}
         tubularSegments={8}
         radius={0.2}
         radialSegments={8}
       />
-
+      }
     </Suspense>
   );
 });

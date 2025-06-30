@@ -447,8 +447,8 @@ export const SceneContainer = React.memo((props) => {
                 new THREE.Vector3(278, 206, -6),
                 new THREE.Vector3(260, 190, 18),
                 new THREE.Vector3(199, 150, 46)])
-    
-            setForcedCameraTarget([45, 21, -50])
+
+                setForcedCameraTarget([45, 21, -50])
             setForcedCameraMovePathCurve(tempCurve);
         }else{
             setForcedCameraTarget([166, 137, 49])
@@ -532,7 +532,7 @@ export const SceneContainer = React.memo((props) => {
 
     return(
     <>
-        <Camera {...{useStore}} position = {[195, 146, 55]} ></Camera>
+        <Camera {...{useStore}} position = {config.default_Camera_starting_position} ></Camera>
         {(siteMode === "resume") && 
         <>
             {/* /////////////////////

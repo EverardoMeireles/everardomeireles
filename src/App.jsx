@@ -65,7 +65,7 @@ const useStore = create((set) => ({
   cameraStateTracking: false,
   setCameraStateTracking: (tracking) => set(() => ({ cameraStateTracking: tracking })),
 
-  forcedCameraTarget: [], // will force the camera's rotation pivot if not empty
+  forcedCameraTarget: [0, 0, 0], // will force the camera's orbit controls pivot if not empty
   setForcedCameraTarget: (target) => set(() => ({ forcedCameraTarget: target })),
 
   forcedCameraMovePathCurve: new THREE.CatmullRomCurve3([
@@ -73,6 +73,9 @@ const useStore = create((set) => ({
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, 0)]), // custom camera curve path
   setForcedCameraMovePathCurve: (curve) => set(() => ({ forcedCameraMovePathCurve: curve })), // Will move the camera according to the provided THREE.CatmullRomCurve3
+
+  forcedCameraPosition: undefined, // will force the camera's rotation pivot if not empty
+  setForcedCameraPosition: (position) => set(() => ({ forcedCameraPosition: position })),
 
   alertProperties: {
     active: false,
@@ -94,7 +97,7 @@ const useStore = create((set) => ({
   isCanvasHovered: false,
   setIsCanvasHovered: (hovered) => set(() => ({ isCanvasHovered: hovered })),
 
-  showReturnButton: true,
+  showReturnButton: false,
   setShowReturnButton: (show) => set(() => ({ showReturnButton: show })),
 
   isReturnButtonPressed: false,
@@ -222,6 +225,7 @@ function App() {
   const setIsReturnButtonPressed = useStore((state) => state.setIsReturnButtonPressed);
   const returnButtonPosition = useStore((state) => state.returnButtonPosition);
   const showReturnButton = useStore((state) => state.showReturnButton);
+  const siteMode = useStore((state) => state.siteMode);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
@@ -367,14 +371,16 @@ function App() {
           focusGroup = {props.focusGroup}
         />
       ))}
-      <TutorialOverlay enable = {enableTutorial} {...{useStore}}/>
-      {/* <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} /> */}
-      {/* <img  src={"textures/back_arrow.png"} width="64" height="64" /> */}
+      <TutorialOverlay enable = {enableTutorial} {...{useStore}}/> 
+      {(siteMode === "resume") &&
+        <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} />
+      }
+
       <img
-            src="textures/back_arrow.png"
-            width={64}
-            height={64}
-            style={{
+            src = "textures/back_arrow.png"
+            width = {64}
+            height = {64}
+            style = {{
               position: 'fixed',
               left:   `${returnButtonPosition[0]}px`,
               top:    `${returnButtonPosition[1]}px`,
@@ -385,8 +391,8 @@ function App() {
               zIndex: 100000
             }}
             // press state
-            onMouseDown={()  => setIsReturnButtonPressed(true)}
-            onMouseUp={()    => setIsReturnButtonPressed(false)}
+            onMouseDown = {()  => setIsReturnButtonPressed(true)}
+            onMouseUp = {()    => setIsReturnButtonPressed(false)}
             // drag to reposition
             alt="Return"
       />
@@ -406,7 +412,7 @@ function App() {
         dpr={1}
       >
       <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
-                {/* <FPSLogger /> */}
+      {/* <FPSLogger /> */}
 
       </Canvas>
       </Suspense>

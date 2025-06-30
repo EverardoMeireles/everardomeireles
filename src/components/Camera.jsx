@@ -24,6 +24,7 @@ export const Camera = React.memo((props) => {
     const cameraStateTracking = useStore((state) => state.cameraStateTracking);
     const forcedCameraTarget = useStore((state) => state.forcedCameraTarget);
     const forcedCameraMovePathCurve = useStore((state) => state.forcedCameraMovePathCurve);
+    const forcedCameraPosition = useStore((state) => state.forcedCameraPosition);
     const triggers = useStore((state) => state.triggers);
 
     const didMount = useRef(false);
@@ -40,7 +41,6 @@ export const Camera = React.memo((props) => {
     
     const keyboardControlsSpeed = 0.4;
 
-    // console.log(forcedCameraMovePathCurve);
     const gravitationalPullPoint = forcedCameraMovePathCurve?.points[forcedCameraMovePathCurve.points.length - 1] ?? new THREE.Vector3(0,0,0) // the point to return to in panDirectional mode
     const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
     const pullInterval = 10; // How often the pull is applied in milliseconds
@@ -286,7 +286,6 @@ export const Camera = React.memo((props) => {
                 controls.current.target = new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]);
                 state.camera.lookAt(forcedCameraTarget)
             }
-
             setTransitionEnded(true);
             updateCallNow.current = false;
             controls.current.enabled = true;
@@ -428,12 +427,24 @@ function compareCurves(curve1, curve2) {
         };
     }, [setCameraState, cameraStateTracking]);
 
+    ////////////////////////////////////////////////////////////
+    /// Force camera position if zustand state changes value ///
+    ////////////////////////////////////////////////////////////
+
+    useEffect(() => {
+        if(forcedCameraPosition){
+            cam.current.position.x = forcedCameraPosition[0];
+            cam.current.position.y = forcedCameraPosition[1];
+            cam.current.position.z = forcedCameraPosition[2];
+        }
+    }, [forcedCameraPosition]);
+    
     return(
         <>
-            <PerspectiveCamera makeDefault ref = {cam} position = {position} target={[0,0,0]} fov = {75}>
+            <PerspectiveCamera makeDefault ref = {cam} position = {position} fov = {75}>
             {/* <HtmlDreiMenu {...{useStore}}></HtmlDreiMenu> */}
             </PerspectiveCamera>
-            <OrbitControls makeDefault mouseButtons={cameraMode} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
+            <OrbitControls makeDefault mouseButtons={cameraMode} target={forcedCameraTarget} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
         </>
     )
 });

@@ -17,7 +17,7 @@
   "ModelProperties": {
     "positionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn":[0, 0, 0],
     "customOrigin": [180, 140, 51],
-
+    "forcedCameraPosition": [195, 146, 55],
     "animationStartOnLoad":true,
     "enableRockingAnimation":true,
     "enableExplodeAnimation":true,
