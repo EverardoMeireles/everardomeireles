@@ -51,7 +51,6 @@ export const Camera = React.memo((props) => {
         new THREE.Vector3(0, 0, 0)])
 
     const curve = useRef(nullCurve);
-    const cameraTarget = useRef([0, 0, 0]);
 
     let smoothStepTick;
     let sub_points;
@@ -223,7 +222,6 @@ export const Camera = React.memo((props) => {
             controls.current.target.y = forcedCameraTarget[1]
             controls.current.target.z = forcedCameraTarget[2]
         }
-        cameraTarget.current = forcedCameraTarget;
 
     }, [forcedCameraTarget]);
 
@@ -261,7 +259,7 @@ export const Camera = React.memo((props) => {
         smoothStepTick = smoothStep(tick.current),
 
         // Determines the next point for the camera to look at
-        current_lookat.current.lerp(new THREE.Vector3(cameraTarget.current[0], cameraTarget.current[1], cameraTarget.current[2]), 0.03),
+        current_lookat.current.lerp(new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]), 0.03),
 
         state.camera.lookAt(current_lookat.current),
         // Updates the orbitcontrol's target
