@@ -14,6 +14,26 @@
     ]
   },
 
+  "ExplodingAnimationObjectDirections": {
+    "Brush_0TT1":{"x": 0, "y": 1, "z": -1, "distance": 1},
+    "Foot_1BB2":{"x": 0, "y": -1, "z": 0, "distance": 2},
+    "Gearbox_body_0BB1":{"x": 0, "y": -1, "z": -1, "distance": 1},
+    "Head_1TT3":{"x": 0, "y": 1, "z": 0, "distance": 3},
+    "LUL_0BB1":{"x": 0, "y": -1, "z": -1, "distance": 1},
+    "Motor_gearbox_1TT1":{"x": 0, "y": 1, "z": 0, "distance": 1},
+    "Wheel_1_1BB1":{"x": 0, "y": -1, "z": 0, "distance": 1},
+    "Wheel_2_1BB1":{"x": 0, "y": -1, "z": 0, "distance": 1},
+    "motor_wheel1_1BB1":{"x": 0, "y": -1, "z": 0, "distance": 1},
+    "motor_wheel2_1BB1":{"x": 0, "y": -1, "z": 0, "distance": 1},
+    "Gear_1_0TL1":{"x": -1, "y": 1, "z": -1, "distance": 1},
+    "Gear_2_1TT1":{"x": 0, "y": 1, "z": 0, "distance": 1},
+    "Gear_3_2TR1":{"x": 1, "y": 1, "z": 1, "distance": 1},
+    "Gearbox_lid_1TT1":{"x": 0, "y": 1, "z": 0, "distance": 1},
+    "Cube0_1_0TL1":{"x": -1, "y": 1, "z": -1, "distance": 1},
+    "Cube1_2_1TT1":{"x": 0, "y": 1, "z": 0, "distance": 1},
+    "Cube2_3_2TR1":{"x": 1, "y": 1, "z": 1, "distance": 1}
+  },
+
   "ModelProperties": {
     "positionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn":[0, 0, 0],
     "customOrigin": [180, 140, 51],

@@ -61,9 +61,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const waitForFocusBeforeExplodeAnimationDefault = true;
 
   const gltf = useLoader(GLTFLoader, config.models_path + modelName);
-
   const { camera, gl } = useThree();
-
 
   const isCanvasHovered = useStore((state) => state.isCanvasHovered);
   const cameraState = useStore((state) => state.cameraState);
@@ -104,6 +102,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   // const [sceneOrigin, setSceneOrigin] = useState([gltf.scene.position.toArray()]); // Sets the imported model's origin point, a custom origin for the object if specified in the props
   const [sceneOrigin, setSceneOrigin] = useState(gltf.scene.position.toArray());
 
+  const explodingAnimationObjectDirections = useRef(undefined)
 
   const [intersectionPoint, setIntersectionPoint] = useState(null); // Might be usefull for projecting more stuff in front of the camera in the future, ???use useRef???
 
@@ -133,7 +132,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const explodeAnimationPlayed = useRef(false);
   const previousAnimationDirection = useRef(null);
 
-  const tooltipCirclesDatajsonParsed = useRef(false);
+  const jsonDataParsed = useRef(false);
 
   const objectsThatHaveExploded = useRef([]);
 
@@ -150,116 +149,33 @@ export const ExplodingModelLoader = React.memo((props) => {
     return currentPositions;
   }
 
-  // function getDesiredPositions(currentPositions) {
-  //   let zIndexTable = {
-  //     0: -1,
-  //     1: 0,
-  //     2: 1
-  //   };
-
-  //   let nameSubstring = '';
-  //   let DirectionValue = '';
-  //   let zIndexValue = 0;
-  //   let incrementValue = 0;
-  //   let incrementVector = new THREE.Vector3(0, 0, 0);
-  //   let newPositions = {};
-
-  //   Object.keys(currentPositions).forEach((name) => {
-  //     nameSubstring = name.slice(-4); // take the 4 characters at the end of the model's name to extract the values
-  //     zIndexValue = zIndexTable[parseInt(nameSubstring[0], 10)];
-  //     DirectionValue = nameSubstring[1] + nameSubstring[2];
-  //     incrementValue = parseInt(nameSubstring[3], 10);
-
-  //     switch (DirectionValue) {
-  //       case 'TL':
-  //         incrementVector = new THREE.Vector3(-1, 1, zIndexValue);
-  //         break;
-
-  //       case 'TT':
-  //         incrementVector = new THREE.Vector3(0, 1, zIndexValue);
-  //         break;
-
-  //       case 'TR':
-  //         incrementVector = new THREE.Vector3(1, 1, zIndexValue);
-  //         break;
-
-  //       case 'LL':
-  //         incrementVector = new THREE.Vector3(-1, 0, zIndexValue);
-  //         break;
-
-  //       case 'MM':
-  //         incrementVector = new THREE.Vector3(0, 0, zIndexValue);
-  //         break;
-
-  //       case 'RR':
-  //         incrementVector = new THREE.Vector3(1, 0, zIndexValue);
-  //         break;
-
-  //       case 'BL':
-  //         incrementVector = new THREE.Vector3(-1, -1, zIndexValue);
-  //         break;
-
-  //       case 'BB':
-  //         incrementVector = new THREE.Vector3(0, -1, zIndexValue);
-  //         break;
-
-  //       case 'BR':
-  //         incrementVector = new THREE.Vector3(1, -1, zIndexValue);
-  //         break;
-
-  //       default:
-  //         incrementVector = new THREE.Vector3(0, 0, 0);
-  //     }
-
-  //     // Clone the current position to avoid mutating the original object
-  //     let newPosition = currentPositions[name].clone();
-
-  //     newPositions[name] = newPosition.add(incrementVector.multiplyScalar(incrementValue * 4));
-  //   });
-
-  //   return newPositions;
-  // }
-
   function getDesiredPositions(currentPositions, directionForward = true) {
-  const zIndexTable = {
-    0: -1,
-    1: 0,
-    2: 1,
-  };
-
-  const newPositions = {};
-
-  Object.keys(currentPositions).forEach((name) => {
-    // parse name suffix: [z][D][D][n], e.g. "1TR3"
-    const nameSubstring = name.slice(-4);
-    const zIndexValue = zIndexTable[parseInt(nameSubstring[0], 10)];
-    const DirectionValue = nameSubstring[1] + nameSubstring[2];
-    const incrementValue = parseInt(nameSubstring[3], 10);
-
-    let incrementVector;
-    switch (DirectionValue) {
-      case 'TL': incrementVector = new THREE.Vector3(-1,  1, zIndexValue); break;
-      case 'TT': incrementVector = new THREE.Vector3( 0,  1, zIndexValue); break;
-      case 'TR': incrementVector = new THREE.Vector3( 1,  1, zIndexValue); break;
-      case 'LL': incrementVector = new THREE.Vector3(-1,  0, zIndexValue); break;
-      case 'MM': incrementVector = new THREE.Vector3( 0,  0, zIndexValue); break;
-      case 'RR': incrementVector = new THREE.Vector3( 1,  0, zIndexValue); break;
-      case 'BL': incrementVector = new THREE.Vector3(-1, -1, zIndexValue); break;
-      case 'BB': incrementVector = new THREE.Vector3( 0, -1, zIndexValue); break;
-      case 'BR': incrementVector = new THREE.Vector3( 1, -1, zIndexValue); break;
-      default:   incrementVector = new THREE.Vector3( 0,  0, 0);         break;
+    if (!explodingAnimationObjectDirections.current) {
+      console.warn("ExplodingAnimationObjectDirections not yet loaded");
+      return { ...currentPositions }; // fallback: no movement
     }
 
-    // clone so we don’t mutate the original
-    const newPosition = currentPositions[name].clone();
+    const newPositions = {};
+    Object.keys(currentPositions).forEach((name) => {
+      const directionData = explodingAnimationObjectDirections.current[name];
 
-    // if directionForward is false, invert the movement
-    const scalar = incrementValue * 4 * (directionForward ? 1 : -1);
-    newPositions[name] = newPosition.add(incrementVector.multiplyScalar(scalar));
-  });
+      if (!directionData) {
+        // No direction specified for this part? Leave it unmoved
+        newPositions[name] = currentPositions[name].clone();
+        return;
+      }
 
-  return newPositions;
-}
+      const { x, y, z, distance } = directionData;
+      const directionVector = new THREE.Vector3(x, y, z);
+
+      // Allow "rewind" by negating
+      const scalar = distance * 4 * (directionForward ? 1 : -1);
+
+      newPositions[name] = currentPositions[name].clone().add(directionVector.multiplyScalar(scalar));
+    });
+    
+    return newPositions;
+  }
 
   // Change the camera's target on trigger
   useEffect(() => {
@@ -287,14 +203,16 @@ export const ExplodingModelLoader = React.memo((props) => {
     currentSelectedObjectName.current = tooltipCurrentObjectNameSelected
   }, [tooltipCurrentObjectNameSelected])
 
+  const jsonFileRef = useRef(undefined);
   //Parses a 3D model's corresponding to a json file to create info circles on the screen
   useEffect(() => {
     if(modelName){
-      parseJson(config.models_path + configFile, "ObjectProperties")
-      .then((ObjectProperties) => {
+      parseJson(config.models_path + configFile)
+      .then((data) => {
+        jsonFileRef.current = data;
         setTooltipCirclesData([])
-        addTooltipCirclesData(ObjectProperties);
-        tooltipCirclesDatajsonParsed.current = true;
+        addTooltipCirclesData(data.ObjectProperties);
+        jsonDataParsed.current = true;
       })
     }
   }, [modelName]);
@@ -327,12 +245,11 @@ export const ExplodingModelLoader = React.memo((props) => {
     foCloneAxisOfRotation.current = tCircleData?.focusedObjectCloneAxisOfRotation ?? focusedObjectCloneAxisOfRotation;
     foCloneSpeedOfRotation.current = tCircleData?.focusedObjectCloneSpeedOfRotation ?? focusedObjectCloneSpeedOfRotation;
     foCloneForcePositionOffset.current = tCircleData?.focusedObjectCloneForcePositionOffset ?? focusedObjectCloneForcePositionOffset;
-  }, [currentSelectedObjectName.current]);
+  }, [currentSelectedObjectName.current, jsonDataParsed.current]);
 
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
-    parseJson(config.models_path + configFile, 'ModelProperties')
-      .then(modelProperties => {
+      const modelProperties = jsonFileRef.current?.ModelProperties;
         setExplodingObjectPosition(modelProperties?.position ?? position)
         setExplodingObjectAnimationStartOnLoad(modelProperties?.animationStartOnLoad ?? animationStartOnLoad)
         setExplodingObjectEnableRockingAnimation(modelProperties?.enableRockingAnimation ?? enableRockingAnimation)
@@ -341,7 +258,6 @@ export const ExplodingModelLoader = React.memo((props) => {
         setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
         setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
         setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
-        console.log(modelProperties?.forcedCameraPosition)
         setForcedCameraPositionArray(modelProperties?.forcedCameraPosition)
         showCirclesAfterExplodingAnimationRef.current = modelProperties?.showCirclesAfterExplodingAnimation ?? showCirclesAfterExplodingAnimation;
         rockingAnimationMaxAngle.current = modelProperties?.rockingMaxAngleDegrees * (Math.PI / 180) ?? rockingMaxAngle; // conversion to radians
@@ -351,11 +267,13 @@ export const ExplodingModelLoader = React.memo((props) => {
         resetInitialRotation.current = modelProperties?.resetInitialRotation ?? mainObjectRotationAnimationResetInitialRotation;
         resetInitialRotationAnimationSpeed.current = modelProperties?.resetInitialRotationAnimationSpeed ?? mainObjectRotationAnimationResetInitialRotationAnimationSpeed;
         restartAnimationAfterStop.current = modelProperties?.restartAnimationAfterStop ?? mainObjectRotationAnimationRestartAnimationAfterStop;
-      })
-      .catch(error => {
-        console.error('Error parsing JSON:', error);
-      });
-  }, [modelName]);
+  }, [modelName, jsonDataParsed.current]);
+
+  // Set the object's exploding animation information by parsing a json
+  useEffect(() => {
+      const directions = jsonFileRef.current?.ExplodingAnimationObjectDirections;
+        explodingAnimationObjectDirections.current = directions;
+  }, [modelName, jsonDataParsed.current]);
 
   /////////////////////////////////////
   /// Main model rotation animation ///
@@ -395,7 +313,6 @@ export const ExplodingModelLoader = React.memo((props) => {
         startRotationAnimation.current = false;
       }
 
-      console.log(tooltipCurrentObjectNameSelected)
       // Stops animation if a circle is hovered
       if(tooltipCurrentObjectNameSelected){
         startRotationAnimation.current = false;
@@ -571,7 +488,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   const [explode, setExplode] = useState(false);
   const [rockingTransitionDuration, setRockingTransitionDuration] = useState(rockingDuration);
   const [explodingTransitionDuration, setExplodingTransitionDuration] = useState(explodingDuration);
-  const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
 
   // Automatically starts the animation when the animationStartOnLoad prop is set to true
   useEffect(() => {
@@ -588,13 +504,13 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // When model loads, set the initial and desired positions of the the objects for the exploding animation
   useEffect(() => {
-    if (gltf) {
+    if (gltf && jsonDataParsed.current) {
       const initialPositions = getInitialPositions(gltf);
       const desiredPositions = getDesiredPositions(initialPositions);
       setInitialPositions(initialPositions);
       setDesiredPositions(desiredPositions);
     }
-  }, [gltf]);
+  }, [gltf, jsonDataParsed.current]);
 
   // Control the animations using the isPlaying state(set either by the animationIsPlaying or the animationStartOnLoad props)
   useEffect(() => {
@@ -703,6 +619,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   const [childAnimationTick, setChildAnimationTick] = useState(0);
   const [childAnimationEnable, setChildAnimationEnable] = useState(false);
+  const [childTransitionDuration, setChildTransitionDuration] = useState(childDuration);
   const childAnimationIsPlaying = useRef(false);
 
   // Animation, rewind included
@@ -776,13 +693,13 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     const selectedObject = tooltipCirclesData.find(item => item.objectName === childAnimationCurrentSelectedObjectNameUpdateFlag.current);
     const childInitialPositions = getChildrenInitialPositions(gltf, [selectedObject?.objectName]);
+    // explodingAnimationObjectDirections.current = 
     const childNames = Object.keys(childInitialPositions);
     const allHaveExploded = childNames.every(name => objectsThatHaveExploded.current.includes(name));
     if(childAnimationUpdateFlag.current && selectedObject && transitionEnded){
       if (selectedObject.waitForFocusBeforeExplodeAnimation && gltf.scene.getObjectByName(selectedObject.objectName).children.length > 0) {
 
         const animationForwards = !allHaveExploded;
-
         const childDesiredPositions = getDesiredPositions(childInitialPositions, animationForwards);
         setChildInitialPositions(childInitialPositions);
         setChildDesiredPositions(childDesiredPositions);
@@ -866,7 +783,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       updateToolTipCircleVisibility();
 
     }
-  }, [tooltipCirclesDatajsonParsed.current]);
+  }, [jsonDataParsed.current]);
 
   // Shows the circles after the exploding animation has played should the showCirclesAfterExplodingAnimationRef flag be true
   useEffect(() => {
@@ -1080,11 +997,9 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   useEffect(() => {
     if (forcedCameraPositionArray) {
-      console.log("forced")
       setForcedCameraPosition(forcedCameraPositionArray);
-
     }
-  }, [forcedCameraPositionArray, tooltipCirclesDatajsonParsed.current]);
+  }, [forcedCameraPositionArray, jsonDataParsed.current]);
 
   //////////////////////////////
   /// Return button handling ///
@@ -1095,7 +1010,6 @@ export const ExplodingModelLoader = React.memo((props) => {
     if (isReturnButtonPressed) {
       setShowReturnButton(false);
       setTransitionEnded(false);
-      console.log(forcedCameraPositionArray)
       setForcedCameraMovePathCurve(createArchCurve([1, 0, 0], forcedCameraPositionArray ?? config.default_Camera_starting_position, 0, camera,));
       updateToolTipCircleVisibility()
       setForcedCameraTarget(sceneOrigin);
