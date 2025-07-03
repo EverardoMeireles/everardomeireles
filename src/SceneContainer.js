@@ -26,7 +26,7 @@ import { AnimationMixer } from 'three';
 import { customInstanceRotation, customInstanceColor } from "./PathPoints";
 import { TranslationTable } from "./TranslationTable";
 import { ResponsiveTable } from "./Styles";
-import { pollForFilesInTHREECache, removeFileExtensionString } from "./Helper";
+import { pollForFilesInTHREECache, removeFileExtensionString, createTimer } from "./Helper";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 import * as THREE from 'three';
@@ -57,7 +57,6 @@ export const SceneContainer = React.memo((props) => {
 
     const { gl } = useThree();
     const { mouse } = useThree();
-
     let mixer;
 
     const animTimeRef = useRef(0);

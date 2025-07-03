@@ -8,7 +8,7 @@ import { Alert } from "./components/Alert";
 import { ToolTip } from "./components/ToolTip";
 import { ToolTipCircle } from "./components/ToolTipCircle";
 import { TutorialOverlay } from "./components/TutorialOverlay";
-import { parseJson, removeFileExtensionString } from "./Helper";
+import { parseJson, removeFileExtensionString, createTimer } from "./Helper";
 import * as THREE from "three";
 import { useLoader, useFrame } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'

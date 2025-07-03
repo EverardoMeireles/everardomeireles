@@ -56,6 +56,11 @@ export function isCurveDegenerate(curve) {
   return curve.points.every(p => p.equals(first));
 }
 
+export function createTimer() {
+  const start = performance.now();
+  return () => performance.now() - start;
+}
+
 // Create a THREE.CatmullRomCurve3 curve from the camera to a target position
 export function createArchCurve(
     frontDirection = [1, 0, 0], // the direction of the "front" of the object
