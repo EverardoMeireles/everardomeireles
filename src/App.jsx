@@ -237,7 +237,8 @@ function App() {
 
   const [enableTutorial, setEnableTutorial] = useState(false);
 
-  const scene = useLoader(GLTFLoader, config.resource_path + '/models/' + 'NewthreeJsScene.glb')
+  const sceneName = siteMode === "resume" ? 'NewthreeJsScene.glb' : 'Cube.glb';
+  const scene = useLoader(GLTFLoader, config.resource_path + '/models/' + sceneName);
 
   // Load initial main scene
   useEffect(() => {
