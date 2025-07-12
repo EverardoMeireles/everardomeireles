@@ -291,15 +291,17 @@ export const Camera = React.memo((props) => {
         }
     }
 
-// useFrame((state,delta)=>{
-//     console.log(forcedCameraTarget)
-// })
+//useFrame((state,delta)=>{
+    // console.log(controls)
+    // console.log(cameraMode)
+//})
 
 // Function to compare arrays of Vector3
 function compareCurves(curve1, curve2) {
     if (curve1.points.length !== curve2.points.length) {
         return false;
     }
+    
     for (let i = 0; i < curve1.points.length; i++) {
         if (!curve1.points[i].equals(curve2.points[i])) {
             return false;

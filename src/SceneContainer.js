@@ -274,15 +274,17 @@ export const SceneContainer = React.memo((props) => {
     // FPS counter
     // const accuDeltasForFPS = useRef(0);
     // const accuFramesForFPS = useRef(0);
-    // useFrame((state, delta)=>{
-    //     accuDeltasForFPS.current += delta;
-    //     accuFramesForFPS.current += 1;
-    //     if(accuDeltasForFPS.current >= 1){
-    //         console.log("FPS:" + accuFramesForFPS.current);
-    //         accuDeltasForFPS.current = 0;
-    //         accuFramesForFPS.current = 0;
-    //     }
-    // });
+    useFrame((state, delta)=>{
+        // accuDeltasForFPS.current += delta;
+        // accuFramesForFPS.current += 1;
+        // if(accuDeltasForFPS.current >= 1){
+        //     console.log("FPS:" + accuFramesForFPS.current);
+        //     accuDeltasForFPS.current = 0;
+        //     accuFramesForFPS.current = 0;
+        // }
+                            //   console.log(modelsConfiguration)
+
+    });
     
     ///////////////////////////
     // E-comerce integration //
@@ -317,49 +319,48 @@ export const SceneContainer = React.memo((props) => {
       loadRecords();
     }, []);
   
-    // Fetch all json configuration files and pack them all into one state
+    // Fetch the appropriate configuration file
     useEffect(() => {
-        async function loadModelsConfiguration() {
-            // Only proceed if modelRecords is not empty
-            if (Object.keys(modelRecords).length === 0) return;
+        async function loadSelectedModelConfig() {
+            if (!productInformationFromMessage?.id || Object.keys(modelRecords).length === 0) return;
+
+            // Find matching record in modelRecords
+            const matchingRecord = Object.values(modelRecords).find(
+            (record) => record.id === productInformationFromMessage.id
+            );
+
+            if (!matchingRecord) {
+            console.warn('No matching record found');
+            return;
+            }
+
+            const modelBaseName = matchingRecord.model.replace(".glb", "");
+            const jsonFilename = `${modelBaseName}.json`;
 
             try {
-                // Convert the object to an array to iterate the records easily
-                const recordsArray = Object.values(modelRecords);
-
-                const modelsObject = await recordsArray.reduce(async (accPromise, record) => {
-                const acc = await accPromise;
-                // Remove the .glb extension to get the base name (e.g. "car")
-                const modelBaseName = record.model.replace(".glb", "");
-                // Build the corresponding JSON filename (e.g. "car.json")
-                const jsonFilename = `${modelBaseName}.json`;
                 const modelResponse = await fetch(`${config.models_path}/${jsonFilename}`);
-                if (!modelResponse.ok) {
-                    throw new Error(`Failed to load ${jsonFilename}`);
-                }
+                if (!modelResponse.ok) throw new Error(`Failed to load ${jsonFilename}`);
                 const modelJson = await modelResponse.json();
 
-                // Combine the record with its corresponding JSON data
-                acc[modelBaseName] = {
-                    ...record,
+                // Save just this one configuration
+                setModelsConfiguration({
+                    [modelBaseName]: {
+                    ...matchingRecord,
                     data: modelJson,
-                };
+                    },
+                });
 
-                return acc;
-                }, Promise.resolve({}));
-
-                setModelsConfiguration(modelsObject);
             } catch (err) {
                 console.error(err);
             }
         }
 
-        loadModelsConfiguration();
-    }, [modelRecords]);
+        loadSelectedModelConfig();
+}, [productInformationFromMessage, modelRecords]);
 
     const [explodingMaterialPath, setExplodingMaterialPath] = useState("");
-    const [explodingModelPath, setExplodingModelPath] = useState("example_model.glb");
-    const [explodingConfigFile, setExplodingConfigFile] = useState("example_model.json");
+    const [explodingModelPath, setExplodingModelPath] = useState("EmptyObject.glb"); ;
+    const [explodingConfigFile, setExplodingConfigFile] = useState("EmptyObject.json");;
 
     // Match the received id from the message to the configuration files(now all in the state ModelsConfiguration) to set product models and materials
     useEffect(() => {
@@ -450,7 +451,9 @@ export const SceneContainer = React.memo((props) => {
                 setForcedCameraTarget([45, 21, -50])
             setForcedCameraMovePathCurve(tempCurve);
         }else{
-            setForcedCameraTarget([166, 137, 49])
+            // setForcedCameraTarget([166, 137, 49])
+            setForcedCameraTarget([0, 0, 0])
+
         }
     }, []);
 
@@ -630,8 +633,8 @@ export const SceneContainer = React.memo((props) => {
             <ambientLight intensity = {1}></ambientLight>
             {(explodingModelPath != "")
             &&
-            <ExplodingModelLoader {...{useStore}} modelName={"Roomba.glb"/*explodingModelPath*/} materialName={""/*explodingMaterialPath*/} configFile={"Roomba.json"/*explodingConfigFile*/} animationIsPlaying={animationTriggerState}
-                position={[175, 135, 50]} setCameraTargetTrigger={"trigger4"} stopMainObjectRotationAnimation={trig} mainObjectRotationAnimationIsPlayingTrigger={"trigger5"} />
+            <ExplodingModelLoader {...{useStore}} modelName={/*"Roomba.glb"*/explodingModelPath} materialName={/*""*/explodingMaterialPath} configFile={/*"Roomba.json"*/explodingConfigFile} animationIsPlaying={animationTriggerState}
+                /*position={[175, 135, 50]}*/ setCameraTargetTrigger={"trigger4"} stopMainObjectRotationAnimation={trig} mainObjectRotationAnimationIsPlayingTrigger={"trigger5"} />
             }
         </>
         }

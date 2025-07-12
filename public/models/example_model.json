@@ -22,7 +22,7 @@
   "ModelProperties": {
     "position":[0, 0, 0], "position_comment":" Overwrite the position of the model.",
     "customOrigin": [180, 140, 51], "customOrigin_comment":" Overwrite the scene's origin point",
-    "forcedCameraPosition": [195, 146, 55], "forcedCameraPosition_comment":" Force the camera's position",
+    "forcedCameraPosition": [0, 50, 100], "forcedCameraPosition_comment":" Force the camera's position, if its [0, 0, 0], orbit controls are unavailable",
     "animationStartOnLoad":false, "animationStartOnLoad_comment":" Start the animation right away",
     "enableRockingAnimation":true, "enableRockingAnimation_comment":" Turn the rocking animation on or off",
     "enableExplodeAnimation":true, "enableExplodeAnimation_comment":" Turn the exploding animation on or off",

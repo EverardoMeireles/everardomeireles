@@ -12,8 +12,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {animationIsPlaying = false} = props;
 
   const {position = [0, 0, 0]} = props;
-  const {modelName = 'example_model.glb'} = props;
-  const {configFile = 'example_model.json'} = props;
+  const {modelName = "EmptyObject.glb"} = props;
+  const {configFile = "EmptyObject.json"} = props;
   const {materialName = ""} = props; // feature: Swap material
   const {customOrigin = []} = props; // If for any reason the imported scene's position transform is not (0, 0, 0), specify it here
   const {animationStartOnLoad = false} = props;
@@ -212,7 +212,9 @@ export const ExplodingModelLoader = React.memo((props) => {
         jsonFileRef.current = data;
         setTooltipCirclesData([])
         addTooltipCirclesData(data.ObjectProperties);
-        jsonDataParsed.current = true;
+        if(jsonFileRef.current && modelName != "EmptyObject.glb"){
+          jsonDataParsed.current = true;
+        }
       })
     }
   }, [modelName]);
@@ -258,7 +260,7 @@ export const ExplodingModelLoader = React.memo((props) => {
         setRockingTransitionDuration(modelProperties?.rockingTransitionDuration ?? rockingDuration);
         setExplodingTransitionDuration(modelProperties?.explodingTransitionDuration ?? explodingDuration);
         setChildTransitionDuration(modelProperties?.childTransitionDuration ?? childDuration);
-        setForcedCameraPositionArray(modelProperties?.forcedCameraPosition)
+        setForcedCameraPositionArray(modelProperties?.forcedCameraPosition);
         showCirclesAfterExplodingAnimationRef.current = modelProperties?.showCirclesAfterExplodingAnimation ?? showCirclesAfterExplodingAnimation;
         rockingAnimationMaxAngle.current = modelProperties?.rockingMaxAngleDegrees * (Math.PI / 180) ?? rockingMaxAngle; // conversion to radians
         enableRotationAnimation.current = modelProperties?.enableRotationAnimation ?? enableMainObjectRotationAnimation;
@@ -271,8 +273,9 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Set the object's exploding animation information by parsing a json
   useEffect(() => {
-      const directions = jsonFileRef.current?.ExplodingAnimationObjectDirections;
-        explodingAnimationObjectDirections.current = directions;
+    const directions = jsonFileRef.current?.ExplodingAnimationObjectDirections;
+    explodingAnimationObjectDirections.current = directions;
+    updateToolTipCircleVisibility();
   }, [modelName, jsonDataParsed.current]);
 
   /////////////////////////////////////
@@ -860,7 +863,6 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   const circlePositionUpdatePixelInterval = useRef(0.3);
   useEffect(() => {
-    console.log(currentGraphicalMode)
     switch(currentGraphicalMode) {
       case "potato":
         circlePositionUpdatePixelInterval.current = 1;
@@ -1011,7 +1013,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       setShowReturnButton(false);
       setTransitionEnded(false);
       setForcedCameraMovePathCurve(createArchCurve([1, 0, 0], forcedCameraPositionArray ?? config.default_Camera_starting_position, 0, camera,));
-      updateToolTipCircleVisibility()
+      updateToolTipCircleVisibility();
       setForcedCameraTarget(sceneOrigin);
 
       if(!explodingObjectAnimationStartOnLoad){

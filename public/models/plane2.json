@@ -42,6 +42,7 @@
 
   "ModelProperties": {
     "position":[0, 0, 0],
+    "forcedCameraPosition": [0, 50, 50],
     "animationStartOnLoad":false,
     "enableRockingAnimation":true,
     "enableExplodeAnimation":true,
