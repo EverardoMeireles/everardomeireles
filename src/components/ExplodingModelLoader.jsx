@@ -49,7 +49,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   // Should these values not be specified in the model's config files, these default values will be applied
   const focusedObjectFrontDefault = [1, 0, 0];
   const focusedObjectFocusPointDefault = [0, 0, 0];
-  const focusedObjectFocusEndPointDistanceDefault = 8;
   const focusedObjectCameraTargetPointDefault = [0, 0, 0];
   const focusedObjectArchWidthDefault = 5;
   const focusedObjectArchCurveDirectionDefault = [1, 0, 0];
@@ -116,7 +115,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   const foCloneForcePositionOffset = useRef(undefined);
   const foCloneEnable = useRef(true); // Enables the rotating object's animation
   const foFocusPoint = useRef([0, 0, 0]); // The point that the camera will transition to if the object is focused on(if circle is clicked)
-  const foFocusEndPointDistance = useRef(0); // The distance from the focus point, that the camera will transition to
   const foFront = useRef([1, 0, 0]); // The 'front' of the object for the object focusing feature
   const foCameraTargetPoint = useRef([0, 0, 0]);
   const foArchWidth = useRef(1); // How wide must the transition's curve be when the object is focused
@@ -228,7 +226,6 @@ export const ExplodingModelLoader = React.memo((props) => {
     
     foFront.current = tCircleData?.focusedObjectFront ?? focusedObjectFrontDefault;
     foFocusPoint.current =  tCircleData?.focusedObjectFocusPoint ?? focusedObjectWorldPosition.current ?? focusedObjectFocusPointDefault;
-    foFocusEndPointDistance.current = tCircleData?.focusedObjectFocusEndPointDistance ?? focusedObjectFocusEndPointDistanceDefault;
     foCameraTargetPoint.current =  tCircleData?.focusedObjectCameraTargetPoint ?? focusedObjectWorldPosition.current.toArray() ?? focusedObjectCameraTargetPointDefault;
     foArchWidth.current = tCircleData?.focusedObjectArchWidth ?? focusedObjectArchWidthDefault;
     foArchcurveDirection.current = tCircleData?.focusedObjectArchCurveDirection ?? focusedObjectArchCurveDirectionDefault;
@@ -966,7 +963,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       frameCount.current += 1;
       // Only update archCurve.current every 5 frames
       if (frameCount.current >= 5) {
-        archCurve.current = createArchCurve(foFront.current, foFocusPoint.current, foFocusEndPointDistance.current, camera, foArchWidth.current, foArchcurveDirection.current);
+        archCurve.current = createArchCurve(foFront.current, foFocusPoint.current, camera, foArchWidth.current, foArchcurveDirection.current);
         frameCount.current = 0;  // Reset the frame count after updating
       }
     }
@@ -1045,7 +1042,7 @@ export const ExplodingModelLoader = React.memo((props) => {
     if (isReturnButtonPressed) {
       setShowReturnButton(false);
       setTransitionEnded(false);
-      setForcedCameraMovePathCurve(createArchCurve([1, 0, 0], forcedCameraPositionArray ?? config.default_Camera_starting_position, 0, camera,));
+      setForcedCameraMovePathCurve(createArchCurve([1, 0, 0], forcedCameraPositionArray ?? config.default_Camera_starting_position, camera,));
       updateToolTipCircleVisibility();
       setForcedCameraTarget(sceneOrigin);
 
