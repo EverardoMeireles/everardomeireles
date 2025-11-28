@@ -12,9 +12,9 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {animationIsPlaying = false} = props;
 
   const {position = [0, 0, 0]} = props;
-  const {modelName = "EmptyObject.glb"} = props;
-  const {configFile = "EmptyObject.json"} = props;
-  const {materialName = ""} = props; // feature: Swap material
+  const {modelName = "base_cube_DO_NOT_REMOVE.glb"} = props;
+  const {configFile = "base_cube_DO_NOT_REMOVE.json"} = props;
+  const {materialName = ""} = props; // feature: swap material. Hot swap material by changing this prop in real time
   const {customOrigin = []} = props; // If for any reason the imported scene's position transform is not (0, 0, 0), specify it here
   const {animationStartOnLoad = false} = props;
   const {enableRockingAnimation = true} = props;
@@ -211,7 +211,7 @@ export const ExplodingModelLoader = React.memo((props) => {
         jsonFileRef.current = data;
         setTooltipCirclesData([])
         addTooltipCirclesData(data.ObjectProperties);
-        if(jsonFileRef.current && modelName != "EmptyObject.glb"){
+        if(jsonFileRef.current && modelName != "base_cube_DO_NOT_REMOVE.glb"){
           jsonDataParsed.current = true;
         }
       })
@@ -1005,7 +1005,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   /// Material change feature ///
   ///////////////////////////////
 
-  const newMaterialGltf = useLoader(GLTFLoader, config.materials_path + ( (!materialName || materialName == "") ? "example_material.glb" : materialName));
+  const newMaterialGltf = useLoader(GLTFLoader, config.materials_path + ( (!materialName || materialName == "") ? "base_material_DO_NOT_REMOVE.glb" : materialName));
   // Material change feature
   useEffect(() => {
     if (materialName != "" && materialName && newMaterialGltf && gltf) {

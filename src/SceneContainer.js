@@ -216,7 +216,7 @@ export const SceneContainer = React.memo((props) => {
         switch (triggers) {
             case 'trigger 9':
                 // console.log("clicked")
-                // setCustomMaterial("example_material.glb")
+                // setCustomMaterial("base_material_DO_NOT_REMOVE.glb")
                 break;
           }
        
@@ -359,8 +359,8 @@ export const SceneContainer = React.memo((props) => {
 }, [productInformationFromMessage, modelRecords]);
 
     const [explodingMaterialPath, setExplodingMaterialPath] = useState("");
-    const [explodingModelPath, setExplodingModelPath] = useState("EmptyObject.glb"); ;
-    const [explodingConfigFile, setExplodingConfigFile] = useState("EmptyObject.json");;
+    const [explodingModelPath, setExplodingModelPath] = useState("base_cube_DO_NOT_REMOVE.glb"); ;
+    const [explodingConfigFile, setExplodingConfigFile] = useState("base_cube_DO_NOT_REMOVE.json");;
 
     // Match the received id from the message to the configuration files(now all in the state ModelsConfiguration) to set product models and materials
     useEffect(() => {

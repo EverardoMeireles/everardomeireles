@@ -243,7 +243,7 @@ function App() {
 
   const [enableTutorial, setEnableTutorial] = useState(false);
 
-  const sceneName = siteMode === "resume" ? 'NewthreeJsScene.glb' : 'example_model.glb';
+  const sceneName = siteMode === "resume" ? 'NewthreeJsScene.glb' : 'base_cube_DO_NOT_REMOVE.glb';
   const scene = useLoader(GLTFLoader, config.resource_path + '/models/' + sceneName);
 
   // Load initial main scene
