@@ -26,14 +26,11 @@
     "animationStartOnLoad":false, "animationStartOnLoad_comment":" Start the animation right away",
     "enableRockingAnimation":true, "enableRockingAnimation_comment":" Turn the rocking animation on or off",
     "enableExplodeAnimation":true, "enableExplodeAnimation_comment":" Turn the exploding animation on or off",
-
     "rockingMaxAngleDegrees": null, "rockingMaxAngle_comment":" Value in degrees, it's converted to radians in the background",
     "rockingTransitionDuration": 2000, "rockingTransitionDuration_comment":" In milliseconds",
     "explodingTransitionDuration": 300, "explodingTransitionDuration_comment":" In milliseconds",
     "childTransitionDuration": 150, "childTransitionDuration_comment":" In milliseconds",
-
     "showCirclesAfterExplodingAnimation": true, "showCirclesAfterExplodingAnimation_comment":" If true, all tooltip circles appear automatically after the explode animation finishes. If false, visibility is set right after the scene loads.",
-
     "enableRotationAnimation": true, "enableRotationAnimation_comment":" Enable an animation where the model rotates?",
       "rotationAnimationSpeed": 0.5, "rotationAnimationSpeed_comment":" The speed of the animation described above",
       "rotationAnimationWhenToStop": "onScreenMouseHover", "rotationAnimationWhenToStop_comment":"When the animation should stop: onScreenMouseHover, onMouseDown, never",

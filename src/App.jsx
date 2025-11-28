@@ -13,6 +13,12 @@ import * as THREE from "three";
 import { useLoader, useFrame } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route
+} from "react-router-dom";
+
 const useStore = create((set) => ({
   mainScene: undefined,
   setMainScene: (loaded) => set(() => ({ mainScene: loaded })),
@@ -348,79 +354,94 @@ function App() {
     };
   }, [isMouseDown]);
 
+  function UnauthorizedPage() {
+  return (
+    <div style={{ textAlign: "center", marginTop: "100px", fontSize: "24px" }}>
+      🚫 Unauthorized Access
+    </div>
+  );
+}
+
   return (
     <>
-    {!forceDisableRender && (
-      <>
-      <Alert {...{ useStore }} />
-      <ToolTip {...{ useStore }} transitionDuration={0.5} />
-      {/* Create info circles on the screen */}
-      {tooltipCirclesData?.length > 0 && tooltipCirclesData?.map((props) => (
-        <ToolTipCircle
-          key={props.objectName}
-          {...{ useStore }}
-          objectName={props.objectName}
-          textShowMode={props.textShowMode}
-          text={props.text}
-          image={props.image}
-          circleSize={props.circleSize}
-          playPulseAnimation={props.playPulseAnimation}
-          position={props.position || [0, 0]}
-          circleIsVisible = {props.circleIsVisible}
-          isFocusable = {props.isFocusable}
-          focusTarget = {props.focusTarget}
-          focusGroup = {props.focusGroup}
-        />
-      ))}
-      <TutorialOverlay enable = {enableTutorial} {...{useStore}}/> 
-      {(siteMode === "resume") &&
-        <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} />
-      }
+      <Router>
+        <Routes>
+          <Route path="/401" element={<UnauthorizedPage /> } />
+          <Route path="*" element=
+            {!forceDisableRender && (
+              <>
+              <Alert {...{ useStore }} />
+              <ToolTip {...{ useStore }} transitionDuration={0.5} />
+              {/* Create info circles on the screen */}
+              {tooltipCirclesData?.length > 0 && tooltipCirclesData?.map((props, index) => (
+                <ToolTipCircle
+                  key={props.objectName || `tooltip-${index}`}
+                  {...{ useStore }}
+                  objectName={props.objectName}
+                  textShowMode={props.textShowMode}
+                  text={props.text}
+                  image={props.image}
+                  circleSize={props.circleSize}
+                  playPulseAnimation={props.playPulseAnimation}
+                  position={props.position || [0, 0]}
+                  circleIsVisible = {props.circleIsVisible}
+                  isFocusable = {props.isFocusable}
+                  focusTarget = {props.focusTarget}
+                  focusGroup = {props.focusGroup}
+                />
+              ))}
+              <TutorialOverlay enable = {enableTutorial} {...{useStore}}/> 
+              {(siteMode === "resume") &&
+                <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} />
+              }
 
-      <img
-            src = "textures/back_arrow.png"
-            width = {64}
-            height = {64}
-            style = {{
-              position: 'fixed',
-              left:   `${returnButtonPosition[0]}px`,
-              top:    `${returnButtonPosition[1]}px`,
-              cursor: 'pointer',
-              opacity: showReturnButton ? 1 : 0,
-                  transition: 'opacity 0.5s ease',
+              <img
+                    src = "textures/back_arrow.png"
+                    width = {64}
+                    height = {64}
+                    style = {{
+                      position: 'fixed',
+                      left:   `${returnButtonPosition[0]}px`,
+                      top:    `${returnButtonPosition[1]}px`,
+                      cursor: 'pointer',
+                      opacity: showReturnButton ? 1 : 0,
+                          transition: 'opacity 0.5s ease',
 
-              userSelect: 'none',
-              cursor:'pointer',
-              zIndex: 100000
-            }}
-            // press state
-            onMouseDown = {()  => setIsReturnButtonPressed(true)}
-            onMouseUp = {()    => setIsReturnButtonPressed(false)}
-            // drag to reposition
-            alt="Return"
-      />
-      <Suspense>
+                      userSelect: 'none',
+                      cursor:'pointer',
+                      zIndex: 100000
+                    }}
+                    // press state
+                    onMouseDown = {()  => setIsReturnButtonPressed(true)}
+                    onMouseUp = {()    => setIsReturnButtonPressed(false)}
+                    // drag to reposition
+                    alt="Return"
+              />
+              <Suspense>
 
-      <Canvas
-        onPointerDown={(e) => {
-          setIsMouseDown(true);
-          mouseDownPosition.current = { x: e.clientX, y: e.clientY };
-          setIsDragging(false);
-        }}
-        onPointerUp={() => {
-          setIsMouseDown(false);
-        }}
-        onPointerEnter={() => setIsCanvasHovered(true)}
-        onPointerLeave={() => setIsCanvasHovered(false)}
-        dpr={1}
-      >
-      <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
-      {/* <FPSLogger /> */}
+              <Canvas
+                onPointerDown={(e) => {
+                  setIsMouseDown(true);
+                  mouseDownPosition.current = { x: e.clientX, y: e.clientY };
+                  setIsDragging(false);
+                }}
+                onPointerUp={() => {
+                  setIsMouseDown(false);
+                }}
+                onPointerEnter={() => setIsCanvasHovered(true)}
+                onPointerLeave={() => setIsCanvasHovered(false)}
+                dpr={1}
+              >
+              <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
+              {/* <FPSLogger /> */}
 
-      </Canvas>
-      </Suspense>
-      </>
-      )}
+              </Canvas>
+              </Suspense>
+              </>
+              )}
+          />
+        </Routes>
+      </Router>
     </>
   );
 }

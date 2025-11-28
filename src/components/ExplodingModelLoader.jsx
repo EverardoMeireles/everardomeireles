@@ -224,7 +224,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     const tCircleData = tooltipCirclesData.find(item => item.objectName === currentSelectedObjectName.current);
     focusedObjectWorldPosition.current = currentSelectedObjectName.current == undefined ? focusedObjectWorldPosition.current : gltf.scene.getObjectByName(currentSelectedObjectName.current)?.getWorldPosition(new THREE.Vector3());
-    
     foFront.current = tCircleData?.focusedObjectFront ?? focusedObjectFrontDefault;
     foFocusPoint.current =  tCircleData?.focusedObjectFocusPoint ?? focusedObjectWorldPosition.current ?? focusedObjectFocusPointDefault;
     foFocusEndPointDistance.current = tCircleData?.focusedObjectFocusEndPointDistance ?? focusedObjectFocusEndPointDistanceDefault;
@@ -232,7 +231,6 @@ export const ExplodingModelLoader = React.memo((props) => {
     foCameraTargetPoint.current =  tCircleData?.focusedObjectCameraTargetPoint ?? focusedObjectWorldPosition.current.toArray() ?? focusedObjectCameraTargetPointDefault;
     foArchWidth.current = tCircleData?.focusedObjectArchWidth ?? focusedObjectArchWidthDefault;
     foArchcurveDirection.current = tCircleData?.focusedObjectArchCurveDirection ?? focusedObjectArchCurveDirectionDefault;
-
     isFocusable.current = tCircleData?.isFocusable ?? isFocusableDefault;
     focusTarget.current = tCircleData?.focusTarget ?? focusTargetDefault;
     focusGroup.current = tCircleData?.focusGroup ?? focusGroupDefault;
@@ -241,13 +239,14 @@ export const ExplodingModelLoader = React.memo((props) => {
     
     waitForFocusBeforeExplodeAnimation.current = tCircleData?.waitForFocusBeforeExplodeAnimation ?? waitForFocusBeforeExplodeAnimationDefault;
     
-    foCloneEnable.current = tCircleData?.focusedObjectCloneEnable ?? focusedObjectCloneEnable;
-    setShouldRenderClone(true);
+    const cloneEnabled = Boolean(tCircleData && (tCircleData?.focusedObjectCloneEnable ?? focusedObjectCloneEnable));
+    foCloneEnable.current = cloneEnabled;
+    setShouldRenderClone(cloneEnabled);
     foCloneScale.current = tCircleData?.focusedObjectCloneScale ?? focusedObjectCloneScale;
     foCloneAxisOfRotation.current = tCircleData?.focusedObjectCloneAxisOfRotation ?? focusedObjectCloneAxisOfRotation;
     foCloneSpeedOfRotation.current = tCircleData?.focusedObjectCloneSpeedOfRotation ?? focusedObjectCloneSpeedOfRotation;
     foCloneForcePositionOffset.current = tCircleData?.focusedObjectCloneForcePositionOffset ?? focusedObjectCloneForcePositionOffset;
-  }, [currentSelectedObjectName.current, jsonDataParsed.current]);
+  }, [tooltipCurrentObjectNameSelected, jsonDataParsed.current]);
 
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
@@ -406,6 +405,8 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Trigger animation start
   useEffect(() => {
+    // Ray that will interstect with a invisible plane to determine the spawn location of the 
+    // rotating object clone relative to position of the clickable css circle on screen
     const raycaster = new THREE.Raycaster();
     if (!currentSelectedObjectName.current || foCloneEnable.current != true) {
       foCloneEnable.current = false;
@@ -467,9 +468,9 @@ export const ExplodingModelLoader = React.memo((props) => {
       }
 
     }
-  }, [currentSelectedObjectName.current, isCircleOnLeftSelected, isCircleOnTopSelected, gltf.scene]);
+  }, [tooltipCurrentObjectNameSelected, isCircleOnLeftSelected, isCircleOnTopSelected, gltf.scene]);
 
-    // Focused object rotation animation
+  // Focused object rotation animation
   useFrame((state, delta) => {
     if(foCloneEnable.current){
       if (objectToRotate.current){
@@ -657,7 +658,7 @@ export const ExplodingModelLoader = React.memo((props) => {
     }
   });
 
-  const childAnimationUpdateFlag = useRef(false);
+  const [childAnimationUpdateFlag, setChildAnimationUpdateFlag] = useState(false);
   const childAnimationCurrentSelectedObjectNameUpdateFlag = useRef("");
   const previousChildAnimationCurrentSelectedObjectNameUpdateFlag = useRef("");
 
@@ -665,12 +666,15 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     const handleObjectChildAnimationMouseClick = (event) => {
       if(!childAnimationIsPlaying.current && currentSelectedObjectName.current && isFocusable.current){
-        childAnimationUpdateFlag.current = true;
+        setChildAnimationUpdateFlag(true);
         childAnimationCurrentSelectedObjectNameUpdateFlag.current = currentSelectedObjectName.current;
       }
     };
 
     window.addEventListener('click', handleObjectChildAnimationMouseClick);
+    return () => {
+      window.removeEventListener('click', handleObjectChildAnimationMouseClick);
+    };
   }, [])
 
   // Use recorded values to reverse the exploding animation of an object if a different object is clicked
@@ -679,7 +683,7 @@ export const ExplodingModelLoader = React.memo((props) => {
     const childInitialPositions = getChildrenInitialPositions(gltf, [selectedObject?.objectName]);
     const childNames = Object.keys(childInitialPositions);
     const allHaveExploded = childNames.every(name => objectsThatHaveExploded.current.includes(name));
-    if(childAnimationUpdateFlag.current && selectedObject){
+    if(childAnimationUpdateFlag && selectedObject){
       if(allHaveExploded && (childAnimationCurrentSelectedObjectNameUpdateFlag.current != previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current)){
         const animationForwards = !allHaveExploded;
 
@@ -690,7 +694,7 @@ export const ExplodingModelLoader = React.memo((props) => {
         setChildAnimationTick(0);
       }
     }
-  }, [childAnimationUpdateFlag.current]);
+  }, [childAnimationUpdateFlag]);
 
   // Use recorded values to determine whether child objects should animate when a circle is clicked
   useEffect(() => {
@@ -699,7 +703,7 @@ export const ExplodingModelLoader = React.memo((props) => {
     // explodingAnimationObjectDirections.current = 
     const childNames = Object.keys(childInitialPositions);
     const allHaveExploded = childNames.every(name => objectsThatHaveExploded.current.includes(name));
-    if(childAnimationUpdateFlag.current && selectedObject && transitionEnded){
+    if(childAnimationUpdateFlag && selectedObject && transitionEnded){
       if (selectedObject.waitForFocusBeforeExplodeAnimation && gltf.scene.getObjectByName(selectedObject.objectName).children.length > 0) {
 
         const animationForwards = !allHaveExploded;
@@ -708,12 +712,12 @@ export const ExplodingModelLoader = React.memo((props) => {
         setChildDesiredPositions(childDesiredPositions);
         setChildAnimationEnable(true);
         setChildAnimationTick(0);
-        childAnimationUpdateFlag.current = false;
+        setChildAnimationUpdateFlag(false);
         previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current = childAnimationCurrentSelectedObjectNameUpdateFlag.current;
         childAnimationCurrentSelectedObjectNameUpdateFlag.current = "";
       }
     }
-  }, [childAnimationUpdateFlag.current, transitionEnded]);
+  }, [childAnimationUpdateFlag, transitionEnded]);
 
   // Right off the bat, explode all objects with children whose waitForFocusBeforeExplodeAnimation flag equal false
   useEffect(() => {
@@ -1019,7 +1023,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       if(!explodingObjectAnimationStartOnLoad){
         reverseAllExplosionAnimations.current = true;
       }else{
-        childAnimationUpdateFlag.current = true;
+        setChildAnimationUpdateFlag(true);
         childAnimationCurrentSelectedObjectNameUpdateFlag.current = currentSelectedObjectName.current;
       }
 

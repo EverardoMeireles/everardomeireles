@@ -69,6 +69,7 @@ export const ToolTipCircle = (props) => {
             setIsCircleOnLeftSelected(isCircleOnLeft)
             setIsCircleOnTopSelected(isCircleOnTop)
             setTooltipCurrentObjectNameSelected(objectName)
+            //console.log(objectName)
         }
         else
         if(textShowMode == "Page"){

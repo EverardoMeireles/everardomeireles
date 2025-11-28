@@ -3,7 +3,7 @@ import { Text } from "@react-three/drei";
 import { useCallback, Suspense } from "react";
 import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
-import { path_points_experience_menu_location } from "../PathPoints";
+import { path_points_experience_menu_location } from "../PathPoints.jsx";
 import config from '../config';
 
 export function ExperienceMenu(props) {

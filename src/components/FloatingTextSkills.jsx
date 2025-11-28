@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Float, Text } from "@react-three/drei";
-import { TranslationTable } from "../TranslationTable";
+import { TranslationTable } from "../TranslationTable.jsx";
 import config from '../config';
 
 export function FloatingTextSkills(props) {

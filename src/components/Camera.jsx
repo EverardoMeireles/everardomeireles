@@ -1,5 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber';
-import { path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed, CreateNavigationCurve, firstPoint} from "../PathPoints";
+import { path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed, CreateNavigationCurve, firstPoint} from "../PathPoints.jsx";
 import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera, calcPosFromAngles } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";

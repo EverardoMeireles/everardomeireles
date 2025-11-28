@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { TranslationTable } from "../TranslationTable";
-import { HudMenuStyles } from "../Styles";
-import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue } from "../Helper";
+import { TranslationTable } from "../TranslationTable.jsx";
+import { HudMenuStyles } from "../Styles.jsx";
+import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue } from "../Helper.js";
 import config from '../config';
-import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "../PathPoints";
+import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "../PathPoints.jsx";
 
 /* eslint-disable jsx-a11y/anchor-is-valid */
 // has jsx HudMenuStyles

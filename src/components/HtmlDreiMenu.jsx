@@ -1,7 +1,7 @@
 import { Html } from "@react-three/drei";
 import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { HtmlDreiMenuStyles } from "../Styles";
+import { HtmlDreiMenuStyles } from "../Styles.jsx";
 
 // has jsx styles
 // Put inside default camera(tested in perspective camera)

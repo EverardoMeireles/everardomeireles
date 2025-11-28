@@ -1,37 +1,37 @@
 import { Environment } from "@react-three/drei";
 import React, { Suspense, useState, useEffect, useRef, useMemo  } from "react";
-import { Camera } from "./components/Camera";
-import { SimpleLoader } from "./components/SimpleLoader";
-import { OrbitingPointLight } from './components/OrbitingPointLights';
-import { GraphicalModeSetter } from './components/GraphicalModeSetter';
+import { Camera } from "./components/Camera.jsx";
+import { SimpleLoader } from "./components/SimpleLoader.jsx";
+import { OrbitingPointLight } from './components/OrbitingPointLights.jsx';
+import { GraphicalModeSetter } from './components/GraphicalModeSetter.jsx';
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
-import { OrbitingMenu } from "./components/OrbitingMenu";
-import { FloatingTextSkills } from "./components/FloatingTextSkills";
-import { FadingText } from "./components/FadingText";
+import { OrbitingMenu } from "./components/OrbitingMenu.jsx";
+import { FloatingTextSkills } from "./components/FloatingTextSkills.jsx";
+import { FadingText } from "./components/FadingText.jsx";
 import { useFrame, useThree, useLoader } from "@react-three/fiber"; // eslint-disable-line no-unused-vars
-import { VideoLoader } from "./components/VideoLoader";
-import { GraphicalModeSetter2 } from "./components/GraphicalModeSetter2";
-import { FadingTitle } from "./components/FadingTitle";
-import { Raycaster } from "./components/Raycaster";
-import { CurveInstanceAnimation } from "./components/CurveInstanceAnimation";
-import { InstanceLoader } from "./components/InstanceLoader";
-import { PreloadAssets } from "./components/PreloadAssets";
-import { ExplodingModelLoader } from "./components/ExplodingModelLoader";
-import { CurveLightAnimation } from "./components/CurveLightAnimation";
-import { PointLightAnimation } from "./components/PointLightAnimation";
-import { ObjectLink } from "./components/ObjectLink";
-import { ParticleEmitter } from "./components/ParticleEmitter";
-import { DynamicMaterialLoader } from "./components/DynamicMaterialLoader";
+import { VideoLoader } from "./components/VideoLoader.jsx";
+import { GraphicalModeSetter2 } from "./components/GraphicalModeSetter2.jsx";
+import { FadingTitle } from "./components/FadingTitle.jsx";
+import { Raycaster } from "./components/Raycaster.jsx";
+import { CurveInstanceAnimation } from "./components/CurveInstanceAnimation.jsx";
+import { InstanceLoader } from "./components/InstanceLoader.jsx";
+import { PreloadAssets } from "./components/PreloadAssets.jsx";
+import { ExplodingModelLoader } from "./components/ExplodingModelLoader.jsx";
+import { CurveLightAnimation } from "./components/CurveLightAnimation.jsx";
+import { PointLightAnimation } from "./components/PointLightAnimation.jsx";
+import { ObjectLink } from "./components/ObjectLink.jsx";
+import { ParticleEmitter } from "./components/ParticleEmitter.jsx";
+import { DynamicMaterialLoader } from "./components/DynamicMaterialLoader.jsx";
 import { AnimationMixer } from 'three';
-import { customInstanceRotation, customInstanceColor } from "./PathPoints";
-import { TranslationTable } from "./TranslationTable";
-import { ResponsiveTable } from "./Styles";
-import { pollForFilesInTHREECache, removeFileExtensionString, createTimer } from "./Helper";
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { customInstanceRotation, customInstanceColor } from "./PathPoints.jsx";
+import { TranslationTable } from "./TranslationTable.jsx";
+import { ResponsiveTable } from "./Styles.jsx";
+import { pollForFilesInTHREECache, removeFileExtensionString, createTimer } from "./Helper.js";
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 import * as THREE from 'three';
 
-import config from './config';
+import config from './config.js';
 
 export const SceneContainer = React.memo((props) => {
     const useStore = props.useStore;
@@ -633,8 +633,24 @@ export const SceneContainer = React.memo((props) => {
             <ambientLight intensity = {1}></ambientLight>
             {(explodingModelPath != "")
             &&
-            <ExplodingModelLoader {...{useStore}} modelName={/*"Roomba.glb"*/explodingModelPath} materialName={/*""*/explodingMaterialPath} configFile={/*"Roomba.json"*/explodingConfigFile} animationIsPlaying={animationTriggerState}
-                /*position={[175, 135, 50]}*/ setCameraTargetTrigger={"trigger4"} stopMainObjectRotationAnimation={trig} mainObjectRotationAnimationIsPlayingTrigger={"trigger5"} />
+            <ExplodingModelLoader {...{useStore}} 
+            modelName={
+                "Roomba.glb"
+                // explodingModelPath
+            } 
+            materialName={
+                ""
+                // explodingMaterialPath
+            } 
+            configFile={
+                "Roomba.json"
+                // explodingConfigFile
+            } 
+            animationIsPlaying={animationTriggerState}
+            /*position={[175, 135, 50]}*/ 
+            setCameraTargetTrigger={"trigger4"} 
+            stopMainObjectRotationAnimation={trig} 
+            mainObjectRotationAnimationIsPlayingTrigger={"trigger5"} />
             }
         </>
         }
