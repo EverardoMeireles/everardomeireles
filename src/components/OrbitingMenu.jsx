@@ -96,7 +96,7 @@ export const OrbitingMenu = React.memo((props) => {
         planeRef5.current.position.x = -orbitDistance;
         planeRef6.current.position.x = -orbitDistance;
         planeRef7.current.position.x = -orbitDistance;
-    },[]) // eslint-disable-line react-hooks/exhaustive-deps
+    },[])
 
     const planetexture0 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheEDHC-' + currentLanguage + '.jpg');
     const planetexture1 = useLoader(THREE.TextureLoader, config.resource_path + '/textures/AfficheUNIRN-' + currentLanguage + '.jpg');

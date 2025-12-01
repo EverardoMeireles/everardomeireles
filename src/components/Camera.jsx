@@ -157,7 +157,7 @@ export const Camera = React.memo((props) => {
             // Clean up the event listener when the component unmounts or when the camera mode changes
             return () => window.removeEventListener('mousemove', handleMouseMove);
         }
-    }, [panDirectionalEdgethreshold, currentCameraMode, transitionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [panDirectionalEdgethreshold, currentCameraMode, transitionEnded]);
 
     useEffect(() => {
         const handleMouseMove = (event) => {
@@ -195,7 +195,7 @@ export const Camera = React.memo((props) => {
             // Clean up the interval when the component unmounts
             return () => clearInterval(intervalId);
         }
-    }, [currentCameraMode, transitionEnded]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [currentCameraMode, transitionEnded]);
 
     // Set the transition speed if a if a tick, speed value pair is provided
     // function setCustomSpeed(currentTick, path_speeds){

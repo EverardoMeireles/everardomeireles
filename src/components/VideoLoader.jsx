@@ -52,7 +52,7 @@ export function VideoLoader (props) {
                 return vid;
             });
     }
-    },[trigger]); // eslint-disable-line react-hooks/exhaustive-deps
+    },[trigger]);
 
     return ( 
     <mesh rotation={rotation} position={position}>

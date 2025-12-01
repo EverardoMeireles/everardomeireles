@@ -5,7 +5,6 @@ import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue } from "../Hel
 import config from '../config';
 import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "../PathPoints.jsx";
 
-/* eslint-disable jsx-a11y/anchor-is-valid */
 // has jsx HudMenuStyles
 // A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx
 export function HudMenu(props) {

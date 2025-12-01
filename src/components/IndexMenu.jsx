@@ -36,7 +36,7 @@ export function IndexMenu(props) {
 
     const wholeCallbackRef = useCallback(
         ref => ref != null ? (ref.setRotationFromAxisAngle(new THREE.Vector3(0, 1, 0) , (rotation))):console.log()
-        ,[]); // eslint-disable-line react-hooks/exhaustive-deps
+        ,[]);
 
     return(
         <mesh
