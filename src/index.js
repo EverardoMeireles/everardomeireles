@@ -3,9 +3,9 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
 import ExperienceFrame from "./ExperienceFrame.jsx";
+import config from "./config.js";
 
-const VIEWER_WIDTH_PERCENT = 100; // The portion of the screen taken by the 3D canvas
-const UI_WIDTH_PERCENT = 100 - VIEWER_WIDTH_PERCENT; // The portion of the screen taken by the ui
+const [VIEWER_WIDTH_PERCENT, UI_WIDTH_PERCENT] = config.viewer_ui_split;
 
 const rootElement = document.getElementById("root");
 rootElement.style.margin = "0";

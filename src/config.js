@@ -6,6 +6,7 @@ const config = {
     check_graphics: false,
     default_graphical_setting: "normal",
     default_Camera_starting_position: [0, 0, 0],
+    viewer_ui_split: [100, 0], // [viewerPercent, uiPercent]
 };
 
 export default config;
