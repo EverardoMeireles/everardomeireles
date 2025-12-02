@@ -16,6 +16,7 @@ export const ToolTip = (props) => {
 
   const [isVisible, setIsVisible] = useState(false);
   const [isDivDisabled, setIsDivDisabled] = useState(true);
+  const viewerBounds = useStore((state) => state.viewerBounds);
 
   // 1) Show + auto-hide
   useEffect(() => {
@@ -53,11 +54,14 @@ export const ToolTip = (props) => {
     }
   }, [isVisible, transitionDuration]);
 
+  const boxWidth = viewerBounds.width * 0.4;
+  const verticalMargin = viewerBounds.height * 0.05;
+  const horizontalMargin = verticalMargin;
+
   const boxStyle = {
     position: 'fixed',
-    width:  isDivDisabled ? '0vw' : '40vw',
-    height: isDivDisabled ? '0vh' : '90vh',
-    margin: '5vh',
+    width:  isDivDisabled ? 0 : `${boxWidth}px`,
+    height: isDivDisabled ? 0 : `${viewerBounds.height * 0.9}px`,
     borderRadius: '50px',
     display: 'flex',
     flexDirection: 'column',
@@ -67,8 +71,11 @@ export const ToolTip = (props) => {
     opacity:  isVisible ?   1  : 0,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     color: '#FFF',
-    right: isCircleOnLeftSelected ? 0 : 'auto',
-    left:  isCircleOnLeftSelected ? 'auto' : 0,
+    top: `${viewerBounds.top + verticalMargin}px`,
+    left: isCircleOnLeftSelected
+      ? `${viewerBounds.left + viewerBounds.width - boxWidth - horizontalMargin}px`
+      : `${viewerBounds.left + horizontalMargin}px`,
+    right: 'auto',
     pointerEvents: 'none',
   };
 

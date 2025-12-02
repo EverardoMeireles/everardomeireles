@@ -14,6 +14,7 @@ export const TutorialOverlay = (props) => {
     
     const [visible, setVisible] = useState(false);
     const [shouldRender, setShouldRender] = useState(false);
+    const viewerBounds = useStore((state) => state.viewerBounds);
     
     const setTutorialClosed = useStore((state) => state.setTutorialClosed);
 
@@ -108,10 +109,10 @@ export const TutorialOverlay = (props) => {
 
     const overlayStyle = {
         position: 'fixed', // Centering in the viewport
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
+        top: `${viewerBounds.top}px`,
+        left: `${viewerBounds.left}px`,
+        width: `${viewerBounds.width}px`,
+        height: `${viewerBounds.height}px`,
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         display: 'flex',
         alignItems: 'center', // Center vertically

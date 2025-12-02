@@ -381,49 +381,50 @@ function compareCurves(curve1, curve2) {
         let animationFrameId;
         let previousPosition = new THREE.Vector3();
         let previousRotation = new THREE.Euler();
-    
+
         const handleFrame = () => {
-            if (!cam.current) return;
-    
+            if (!cam.current) {
+                animationFrameId = requestAnimationFrame(handleFrame);
+                return;
+            }
+
             const currentPosition = cam.current.position;
             const currentRotation = cam.current.rotation;
-            const positionChanged = (
+            const positionChanged =
                 hasSignificantChange(previousPosition.x, currentPosition.x) ||
                 hasSignificantChange(previousPosition.y, currentPosition.y) ||
-                hasSignificantChange(previousPosition.z, currentPosition.z)
-            );
-    
-            const rotationChanged = (
+                hasSignificantChange(previousPosition.z, currentPosition.z);
+
+            const rotationChanged =
                 hasSignificantChange(previousRotation.x, currentRotation.x) ||
                 hasSignificantChange(previousRotation.y, currentRotation.y) ||
-                hasSignificantChange(previousRotation.z, currentRotation.z)
-            );
+                hasSignificantChange(previousRotation.z, currentRotation.z);
 
             if (positionChanged || rotationChanged) {
                 setCameraState(
                     [
-                        roundToDecimalPlace(currentPosition.x, 1), 
-                        roundToDecimalPlace(currentPosition.y, 1), 
-                        roundToDecimalPlace(currentPosition.z, 1)
-                    ], 
+                        roundToDecimalPlace(currentPosition.x, 1),
+                        roundToDecimalPlace(currentPosition.y, 1),
+                        roundToDecimalPlace(currentPosition.z, 1),
+                    ],
                     [
-                        roundToDecimalPlace(currentRotation.x, 1), 
-                        roundToDecimalPlace(currentRotation.y, 1), 
-                        roundToDecimalPlace(currentRotation.z, 1)
+                        roundToDecimalPlace(currentRotation.x, 1),
+                        roundToDecimalPlace(currentRotation.y, 1),
+                        roundToDecimalPlace(currentRotation.z, 1),
                     ]
                 );
-    
+
                 previousPosition.copy(currentPosition);
                 previousRotation.copy(currentRotation);
             }
-    
+
             animationFrameId = requestAnimationFrame(handleFrame);
         };
-    
-        handleFrame(); // Initial call
-    
+
+        handleFrame();
+
         return () => {
-            cancelAnimationFrame(animationFrameId); // Cleanup on component unmount
+            cancelAnimationFrame(animationFrameId);
         };
     }, [setCameraState, cameraStateTracking]);
 

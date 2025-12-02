@@ -17,6 +17,7 @@ export const Alert = (props) => {
   const useStore = props.useStore;
   const alertProperties = useStore((state) => state.alertProperties);
   const setAlertProperties = useStore((state) => state.setAlertProperties);
+  const viewerBounds = useStore((state) => state.viewerBounds);
 
   const [isVisible, setIsVisible] = useState(false);
 
@@ -38,6 +39,8 @@ export const Alert = (props) => {
   }, [alertProperties.active, alertProperties.duration, setAlertProperties]);
 
   // Inline styles for the alert box
+  const margin = 10;
+
   const alertBoxStyle = {
     position: 'fixed',
     width: alertProperties.width,
@@ -58,10 +61,10 @@ export const Alert = (props) => {
     color: alertProperties.type === 'Error' ? '#721c24' :
           alertProperties.type === 'Warning' ? '#856404' :
           '#155724',
-    top: alertProperties.displaySide.includes('top') ? '0' : 'auto',
-    bottom: alertProperties.displaySide.includes('bottom') ? '0' : 'auto',
-    left: alertProperties.displaySide.includes('Left') ? '0' : 'auto',
-    right: alertProperties.displaySide.includes('Right') ? '0' : 'auto',
+    top: alertProperties.displaySide.includes('top') ? `${viewerBounds.top + margin}px` : 'auto',
+    bottom: alertProperties.displaySide.includes('bottom') ? `${window.innerHeight - (viewerBounds.top + viewerBounds.height) + margin}px` : 'auto',
+    left: alertProperties.displaySide.includes('Left') ? `${viewerBounds.left + margin}px` : 'auto',
+    right: alertProperties.displaySide.includes('Right') ? `${window.innerWidth - (viewerBounds.left + viewerBounds.width) + margin}px` : 'auto',
   };
 
   // Only render the alert if it's set to be visible

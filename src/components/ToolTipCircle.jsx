@@ -40,10 +40,15 @@ export const ToolTipCircle = (props) => {
         }
     }, [tooltipCirclesData]);
 
+    const viewerBounds = useStore((state) => state.viewerBounds);
+
+    const computedLeft = viewerBounds.left + (viewerBounds.width * (position[0] / 100));
+    const computedTop = viewerBounds.top + (viewerBounds.height * (position[1] / 100));
+
     const circleStyle = {
         position: 'fixed',
-        left: `${position[0]}vw`,
-        top: `${position[1]}vh`,
+        left: `${computedLeft}px`,
+        top: `${computedTop}px`,
         width: `${circleSize}px`,
         height: `${circleSize}px`,
         borderRadius: '50%',
