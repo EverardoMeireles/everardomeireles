@@ -8,7 +8,7 @@ import { ToolTip } from "./components/ToolTip";
 import { ToolTipCircle } from "./components/ToolTipCircle";
 import { TutorialOverlay } from "./components/TutorialOverlay";
 import { parseJson, removeFileExtensionString, createTimer } from "./Helper";
-import useExperienceStore from "./useExperienceStore";
+import useStore from "./SystemStore";
 import * as THREE from "three";
 import { useLoader, useFrame } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -20,8 +20,6 @@ import {
 } from "react-router-dom";
 
 
-
-const useStore = useExperienceStore;
 
 function ExperienceFrame() {
   THREE.Cache.enabled = true;
@@ -52,6 +50,7 @@ function ExperienceFrame() {
 
   const [enableTutorial, setEnableTutorial] = useState(false);
   const setViewerBounds = useStore((state) => state.setViewerBounds);
+  const viewerBounds = useStore((state) => state.viewerBounds);
   const [canvasReady, setCanvasReady] = useState(false);
 
   useEffect(() => {
@@ -64,6 +63,7 @@ function ExperienceFrame() {
 
     const updateBounds = () => {
       const rect = viewerEl.getBoundingClientRect();
+
       setViewerBounds({
         left: rect.left,
         top: rect.top,

@@ -18,7 +18,6 @@ export const Alert = (props) => {
   const alertProperties = useStore((state) => state.alertProperties);
   const setAlertProperties = useStore((state) => state.setAlertProperties);
   const viewerBounds = useStore((state) => state.viewerBounds);
-
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
