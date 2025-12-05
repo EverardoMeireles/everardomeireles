@@ -12,6 +12,9 @@ const useExperienceStore = create((set) => ({
   raycasterEnabled: true,
   setRaycasterEnabled: (loaded) => set(() => ({ raycasterEnabled: loaded })),
 
+  currentObjectClicked: "", // Raycaster.jsx: Object captured by mouse click while the component is on the scene.
+  setCurrentObjectClicked: (object) => set(() => ({ currentObjectClicked: object })),
+
   preloadDone: false,
   setPreloadDone: (preloaded) => set(() => ({ preloadDone: preloaded })),
 
@@ -119,9 +122,6 @@ const useExperienceStore = create((set) => ({
     : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight },
   setViewerBounds: (viewerBounds) => set(() => ({ viewerBounds })),
 
-  currentObjectClicked: "",
-  setCurrentObjectClicked: (object) => set(() => ({ currentObjectClicked: object })),
-
   tutorialClosed: false,
   setTutorialClosed: (closed) => set(() => ({ tutorialClosed: closed })),
 
@@ -186,7 +186,7 @@ const useExperienceStore = create((set) => ({
   isCircleOnTopSelected: false,
   setIsCircleOnTopSelected: (isTop) => set(() => ({ isCircleOnTopSelected: isTop })),
 
-  tooltipCurrentObjectNameSelected: undefined,
+  tooltipCurrentObjectNameSelected: undefined, // ToolTipCircle.jsx: Represents the name of the current hovered object when the component is present.
   setTooltipCurrentObjectNameSelected: (object) => set(() => ({ tooltipCurrentObjectNameSelected: object })),
 
   message: {
@@ -199,15 +199,6 @@ const useExperienceStore = create((set) => ({
 
   productInformationFromMessage: {},
   setProductInformationFromMessage: (productInformation) => set(() => ({ productInformationFromMessage: productInformation })),
-  
-  currentSkillHovered: "Python", // try to put this on the component itself
-  setSkillHovered: (skill) => set(() => ({ currentSkillHovered: skill })),
-
-  siteMode: "store",
-  setSiteMode: (mode) => set(() => ({ siteMode: mode })),
-
-  animationTriggerState: false,
-  setAnimationTriggerState: (playing) => set(() => ({ animationTriggerState: playing })),
 
   explodeAnimationEnded: false,
   setExplodeAnimationEnded: (ended) => set(() => ({ explodeAnimationEnded: ended })),

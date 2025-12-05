@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import config from '../config';
+import useSystemStore from "../SystemStore";
 
 export const TutorialOverlay = (props) => {
-    const useStore = props.useStore;
     const {enable = true} = props;
     const {showOnlyOnce = true} = props;
     const {topImagePaths = ["/textures/tutorial_rotate_video.png", "/textures/tutorial_zoom_video.png"]} = props;
@@ -14,9 +14,9 @@ export const TutorialOverlay = (props) => {
     
     const [visible, setVisible] = useState(false);
     const [shouldRender, setShouldRender] = useState(false);
-    const viewerBounds = useStore((state) => state.viewerBounds);
+    const viewerBounds = useSystemStore((state) => state.viewerBounds);
     
-    const setTutorialClosed = useStore((state) => state.setTutorialClosed);
+    const setTutorialClosed = useSystemStore((state) => state.setTutorialClosed);
 
     // Close tutorial when the user uses OrbitControls
     useEffect(() => {

@@ -2,12 +2,13 @@ import { Html } from "@react-three/drei";
 import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { HtmlDreiMenuStyles } from "../Styles.jsx";
+import useSystemStore from "../SystemStore";
 
 // has jsx styles
 // Put inside default camera(tested in perspective camera)
 export function HtmlDreiMenu(props) {
-    const setDesiredPath = props.useStore((state) => state.setDesiredPath);
-    const setTransitionEnded = props.useStore((state) => state.setTransitionEnded);
+    const setDesiredPath = useSystemStore((state) => state.setDesiredPath);
+    const setTransitionEnded = useSystemStore((state) => state.setTransitionEnded);
 
     const meshHtmlRef = useRef();
 

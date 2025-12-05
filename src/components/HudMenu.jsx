@@ -4,37 +4,34 @@ import { HudMenuStyles } from "../Styles.jsx";
 import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue } from "../Helper.js";
 import config from '../config';
 import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "../PathPoints.jsx";
+import useSystemStore from "../SystemStore";
 
 // has jsx HudMenuStyles
 // A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx
 export function HudMenu(props) {
-    const useStore = props.useStore;
     const {graphicalLevelIndicatorIsEnabled = true} = props;
     const {goesInvisible = false} = props;
     const {goesTransparent = true} = props; // setting this to true while goesInvisible is also true is useless
     const {transparentTimer = 5000} = props;
     const {transparency = 0.15} = props;
 
-    const currentLanguage = useStore((state) => state.currentLanguage);
-    const setLanguage = useStore((state) => state.setLanguage);
-    const setGraphicalMode = useStore((state) => state.setGraphicalMode);
-    const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
-    const enableDynamicGraphicalModeSetting = useStore((state) => state.enableDynamicGraphicalModeSetting);
-    const setEnableDynamicGraphicalModeSetting = useStore((state) => state.setEnableDynamicGraphicalModeSetting);
-    const setTransitionEnded = useStore((state) => state.setTransitionEnded);
-    const transitionEnded = useStore((state) => state.transitionEnded);
-    const setForcedCameraMovePathCurve = useStore((state) => state.setForcedCameraMovePathCurve);
-    const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
-    const setDesiredPath = useStore((state) => state.setDesiredPath);
-    const modifyTooltipCircleData = useStore((state) => state.modifyTooltipCircleData);
-
-    // const animationTriggerState = useStore((state) => state.animationTriggerState);
-    // const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
+    const currentLanguage = useSystemStore((state) => state.currentLanguage);
+    const setLanguage = useSystemStore((state) => state.setLanguage);
+    const setGraphicalMode = useSystemStore((state) => state.setGraphicalMode);
+    const currentGraphicalMode = useSystemStore((state) => state.currentGraphicalMode);
+    const enableDynamicGraphicalModeSetting = useSystemStore((state) => state.enableDynamicGraphicalModeSetting);
+    const setEnableDynamicGraphicalModeSetting = useSystemStore((state) => state.setEnableDynamicGraphicalModeSetting);
+    const setTransitionEnded = useSystemStore((state) => state.setTransitionEnded);
+    const transitionEnded = useSystemStore((state) => state.transitionEnded);
+    const setForcedCameraMovePathCurve = useSystemStore((state) => state.setForcedCameraMovePathCurve);
+    const setForcedCameraTarget = useSystemStore((state) => state.setForcedCameraTarget);
+    const setDesiredPath = useSystemStore((state) => state.setDesiredPath);
+    const modifyTooltipCircleData = useSystemStore((state) => state.modifyTooltipCircleData);
 
 	//DEBUG animations
-    const toggleTrigger = useStore((state) => state.toggleTrigger);
+    const toggleTrigger = useSystemStore((state) => state.toggleTrigger);
 
-    const setTrigger = useStore((state) => state.setTrigger);
+    const setTrigger = useSystemStore((state) => state.setTrigger);
 
     const [profExpClicked, setProfExpClicked] = useState(false);
     const [isTransparent, setIsTransparent] = useState(false);
@@ -133,8 +130,8 @@ export function HudMenu(props) {
                     }}>Auto</div>
 
                 {/* Graphical mode arrows */}
-                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1); setEnableDynamicGraphicalModeSetting(false); test()}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
-                <b onClick={() => {/*setAnimationTriggerState(!animationTriggerState)*/increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1); setEnableDynamicGraphicalModeSetting(false); test()}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
+                <b onClick={() => {increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1); setEnableDynamicGraphicalModeSetting(false); test()}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
+                <b onClick={() => {increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1); setEnableDynamicGraphicalModeSetting(false); test()}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
                 
                 {/* Graphical mode indicator */}
                 {graphicalLevelIndicatorIsEnabled && <img 

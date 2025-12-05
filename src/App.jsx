@@ -2,13 +2,14 @@ import { Suspense, useEffect, useState, useRef } from 'react';
 import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./components/HudMenu";
-import { create } from 'zustand';
 import config from './config';
 import { Alert } from "./components/Alert";
 import { ToolTip } from "./components/ToolTip";
 import { ToolTipCircle } from "./components/ToolTipCircle";
 import { TutorialOverlay } from "./components/TutorialOverlay";
 import { parseJson, removeFileExtensionString, createTimer } from "./Helper";
+import useSystemStore from "./SystemStore";
+import useUserStore from "./UserStore";
 import * as THREE from "three";
 import { useLoader, useFrame } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -19,204 +20,9 @@ import {
   Route
 } from "react-router-dom";
 
-const useStore = create((set) => ({
-  mainScene: undefined,
-  setMainScene: (loaded) => set(() => ({ mainScene: loaded })),
-
-  forceDisableRender: false, // will disable the app's render
-  setForceDisableRender: (DisableRender) => set(() => ({ forceDisableRender: DisableRender })),
-
-  raycasterEnabled: true,
-  setRaycasterEnabled: (loaded) => set(() => ({ raycasterEnabled: loaded })),
-
-  preloadDone: false,
-  setPreloadDone: (preloaded) => set(() => ({ preloadDone: preloaded })),
-
-  // The named position that the transition is aiming to go
-  transitionDestination: "MainMenu",
-  setDesiredPath: (desired) => set(() => ({ transitionDestination: desired })),
-
-  transitionEnded: false,
-  setTransitionEnded: (ended) => set(() => ({ transitionEnded: ended })),
-
-  currentGraphicalMode: config.default_graphical_setting,
-  setGraphicalMode: (mode) => set(() => ({ currentGraphicalMode: mode })),
-
-  enableDynamicGraphicalModeSetting: true,
-  setEnableDynamicGraphicalModeSetting: (trueOrFalse) => set(() => ({ enableDynamicGraphicalModeSetting: trueOrFalse })),
-
-  currentLanguage: "Portuguese",
-  setLanguage: (language) => set(() => ({ currentLanguage: language })),
-
-  currentCameraMovements: { zoom: true, pan: true, rotate: true },
-  setcurrentCameraMovements: (cameraMovements) => set(() => ({ currentCameraMovements: cameraMovements })),
-
-  currentCameraMode: "NormalMovement",
-  setCurrentCameraMode: (cameraMode) => set(() => ({ currentCameraMode: cameraMode })),
-
-  panDirectionalAxis: ['+z', '+y'],
-  setPanDirectionalAxis: (axis) => set(() => ({ panDirectionalAxis: axis })),
-
-  panDirectionalEdgethreshold: 150,
-  setPanDirectionalEdgethreshold: (threshold) => set(() => ({ panDirectionalEdgethreshold: threshold })),
-
-  cameraState: {
-    position: [0, 0, 0],
-    rotation: [0, 0, 0],
-  },
-  setCameraState: (position, rotation) => set(() => ({
-    cameraState: { position, rotation }
-  })),
-
-  cameraStateTracking: false,
-  setCameraStateTracking: (tracking) => set(() => ({ cameraStateTracking: tracking })),
-
-  forcedCameraTarget: [0, 0, 0], // will force the camera's orbit controls pivot if not empty
-  setForcedCameraTarget: (target) => set(() => ({ forcedCameraTarget: target })),
-
-  forcedCameraMovePathCurve: new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, 0)]), // custom camera curve path
-  setForcedCameraMovePathCurve: (curve) => set(() => ({ forcedCameraMovePathCurve: curve })), // Will move the camera according to the provided THREE.CatmullRomCurve3
-
-  forcedCameraPosition: undefined, // will force the camera's rotation pivot if not empty
-  setForcedCameraPosition: (position) => set(() => ({ forcedCameraPosition: position })),
-
-  alertProperties: {
-    active: false,
-    type: 'Success',
-    displaySide: 'topRight',
-    duration: 5,
-    width: '300px',
-    height: '50px',
-    transitionDuration: 0.5,
-    text: 'Lorem Ipsum Dolor!'
-  },
-  setAlertProperties: (newProperties) => set((state) => ({
-    alertProperties: {
-      ...state.alertProperties,
-      ...newProperties
-    }
-  })),
-
-  isCanvasHovered: false,
-  setIsCanvasHovered: (hovered) => set(() => ({ isCanvasHovered: hovered })),
-
-  showReturnButton: false,
-  setShowReturnButton: (show) => set(() => ({ showReturnButton: show })),
-
-  isReturnButtonPressed: false,
-  setIsReturnButtonPressed: (pressed) => set(() => ({ isReturnButtonPressed: pressed })),
-
-  returnButtonPosition: [50, 50],
-  setReturnButtonPosition: (position) => set(() => ({ returnButtonPosition: position })),
-
-  mouseClicked: false,
-  toggleMouseClicked: () => set((state) => ({ mouseClicked: !state.mouseClicked })),
-
-  isMouseDown: false,
-  setIsMouseDown: () => set((state) => ({ isMouseDown: !state.isMouseDown })),
-
-  isDragging: false,
-  setIsDragging: (dragging) => set(() => ({ isDragging: dragging })),
-
-  currentObjectClicked: "",
-  setCurrentObjectClicked: (object) => set(() => ({ currentObjectClicked: object })),
-
-  tutorialClosed: false,
-  setTutorialClosed: (closed) => set(() => ({ tutorialClosed: closed })),
-
-  triggers: { "trigger1": false, "trigger2": false, "trigger3": false, "trigger4": false, "trigger5": false },
-  toggleTrigger: (key) => set((state) => ({
-    triggers: {
-      ...state.triggers,
-      [key]: !state.triggers[key]
-    }
-  })),
-  setTrigger: (key, value) => set((state) => ({
-    triggers: {
-      ...state.triggers,
-      [key]: value
-    }
-  })),
-
-  tooltipProperties: {
-    active: false,
-    visible: false,
-    type: 'Success',
-    displaySide: 'topRight',
-    transitionDuration: 0.5,
-    text: 'Lorem Ipsum Dolor!',
-    image: ""
-  },
-  setTooltipProperties: (newProperties) => set((state) => ({
-    tooltipProperties: {
-      ...state.tooltipProperties,
-      ...newProperties
-    }
-  })), // to be used like this: setTooltipProperties({active:false, visible:false});
-
-  tooltipCirclesData: [],
-  setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data })),
-  addTooltipCirclesData: (newData) => set((state) => { // Add new data, in case of duplicate keys, the object will be overwritten
-    const updatedData = [...state.tooltipCirclesData];
-    newData.forEach(newItem => {
-      const existingIndex = updatedData.findIndex(item => item.objectName === newItem.objectName);
-      if (existingIndex !== -1) {
-        updatedData[existingIndex] = newItem;
-      } else {
-        updatedData.push(newItem);
-      }
-    });
-    return {
-      tooltipCirclesData: updatedData
-    };
-  }),
-  modifyTooltipCircleData: (objectName, newProperties) => set((state) => {
-    const updatedData = state.tooltipCirclesData.map(item =>
-      item.objectName === objectName ? { ...item, ...newProperties } : item
-    );
-    return {
-      tooltipCirclesData: updatedData
-    };
-  }),
-
-  isCircleOnLeftSelected: false,
-  setIsCircleOnLeftSelected: (isLeft) => set(() => ({ isCircleOnLeftSelected: isLeft })),
-
-  isCircleOnTopSelected: false,
-  setIsCircleOnTopSelected: (isTop) => set(() => ({ isCircleOnTopSelected: isTop })),
-
-  tooltipCurrentObjectNameSelected: undefined,
-  setTooltipCurrentObjectNameSelected: (object) => set(() => ({ tooltipCurrentObjectNameSelected: object })),
-
-  message: {
-    type: undefined,
-    payload: undefined,
-  },
-  setMessage: (type, payload) => set(() => ({
-    message: { type, payload }
-  })),
-
-  productInformationFromMessage: {},
-  setProductInformationFromMessage: (productInformation) => set(() => ({ productInformationFromMessage: productInformation })),
-  
-  currentSkillHovered: "Python", // try to put this on the component itself
-  setSkillHovered: (skill) => set(() => ({ currentSkillHovered: skill })),
-
-  siteMode: "store",
-  setSiteMode: (mode) => set(() => ({ siteMode: mode })),
-
-  animationTriggerState: false,
-  setAnimationTriggerState: (playing) => set(() => ({ animationTriggerState: playing })),
-
-  explodeAnimationEnded: false,
-  setExplodeAnimationEnded: (ended) => set(() => ({ explodeAnimationEnded: ended })),
-}));
-
 function App() {
   THREE.Cache.enabled = true;
+  const useStore = useSystemStore;
   
   const setIsCanvasHovered = useStore((state) => state.setIsCanvasHovered);
   const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
@@ -231,7 +37,7 @@ function App() {
   const setIsReturnButtonPressed = useStore((state) => state.setIsReturnButtonPressed);
   const returnButtonPosition = useStore((state) => state.returnButtonPosition);
   const showReturnButton = useStore((state) => state.showReturnButton);
-  const siteMode = useStore((state) => state.siteMode);
+  const siteMode = useUserStore((state) => state.siteMode);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
@@ -300,7 +106,8 @@ function App() {
     
     // exposes the store to the global context to change states on chrome devtools
     if (typeof window !== "undefined") {
-      window.useStore = useStore;
+      window.useSystemStore = useSystemStore;
+      window.useUserStore = useUserStore;
     }
 
   // Console logs the current fps
@@ -370,13 +177,12 @@ function App() {
           <Route path="*" element=
             {!forceDisableRender && (
               <>
-              <Alert {...{ useStore }} />
-              <ToolTip {...{ useStore }} transitionDuration={0.5} />
+              <Alert />
+              <ToolTip transitionDuration={0.5} />
               {/* Create info circles on the screen */}
               {tooltipCirclesData?.length > 0 && tooltipCirclesData?.map((props, index) => (
                 <ToolTipCircle
                   key={props.objectName || `tooltip-${index}`}
-                  {...{ useStore }}
                   objectName={props.objectName}
                   textShowMode={props.textShowMode}
                   text={props.text}
@@ -390,9 +196,9 @@ function App() {
                   focusGroup = {props.focusGroup}
                 />
               ))}
-              <TutorialOverlay enable = {enableTutorial} {...{useStore}}/> 
+              <TutorialOverlay enable = {enableTutorial}/> 
               {(siteMode === "resume") &&
-                <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} />
+                <HudMenu responsive={ResponsiveWidthHeight} />
               }
 
               <img
@@ -432,7 +238,7 @@ function App() {
                 onPointerLeave={() => setIsCanvasHovered(false)}
                 dpr={1}
               >
-              <SceneContainer responsive={ResponsiveWidthHeight} {...{ useStore }} />
+              <SceneContainer responsive={ResponsiveWidthHeight} />
               {/* <FPSLogger /> */}
 
               </Canvas>

@@ -3,6 +3,7 @@ import { useSpring, a } from '@react-spring/three';
 import * as THREE from "three";
 import { Text3D } from "@react-three/drei";
 import config from '../config';
+import useSystemStore from "../SystemStore";
 
 export function FadingText3D(props) {
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
@@ -18,7 +19,7 @@ export function FadingText3D(props) {
     const {scale = 1.5} = props;
     const {textPositionOffset = [0, -0.5, 0.2]} = props;
 
-    const {transitionEnded, transitionDestination} = props.useStore();
+    const {transitionEnded, transitionDestination} = useSystemStore();
 
     // Fade in and out animation
     const springFade = useSpring({

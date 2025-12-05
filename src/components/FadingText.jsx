@@ -3,10 +3,9 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from "three";
 import { Text } from "@react-three/drei";
 import config from '../config';
+import useSystemStore from "../SystemStore";
 
 export const FadingText = React.memo((props) => {
-    const useStore = props.useStore;
-
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
     const {textColor = "#000000"} = props;
     const {initialPosition = [0, 0, 0]} = props;
@@ -28,8 +27,8 @@ export const FadingText = React.memo((props) => {
     const [playAnimation, setPlayAnimation] = useState(false); //true or false
     const [materialOpacity, setMaterialOpacity] = useState(0);
 
-    const transitionEnded = useStore((state) => state.transitionEnded);
-    const transitionDestination = useStore((state) => state.transitionDestination);
+    const transitionEnded = useSystemStore((state) => state.transitionEnded);
+    const transitionDestination = useSystemStore((state) => state.transitionDestination);
     const currentTransitionDestination = useRef("");
 
     const iScale= useMemo(() => [3, 3, 3], []);

@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber';
 import { getGPUTier } from 'detect-gpu';
 import React,{ useEffect } from "react";
 import { graphicsModes } from "../Helper";
+import useSystemStore from "../SystemStore";
 
 // set graphical by performing a gpu ier test, a fps check and a hardware acceleration check
 export const GraphicalModeSetter2 = React.memo((props) => {
@@ -12,10 +13,10 @@ export const GraphicalModeSetter2 = React.memo((props) => {
     const {fallbackMode = 'disableRender'} = props; // if site is unusable, exit. disableRender or fallbackPage
     const {fallBackPageName = "HardwareAcceleration.html"} = props;
 
-    const currentGraphicalMode = props.useStore((state) => state.currentGraphicalMode);
-    const setGraphicalMode = props.useStore((state) => state.setGraphicalMode);
-    const setForceDisableRender = props.useStore((state) => state.setForceDisableRender);
-    // const setFinishedBenchmark = props.useStore((state) => state.setFinishedBenchmark);    
+    const currentGraphicalMode = useSystemStore((state) => state.currentGraphicalMode);
+    const setGraphicalMode = useSystemStore((state) => state.setGraphicalMode);
+    const setForceDisableRender = useSystemStore((state) => state.setForceDisableRender);
+    // const setFinishedBenchmark = useSystemStore((state) => state.setFinishedBenchmark);    
     
     useEffect(() => {(async () => {
         let HardwareAccelerationCheckPassed = true;

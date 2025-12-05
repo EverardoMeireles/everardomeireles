@@ -8,7 +8,8 @@ import { ToolTip } from "./components/ToolTip";
 import { ToolTipCircle } from "./components/ToolTipCircle";
 import { TutorialOverlay } from "./components/TutorialOverlay";
 import { parseJson, removeFileExtensionString, createTimer } from "./Helper";
-import useStore from "./SystemStore";
+import useSystemStore from "./SystemStore";
+import useUserStore from "./UserStore";
 import * as THREE from "three";
 import { useLoader, useFrame } from '@react-three/fiber'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -24,33 +25,33 @@ import {
 function ExperienceFrame() {
   THREE.Cache.enabled = true;
   
-  const setIsCanvasHovered = useStore((state) => state.setIsCanvasHovered);
-  const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
-  const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
-  const tooltipProperties = useStore((state) => state.tooltipProperties);
-  const forceDisableRender = useStore((state) => state.forceDisableRender);
-  const setMainScene = useStore((state) => state.setMainScene);
-  const setIsDragging = useStore((state) => state.setIsDragging);
-  const isDragging = useStore((state) => state.isDragging);
-  const setIsMouseDown = useStore((state) => state.setIsMouseDown);
-  const isMouseDown = useStore((state) => state.isMouseDown);
-  const setIsReturnButtonPressed = useStore((state) => state.setIsReturnButtonPressed);
-  const returnButtonPosition = useStore((state) => state.returnButtonPosition);
-  const showReturnButton = useStore((state) => state.showReturnButton);
-  const siteMode = useStore((state) => state.siteMode);
-  const cameraState = useStore((state) => state.cameraState);
+  const setIsCanvasHovered = useSystemStore((state) => state.setIsCanvasHovered);
+  const tooltipCirclesData = useSystemStore((state) => state.tooltipCirclesData);
+  const setTooltipCirclesData = useSystemStore((state) => state.setTooltipCirclesData);
+  const tooltipProperties = useSystemStore((state) => state.tooltipProperties);
+  const forceDisableRender = useSystemStore((state) => state.forceDisableRender);
+  const setMainScene = useSystemStore((state) => state.setMainScene);
+  const setIsDragging = useSystemStore((state) => state.setIsDragging);
+  const isDragging = useSystemStore((state) => state.isDragging);
+  const setIsMouseDown = useSystemStore((state) => state.setIsMouseDown);
+  const isMouseDown = useSystemStore((state) => state.isMouseDown);
+  const setIsReturnButtonPressed = useSystemStore((state) => state.setIsReturnButtonPressed);
+  const returnButtonPosition = useSystemStore((state) => state.returnButtonPosition);
+  const showReturnButton = useSystemStore((state) => state.showReturnButton);
+  const cameraState = useSystemStore((state) => state.cameraState);
+  const siteMode = useUserStore((state) => state.siteMode);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
-  const transitionEnded = useStore((state) => state.transitionEnded);
+  const transitionEnded = useSystemStore((state) => state.transitionEnded);
 
-  const message = useStore((state) => state.message);
-  const setMessage = useStore((state) => state.setMessage);
-  const setProductInformationFromMessage = useStore((state) => state.setProductInformationFromMessage);
+  const message = useSystemStore((state) => state.message);
+  const setMessage = useSystemStore((state) => state.setMessage);
+  const setProductInformationFromMessage = useSystemStore((state) => state.setProductInformationFromMessage);
 
   const [enableTutorial, setEnableTutorial] = useState(false);
-  const setViewerBounds = useStore((state) => state.setViewerBounds);
-  const viewerBounds = useStore((state) => state.viewerBounds);
+  const setViewerBounds = useSystemStore((state) => state.setViewerBounds);
+  const viewerBounds = useSystemStore((state) => state.viewerBounds);
   const [canvasReady, setCanvasReady] = useState(false);
 
   useEffect(() => {
@@ -141,7 +142,8 @@ function ExperienceFrame() {
     
     // exposes the store to the global context to change states on chrome devtools
     if (typeof window !== "undefined") {
-      window.useStore = useStore;
+      window.useSystemStore = useSystemStore;
+      window.useUserStore = useUserStore;
     }
 
   // Console logs the current fps
@@ -210,13 +212,12 @@ function ExperienceFrame() {
           <Route path="*" element=
             {!forceDisableRender && (
               <>
-              <Alert {...{ useStore }} />
-              <ToolTip {...{ useStore }} transitionDuration={0.5} />
+              <Alert />
+              <ToolTip transitionDuration={0.5} />
               {/* Create info circles on the screen */}
               {tooltipCirclesData?.length > 0 && tooltipCirclesData?.map((props, index) => (
                 <ToolTipCircle
                   key={props.objectName || `tooltip-${index}`}
-                  {...{ useStore }}
                   objectName={props.objectName}
                   textShowMode={props.textShowMode}
                   text={props.text}
@@ -230,9 +231,9 @@ function ExperienceFrame() {
                   focusGroup = {props.focusGroup}
                 />
               ))}
-              <TutorialOverlay enable = {enableTutorial} {...{useStore}}/> 
+              <TutorialOverlay enable = {enableTutorial}/> 
               {(siteMode === "resume") &&
-                <HudMenu responsive={ResponsiveWidthHeight} {...{ useStore }} />
+                <HudMenu responsive={ResponsiveWidthHeight} />
               }
 
               <img
@@ -274,7 +275,6 @@ function ExperienceFrame() {
                   >
                     <SceneContainer
                       responsive={ResponsiveWidthHeight}
-                      {...{ useStore }}
                     />
                     <FPSLogger />
                   </Canvas>

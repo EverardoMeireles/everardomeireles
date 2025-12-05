@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import config from '../config';
+import useSystemStore from "../SystemStore";
 
 // A component that displays a message on screen for a time.
 // Usage: setTooltipProperties({ active: true, duration: 2 /*sec*/, text: "...", image: "..." })
 export const ToolTip = (props) => {
-  const useStore = props.useStore;
   const {imagePercentHeight = 40} = props;
   const {textPercentHeight = 60} = props;
   const {fontSize = 18} = props;
   const {transitionDuration = 0.5} = props; // fade time in seconds
 
-  const tooltipProperties = useStore((state) => state.tooltipProperties);
-  const setTooltipProperties = useStore((state) => state.setTooltipProperties);
-  const isCircleOnLeftSelected = useStore((state) => state.isCircleOnLeftSelected);
+  const tooltipProperties = useSystemStore((state) => state.tooltipProperties);
+  const setTooltipProperties = useSystemStore((state) => state.setTooltipProperties);
+  const isCircleOnLeftSelected = useSystemStore((state) => state.isCircleOnLeftSelected);
 
   const [isVisible, setIsVisible] = useState(false);
   const [isDivDisabled, setIsDivDisabled] = useState(true);
-  const viewerBounds = useStore((state) => state.viewerBounds);
+  const viewerBounds = useSystemStore((state) => state.viewerBounds);
 
   // 1) Show + auto-hide
   useEffect(() => {

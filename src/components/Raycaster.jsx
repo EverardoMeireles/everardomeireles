@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import useSystemStore from "../SystemStore";
 
 export const Raycaster = React.memo((props) => {
-    const useStore = props.useStore;
     const {children} = props;
     const {mouse} = props;
     const {frameInterval = 1} = props; // Ray is casted every x frames
     const {enabled = false} = props; // enable raycaster
 
-    const setCurrentObjectClicked = useStore((state) => state.setCurrentObjectClicked);
-    const currentObjectClicked = useStore((state) => state.currentObjectClicked);
+    const setCurrentObjectClicked = useSystemStore((state) => state.setCurrentObjectClicked);
+    const currentObjectClicked = useSystemStore((state) => state.currentObjectClicked);
     
     const { scene, camera } = useThree();
     const [hoveredObject, setHoveredObject] = useState(null);

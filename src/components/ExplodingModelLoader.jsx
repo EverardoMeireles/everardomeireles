@@ -5,9 +5,9 @@ import * as THREE from 'three';
 import React from 'react';
 import { parseJson, removeFileExtensionString, easeInCubic, easeOutCubic, createArchCurve } from "../Helper";
 import config from '../config';
+import useSystemStore from "../SystemStore";
 
 export const ExplodingModelLoader = React.memo((props) => {
-  const useStore = props.useStore; // Using useStore from props
 
   const {animationIsPlaying = false} = props;
 
@@ -62,28 +62,28 @@ export const ExplodingModelLoader = React.memo((props) => {
   const gltf = useLoader(GLTFLoader, config.models_path + modelName);
   const { camera, gl } = useThree();
 
-  const isCanvasHovered = useStore((state) => state.isCanvasHovered);
-  const cameraState = useStore((state) => state.cameraState);
-  const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
-  const transitionEnded = useStore((state) => state.transitionEnded);
-  const setTransitionEnded = useStore((state) => state.setTransitionEnded);
-  const triggers = useStore((state) => state.triggers);
-  const setTrigger = useStore((state) => state.setTrigger);
-  const isCircleOnLeftSelected = useStore((state) => state.isCircleOnLeftSelected);
-  const isCircleOnTopSelected = useStore((state) => state.isCircleOnTopSelected);
-  const tooltipCurrentObjectNameSelected = useStore((state) => state.tooltipCurrentObjectNameSelected);
-  const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
-  const addTooltipCirclesData = useStore((state) => state.addTooltipCirclesData);
-  const modifyTooltipCircleData = useStore((state) => state.modifyTooltipCircleData);
-  const setTooltipCirclesData = useStore((state) => state.setTooltipCirclesData);
-  const setForcedCameraMovePathCurve = useStore((state) => state.setForcedCameraMovePathCurve);
-  const setCameraStateTracking = useStore((state) => state.setCameraStateTracking);
-  const isDragging = useStore((state) => state.isDragging);
-  const isMouseDown = useStore((state) => state.isMouseDown);
-  const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
-  const isReturnButtonPressed = useStore((state) => state.isReturnButtonPressed);
-  const setShowReturnButton = useStore((state) => state.setShowReturnButton);
-  const setForcedCameraPosition = useStore((state) => state.setForcedCameraPosition);
+  const isCanvasHovered = useSystemStore((state) => state.isCanvasHovered);
+  const cameraState = useSystemStore((state) => state.cameraState);
+  const setForcedCameraTarget = useSystemStore((state) => state.setForcedCameraTarget);
+  const transitionEnded = useSystemStore((state) => state.transitionEnded);
+  const setTransitionEnded = useSystemStore((state) => state.setTransitionEnded);
+  const triggers = useSystemStore((state) => state.triggers);
+  const setTrigger = useSystemStore((state) => state.setTrigger);
+  const isCircleOnLeftSelected = useSystemStore((state) => state.isCircleOnLeftSelected);
+  const isCircleOnTopSelected = useSystemStore((state) => state.isCircleOnTopSelected);
+  const tooltipCurrentObjectNameSelected = useSystemStore((state) => state.tooltipCurrentObjectNameSelected);
+  const tooltipCirclesData = useSystemStore((state) => state.tooltipCirclesData);
+  const addTooltipCirclesData = useSystemStore((state) => state.addTooltipCirclesData);
+  const modifyTooltipCircleData = useSystemStore((state) => state.modifyTooltipCircleData);
+  const setTooltipCirclesData = useSystemStore((state) => state.setTooltipCirclesData);
+  const setForcedCameraMovePathCurve = useSystemStore((state) => state.setForcedCameraMovePathCurve);
+  const setCameraStateTracking = useSystemStore((state) => state.setCameraStateTracking);
+  const isDragging = useSystemStore((state) => state.isDragging);
+  const isMouseDown = useSystemStore((state) => state.isMouseDown);
+  const currentGraphicalMode = useSystemStore((state) => state.currentGraphicalMode);
+  const isReturnButtonPressed = useSystemStore((state) => state.isReturnButtonPressed);
+  const setShowReturnButton = useSystemStore((state) => state.setShowReturnButton);
+  const setForcedCameraPosition = useSystemStore((state) => state.setForcedCameraPosition);
 
   const [initialPositions, setInitialPositions] = useState({});
   const [desiredPositions, setDesiredPositions] = useState({});

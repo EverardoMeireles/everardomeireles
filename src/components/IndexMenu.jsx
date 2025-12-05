@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
 import { increaseOrDecreaseGraphics } from "../Helper";
 import config from '../config';
+import useSystemStore from "../SystemStore";
 
 export function IndexMenu(props) {
     const {rotation = 2 * Math.PI} = props;
@@ -15,12 +16,12 @@ export function IndexMenu(props) {
     const {visible = true} = props;
     const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
-    const {setDesiredPath, setTransitionEnded} = props.useStore();
+    const {setDesiredPath, setTransitionEnded} = useSystemStore();
     
-    const setGraphicalMode = props.useStore((state) => state.setGraphicalMode);
-    const currentGraphicalMode = props.useStore((state) => state.currentGraphicalMode);
-    const graphicalModes = props.useStore((state) => state.graphicalModes);
-    const finishedBenchmark = props.useStore((state) => state.finishedBenchmark);
+    const setGraphicalMode = useSystemStore((state) => state.setGraphicalMode);
+    const currentGraphicalMode = useSystemStore((state) => state.currentGraphicalMode);
+    const graphicalModes = useSystemStore((state) => state.graphicalModes);
+    const finishedBenchmark = useSystemStore((state) => state.finishedBenchmark);
 
     const [hovered0, setHover0] = useState(false);
     const [hovered1, setHover1] = useState(false);

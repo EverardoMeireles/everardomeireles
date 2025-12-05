@@ -32,28 +32,29 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 
 import config from './config.js';
+import useSystemStore from "./SystemStore.js";
+import useUserStore from "./UserStore.js";
 
 export const SceneContainer = React.memo((props) => {
-    const useStore = props.useStore;
+    const transitionDestination = useSystemStore((state) => state.transitionDestination);
+    const transitionEnded = useSystemStore((state) => state.transitionEnded);
+    const currentLanguage = useSystemStore((state) => state.currentLanguage);
+    const currentGraphicalMode = useSystemStore((state) => state.currentGraphicalMode);
+    const triggers = useSystemStore((state) => state.triggers);
+    const currentObjectClicked = useSystemStore((state) => state.currentObjectClicked);
+    const mouseClicked = useSystemStore((state) => state.mouseClicked);
+    const preloadDone = useSystemStore((state) => state.preloadDone);
+    const raycasterEnabled = useSystemStore((state) => state.raycasterEnabled);
+    const setForcedCameraTarget = useSystemStore((state) => state.setForcedCameraTarget);
+    const setForcedCameraMovePathCurve = useSystemStore((state) => state.setForcedCameraMovePathCurve);
+    const setTrigger = useSystemStore((state) => state.setTrigger);
+    const mainScene = useSystemStore((state) => state.mainScene);
+    const productInformationFromMessage = useSystemStore((state) => state.productInformationFromMessage);
 
-    const transitionDestination = useStore((state) => state.transitionDestination);
-    const transitionEnded = useStore((state) => state.transitionEnded);
-    const currentSkillHovered = useStore((state) => state.currentSkillHovered);
-    const currentLanguage = useStore((state) => state.currentLanguage);
-    const currentGraphicalMode = useStore((state) => state.currentGraphicalMode);
-    const triggers = useStore((state) => state.triggers);
-    const currentObjectClicked = useStore((state) => state.currentObjectClicked);
-    const mouseClicked = useStore((state) => state.mouseClicked);
-    const preloadDone = useStore((state) => state.preloadDone);
-    const raycasterEnabled = useStore((state) => state.raycasterEnabled);
-    const setForcedCameraTarget = useStore((state) => state.setForcedCameraTarget);
-    const setForcedCameraMovePathCurve = useStore((state) => state.setForcedCameraMovePathCurve);
-    const setTrigger = useStore((state) => state.setTrigger);
-    const animationTriggerState = useStore((state) => state.animationTriggerState);
-    const setAnimationTriggerState = useStore((state) => state.setAnimationTriggerState);
-    const mainScene = useStore((state) => state.mainScene);
-    const siteMode = useStore((state) => state.siteMode);
-    const productInformationFromMessage = useStore((state) => state.productInformationFromMessage);
+    const currentSkillHovered = useUserStore((state) => state.currentSkillHovered);
+    const animationTriggerState = useUserStore((state) => state.animationTriggerState);
+    const setAnimationTriggerState = useUserStore((state) => state.setAnimationTriggerState);
+    const siteMode = useUserStore((state) => state.siteMode);
 
     const { gl } = useThree();
     const { mouse } = useThree();
@@ -503,7 +504,7 @@ export const SceneContainer = React.memo((props) => {
     const objectLinkScale = useMemo(() => [1, 1, 1], []);
 
     const stableOrbitingPointLightParticleEmitterAndPointLightAnimation = useMemo(() => [
-        <ParticleEmitter key="particles" {...{useStore}} imageNames={["fire.png", "fire2.png"]} count={15} speed={10} initialSize={10}
+        <ParticleEmitter key="particles" imageNames={["fire.png", "fire2.png"]} count={15} speed={10} initialSize={10}
             maxSizeOverLifespan={15} fadeInOut={true} faceCamera={false} faceCameraFrameCheck={80}
             faceCameraAxisLock={[1, 1, 1]} instanceMaxRandomDelay={10} lifespan={0.3}
             spread={3} position={[0, -1, 0]} rotation={[0, 1, 0]} direction={[0, 1, 0]} />,
@@ -516,7 +517,7 @@ export const SceneContainer = React.memo((props) => {
     ], []);
 
         const stableSimpleLoader = useMemo(() => 
-                    <SimpleLoader  {...{useStore}} scene={mainScene} objectsRevealTriggers={objectsRevealTriggers} 
+                    <SimpleLoader scene={mainScene} objectsRevealTriggers={objectsRevealTriggers} 
                     animationToPlay={animationToPlay} loopMode={"Loop"} animationTrigger={animationTrigger} 
                     animationTimesToTrigger={animationTimesToTrigger} animationTriggerNames={animationTriggerNames} 
                     hoverAffectedObjects={hoverAffectedObjects} hoverLinkedObjects={hoverLinkedObjects} />
@@ -534,18 +535,18 @@ export const SceneContainer = React.memo((props) => {
 
     return(
     <>
-        <Camera {...{useStore}} position = {config.default_Camera_starting_position} ></Camera>
+        <Camera position = {config.default_Camera_starting_position} ></Camera>
         {(siteMode === "resume") && 
         <>
             {/* /////////////////////
                 //System components//
                 ///////////////////// */}
 
-            <PreloadAssets {...{useStore}} delay={4000} texturesToLoad={texturesToLoad} scenesToLoad={scenesToLoad}></PreloadAssets>
-            {/* <Raycaster {...{useStore}} enabled={raycasterEnabled} mouse={mouse} frameInterval={10} /> */}
+            <PreloadAssets delay={4000} texturesToLoad={texturesToLoad} scenesToLoad={scenesToLoad}></PreloadAssets>
+            {/* <Raycaster enabled={raycasterEnabled} mouse={mouse} frameInterval={10} /> */}
             {(config.check_graphics)
             && 
-            <GraphicalModeSetter {...{useStore}} enableGraphicalModeSwapping = {false} fpsToDecreaseGraphics = {55} />
+            <GraphicalModeSetter enableGraphicalModeSwapping = {false} fpsToDecreaseGraphics = {55} />
             }
 
             {/* /////////////////////
@@ -558,29 +559,29 @@ export const SceneContainer = React.memo((props) => {
             {/* <Environment files = {config.resource_path + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} /> */}
             {(transitionDestination === "Education") 
             && (
-            <OrbitingMenu {...{ useStore }} transitionDestinationToRestrictKeyboardControl = {"Education"} visible={isOrbitingMenuVisible.current} orbitDistance={7.5} orbitCenterPosition={orbitCenterPosition} />
+            <OrbitingMenu transitionDestinationToRestrictKeyboardControl = {"Education"} visible={isOrbitingMenuVisible.current} orbitDistance={7.5} orbitCenterPosition={orbitCenterPosition} />
                         )}
-            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} 
+            <FadingTitle initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} 
                 text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {2000} transitionDuration = {1500} />
-            <FadingTitle {...{useStore}} initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} 
+            <FadingTitle initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} 
                 text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {2600} transitionDuration = {1500} />
             <>
-                <FadingText {...{useStore}} textToFade = {TranslationTable0} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects0" lettersPerUnit = {5}  scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable1} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects1"                       scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable2} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects2"                       scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI}       textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable3} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {fadingTextScale3} initialPosition = {fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable4} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects4" lettersPerUnit = {9}  scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText {...{useStore}} textToFade = {TranslationTable5} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects5" lettersPerUnit = {7}  scale = {fadingTextScale5} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                {/* <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText {...{useStore}} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
+                <FadingText textToFade = {TranslationTable0} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects0" lettersPerUnit = {5}  scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable1} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects1"                       scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable2} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects2"                       scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI}       textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable3} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {fadingTextScale3} initialPosition = {fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable4} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects4" lettersPerUnit = {9}  scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable5} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects5" lettersPerUnit = {7}  scale = {fadingTextScale5} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                {/* <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
+                <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
             </>
             
             {/* {(transitionDestination=="Skills" && transitionEnded) &&
-            <FloatingTextSkills {...{useStore}} initialPosition = {[-9, 30, -15]} textPosition = {FloatingTextSkillsPosition} /> 
+            <FloatingTextSkills initialPosition = {[-9, 30, -15]} textPosition = {FloatingTextSkillsPosition} /> 
             } */}
 
             {(currentGraphicalMode === "potato")
@@ -615,7 +616,7 @@ export const SceneContainer = React.memo((props) => {
             {/* <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
             <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
             <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader> */}
-            {/* <CurveInstanceAnimation {...{useStore}} curveNumber = {5} instanceInterval = {1000} tubeWireframe={false} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}
+            {/* <CurveInstanceAnimation curveNumber = {5} instanceInterval = {1000} tubeWireframe={false} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}
             
             {(currentGraphicalMode === "high")
             &&
@@ -633,7 +634,7 @@ export const SceneContainer = React.memo((props) => {
             <ambientLight intensity = {1}></ambientLight>
             {(explodingModelPath != "")
             &&
-            <ExplodingModelLoader {...{useStore}} 
+            <ExplodingModelLoader 
             modelName={
                 "Roomba.glb"
                 // explodingModelPath

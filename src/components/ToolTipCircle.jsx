@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../PulsatingAnimation.css'; // Adjust the path as necessary
 import config from '../config';
+import useSystemStore from "../SystemStore";
 
 // A component that displays a message on screen for a time.
 // How to use:
@@ -9,7 +10,6 @@ import config from '../config';
 // You can set any of the tooltip's properties like this for example:
 // setTooltipProperties({active:false, text:"This image is very interesting!"});
 export const ToolTipCircle = (props) => {
-    const useStore = props.useStore;
     const {objectName = ""} = props;
     const {circleIsVisible = false} = props; // Whether to show the circles or not
     const {textShowMode = "Canvas"} = props; //Canvas or Page
@@ -20,12 +20,12 @@ export const ToolTipCircle = (props) => {
     const {position = [0, 0]} = props;
 
 
-    const setIsCircleOnLeftSelected = useStore((state) => state.setIsCircleOnLeftSelected);
-    const setIsCircleOnTopSelected = useStore((state) => state.setIsCircleOnTopSelected);
-    const setTooltipProperties = useStore((state) => state.setTooltipProperties);
-    const tooltipCirclesData = useStore((state) => state.tooltipCirclesData);
-    const setTooltipCurrentObjectNameSelected = useStore((state) => state.setTooltipCurrentObjectNameSelected);
-    const setMessage = useStore((state) => state.setMessage);
+    const setIsCircleOnLeftSelected = useSystemStore((state) => state.setIsCircleOnLeftSelected);
+    const setIsCircleOnTopSelected = useSystemStore((state) => state.setIsCircleOnTopSelected);
+    const setTooltipProperties = useSystemStore((state) => state.setTooltipProperties);
+    const tooltipCirclesData = useSystemStore((state) => state.tooltipCirclesData);
+    const setTooltipCurrentObjectNameSelected = useSystemStore((state) => state.setTooltipCurrentObjectNameSelected);
+    const setMessage = useSystemStore((state) => state.setMessage);
 
     const [isVisible, setIsVisible] = useState(false);
 
@@ -40,7 +40,7 @@ export const ToolTipCircle = (props) => {
         }
     }, [tooltipCirclesData]);
 
-    const viewerBounds = useStore((state) => state.viewerBounds);
+    const viewerBounds = useSystemStore((state) => state.viewerBounds);
 
     const computedLeft = viewerBounds.left + (viewerBounds.width * (position[0] / 100));
     const computedTop = viewerBounds.top + (viewerBounds.height * (position[1] / 100));
