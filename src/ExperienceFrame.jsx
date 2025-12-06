@@ -1,18 +1,14 @@
 import { Suspense, useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { Canvas } from "@react-three/fiber";
-import { SceneContainer } from "./SceneContainer";
-import { HudMenu } from "./components/HudMenu";
-import config from './config';
+import { SceneContainer, SceneHudMenu } from "./SceneContainer";
 import { Alert } from "./components/Alert";
 import { ToolTip } from "./components/ToolTip";
 import { ToolTipCircle } from "./components/ToolTipCircle";
 import { TutorialOverlay } from "./components/TutorialOverlay";
-import { parseJson, removeFileExtensionString, createTimer } from "./Helper";
 import useSystemStore from "./SystemStore";
-import useUserStore from "./UserStore";
+import useUserStore from "./SystemStore";
 import * as THREE from "three";
-import { useLoader, useFrame } from '@react-three/fiber'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { useFrame } from '@react-three/fiber'
 
 import {
   BrowserRouter as Router,
@@ -30,7 +26,6 @@ function ExperienceFrame() {
   const setTooltipCirclesData = useSystemStore((state) => state.setTooltipCirclesData);
   const tooltipProperties = useSystemStore((state) => state.tooltipProperties);
   const forceDisableRender = useSystemStore((state) => state.forceDisableRender);
-  const setMainScene = useSystemStore((state) => state.setMainScene);
   const setIsDragging = useSystemStore((state) => state.setIsDragging);
   const isDragging = useSystemStore((state) => state.isDragging);
   const setIsMouseDown = useSystemStore((state) => state.setIsMouseDown);
@@ -39,7 +34,6 @@ function ExperienceFrame() {
   const returnButtonPosition = useSystemStore((state) => state.returnButtonPosition);
   const showReturnButton = useSystemStore((state) => state.showReturnButton);
   const cameraState = useSystemStore((state) => state.cameraState);
-  const siteMode = useUserStore((state) => state.siteMode);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
@@ -84,14 +78,6 @@ function ExperienceFrame() {
       resizeObserver.disconnect();
     };
   }, [setViewerBounds]);
-
-  const sceneName = siteMode === "resume" ? 'NewthreeJsScene.glb' : 'base_cube_DO_NOT_REMOVE.glb';
-  const scene = useLoader(GLTFLoader, config.resource_path + '/models/' + sceneName);
-
-  // Load initial main scene
-  useEffect(() => {
-    setMainScene(scene)
-}, [scene]);
 
   useEffect(() => {
     // console.log(tooltipCirclesData)
@@ -232,9 +218,7 @@ function ExperienceFrame() {
                 />
               ))}
               <TutorialOverlay enable = {enableTutorial}/> 
-              {(siteMode === "resume") &&
-                <HudMenu responsive={ResponsiveWidthHeight} />
-              }
+              <SceneHudMenu responsive={ResponsiveWidthHeight} />
 
               <img
                     src = "textures/back_arrow.png"

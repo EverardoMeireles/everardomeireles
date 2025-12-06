@@ -28,12 +28,19 @@ import { TranslationTable } from "./TranslationTable.jsx";
 import { ResponsiveTable } from "./Styles.jsx";
 import { pollForFilesInTHREECache, removeFileExtensionString, createTimer } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { HudMenu } from "./components/HudMenu.jsx";
 
 import * as THREE from 'three';
 
 import config from './config.js';
 import useSystemStore from "./SystemStore.js";
 import useUserStore from "./UserStore.js";
+
+export const SceneHudMenu = ({ responsive }) => {
+    const siteMode = useUserStore((state) => state.siteMode);
+    if (siteMode !== "resume") return null;
+    return <HudMenu responsive={responsive} />;
+};
 
 export const SceneContainer = React.memo((props) => {
     const transitionDestination = useSystemStore((state) => state.transitionDestination);
@@ -48,6 +55,7 @@ export const SceneContainer = React.memo((props) => {
     const setForcedCameraTarget = useSystemStore((state) => state.setForcedCameraTarget);
     const setForcedCameraMovePathCurve = useSystemStore((state) => state.setForcedCameraMovePathCurve);
     const setTrigger = useSystemStore((state) => state.setTrigger);
+    const setMainScene = useSystemStore((state) => state.setMainScene);
     const mainScene = useSystemStore((state) => state.mainScene);
     const productInformationFromMessage = useSystemStore((state) => state.productInformationFromMessage);
 
@@ -55,6 +63,16 @@ export const SceneContainer = React.memo((props) => {
     const animationTriggerState = useUserStore((state) => state.animationTriggerState);
     const setAnimationTriggerState = useUserStore((state) => state.setAnimationTriggerState);
     const siteMode = useUserStore((state) => state.siteMode);
+
+    const sceneName = useMemo(
+        () => siteMode === "resume" ? "NewthreeJsScene.glb" : "base_cube_DO_NOT_REMOVE.glb",
+        [siteMode]
+    );
+    const scene = useLoader(GLTFLoader, `${config.resource_path}/models/${sceneName}`);
+
+    useEffect(() => {
+        setMainScene(scene);
+    }, [scene, setMainScene]);
 
     const { gl } = useThree();
     const { mouse } = useThree();
@@ -185,7 +203,7 @@ export const SceneContainer = React.memo((props) => {
     },[currentGraphicalMode])
 
     useEffect(() => {
-        if (!mainScene.animations.length) return; // Ensure there are animations in the GLTF
+        if (!mainScene || !mainScene.animations?.length) return; // Ensure there are animations in the GLTF
         
         mixer = new AnimationMixer(mainScene.scene); // Create an AnimationMixer
 
@@ -441,7 +459,7 @@ export const SceneContainer = React.memo((props) => {
     // Temporary initial transition //
     //////////////////////////////////
     
-    // Temporary useEffect to initialize the position and lookat
+    // Temporary useEffect to initialize the position and camera target of both scenes
     useEffect(() => {
         if(siteMode == "resume"){
             const tempCurve = new THREE.CatmullRomCurve3([
@@ -450,7 +468,7 @@ export const SceneContainer = React.memo((props) => {
                 new THREE.Vector3(199, 150, 46)])
 
                 setForcedCameraTarget([45, 21, -50])
-            setForcedCameraMovePathCurve(tempCurve);
+                setForcedCameraMovePathCurve(tempCurve);
         }else{
             // setForcedCameraTarget([166, 137, 49])
             setForcedCameraTarget([0, 0, 0])
@@ -516,12 +534,31 @@ export const SceneContainer = React.memo((props) => {
             orbitDistance = {50} orbitCenterPosition = {[0,20,0]} lightIntensivity = {1} />
     ], []);
 
-        const stableSimpleLoader = useMemo(() => 
-                    <SimpleLoader scene={mainScene} objectsRevealTriggers={objectsRevealTriggers} 
-                    animationToPlay={animationToPlay} loopMode={"Loop"} animationTrigger={animationTrigger} 
-                    animationTimesToTrigger={animationTimesToTrigger} animationTriggerNames={animationTriggerNames} 
-                    hoverAffectedObjects={hoverAffectedObjects} hoverLinkedObjects={hoverLinkedObjects} />
-    , []);
+    const stableSimpleLoader = useMemo(() => {
+                    if (!mainScene) return null;
+                    return (
+                        <SimpleLoader
+                            scene={mainScene}
+                            objectsRevealTriggers={objectsRevealTriggers}
+                            animationToPlay={animationToPlay}
+                            loopMode={"Loop"}
+                            animationTrigger={animationTrigger}
+                            animationTimesToTrigger={animationTimesToTrigger}
+                            animationTriggerNames={animationTriggerNames}
+                            hoverAffectedObjects={hoverAffectedObjects}
+                            hoverLinkedObjects={hoverLinkedObjects}
+                        />
+                    );
+    }, [
+        mainScene,
+        objectsRevealTriggers,
+        animationToPlay,
+        animationTrigger,
+        animationTimesToTrigger,
+        animationTriggerNames,
+        hoverAffectedObjects,
+        hoverLinkedObjects
+    ]);
 
     const isOrbitingMenuVisible = useRef(false)
 
@@ -532,6 +569,10 @@ export const SceneContainer = React.memo((props) => {
             isOrbitingMenuVisible.current = false;
         }
     }, [transitionDestination, transitionEnded]);
+
+    if (!mainScene) {
+        return null;
+    }
 
     return(
     <>

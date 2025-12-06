@@ -48,12 +48,15 @@ export function smoothStep(x) {
     return Sn;
 }
 
-// Checks if a curve is valid(all its points are not the same)
+// Checks if a curve is valid(all its points are not the same, its an array, every entry valid and not undefined)
 export function isCurveDegenerate(curve) {
-  if (curve.points.length === 0) return true;
+  if (!curve) return true;
+  if (!Array.isArray(curve.points) || curve.points.length === 0) return true;
 
   const first = curve.points[0];
-  return curve.points.every(p => p.equals(first));
+  if (!first || typeof first.equals !== "function") return true;
+
+  return curve.points.every((p) => p && typeof p.equals === "function" && p.equals(first));
 }
 
 export function createTimer() {
@@ -63,24 +66,48 @@ export function createTimer() {
 
 // Create a THREE.CatmullRomCurve3 curve from the camera to a target position
 export function createArchCurve(
-    frontDirection = [1, 0, 0], // retained for backwards compatibility
+    frontDirection = [1, 0, 0], // the direction of the "front" of the object
     targetPosition, // The end position of the curve
-    camera, // Camera reference
-    archWidth = 1,
-    curveDirection = "up" // Accepts string or array/vector (ie: "up", "down", "left", "right" or [0, 1, 0], [0, -1, 0], [-1, 0, 0], [1, 0, 0])
+    distanceOrCamera = 1, // backward compatibility: can be the camera if distance is omitted
+    cameraOrArchWidth,
+    archWidthOrCurveDirection,
+    maybeCurveDirection
   ) {
-    // 1. get object world position and compute end point
+    let distance = 1;
+    let camera;
+    let archWidth = 1;
+    let curveDirection = "up";
+
+    if (typeof distanceOrCamera === "number" || distanceOrCamera === undefined) {
+      distance = typeof distanceOrCamera === "number" ? distanceOrCamera : 1;
+      camera = cameraOrArchWidth;
+      archWidth = archWidthOrCurveDirection ?? 1;
+      curveDirection = maybeCurveDirection ?? "up";
+    } else {
+      camera = distanceOrCamera;
+      archWidth = cameraOrArchWidth ?? 1;
+      curveDirection = archWidthOrCurveDirection ?? "up";
+    }
+
+    if (!camera || typeof camera.getWorldPosition !== "function") {
+      throw new Error("createArchCurve requires a THREE.Camera instance.");
+    }
+    // 1. frontDirection → normalized Vector3 * distance
+    const dirVec = frontDirection.isVector3 ? frontDirection.clone() : new THREE.Vector3(...frontDirection);
+    const offset = dirVec.normalize().multiplyScalar(distance);
+  
+    // 2. get object world position and compute end point
     const worldPos = Array.isArray(targetPosition)
       ? new THREE.Vector3(...targetPosition)
       : targetPosition ?? new THREE.Vector3(0, 0, 0);
   
-    const endPos = worldPos.clone();
+    const endPos = worldPos.clone().add(offset);
   
-    // 2. get camera world position (start)
+    // 3. get camera world position (start)
     const startPos = new THREE.Vector3();
     camera.getWorldPosition(startPos);
   
-    // 3. Determine curve direction based on curveDirection type
+    // 4. Determine curve frontDirection based on curveDirection type
     let directionVec = new THREE.Vector3(0, 0, 0); // Default vector
   
     if (typeof curveDirection === "string") {
@@ -99,7 +126,7 @@ export function createArchCurve(
           directionVec.set(1, 0, 0); // Curve right
           break;
         default:
-          console.warn("Invalid curve direction, using default 'up'");
+          console.warn("Invalid curve frontDirection, using default 'up'");
           directionVec.set(0, 1, 0); // Default curve upwards
       }
     } else if (Array.isArray(curveDirection) || curveDirection instanceof THREE.Vector3) {
@@ -107,14 +134,14 @@ export function createArchCurve(
       directionVec = new THREE.Vector3(...curveDirection); // Convert array to Vector3
     }
   
-    // 4. Adjust midpoints based on the direction vector
+    // 5. Adjust midpoints based on the frontDirection vector
     const p1 = startPos.clone().lerp(endPos, 0.25);
     p1.add(directionVec.clone().multiplyScalar(archWidth)); // Use directionVec for curvature
   
     const p2 = startPos.clone().lerp(endPos, 0.75);
     p2.add(directionVec.clone().multiplyScalar(archWidth)); // Similarly adjust second midpoint
   
-    // 5. Return the Catmull-Rom curve
+    // 6. Return the Catmull-Rom curve
     return new THREE.CatmullRomCurve3([startPos, p1, p2, endPos]);
   }
 
