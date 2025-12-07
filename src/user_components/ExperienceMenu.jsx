@@ -1,4 +1,4 @@
-import { BaseCube } from "./BaseCube";
+import { BaseCube } from "../system_components/BaseCube";
 import { Text } from "@react-three/drei";
 import { useCallback, Suspense } from "react";
 import * as THREE from "three";

@@ -1,10 +1,10 @@
 import { Suspense, useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { Canvas } from "@react-three/fiber";
 import { SceneContainer, SceneHudMenu } from "./SceneContainer";
-import { Alert } from "./components/Alert";
-import { ToolTip } from "./components/ToolTip";
-import { ToolTipCircle } from "./components/ToolTipCircle";
-import { TutorialOverlay } from "./components/TutorialOverlay";
+import { Alert } from "./system_components/Alert";
+import { ToolTip } from "./system_components/ToolTip";
+import { ToolTipCircle } from "./system_components/ToolTipCircle";
+import { TutorialOverlay } from "./system_components/TutorialOverlay";
 import useSystemStore from "./SystemStore";
 import useUserStore from "./SystemStore";
 import * as THREE from "three";
@@ -260,7 +260,7 @@ function ExperienceFrame() {
                     <SceneContainer
                       responsive={ResponsiveWidthHeight}
                     />
-                    <FPSLogger />
+                    {/* <FPSLogger /> */}
                   </Canvas>
                 </Suspense>
               ) : (

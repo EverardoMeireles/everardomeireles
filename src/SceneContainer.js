@@ -1,34 +1,34 @@
 import { Environment } from "@react-three/drei";
 import React, { Suspense, useState, useEffect, useRef, useMemo  } from "react";
-import { Camera } from "./components/Camera.jsx";
-import { SimpleLoader } from "./components/SimpleLoader.jsx";
-import { OrbitingPointLight } from './components/OrbitingPointLights.jsx';
-import { GraphicalModeSetter } from './components/GraphicalModeSetter.jsx';
+import { Camera } from "./system_components/Camera.jsx";
+import { SimpleLoader } from "./system_components/SimpleLoader.jsx";
+import { OrbitingPointLight } from './system_components/OrbitingPointLights.jsx';
+import { GraphicalModeSetter } from './system_components/GraphicalModeSetter.jsx';
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
-import { OrbitingMenu } from "./components/OrbitingMenu.jsx";
-import { FloatingTextSkills } from "./components/FloatingTextSkills.jsx";
-import { FadingText } from "./components/FadingText.jsx";
+import { OrbitingMenu } from "./system_components/OrbitingMenu.jsx";
+import { FloatingTextSkills } from "./system_components/FloatingTextSkills.jsx";
+import { FadingText } from "./system_components/FadingText.jsx";
 import { useFrame, useThree, useLoader } from "@react-three/fiber"; // eslint-disable-line no-unused-vars
-import { VideoLoader } from "./components/VideoLoader.jsx";
-import { GraphicalModeSetter2 } from "./components/GraphicalModeSetter2.jsx";
-import { FadingTitle } from "./components/FadingTitle.jsx";
-import { Raycaster } from "./components/Raycaster.jsx";
-import { CurveInstanceAnimation } from "./components/CurveInstanceAnimation.jsx";
-import { InstanceLoader } from "./components/InstanceLoader.jsx";
-import { PreloadAssets } from "./components/PreloadAssets.jsx";
-import { ExplodingModelLoader } from "./components/ExplodingModelLoader.jsx";
-import { CurveLightAnimation } from "./components/CurveLightAnimation.jsx";
-import { PointLightAnimation } from "./components/PointLightAnimation.jsx";
-import { ObjectLink } from "./components/ObjectLink.jsx";
-import { ParticleEmitter } from "./components/ParticleEmitter.jsx";
-import { DynamicMaterialLoader } from "./components/DynamicMaterialLoader.jsx";
+import { VideoLoader } from "./system_components/VideoLoader.jsx";
+import { GraphicalModeSetter2 } from "./system_components/GraphicalModeSetter2.jsx";
+import { FadingTitle } from "./system_components/FadingTitle.jsx";
+import { Raycaster } from "./system_components/Raycaster.jsx";
+import { CurveInstanceAnimation } from "./system_components/CurveInstanceAnimation.jsx";
+import { InstanceLoader } from "./system_components/InstanceLoader.jsx";
+import { PreloadAssets } from "./system_components/PreloadAssets.jsx";
+import { ExplodingModelLoader } from "./system_components/ExplodingModelLoader.jsx";
+import { CurveLightAnimation } from "./system_components/CurveLightAnimation.jsx";
+import { PointLightAnimation } from "./system_components/PointLightAnimation.jsx";
+import { ObjectLink } from "./system_components/ObjectLink.jsx";
+import { ParticleEmitter } from "./system_components/ParticleEmitter.jsx";
+import { DynamicMaterialLoader } from "./system_components/DynamicMaterialLoader.jsx";
 import { AnimationMixer } from 'three';
 import { customInstanceRotation, customInstanceColor } from "./PathPoints.jsx";
 import { TranslationTable } from "./TranslationTable.jsx";
 import { ResponsiveTable } from "./Styles.jsx";
 import { pollForFilesInTHREECache, removeFileExtensionString, createTimer } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { HudMenu } from "./components/HudMenu.jsx";
+import { HudMenu } from "./system_components/HudMenu.jsx";
 
 import * as THREE from 'three';
 
@@ -580,7 +580,7 @@ export const SceneContainer = React.memo((props) => {
         {(siteMode === "resume") && 
         <>
             {/* /////////////////////
-                //System components//
+                //System system_components//
                 ///////////////////// */}
 
             <PreloadAssets delay={4000} texturesToLoad={texturesToLoad} scenesToLoad={scenesToLoad}></PreloadAssets>
@@ -591,7 +591,7 @@ export const SceneContainer = React.memo((props) => {
             }
 
             {/* /////////////////////
-                //Content components//
+                //Content system_components//
                 ///////////////////// */}
 
 

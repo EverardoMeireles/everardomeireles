@@ -248,33 +248,66 @@ export const Camera = React.memo((props) => {
     }, [forcedCameraMovePathCurve]);
 
     // Moves the camera every frame when the desired path changes
-    useFrame((state, delta) => (tick.current < 1 ? (
-        updateCallNow.current = true,
-        state.events.enabled = false,
-        controls.current.enabled = false,
-        
-        tick.current += transitionSpeed * delta,
+    useFrame((state, delta) => {
+        const curvePoints = curve.current?.points;
+        const invalidCurve =
+            !curvePoints ||
+            curvePoints.length < 2 ||
+            curvePoints.some(
+                (p) =>
+                    !p ||
+                    !Number.isFinite(p.x) ||
+                    !Number.isFinite(p.y) ||
+                    !Number.isFinite(p.z)
+            );
 
-        // Smooth out the movement
-        smoothStepTick = smoothStep(tick.current),
+        if (invalidCurve) {
+            setTransitionEnded(true);
+            state.events.enabled = true;
+            if (controls.current) controls.current.enabled = true;
+            return;
+        }
 
-        // Determines the next point for the camera to look at
-        current_lookat.current.lerp(new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]), 0.03),
+        if (tick.current < 1) {
+            updateCallNow.current = true;
+            state.events.enabled = false;
+            controls.current.enabled = false;
 
-        state.camera.lookAt(current_lookat.current),
-        // Updates the orbitcontrol's target
-        controls.current.target.x = current_lookat.current.x,
-        controls.current.target.y = current_lookat.current.y,
-        controls.current.target.z = current_lookat.current.z,
+            tick.current += transitionSpeed * delta;
 
-        // Get the current point along the curve
-        sub_points = curve.current.getPointAt(smoothStepTick), 
-        // Updates the camera's position
-        state.camera.position.x = sub_points.x,
-        state.camera.position.y = sub_points.y,
-        state.camera.position.z = sub_points.z
-    ) : (updateCall(state))
-    ));
+            // Smooth out the movement
+            smoothStepTick = smoothStep(tick.current);
+
+            // Determines the next point for the camera to look at
+            current_lookat.current.lerp(new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]), 0.03);
+
+            state.camera.lookAt(current_lookat.current);
+            // Updates the orbitcontrol's target
+            controls.current.target.x = current_lookat.current.x;
+            controls.current.target.y = current_lookat.current.y;
+            controls.current.target.z = current_lookat.current.z;
+
+            // Get the current point along the curve
+            let sub_points_local = null;
+            try {
+                sub_points_local = curve.current.getPointAt(Math.min(Math.max(smoothStepTick, 0), 0.99999));
+            } catch (err) {
+                setTransitionEnded(true);
+                state.events.enabled = true;
+                if (controls.current) controls.current.enabled = true;
+                return;
+            }
+
+            if (sub_points_local) {
+                // Updates the camera's position
+                state.camera.position.x = sub_points_local.x;
+                state.camera.position.y = sub_points_local.y;
+                state.camera.position.z = sub_points_local.z;
+            }
+        } else {
+            updateCall(state);
+        }
+    });
 
     // Sets values after the camera movement is done 
     function updateCall(state){
