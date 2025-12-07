@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import * as THREE from 'three';
 import config from './config.js';
 
-const useExperienceStore = create((set) => ({
+const SystemStore = create((set) => ({
   mainScene: undefined,
   setMainScene: (loaded) => set(() => ({ mainScene: loaded })),
 
@@ -208,6 +208,6 @@ const useExperienceStore = create((set) => ({
 
 }));
 
-export default useExperienceStore;
+export default SystemStore;
 
 

@@ -42,9 +42,9 @@ rootElement.appendChild(uiContainer);
 const viewerRoot = ReactDOM.createRoot(viewerContainer);
 viewerRoot.render(<ExperienceFrame />);
 
-// const uiRoot = ReactDOM.createRoot(uiContainer);
-// uiRoot.render(
-//   <React.StrictMode>
-//     <App />
-//   </React.StrictMode>
-// );
+const uiRoot = ReactDOM.createRoot(uiContainer);
+uiRoot.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
