@@ -9,6 +9,7 @@ import useSystemStore from "../SystemStore";
 // has jsx HudMenuStyles
 // A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx
 export function HudMenu(props) {
+    const { enabled = false } = props;
     const {graphicalLevelIndicatorIsEnabled = true} = props;
     const {goesInvisible = false} = props;
     const {goesTransparent = true} = props; // setting this to true while goesInvisible is also true is useless
@@ -53,18 +54,20 @@ export function HudMenu(props) {
 
     // Initial hide after 5 seconds
     useEffect(() => {
+        if (!enabled) return;
         const timer = hideImage();
 
         return () => clearTimeout(timer);
-    }, []);
+    }, [enabled]);
 
     // Reset visibility and timer on currentGraphicalMode change
     useEffect(() => {
+        if (!enabled) return;
         setIsTransparent(false);
         const timer = hideImage();
 
         return () => clearTimeout(timer);
-    }, [currentGraphicalMode, enableDynamicGraphicalModeSetting]);
+    }, [currentGraphicalMode, enableDynamicGraphicalModeSetting, enabled]);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +77,7 @@ export function HudMenu(props) {
     const currentPath = useRef("MainMenu");
     const desiredPath = useRef("MainMenu");
     useEffect(() => {
+    if (!enabled) return;
     const handlePopState = (event) => {
         const href = event.currentTarget.location.href;
         const urlPath = href.slice(href.indexOf('#') + 1);
@@ -92,7 +96,7 @@ export function HudMenu(props) {
     return () => {
         window.removeEventListener('popstate', handlePopState);
     };
-}, []);
+}, [enabled, setDesiredPath, setForcedCameraTarget, setForcedCameraMovePathCurve, setTransitionEnded]);
     
 
     /////////////
@@ -101,8 +105,9 @@ export function HudMenu(props) {
     
     // Once the transition is over, set the new current path position
     useEffect(() => {
+        if (!enabled) return;
         currentPath.current = desiredPath.current;
-    }, [transitionEnded]);
+    }, [transitionEnded, enabled]);
 
     function test(){
         console.log("Arrow pressed")
@@ -111,6 +116,8 @@ export function HudMenu(props) {
         //     circleIsVisible: true
         // });
     }
+
+    if (!enabled) return null;
 
     return(
     <>

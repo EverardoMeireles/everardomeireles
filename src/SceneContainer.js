@@ -28,19 +28,12 @@ import { TranslationTable } from "./TranslationTable.jsx";
 import { ResponsiveTable } from "./Styles.jsx";
 import { pollForFilesInTHREECache, removeFileExtensionString, createTimer } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { HudMenu } from "./system_components/HudMenu.jsx";
 
 import * as THREE from 'three';
 
 import config from './config.js';
 import useSystemStore from "./SystemStore.js";
 import useUserStore from "./UserStore.js";
-
-export const SceneHudMenu = ({ responsive }) => {
-    const siteMode = useUserStore((state) => state.siteMode);
-    if (siteMode !== "resume") return null;
-    return <HudMenu responsive={responsive} />;
-};
 
 export const SceneContainer = React.memo((props) => {
     const transitionDestination = useSystemStore((state) => state.transitionDestination);
@@ -58,6 +51,8 @@ export const SceneContainer = React.memo((props) => {
     const setMainScene = useSystemStore((state) => state.setMainScene);
     const mainScene = useSystemStore((state) => state.mainScene);
     const productInformationFromMessage = useSystemStore((state) => state.productInformationFromMessage);
+    const hudMenuEnabled = useSystemStore((state) => state.hudMenuEnabled);
+    const setHudMenuEnabled = useSystemStore((state) => state.setHudMenuEnabled);
 
     const currentSkillHovered = useUserStore((state) => state.currentSkillHovered);
     const animationTriggerState = useUserStore((state) => state.animationTriggerState);
@@ -311,6 +306,10 @@ export const SceneContainer = React.memo((props) => {
 
     const [modelsConfiguration, setModelsConfiguration] = useState({});
     const [modelRecords, setModelRecords] = useState({});
+
+    useEffect(() => {
+        setHudMenuEnabled(siteMode === "resume");
+    }, [siteMode, hudMenuEnabled]);
 
     // Store the contents of modelRecords.json in a state
     useEffect(() => {

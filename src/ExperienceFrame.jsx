@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { Canvas } from "@react-three/fiber";
-import { SceneContainer, SceneHudMenu } from "./SceneContainer";
+import { SceneContainer } from "./SceneContainer";
+import { HudMenu } from "./system_components/HudMenu";
 import { Alert } from "./system_components/Alert";
 import { ToolTip } from "./system_components/ToolTip";
 import { ToolTipCircle } from "./system_components/ToolTipCircle";
@@ -34,6 +35,7 @@ function ExperienceFrame() {
   const returnButtonPosition = useSystemStore((state) => state.returnButtonPosition);
   const showReturnButton = useSystemStore((state) => state.showReturnButton);
   const cameraState = useSystemStore((state) => state.cameraState);
+  const hudMenuEnabled = useSystemStore((state) => state.hudMenuEnabled);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
@@ -218,7 +220,7 @@ function ExperienceFrame() {
                 />
               ))}
               <TutorialOverlay enable = {enableTutorial}/> 
-              <SceneHudMenu responsive={ResponsiveWidthHeight} />
+              <HudMenu responsive={ResponsiveWidthHeight} enabled={hudMenuEnabled} />
 
               <img
                     src = "textures/back_arrow.png"

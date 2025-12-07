@@ -202,6 +202,10 @@ const useExperienceStore = create((set) => ({
 
   explodeAnimationEnded: false,
   setExplodeAnimationEnded: (ended) => set(() => ({ explodeAnimationEnded: ended })),
+
+  hudMenuEnabled: false,
+  setHudMenuEnabled: (enabled) => set(() => ({ hudMenuEnabled: enabled })),
+
 }));
 
 export default useExperienceStore;
