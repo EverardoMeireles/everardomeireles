@@ -107,16 +107,6 @@ const SystemStore = create((set) => ({
   isDragging: false,
   setIsDragging: (dragging) => set(() => ({ isDragging: dragging })),
 
-  sceneModelName: "base_cube_DO_NOT_REMOVE.glb",
-  sceneConfigFile: "base_cube_DO_NOT_REMOVE.json",
-  sceneModelUrl: "",
-  setSceneAssets: ({ modelName, configFile, modelUrl }) =>
-    set(() => ({
-      sceneModelName: modelName ?? "base_cube_DO_NOT_REMOVE.glb",
-      sceneConfigFile: configFile ?? "base_cube_DO_NOT_REMOVE.json",
-      sceneModelUrl: modelUrl ?? "",
-    })),
-
   viewerBounds: typeof window === "undefined"
     ? { left: 0, top: 0, width: 0, height: 0 }
     : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight },
