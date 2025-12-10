@@ -6,7 +6,7 @@ import { OrbitingPointLight } from './system_components/OrbitingPointLights.jsx'
 import { GraphicalModeSetter } from './system_components/GraphicalModeSetter.jsx';
 import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { OrbitingMenu } from "./system_components/OrbitingMenu.jsx";
-import { FloatingTextSkills } from "./system_components/FloatingTextSkills.jsx";
+import { FloatingTextSkills } from "./user_components/FloatingTextSkills.jsx";
 import { FadingText } from "./system_components/FadingText.jsx";
 import { useFrame, useThree, useLoader } from "@react-three/fiber"; // eslint-disable-line no-unused-vars
 import { VideoLoader } from "./system_components/VideoLoader.jsx";
