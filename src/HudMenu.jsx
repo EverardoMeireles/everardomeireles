@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
-import { TranslationTable } from "../TranslationTable.jsx";
-import { HudMenuStyles } from "../Styles.jsx";
-import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue } from "../Helper.js";
-import config from '../config';
-import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "../PathPoints.jsx";
-import useSystemStore from "../SystemStore";
+ import { useState, useEffect, useRef } from "react";
+import { TranslationTable } from "./TranslationTable.jsx";
+import { HudMenuStyles } from "./Styles.jsx";
+import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue } from "./Helper.js";
+import config from "./config.js";
+import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "./PathPoints.jsx";
+import useSystemStore from "./SystemStore";
 
 // has jsx HudMenuStyles
 // A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx

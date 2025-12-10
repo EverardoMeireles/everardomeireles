@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "./SceneContainer";
-import { HudMenu } from "./system_components/HudMenu";
+import { HudMenu } from "./HudMenu";
 import { Alert } from "./system_components/Alert";
 import { ToolTip } from "./system_components/ToolTip";
 import { ToolTipCircle } from "./system_components/ToolTipCircle";
