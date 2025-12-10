@@ -14,12 +14,12 @@ import { useFrame } from '@react-three/fiber'
 import {
   BrowserRouter as Router,
   Routes,
-  Route
+Route
 } from "react-router-dom";
 
 
 
-function ExperienceFrame() {
+function SceneViewer() {
   THREE.Cache.enabled = true;
   
   const setIsCanvasHovered = useSystemStore((state) => state.setIsCanvasHovered);
@@ -288,5 +288,5 @@ function ExperienceFrame() {
   );
 }
 
-export default ExperienceFrame;
+export default SceneViewer;
 

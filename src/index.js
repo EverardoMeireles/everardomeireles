@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
-import ExperienceFrame from "./ExperienceFrame.jsx";
+import SceneViewer from "./SceneViewer.jsx";
 import config from "./config.js";
 
 const [VIEWER_WIDTH_PERCENT, UI_WIDTH_PERCENT] = config.viewer_ui_split;
@@ -40,7 +40,7 @@ rootElement.appendChild(viewerContainer);
 rootElement.appendChild(uiContainer);
 
 const viewerRoot = ReactDOM.createRoot(viewerContainer);
-viewerRoot.render(<ExperienceFrame />);
+viewerRoot.render(<SceneViewer />);
 
 const uiRoot = ReactDOM.createRoot(uiContainer);
 uiRoot.render(
