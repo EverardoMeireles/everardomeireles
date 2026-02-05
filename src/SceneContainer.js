@@ -26,7 +26,7 @@ import { AnimationMixer } from 'three';
 import { customInstanceRotation, customInstanceColor } from "./PathPoints.jsx";
 import { TranslationTable } from "./TranslationTable.jsx";
 import { ResponsiveTable } from "./Styles.jsx";
-import { pollForFilesInTHREECache, removeFileExtensionString, createTimer } from "./Helper.js";
+import { pollForFilesInTHREECache, createTimer } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 import * as THREE from 'three';
@@ -50,7 +50,9 @@ export const SceneContainer = React.memo((props) => {
     const setTrigger = useSystemStore((state) => state.setTrigger);
     const setMainScene = useSystemStore((state) => state.setMainScene);
     const mainScene = useSystemStore((state) => state.mainScene);
-    const productInformationFromMessage = useSystemStore((state) => state.productInformationFromMessage);
+    const viewerModelName = useSystemStore((state) => state.viewerModelName);
+    const viewerConfigFile = useSystemStore((state) => state.viewerConfigFile);
+    const viewerMaterialName = useSystemStore((state) => state.viewerMaterialName);
     const hudMenuEnabled = useSystemStore((state) => state.hudMenuEnabled);
     const setHudMenuEnabled = useSystemStore((state) => state.setHudMenuEnabled);
 
@@ -304,136 +306,13 @@ export const SceneContainer = React.memo((props) => {
     // E-comerce integration //
     ///////////////////////////
 
-    const [modelsConfiguration, setModelsConfiguration] = useState({});
-    const [modelRecords, setModelRecords] = useState({});
-
     useEffect(() => {
         setHudMenuEnabled(siteMode === "resume");
     }, [siteMode, hudMenuEnabled]);
 
-    // Store the contents of modelRecords.json in a state
-    useEffect(() => {
-      async function loadRecords() {
-        try {
-          // Load the modelRecords.json file
-          const recordsResponse = await fetch(`${config.models_path}/modelRecords.json`);
-          if (!recordsResponse.ok) {
-            throw new Error("Failed to load modelRecords.json");
-          }
-
-          const records = await recordsResponse.json();
-          // Convert array to object (keys as indices)
-          const objectRecords = records.reduce((acc, record, index) => {
-            acc[index] = record;
-            return acc;
-          }, {});
-          
-          setModelRecords(objectRecords);
-        } catch (err) {
-          console.error(err);
-        }
-      }
-  
-      loadRecords();
-    }, []);
-  
-    // Fetch the appropriate configuration file
-    useEffect(() => {
-        async function loadSelectedModelConfig() {
-            if (!productInformationFromMessage?.id || Object.keys(modelRecords).length === 0) return;
-
-            // Find matching record in modelRecords
-            const matchingRecord = Object.values(modelRecords).find(
-            (record) => record.id === productInformationFromMessage.id
-            );
-
-            if (!matchingRecord) {
-            console.warn('No matching record found');
-            return;
-            }
-
-            const modelBaseName = matchingRecord.model.replace(".glb", "");
-            const jsonFilename = `${modelBaseName}.json`;
-
-            try {
-                const modelResponse = await fetch(`${config.models_path}/${jsonFilename}`);
-                if (!modelResponse.ok) throw new Error(`Failed to load ${jsonFilename}`);
-                const modelJson = await modelResponse.json();
-
-                // Save just this one configuration
-                setModelsConfiguration({
-                    [modelBaseName]: {
-                    ...matchingRecord,
-                    data: modelJson,
-                    },
-                });
-
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        loadSelectedModelConfig();
-}, [productInformationFromMessage, modelRecords]);
-
-    const [explodingMaterialPath, setExplodingMaterialPath] = useState("");
-    const [explodingModelPath, setExplodingModelPath] = useState("base_cube_DO_NOT_REMOVE.glb"); ;
-    const [explodingConfigFile, setExplodingConfigFile] = useState("base_cube_DO_NOT_REMOVE.json");;
-
-    // Match the received id from the message to the configuration files(now all in the state ModelsConfiguration) to set product models and materials
-    useEffect(() => {
-        if (productInformationFromMessage && modelsConfiguration && modelRecords && productInformationFromMessage.id) {
-            // Find the configuration entry in modelsConfiguration that matches productInformationFromMessage's id.
-            const matchingModelConfiguration = Object.values(modelsConfiguration).find((record) => record.id === productInformationFromMessage.id);
-            // Remove the "attributes_" prefix and only add the key if its value is not an empty string.
-            if (matchingModelConfiguration) {
-                // Set initial model and material
-                setExplodingModelPath(matchingModelConfiguration.model);
-                setExplodingConfigFile(removeFileExtensionString(matchingModelConfiguration.model) + ".json");
-                if(config.materials_path + matchingModelConfiguration.default_material != ""){
-                    setExplodingMaterialPath(matchingModelConfiguration.default_material);
-                }
-
-                const attrs = productInformationFromMessage.attributes;
-                const normalized = {};
-                for (const key in attrs) {
-                    if (key.startsWith("attribute_")) {
-                        if (attrs[key] !== "") {
-                        normalized[key.slice("attribute_".length)] = attrs[key];
-                        }
-                    }
-                }
-
-                // Match attributes
-                const productAttrs = normalized
-                const variations = matchingModelConfiguration.data.ExternalProperties.variations;
-                let matchedVariation = null;
-                for (const variation of variations) {
-                    let allMatch = true;
-                    for (const key in variation.attributes) {
-                        if (!(key in productAttrs) || variation.attributes[key] !== productAttrs[key]) {
-                            allMatch = false;
-                            break;
-                        }
-                    }
-
-                    if (allMatch) {
-                        matchedVariation = variation;
-                        break;
-                    }
-                }
-                
-                if (matchedVariation) {
-                    const type = matchedVariation.type.toLowerCase();
-                    if (type === "model") {
-                        setExplodingModelPath(matchedVariation.file);
-                    } else if (type === "material") {
-                        setExplodingMaterialPath(matchedVariation.file);
-                    }
-                }
-            }
-        }
-    }, [modelRecords, modelsConfiguration, productInformationFromMessage]);
+    const explodingModelPath = viewerModelName || "base_cube_DO_NOT_REMOVE.glb";
+    const explodingConfigFile = viewerConfigFile || "base_cube_DO_NOT_REMOVE.json";
+    const explodingMaterialPath = viewerMaterialName || "";
 
     function TubeCurve({
         curve,
@@ -676,16 +555,15 @@ export const SceneContainer = React.memo((props) => {
             &&
             <ExplodingModelLoader 
             modelName={
-                "Roomba.glb"
-                // explodingModelPath
+                // "Roomba.glb"
+                explodingModelPath || "base_cube_DO_NOT_REMOVE.glb" 
             } 
             materialName={
-                ""
-                // explodingMaterialPath
+                explodingMaterialPath || ""
             } 
             configFile={
-                "Roomba.json"
-                // explodingConfigFile
+                // "Roomba.json"
+                explodingConfigFile || "base_cube_DO_NOT_REMOVE.json"
             } 
             animationIsPlaying={animationTriggerState}
             /*position={[175, 135, 50]}*/ 

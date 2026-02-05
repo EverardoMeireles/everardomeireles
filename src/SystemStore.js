@@ -190,6 +190,15 @@ const SystemStore = create((set) => ({
   productInformationFromMessage: {},
   setProductInformationFromMessage: (productInformation) => set(() => ({ productInformationFromMessage: productInformation })),
 
+  viewerModelName: "base_cube_DO_NOT_REMOVE.glb",
+  viewerConfigFile: "base_cube_DO_NOT_REMOVE.json",
+  viewerMaterialName: "",
+  setViewerModelSelection: (selection = {}) => set(() => ({
+    viewerModelName: selection.modelName ?? "base_cube_DO_NOT_REMOVE.glb",
+    viewerConfigFile: selection.configFile ?? "base_cube_DO_NOT_REMOVE.json",
+    viewerMaterialName: selection.materialName ?? "",
+  })),
+
   explodeAnimationEnded: false,
   setExplodeAnimationEnded: (ended) => set(() => ({ explodeAnimationEnded: ended })),
 

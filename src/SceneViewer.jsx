@@ -10,6 +10,7 @@ import useSystemStore from "./SystemStore";
 import useUserStore from "./SystemStore";
 import * as THREE from "three";
 import { useFrame } from '@react-three/fiber'
+import config from "./config.js";
 
 import {
   BrowserRouter as Router,
@@ -44,6 +45,8 @@ function SceneViewer() {
   const message = useSystemStore((state) => state.message);
   const setMessage = useSystemStore((state) => state.setMessage);
   const setProductInformationFromMessage = useSystemStore((state) => state.setProductInformationFromMessage);
+  const productInformationFromMessage = useSystemStore((state) => state.productInformationFromMessage);
+  const setViewerModelSelection = useSystemStore((state) => state.setViewerModelSelection);
 
   const [enableTutorial, setEnableTutorial] = useState(false);
   const setViewerBounds = useSystemStore((state) => state.setViewerBounds);
@@ -98,6 +101,110 @@ function SceneViewer() {
     // console.log(toolTipCirclePositions)
 
   }, [tooltipProperties, setTooltipCirclesData]);
+
+  // Select model/material based on product info + modelRecords.json
+  useEffect(() => {
+    let isActive = true;
+    const productId = Number(productInformationFromMessage?.id);
+    if (!Number.isFinite(productId)) return () => {};
+
+    const normalizeAttributes = (attrs = {}) => {
+      const normalized = {};
+      if (!attrs || typeof attrs !== "object") return normalized;
+      for (const key of Object.keys(attrs)) {
+        const value = attrs[key];
+        if (value === "") continue;
+        const rawKey = key.startsWith("attribute_")
+          ? key.slice("attribute_".length)
+          : key;
+        normalized[rawKey] = value;
+        if (rawKey.startsWith("pa_")) {
+          normalized[rawKey.slice(3)] = value;
+        }
+      }
+      return normalized;
+    };
+
+    const loadSelection = async () => {
+      try {
+        const recordsRes = await fetch(`${config.models_path}/modelRecords.json`);
+        if (!recordsRes.ok) {
+          console.warn("Failed to load modelRecords.json");
+          return;
+        }
+        const records = await recordsRes.json();
+        const list = Array.isArray(records) ? records : [];
+        const matchingRecord = list.find(
+          (record) => Number(record?.id) === productId
+        );
+
+        if (!matchingRecord?.model) {
+          console.warn("No matching record found for product id:", productId);
+          return;
+        }
+
+        const modelName = matchingRecord.model;
+        const modelBaseName = modelName.replace(/\.glb$/i, "");
+        const configFilename = `${modelBaseName}.json`;
+
+        let modelJson = null;
+        try {
+          const modelResponse = await fetch(`${config.models_path}/${configFilename}`);
+          if (modelResponse.ok) {
+            modelJson = await modelResponse.json();
+          }
+        } catch (err) {
+          console.warn("Failed to load model config:", configFilename, err);
+        }
+
+        const selection = {
+          modelName,
+          configFile: configFilename,
+          materialName: matchingRecord.default_material || "",
+        };
+
+        const productAttrs = normalizeAttributes(productInformationFromMessage?.attributes);
+        const variations = modelJson?.ExternalProperties?.variations || [];
+        let matchedVariation = null;
+        for (const variation of variations) {
+          const variationAttrs = variation?.attributes || {};
+          let allMatch = true;
+          for (const key in variationAttrs) {
+            if (!(key in productAttrs) || variationAttrs[key] !== productAttrs[key]) {
+              allMatch = false;
+              break;
+            }
+          }
+
+          if (allMatch) {
+            matchedVariation = variation;
+            break;
+          }
+        }
+
+        if (matchedVariation) {
+          const type = (matchedVariation.type || "").toLowerCase();
+          if (type === "model" && matchedVariation.file) {
+            selection.modelName = matchedVariation.file;
+          } else if (type === "material" && matchedVariation.file) {
+            selection.materialName = matchedVariation.file;
+          }
+        }
+
+        if (isActive) {
+          setViewerModelSelection(selection);
+        }
+      } catch (err) {
+        console.error("Failed to resolve product model selection:", err);
+      }
+    };
+
+    loadSelection();
+
+    return () => {
+      isActive = false;
+    };
+  }, [productInformationFromMessage, setViewerModelSelection]);
 
   //////////////////////////////////////
   ////////// Message handling //////////
