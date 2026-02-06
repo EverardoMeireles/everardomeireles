@@ -2,57 +2,80 @@
   "ExternalProperties": {
     "variations": [
       {
-        "type":"model",
-        "attributes":{
-          "model":"2"
-        },
-        "file":"Roomba_alternate.glb"
+        "type": "model",
+        "message_payload_trigger": "",
+        "file": "Roomba_alternate.glb",
+        "attributes": {
+          "model": "2"
+        }
       },
       {
-        "type":"material",
-        "attributes":{
-          "color":"Red",
-          "weight":"5kg"
-        },
-        "file":"Roomba_material_1.glb"
+        "type": "material",
+        "message_payload_trigger": "",
+        "file": "Roomba_material_1.glb",
+        "attributes": {
+          "color": "Red",
+          "weight": "5kg"
+        }
       },
       {
-        "type":"material",
-        "attributes":{
-          "color":"Red"
-        },
-        "file":"plane_red.glb"
+        "type": "material",
+        "message_payload_trigger": "",
+        "file": "plane_red.glb",
+        "attributes": {
+          "color": "Red"
+        }
       },
       {
-        "type":"material",
-        "attributes":{
-          "color":"Green"
-        },
-        "file":"plane_green.glb"
+        "type": "material",
+        "message_payload_trigger": "",
+        "file": "plane_green.glb",
+        "attributes": {
+          "color": "Green"
+        }
       },
       {
-        "type":"material",
-        "attributes":{
-          "color":"Blue"
-        },
-        "file":"plane_blue.glb"
+        "type": "material",
+        "message_payload_trigger": "",
+        "file": "plane_blue.glb",
+        "attributes": {
+          "color": "Blue"
+        }
       }
     ]
   },
-
+  "ExplodingAnimationObjectDirections": {},
   "ModelProperties": {
-    "position":[0, 0, 0],
-    "forcedCameraPosition": [0, 50, 50],
-    "animationStartOnLoad":false,
-    "enableRockingAnimation":true,
-    "enableExplodeAnimation":true,
-    "customOrigin": [180, 140, 51],
-    "rockingMaxAngle": null,
+    "positionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn": [
+      0,
+      0,
+      0
+    ],
+    "customOrigin": [
+      180,
+      140,
+      51
+    ],
+    "forcedCameraPosition": [
+      0,
+      50,
+      50
+    ],
+    "animationStartOnLoad": false,
+    "enableRockingAnimation": true,
+    "enableExplodeAnimation": true,
+    "rockingMaxAngleDegrees": 10,
     "rockingTransitionDuration": 2000,
     "explodingTransitionDuration": 300,
-    "childTransitionDuration": 150
+    "childTransitionDuration": 150,
+    "showCirclesAfterExplodingAnimation": false,
+    "enableRotationAnimation": false,
+    "rotationAnimationSpeed": 0.5,
+    "rotationAnimationWhenToStop": "onScreenMouseHover",
+    "resetInitialRotation": false,
+    "resetInitialRotationAnimationSpeed": 8,
+    "restartAnimationAfterStop": false
   },
-
   "ObjectProperties": [
     {
       "objectName": "Elevator",
@@ -61,13 +84,41 @@
       "image": "/textures/4x3.png",
       "circleSize": 30,
       "playPulseAnimation": true,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "focusedObjectCloneEnable": true,
-      "focusedObjectCloneScale":0.1,
-      "focusedObjectCloneAxisOfRotation": [0, 1, 0],
+      "focusedObjectCloneScale": 0.1,
+      "focusedObjectCloneAxisOfRotation": [
+        0,
+        1,
+        0
+      ],
       "focusedObjectCloneSpeedOfRotation": 2,
-      "focusedObjectCloneForcePositionOffset": {"left" : 0, "right" : 0, "top" : 0, "bottom" : 0}
+      "focusedObjectCloneForcePositionOffset": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "focusedObjectFocusPoint": [
+        21,
+        15,
+        -29
+      ],
+      "focusedObjectArchWidth": 10,
+      "focusedObjectFocusEndPointDistance": 0,
+      "waitForFocusBeforeExplodeAnimation": false,
+      "showCirclesAfterFocusAnimation": false,
+      "focusedObjectFront": [
+        1,
+        0,
+        0
+      ],
+      "isFocusable": true,
+      "focusTarget": "",
+      "focusGroup": ""
     }
   ]
 }
-  

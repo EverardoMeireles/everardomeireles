@@ -100,6 +100,7 @@ export const Camera = React.memo((props) => {
             }
 
             const handleMouseMove = (event) => {
+                if (!cam.current || !controls.current) return;
                 const { innerWidth, innerHeight } = window; // Get the viewport dimensions
 
                 // Check if the mouse is near the left or right edge of the screen
@@ -216,6 +217,7 @@ export const Camera = React.memo((props) => {
             return;
         }
 
+        if (!controls.current) return;
         if(forcedCameraTarget != [])
         {
             controls.current.target.x = forcedCameraTarget[0]
@@ -344,8 +346,9 @@ function compareCurves(curve1, curve2) {
 }
 
     // orbitcontrols keyboard control is not working, that's a workaround
-    useEffect(()=>{
-        window.addEventListener("keydown", (event) => {
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (!cam.current || !controls.current) return;
             // eslint-disable-next-line default-case
             switch(event.code) {
                 case "KeyP":
@@ -404,8 +407,11 @@ function compareCurves(curve1, curve2) {
                 [cam.current.position.x, cam.current.position.y, cam.current.position.z],
                 [cam.current.rotation.x, cam.current.rotation.y, cam.current.rotation.z]
             );
-        });
-    });
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [setCameraState]);
 
     // Update camera state
     useEffect(() => {
@@ -466,6 +472,9 @@ function compareCurves(curve1, curve2) {
     ////////////////////////////////////////////////////////////
 
     useEffect(() => {
+        if(!forcedCameraPosition || !cam.current){
+            return;
+        }
         if(forcedCameraPosition){
             cam.current.position.x = forcedCameraPosition[0];
             cam.current.position.y = forcedCameraPosition[1];
