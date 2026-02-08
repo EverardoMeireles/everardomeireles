@@ -4,7 +4,7 @@ import { HudMenuStyles } from "./Styles.jsx";
 import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue } from "./Helper.js";
 import config from "./config.js";
 import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "./PathPoints.jsx";
-import useSystemStore from "./SystemStore";
+import SystemStore from "./SystemStore";
 
 // has jsx HudMenuStyles
 // A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx
@@ -16,23 +16,23 @@ export function HudMenu(props) {
     const {transparentTimer = 5000} = props;
     const {transparency = 0.15} = props;
 
-    const currentLanguage = useSystemStore((state) => state.currentLanguage);
-    const setLanguage = useSystemStore((state) => state.setLanguage);
-    const setGraphicalMode = useSystemStore((state) => state.setGraphicalMode);
-    const currentGraphicalMode = useSystemStore((state) => state.currentGraphicalMode);
-    const enableDynamicGraphicalModeSetting = useSystemStore((state) => state.enableDynamicGraphicalModeSetting);
-    const setEnableDynamicGraphicalModeSetting = useSystemStore((state) => state.setEnableDynamicGraphicalModeSetting);
-    const setTransitionEnded = useSystemStore((state) => state.setTransitionEnded);
-    const transitionEnded = useSystemStore((state) => state.transitionEnded);
-    const setForcedCameraMovePathCurve = useSystemStore((state) => state.setForcedCameraMovePathCurve);
-    const setForcedCameraTarget = useSystemStore((state) => state.setForcedCameraTarget);
-    const setDesiredPath = useSystemStore((state) => state.setDesiredPath);
-    const modifyTooltipCircleData = useSystemStore((state) => state.modifyTooltipCircleData);
+    const currentLanguage = SystemStore((state) => state.currentLanguage);
+    const setLanguage = SystemStore((state) => state.setLanguage);
+    const setGraphicalMode = SystemStore((state) => state.setGraphicalMode);
+    const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
+    const enableDynamicGraphicalModeSetting = SystemStore((state) => state.enableDynamicGraphicalModeSetting);
+    const setEnableDynamicGraphicalModeSetting = SystemStore((state) => state.setEnableDynamicGraphicalModeSetting);
+    const setTransitionEnded = SystemStore((state) => state.setTransitionEnded);
+    const transitionEnded = SystemStore((state) => state.transitionEnded);
+    const setForcedCameraMovePathCurve = SystemStore((state) => state.setForcedCameraMovePathCurve);
+    const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
+    const setDesiredPath = SystemStore((state) => state.setDesiredPath);
+    const modifyTooltipCircleData = SystemStore((state) => state.modifyTooltipCircleData);
 
 	//DEBUG animations
-    const toggleTrigger = useSystemStore((state) => state.toggleTrigger);
+    const toggleTrigger = SystemStore((state) => state.toggleTrigger);
 
-    const setTrigger = useSystemStore((state) => state.setTrigger);
+    const setTrigger = SystemStore((state) => state.setTrigger);
 
     const [profExpClicked, setProfExpClicked] = useState(false);
     const [isTransparent, setIsTransparent] = useState(false);

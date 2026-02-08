@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
 import { path_points_experience_menu_location } from "../PathPoints.jsx";
 import config from '../config';
-import useSystemStore from "../SystemStore";
+import SystemStore from "../SystemStore";
 
 export function ExperienceMenu(props) {
     // const {rotation = 2 * Math.PI} = props;
@@ -14,7 +14,7 @@ export function ExperienceMenu(props) {
     const {textColor = "#062d69"} = props;
     const {transitionDuration = 1000} = props;
 
-    const {setDesiredPath, setTransitionEnded, transitionDestination} = useSystemStore();
+    const {setDesiredPath, setTransitionEnded, transitionDestination} = SystemStore();
 
     const isPathExperienceMenu = transitionDestination.includes("ProfessionalExpProjects"); // is the user going to the professional experience and projects
 

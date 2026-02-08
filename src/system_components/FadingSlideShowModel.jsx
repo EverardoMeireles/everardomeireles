@@ -3,7 +3,7 @@ import { useLoader } from '@react-three/fiber'
 import * as THREE from "three";
 import { useSpring, a } from '@react-spring/three';
 import config from '../config';
-import useSystemStore from "../SystemStore";
+import SystemStore from "../SystemStore";
 
 export function FadingSlideShowModel(props) {
     const {textModelMenu = "MainMenu"} = props;
@@ -12,7 +12,7 @@ export function FadingSlideShowModel(props) {
     const {PlaneSize = [10, 10]} = props;
     const {imageTexture = 'placeHolderImage.png'} = props;
 
-    const {transitionEnded, transitionDestination} = useSystemStore();
+    const {transitionEnded, transitionDestination} = SystemStore();
 
     const springFade = useSpring({
         opacity: (transitionEnded && transitionDestination === textModelMenu) ? 1 : 0,

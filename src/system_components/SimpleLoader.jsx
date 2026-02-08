@@ -5,7 +5,7 @@ import * as THREE from "three";
 import React from "react";
 import { TextureLoader } from 'three';
 import config from '../config';
-import useSystemStore from "../SystemStore";
+import SystemStore from "../SystemStore";
 
 export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const {position = [0, 0, 0]} = props;
@@ -64,8 +64,8 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     let objectHideRevealDirections = {}; // store the factor of the scale up or down effects, 1 or -1. EX:{"BookShelf" : -1, "Table" : 1}
 
     // Load Model
-    const toggleTrigger = useSystemStore((state) => state.toggleTrigger);
-    const triggers = useSystemStore((state) => state.triggers);
+    const toggleTrigger = SystemStore((state) => state.toggleTrigger);
+    const triggers = SystemStore((state) => state.triggers);
 
     // initialize the animation mixer
     const mixer = useRef(new THREE.AnimationMixer(scene.scene));

@@ -3,14 +3,14 @@ import { useLoader } from '@react-three/fiber';
 import { TextureLoader } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import config from '../config';
-import useSystemStore from "../SystemStore";
+import SystemStore from "../SystemStore";
 
 export const PreloadAssets = React.memo((props) => {
   const {texturesToLoad = ["image1.jpg", "image2.jpg"]} = props;
   const {scenesToLoad = ["scene1.glb", "scene2.glb"]} = props;
   const {delay = 3000} = props;
 
-  const setPreloadDone = useSystemStore((state) => state.setPreloadDone);
+  const setPreloadDone = SystemStore((state) => state.setPreloadDone);
 
   const [startLoading, setStartLoading] = useState(false);
 

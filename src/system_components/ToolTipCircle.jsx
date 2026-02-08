@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../PulsatingAnimation.css'; // Adjust the path as necessary
 import config from '../config';
-import useSystemStore from "../SystemStore";
+import SystemStore from "../SystemStore";
 
 // A component that displays a message on screen for a time.
 // How to use:
@@ -20,12 +20,12 @@ export const ToolTipCircle = (props) => {
     const {position = [0, 0]} = props;
 
 
-    const setIsCircleOnLeftSelected = useSystemStore((state) => state.setIsCircleOnLeftSelected);
-    const setIsCircleOnTopSelected = useSystemStore((state) => state.setIsCircleOnTopSelected);
-    const setTooltipProperties = useSystemStore((state) => state.setTooltipProperties);
-    const tooltipCirclesData = useSystemStore((state) => state.tooltipCirclesData);
-    const setTooltipCurrentObjectNameSelected = useSystemStore((state) => state.setTooltipCurrentObjectNameSelected);
-    const setMessage = useSystemStore((state) => state.setMessage);
+    const setIsCircleOnLeftSelected = SystemStore((state) => state.setIsCircleOnLeftSelected);
+    const setIsCircleOnTopSelected = SystemStore((state) => state.setIsCircleOnTopSelected);
+    const setTooltipProperties = SystemStore((state) => state.setTooltipProperties);
+    const tooltipCirclesData = SystemStore((state) => state.tooltipCirclesData);
+    const setTooltipCurrentObjectNameSelected = SystemStore((state) => state.setTooltipCurrentObjectNameSelected);
+    const setMessage = SystemStore((state) => state.setMessage);
 
     const [isVisible, setIsVisible] = useState(false);
 
@@ -40,7 +40,7 @@ export const ToolTipCircle = (props) => {
         }
     }, [tooltipCirclesData]);
 
-    const viewerBounds = useSystemStore((state) => state.viewerBounds);
+    const viewerBounds = SystemStore((state) => state.viewerBounds);
 
     const computedLeft = viewerBounds.left + (viewerBounds.width * (position[0] / 100));
     const computedTop = viewerBounds.top + (viewerBounds.height * (position[1] / 100));

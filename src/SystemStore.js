@@ -37,6 +37,9 @@ const SystemStore = create((set) => ({
   currentCameraMovements: { zoom: true, pan: true, rotate: true },
   setcurrentCameraMovements: (cameraMovements) => set(() => ({ currentCameraMovements: cameraMovements })),
 
+  forceDisableZoom: false,
+  setForceDisableZoom: (disabled) => set(() => ({ forceDisableZoom: disabled })),
+
   currentCameraMode: "NormalMovement",
   setCurrentCameraMode: (cameraMode) => set(() => ({ currentCameraMode: cameraMode })),
 
@@ -198,6 +201,19 @@ const SystemStore = create((set) => ({
     viewerConfigFile: selection.configFile ?? "base_cube_DO_NOT_REMOVE.json",
     viewerMaterialName: selection.materialName ?? "",
   })),
+
+  scrollProgress: 0,
+  setScrollProgress: (progressOrUpdater) => set((state) => ({
+    scrollProgress: typeof progressOrUpdater === "function"
+      ? progressOrUpdater(state.scrollProgress)
+      : progressOrUpdater
+  })),
+  scrollSpeed: 2,
+  setScrollSpeed: (speed) => set(() => ({ scrollSpeed: speed })),
+  scrollMax: 360,
+  setScrollMax: (max) => set(() => ({ scrollMax: max })),
+  modelName: "ScrollTest.glb",
+  setModelName: (name) => set(() => ({ modelName: name })),
 
   explodeAnimationEnded: false,
   setExplodeAnimationEnded: (ended) => set(() => ({ explodeAnimationEnded: ended })),

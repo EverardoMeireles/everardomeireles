@@ -5,27 +5,28 @@ import { OrbitControls, PerspectiveCamera, calcPosFromAngles } from "@react-thre
 import React, { useRef, useEffect, useState } from "react";
 import { HtmlDreiMenu } from "./HtmlDreiMenu"; // eslint-disable-line no-unused-vars
 import { smoothStep, roundToDecimalPlace, hasSignificantChange, createArchCurve, isCurveDegenerate } from "../Helper";
-import useSystemStore from "../SystemStore";
+import SystemStore from "../SystemStore";
 
 // revisit custom camera lookat mode and simpleLookatMode
 export const Camera = React.memo((props) => {
     const {transitionSpeed = 0.5} = props;
     const {position = [0, 0, 0]} = props;
 
-    const setTransitionEnded = useSystemStore((state) => state.setTransitionEnded);
-    const transitionEnded = useSystemStore((state) => state.transitionEnded);
-    const currentCameraMovements = useSystemStore((state) => state.currentCameraMovements);
-    const setcurrentCameraMovements = useSystemStore((state) => state.setcurrentCameraMovements);
-    const currentCameraMode = useSystemStore((state) => state.currentCameraMode);
-    const panDirectionalEdgethreshold = useSystemStore((state) => state.panDirectionalEdgethreshold);
-    const panDirectionalAxis = useSystemStore((state) => state.panDirectionalAxis);
-    const setTrigger = useSystemStore((state) => state.setTrigger);
-    const setCameraState = useSystemStore((state) => state.setCameraState);
-    const cameraStateTracking = useSystemStore((state) => state.cameraStateTracking);
-    const forcedCameraTarget = useSystemStore((state) => state.forcedCameraTarget);
-    const forcedCameraMovePathCurve = useSystemStore((state) => state.forcedCameraMovePathCurve);
-    const forcedCameraPosition = useSystemStore((state) => state.forcedCameraPosition);
-    const triggers = useSystemStore((state) => state.triggers);
+    const setTransitionEnded = SystemStore((state) => state.setTransitionEnded);
+    const transitionEnded = SystemStore((state) => state.transitionEnded);
+    const currentCameraMovements = SystemStore((state) => state.currentCameraMovements);
+    const setcurrentCameraMovements = SystemStore((state) => state.setcurrentCameraMovements);
+    const forceDisableZoom = SystemStore((state) => state.forceDisableZoom);
+    const currentCameraMode = SystemStore((state) => state.currentCameraMode);
+    const panDirectionalEdgethreshold = SystemStore((state) => state.panDirectionalEdgethreshold);
+    const panDirectionalAxis = SystemStore((state) => state.panDirectionalAxis);
+    const setTrigger = SystemStore((state) => state.setTrigger);
+    const setCameraState = SystemStore((state) => state.setCameraState);
+    const cameraStateTracking = SystemStore((state) => state.cameraStateTracking);
+    const forcedCameraTarget = SystemStore((state) => state.forcedCameraTarget);
+    const forcedCameraMovePathCurve = SystemStore((state) => state.forcedCameraMovePathCurve);
+    const forcedCameraPosition = SystemStore((state) => state.forcedCameraPosition);
+    const triggers = SystemStore((state) => state.triggers);
 
     const didMount = useRef(false);
 
@@ -486,7 +487,7 @@ function compareCurves(curve1, curve2) {
         <>
             <PerspectiveCamera makeDefault ref = {cam} position = {position} fov = {75}>
             </PerspectiveCamera>
-            <OrbitControls makeDefault mouseButtons={cameraMode} target={forcedCameraTarget} enableZoom = {currentCameraMovements["zoom"]}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
+            <OrbitControls makeDefault mouseButtons={cameraMode} target={forcedCameraTarget} enableZoom = {currentCameraMovements["zoom"] && !forceDisableZoom}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
         </>
     )
 });

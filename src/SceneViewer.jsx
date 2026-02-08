@@ -6,8 +6,8 @@ import { Alert } from "./system_components/Alert";
 import { ToolTip } from "./system_components/ToolTip";
 import { ToolTipCircle } from "./system_components/ToolTipCircle";
 import { TutorialOverlay } from "./system_components/TutorialOverlay";
-import useSystemStore from "./SystemStore";
-import useUserStore from "./SystemStore";
+import SystemStore from "./SystemStore";
+import UserStore from "./SystemStore";
 import * as THREE from "three";
 import { useFrame } from '@react-three/fiber'
 import config from "./config.js";
@@ -23,34 +23,34 @@ Route
 function SceneViewer() {
   THREE.Cache.enabled = true;
   
-  const setIsCanvasHovered = useSystemStore((state) => state.setIsCanvasHovered);
-  const tooltipCirclesData = useSystemStore((state) => state.tooltipCirclesData);
-  const setTooltipCirclesData = useSystemStore((state) => state.setTooltipCirclesData);
-  const tooltipProperties = useSystemStore((state) => state.tooltipProperties);
-  const forceDisableRender = useSystemStore((state) => state.forceDisableRender);
-  const setIsDragging = useSystemStore((state) => state.setIsDragging);
-  const isDragging = useSystemStore((state) => state.isDragging);
-  const setIsMouseDown = useSystemStore((state) => state.setIsMouseDown);
-  const isMouseDown = useSystemStore((state) => state.isMouseDown);
-  const setIsReturnButtonPressed = useSystemStore((state) => state.setIsReturnButtonPressed);
-  const returnButtonPosition = useSystemStore((state) => state.returnButtonPosition);
-  const showReturnButton = useSystemStore((state) => state.showReturnButton);
-  const cameraState = useSystemStore((state) => state.cameraState);
-  const hudMenuEnabled = useSystemStore((state) => state.hudMenuEnabled);
+  const setIsCanvasHovered = SystemStore((state) => state.setIsCanvasHovered);
+  const tooltipCirclesData = SystemStore((state) => state.tooltipCirclesData);
+  const setTooltipCirclesData = SystemStore((state) => state.setTooltipCirclesData);
+  const tooltipProperties = SystemStore((state) => state.tooltipProperties);
+  const forceDisableRender = SystemStore((state) => state.forceDisableRender);
+  const setIsDragging = SystemStore((state) => state.setIsDragging);
+  const isDragging = SystemStore((state) => state.isDragging);
+  const setIsMouseDown = SystemStore((state) => state.setIsMouseDown);
+  const isMouseDown = SystemStore((state) => state.isMouseDown);
+  const setIsReturnButtonPressed = SystemStore((state) => state.setIsReturnButtonPressed);
+  const returnButtonPosition = SystemStore((state) => state.returnButtonPosition);
+  const showReturnButton = SystemStore((state) => state.showReturnButton);
+  const cameraState = SystemStore((state) => state.cameraState);
+  const hudMenuEnabled = SystemStore((state) => state.hudMenuEnabled);
 
   const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
 
-  const transitionEnded = useSystemStore((state) => state.transitionEnded);
+  const transitionEnded = SystemStore((state) => state.transitionEnded);
 
-  const message = useSystemStore((state) => state.message);
-  const setMessage = useSystemStore((state) => state.setMessage);
-  const setProductInformationFromMessage = useSystemStore((state) => state.setProductInformationFromMessage);
-  const productInformationFromMessage = useSystemStore((state) => state.productInformationFromMessage);
-  const setViewerModelSelection = useSystemStore((state) => state.setViewerModelSelection);
+  const message = SystemStore((state) => state.message);
+  const setMessage = SystemStore((state) => state.setMessage);
+  const setProductInformationFromMessage = SystemStore((state) => state.setProductInformationFromMessage);
+  const productInformationFromMessage = SystemStore((state) => state.productInformationFromMessage);
+  const setViewerModelSelection = SystemStore((state) => state.setViewerModelSelection);
 
   const [enableTutorial, setEnableTutorial] = useState(false);
-  const setViewerBounds = useSystemStore((state) => state.setViewerBounds);
-  const viewerBounds = useSystemStore((state) => state.viewerBounds);
+  const setViewerBounds = SystemStore((state) => state.setViewerBounds);
+  const viewerBounds = SystemStore((state) => state.viewerBounds);
   const [canvasReady, setCanvasReady] = useState(false);
 
   useEffect(() => {
@@ -237,8 +237,8 @@ function SceneViewer() {
     
     // exposes the store to the global context to change states on chrome devtools
     if (typeof window !== "undefined") {
-      window.useSystemStore = useSystemStore;
-      window.useUserStore = useUserStore;
+      window.SystemStore = SystemStore;
+      window.UserStore = UserStore;
     }
 
   // Console logs the current fps

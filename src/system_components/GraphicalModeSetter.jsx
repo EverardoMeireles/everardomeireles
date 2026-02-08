@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber';
 import { getGPUTier } from 'detect-gpu';
 import React,{ useEffect, useRef } from "react";
 import { graphicsModes, CalculateAverageOfArray, increaseOrDecreaseGraphics } from "../Helper";
-import useSystemStore from "../SystemStore";
+import SystemStore from "../SystemStore";
 
 // set graphical by performing a gpu ier test, a fps check and a hardware acceleration check
 export const GraphicalModeSetter = React.memo((props) => {
@@ -13,9 +13,9 @@ export const GraphicalModeSetter = React.memo((props) => {
     const {deltaCountToIncreaseGraphicsCheck = 6} = props;// n seconds to check if graphics must be increased
     const {deltaCountToDecreaseGraphicsCheck = 3} = props; // n seconds to check if graphics must be decreased
 
-    const currentGraphicalMode = useSystemStore((state) => state.currentGraphicalMode);
-    const setGraphicalMode = useSystemStore((state) => state.setGraphicalMode);
-    const enableDynamicGraphicalModeSetting = useSystemStore((state) => state.enableDynamicGraphicalModeSetting);
+    const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
+    const setGraphicalMode = SystemStore((state) => state.setGraphicalMode);
+    const enableDynamicGraphicalModeSetting = SystemStore((state) => state.enableDynamicGraphicalModeSetting);
 
     ////////////////////////////////////////////
     // Initial graphical mode setting section //

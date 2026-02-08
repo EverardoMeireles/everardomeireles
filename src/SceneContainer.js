@@ -22,6 +22,7 @@ import { PointLightAnimation } from "./system_components/PointLightAnimation.jsx
 import { ObjectLink } from "./system_components/ObjectLink.jsx";
 import { ParticleEmitter } from "./system_components/ParticleEmitter.jsx";
 import { DynamicMaterialLoader } from "./system_components/DynamicMaterialLoader.jsx";
+import { CircularScrollLoader } from "./system_components/CircularScrollLoader.jsx";
 import { AnimationMixer } from 'three';
 import { customInstanceRotation, customInstanceColor } from "./PathPoints.jsx";
 import { TranslationTable } from "./TranslationTable.jsx";
@@ -32,34 +33,34 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 
 import config from './config.js';
-import useSystemStore from "./SystemStore.js";
-import useUserStore from "./UserStore.js";
+import SystemStore from "./SystemStore.js";
+import UserStore from "./UserStore.js";
 
 export const SceneContainer = React.memo((props) => {
-    const transitionDestination = useSystemStore((state) => state.transitionDestination);
-    const transitionEnded = useSystemStore((state) => state.transitionEnded);
-    const currentLanguage = useSystemStore((state) => state.currentLanguage);
-    const currentGraphicalMode = useSystemStore((state) => state.currentGraphicalMode);
-    const triggers = useSystemStore((state) => state.triggers);
-    const currentObjectClicked = useSystemStore((state) => state.currentObjectClicked);
-    const mouseClicked = useSystemStore((state) => state.mouseClicked);
-    const preloadDone = useSystemStore((state) => state.preloadDone);
-    const raycasterEnabled = useSystemStore((state) => state.raycasterEnabled);
-    const setForcedCameraTarget = useSystemStore((state) => state.setForcedCameraTarget);
-    const setForcedCameraMovePathCurve = useSystemStore((state) => state.setForcedCameraMovePathCurve);
-    const setTrigger = useSystemStore((state) => state.setTrigger);
-    const setMainScene = useSystemStore((state) => state.setMainScene);
-    const mainScene = useSystemStore((state) => state.mainScene);
-    const viewerModelName = useSystemStore((state) => state.viewerModelName);
-    const viewerConfigFile = useSystemStore((state) => state.viewerConfigFile);
-    const viewerMaterialName = useSystemStore((state) => state.viewerMaterialName);
-    const hudMenuEnabled = useSystemStore((state) => state.hudMenuEnabled);
-    const setHudMenuEnabled = useSystemStore((state) => state.setHudMenuEnabled);
+    const transitionDestination = SystemStore((state) => state.transitionDestination);
+    const transitionEnded = SystemStore((state) => state.transitionEnded);
+    const currentLanguage = SystemStore((state) => state.currentLanguage);
+    const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
+    const triggers = SystemStore((state) => state.triggers);
+    const currentObjectClicked = SystemStore((state) => state.currentObjectClicked);
+    const mouseClicked = SystemStore((state) => state.mouseClicked);
+    const preloadDone = SystemStore((state) => state.preloadDone);
+    const raycasterEnabled = SystemStore((state) => state.raycasterEnabled);
+    const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
+    const setForcedCameraMovePathCurve = SystemStore((state) => state.setForcedCameraMovePathCurve);
+    const setTrigger = SystemStore((state) => state.setTrigger);
+    const setMainScene = SystemStore((state) => state.setMainScene);
+    const mainScene = SystemStore((state) => state.mainScene);
+    const viewerModelName = SystemStore((state) => state.viewerModelName);
+    const viewerConfigFile = SystemStore((state) => state.viewerConfigFile);
+    const viewerMaterialName = SystemStore((state) => state.viewerMaterialName);
+    const hudMenuEnabled = SystemStore((state) => state.hudMenuEnabled);
+    const setHudMenuEnabled = SystemStore((state) => state.setHudMenuEnabled);
 
-    const currentSkillHovered = useUserStore((state) => state.currentSkillHovered);
-    const animationTriggerState = useUserStore((state) => state.animationTriggerState);
-    const setAnimationTriggerState = useUserStore((state) => state.setAnimationTriggerState);
-    const siteMode = useUserStore((state) => state.siteMode);
+    const currentSkillHovered = UserStore((state) => state.currentSkillHovered);
+    const animationTriggerState = UserStore((state) => state.animationTriggerState);
+    const setAnimationTriggerState = UserStore((state) => state.setAnimationTriggerState);
+    const siteMode = UserStore((state) => state.siteMode);
 
     const sceneName = useMemo(
         () => siteMode === "resume" ? "NewthreeJsScene.glb" : "base_cube_DO_NOT_REMOVE.glb",
@@ -455,6 +456,7 @@ export const SceneContainer = React.memo((props) => {
     return(
     <>
         <Camera position = {config.default_Camera_starting_position} ></Camera>
+        <CircularScrollLoader />
         {(siteMode === "resume") && 
         <>
             {/* /////////////////////
@@ -513,10 +515,10 @@ export const SceneContainer = React.memo((props) => {
             <ambientLight intensity = {0.1}></ambientLight>
             }
 
-            <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
+            {/* <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
             forceLowResTrigger={forceLowresMaterial} forceMidResTrigger={forceMidresMaterial} forceHighResTrigger={forceHighResMaterial}>
                 {stableSimpleLoader}
-            </DynamicMaterialLoader>
+            </DynamicMaterialLoader> */}
             {(currentGraphicalMode !== "potato")
             &&
             <>

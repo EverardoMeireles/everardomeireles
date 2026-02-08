@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import useSystemStore from "../SystemStore";
+import SystemStore from "../SystemStore";
 //lol
 // Define icons for simplicity
 const icons = {
@@ -15,9 +15,9 @@ const icons = {
 // You can set any of the alert's properties like this for example:
 // setAlertProperties({active:false, type:'Success', text:"the button was pressed successfully!"});
 export const Alert = () => {  
-  const alertProperties = useSystemStore((state) => state.alertProperties);
-  const setAlertProperties = useSystemStore((state) => state.setAlertProperties);
-  const viewerBounds = useSystemStore((state) => state.viewerBounds);
+  const alertProperties = SystemStore((state) => state.alertProperties);
+  const setAlertProperties = SystemStore((state) => state.setAlertProperties);
+  const viewerBounds = SystemStore((state) => state.viewerBounds);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {

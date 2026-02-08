@@ -2,7 +2,7 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from "three";
 import config from '../config';
-import useSystemStore from "../SystemStore";
+import SystemStore from "../SystemStore";
 
 export const OrbitingMenu = React.memo((props) => {
     const {orbitCenterPosition = [15.5, 1.1, 0]} = props;
@@ -14,9 +14,9 @@ export const OrbitingMenu = React.memo((props) => {
 
     const {fadeInDuration = 300} = props;
 
-    const transitionEnded = useSystemStore((state) => state.transitionEnded);
-    const transitionDestination = useSystemStore((state) => state.transitionDestination);
-    const currentLanguage = useSystemStore((state) => state.currentLanguage);
+    const transitionEnded = SystemStore((state) => state.transitionEnded);
+    const transitionDestination = SystemStore((state) => state.transitionDestination);
+    const currentLanguage = SystemStore((state) => state.currentLanguage);
 
     const [hovered0, setHover0] = useState(false);
     const [hovered1, setHover1] = useState(false);

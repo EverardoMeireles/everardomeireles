@@ -33,6 +33,7 @@ uiContainer.style.right = "0";
 uiContainer.style.width = `${UI_WIDTH_PERCENT}vw`;
 uiContainer.style.height = "100%";
 uiContainer.style.overflowY = "auto";
+uiContainer.style.overflowX = "hidden";
 uiContainer.style.backgroundColor = "#111";
 uiContainer.style.color = "#f5f5f5";
 

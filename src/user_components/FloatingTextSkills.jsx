@@ -4,8 +4,8 @@ import * as THREE from "three";
 import { Float, Text } from "@react-three/drei";
 import { TranslationTable } from "../TranslationTable.jsx";
 import config from '../config';
-import useSystemStore from "../SystemStore";
-import useUserStore from "../UserStore";
+import SystemStore from "../SystemStore";
+import UserStore from "../UserStore";
 
 export function FloatingTextSkills(props) {
     const {initialPosition = [0,0,0]} = props;
@@ -14,8 +14,8 @@ export function FloatingTextSkills(props) {
     const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
     const {textPosition = [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8], [1, 2, 8]]} = props;
 
-    const setSkillHovered = useUserStore((state) => state.setSkillHovered); 
-    const currentLanguage = useSystemStore((state) => state.currentLanguage);
+    const setSkillHovered = UserStore((state) => state.setSkillHovered); 
+    const currentLanguage = SystemStore((state) => state.currentLanguage);
 
     const textContents = [
     TranslationTable[currentLanguage]["Floating_text_Python"], TranslationTable[currentLanguage]["Floating_text_C#"], TranslationTable[currentLanguage]["Floating_text_javaScript"],
