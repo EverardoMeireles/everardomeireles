@@ -11,7 +11,7 @@
   },
   {
     "model": "plane2.glb",
-    "default_material": "",
+    "default_material": "plane_green.glb",
     "id": 63,
     "thumbnail_index": 0
   },

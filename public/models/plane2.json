@@ -41,12 +41,20 @@
         "attributes": {
           "color": "Blue"
         }
+      },
+      {
+        "type": "material",
+        "message_payload_trigger": "color_Green",
+        "file": "plane_blue.glb",
+        "attributes": {
+          "color": "Green"
+        }
       }
     ]
   },
   "ExplodingAnimationObjectDirections": {},
   "ModelProperties": {
-    "positionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn": [
+    "position": [
       0,
       0,
       0
@@ -95,7 +103,7 @@
         1,
         0
       ],
-      "focusedObjectCloneSpeedOfRotation": 2,
+      "focusedObjectCloneSpeedOfRotation": 3,
       "focusedObjectCloneForcePositionOffset": {
         "left": 0,
         "right": 0,
@@ -114,11 +122,16 @@
       "focusedObjectFront": [
         1,
         0,
-        0
+        -1
       ],
       "isFocusable": true,
       "focusTarget": "",
-      "focusGroup": ""
+      "focusGroup": "",
+      "focusedObjectCameraTargetPoint": [
+        0,
+        0,
+        0
+      ]
     }
   ]
 }
