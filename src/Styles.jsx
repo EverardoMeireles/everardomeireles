@@ -1,3 +1,20 @@
+import { useEffect, useMemo, useState } from "react";
+
+//////////////////////////////////////////////////
+/////////////// Responsive values ////////////////
+//////////////////////////////////////////////////
+
+export const ResponsiveBreakpoints = {
+    scene: {
+        mobileMax: 500,
+        tabletMax: 1200
+    },
+    hud: {
+        mobileMax: 500,
+        tabletMax: 1800
+    }
+};
+
 export const ResponsiveTable = {
     "Mobile":{
         "fadingTitlePosition0": [170, 148, 58],
@@ -62,6 +79,84 @@ export const ResponsiveTable = {
         "FloatingTextSkillsPosition" : [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]
     },
 }
+
+const getViewportSize = () => {
+    if (typeof window === "undefined") {
+        return { width: 0, height: 0 };
+    }
+
+    return { width: window.innerWidth, height: window.innerHeight };
+};
+
+export const getSceneLayoutKey = (width) => {
+    if (width < ResponsiveBreakpoints.scene.mobileMax) {
+        return "Mobile";
+    }
+    if (width < ResponsiveBreakpoints.scene.tabletMax) {
+        return "Tablet";
+    }
+    return "Widescreen";
+};
+
+export const getHudLayoutKey = (width) => {
+    if (width <= ResponsiveBreakpoints.hud.mobileMax) {
+        return "Mobile";
+    }
+    if (width <= ResponsiveBreakpoints.hud.tabletMax) {
+        return "Tablet";
+    }
+    return "Widescreen";
+};
+
+const applySceneOverrides = (layoutKey, layout) => {
+    if (layoutKey === "Mobile" || layoutKey === "Tablet") {
+        return {
+            ...layout,
+            fadingTextPosition4: layout.fadingTextPosition3,
+            fadingTextScale4: layout.fadingTextScale3,
+            fadingTextPosition5: layout.fadingTextPosition3,
+            fadingTextScale5: layout.fadingTextScale3
+        };
+    }
+
+    return layout;
+};
+
+export const useViewportSize = () => {
+    const [size, setSize] = useState(getViewportSize);
+
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return undefined;
+        }
+
+        const handleResize = () => setSize(getViewportSize());
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    return size;
+};
+
+export const useResponsive = (kind = "scene") => {
+    const size = useViewportSize();
+    const layoutKey = useMemo(() => {
+        if (kind === "hud") {
+            return getHudLayoutKey(size.width);
+        }
+        return getSceneLayoutKey(size.width);
+    }, [kind, size.width]);
+
+    const layoutBase = ResponsiveTable[layoutKey] || ResponsiveTable.Widescreen;
+    const layout = useMemo(() => {
+        if (kind === "scene") {
+            return applySceneOverrides(layoutKey, layoutBase);
+        }
+        return layoutBase;
+    }, [kind, layoutKey, layoutBase]);
+
+    return { ...size, key: layoutKey, layout };
+};
 
 export const HtmlDreiMenuStyles = ({
     menu: {

@@ -1,6 +1,6 @@
  import { useState, useEffect, useRef } from "react";
 import { TranslationTable } from "./TranslationTable.jsx";
-import { HudMenuStyles } from "./Styles.jsx";
+import { HudMenuStyles, useResponsive } from "./Styles.jsx";
 import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue } from "./Helper.js";
 import config from "./config.js";
 import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "./PathPoints.jsx";
@@ -117,6 +117,8 @@ export function HudMenu(props) {
         // });
     }
 
+    const { key: hudLayoutKey } = useResponsive("hud");
+
     if (!enabled) return null;
 
     return(
@@ -148,7 +150,7 @@ export function HudMenu(props) {
                     alt = "Graphic level"></img>}
             </div> 
         }
-        {props.responsive.width <= 500 &&
+        {hudLayoutKey === "Mobile" &&
         <>
             <ul style = {HudMenuStyles.ListStyle(0, -7)}>
                 <li style = {marginDisplay}>
@@ -181,7 +183,7 @@ export function HudMenu(props) {
         </>
         }
 
-        {(props.responsive.width >= 500 && props.responsive.width <= 1800) &&
+        {hudLayoutKey === "Tablet" &&
         <>
             <ul style = {HudMenuStyles.ListStyle(0, 0)}>
                 <li style={marginDisplay}>
@@ -214,7 +216,7 @@ export function HudMenu(props) {
         </>
         }
 
-        {props.responsive.width > 1800 &&
+        {hudLayoutKey === "Widescreen" &&
         <>
             <ul style = {HudMenuStyles.ListStyle(0, 0)}>
                 <li style = {marginDisplay}>

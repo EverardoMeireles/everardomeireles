@@ -26,7 +26,7 @@ import { CircularScrollLoader } from "./system_components/CircularScrollLoader.j
 import { AnimationMixer } from 'three';
 import { customInstanceRotation, customInstanceColor } from "./PathPoints.jsx";
 import { TranslationTable } from "./TranslationTable.jsx";
-import { ResponsiveTable } from "./Styles.jsx";
+import { useResponsive } from "./Styles.jsx";
 import { pollForFilesInTHREECache, createTimer } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
@@ -87,73 +87,7 @@ export const SceneContainer = React.memo((props) => {
 
     const filesToLoadBeforeEnablingMaterialSwap = ["/materials/low_512.glb", "/materials/high_4096_NOPBR.glb", "/materials/high_4096_PBR.glb"]; 
 
-    ////////////////////////////////////////////////////
-    ///////////////// Responsive values ////////////////
-    ////////////////////////////////////////////////////
-
-    var fadingTitlePosition0, fadingTitleScale0, fadingTitlePosition1, fadingTitleScale1,
-    fadingTextPosition0, fadingTextScale0, fadingTextPosition1, fadingTextScale1, 
-    fadingTextPosition2, fadingTextScale2, fadingTextPosition3, fadingTextScale3, fadingTextPosition4, fadingTextScale4, 
-    fadingTextPosition5, fadingTextScale5, FloatingTextSkillsPosition
-
-    if(window.innerWidth < 500){
-        fadingTitlePosition0 = ResponsiveTable["Mobile"]["fadingTitlePosition0"]
-        fadingTitleScale0 = ResponsiveTable["Mobile"]["fadingTitleScale0"]
-        fadingTitlePosition1 = ResponsiveTable["Mobile"]["fadingTitlePosition1"]
-        fadingTitleScale1 = ResponsiveTable["Mobile"]["fadingTitleScale1"]
-        fadingTextPosition0 = ResponsiveTable["Mobile"]["fadingTextPosition0"]
-        fadingTextScale0 = ResponsiveTable["Mobile"]["fadingTextScale0"]
-        fadingTextPosition1 = ResponsiveTable["Mobile"]["fadingTextPosition1"]
-        fadingTextScale1 = ResponsiveTable["Mobile"]["fadingTextScale1"]
-        fadingTextPosition2 = ResponsiveTable["Mobile"]["fadingTextPosition2"]
-        fadingTextScale2 = ResponsiveTable["Mobile"]["fadingTextScale2"]
-        fadingTextPosition3 = ResponsiveTable["Mobile"]["fadingTextPosition3"]
-        fadingTextScale3 = ResponsiveTable["Mobile"]["fadingTextScale3"]
-        fadingTextPosition4 = ResponsiveTable["Mobile"]["fadingTextPosition3"]
-        fadingTextScale4 = ResponsiveTable["Mobile"]["fadingTextScale3"]
-        fadingTextPosition5 = ResponsiveTable["Mobile"]["fadingTextPosition3"]
-        fadingTextScale5 = ResponsiveTable["Mobile"]["fadingTextScale3"]
-        FloatingTextSkillsPosition = ResponsiveTable["Mobile"]["FloatingTextSkillsPosition"]
-
-    }else if(window.innerWidth < 1200){
-        fadingTitlePosition0 = ResponsiveTable["Tablet"]["fadingTitlePosition0"]
-        fadingTitleScale0 = ResponsiveTable["Tablet"]["fadingTitleScale0"]
-        fadingTitlePosition1 = ResponsiveTable["Tablet"]["fadingTitlePosition1"]
-        fadingTitleScale1 = ResponsiveTable["Tablet"]["fadingTitleScale1"]
-        fadingTextPosition0 = ResponsiveTable["Tablet"]["fadingTextPosition0"]
-        fadingTextScale0 = ResponsiveTable["Tablet"]["fadingTextScale0"]
-        fadingTextPosition1 = ResponsiveTable["Tablet"]["fadingTextPosition1"]
-        fadingTextScale1 = ResponsiveTable["Tablet"]["fadingTextScale1"]
-        fadingTextPosition2 = ResponsiveTable["Tablet"]["fadingTextPosition2"]
-        fadingTextScale2 = ResponsiveTable["Tablet"]["fadingTextScale2"]
-        fadingTextPosition3 = ResponsiveTable["Tablet"]["fadingTextPosition3"]
-        fadingTextScale3 = ResponsiveTable["Tablet"]["fadingTextScale3"]
-        fadingTextPosition4 = ResponsiveTable["Tablet"]["fadingTextPosition3"]
-        fadingTextScale4 = ResponsiveTable["Tablet"]["fadingTextScale3"]
-        fadingTextPosition5 = ResponsiveTable["Tablet"]["fadingTextPosition3"]
-        fadingTextScale5 = ResponsiveTable["Tablet"]["fadingTextScale3"]
-        FloatingTextSkillsPosition = ResponsiveTable["Tablet"]["FloatingTextSkillsPosition"]
-
-
-    }else if(window.innerWidth <= 4000){
-        fadingTitlePosition0 = ResponsiveTable["Widescreen"]["fadingTitlePosition0"]
-        fadingTitleScale0 = ResponsiveTable["Widescreen"]["fadingTitleScale0"]
-        fadingTitlePosition1 = ResponsiveTable["Widescreen"]["fadingTitlePosition1"]
-        fadingTitleScale1 = ResponsiveTable["Widescreen"]["fadingTitleScale1"]
-        fadingTextPosition0 = ResponsiveTable["Widescreen"]["fadingTextPosition0"]
-        fadingTextScale0 = ResponsiveTable["Widescreen"]["fadingTextScale0"]
-        fadingTextPosition1 = ResponsiveTable["Widescreen"]["fadingTextPosition1"]
-        fadingTextScale1 = ResponsiveTable["Widescreen"]["fadingTextScale1"]
-        fadingTextPosition2 = ResponsiveTable["Widescreen"]["fadingTextPosition2"]
-        fadingTextScale2 = ResponsiveTable["Widescreen"]["fadingTextScale2"]
-        fadingTextPosition3 = ResponsiveTable["Widescreen"]["fadingTextPosition3"]
-        fadingTextScale3 = ResponsiveTable["Widescreen"]["fadingTextScale3"]
-        fadingTextPosition4 = ResponsiveTable["Widescreen"]["fadingTextPosition4"]
-        fadingTextScale4 = ResponsiveTable["Widescreen"]["fadingTextScale4"]
-        fadingTextPosition5 = ResponsiveTable["Widescreen"]["fadingTextPosition5"]
-        fadingTextScale5 = ResponsiveTable["Widescreen"]["fadingTextScale5"]
-        FloatingTextSkillsPosition = ResponsiveTable["Widescreen"]["FloatingTextSkillsPosition"]
-    }
+    const { layout } = useResponsive("scene");
 
     ////////////////////////////////////////////////////
     ///////////////// One-time effects /////////////////
@@ -482,17 +416,17 @@ export const SceneContainer = React.memo((props) => {
             && (
             <OrbitingMenu transitionDestinationToRestrictKeyboardControl = {"Education"} visible={isOrbitingMenuVisible.current} orbitDistance={7.5} orbitCenterPosition={orbitCenterPosition} />
                         )}
-            <FadingTitle initialPosition = {fadingTitlePosition0} scale = {fadingTitleScale0} 
+            <FadingTitle initialPosition = {layout.fadingTitlePosition0} scale = {layout.fadingTitleScale0} 
                 text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {2000} transitionDuration = {1500} />
-            <FadingTitle initialPosition = {fadingTitlePosition1} scale = {fadingTitleScale1} 
+            <FadingTitle initialPosition = {layout.fadingTitlePosition1} scale = {layout.fadingTitleScale1} 
                 text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {2600} transitionDuration = {1500} />
             <>
-                <FadingText textToFade = {TranslationTable0} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects0" lettersPerUnit = {5}  scale = {fadingTextScale0} initialPosition = {fadingTextPosition0} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText textToFade = {TranslationTable1} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects1"                       scale = {fadingTextScale1} initialPosition = {fadingTextPosition1} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText textToFade = {TranslationTable2} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects2"                       scale = {fadingTextScale2} initialPosition = {fadingTextPosition2} rotation = {Math.PI}       textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText textToFade = {TranslationTable3} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {fadingTextScale3} initialPosition = {fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText textToFade = {TranslationTable4} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects4" lettersPerUnit = {9}  scale = {fadingTextScale4} initialPosition = {fadingTextPosition4} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText textToFade = {TranslationTable5} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects5" lettersPerUnit = {7}  scale = {fadingTextScale5} initialPosition = {fadingTextPosition5} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable0} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects0" lettersPerUnit = {5}  scale = {layout.fadingTextScale0} initialPosition = {layout.fadingTextPosition0} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable1} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects1"                       scale = {layout.fadingTextScale1} initialPosition = {layout.fadingTextPosition1} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable2} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects2"                       scale = {layout.fadingTextScale2} initialPosition = {layout.fadingTextPosition2} rotation = {Math.PI}       textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable3} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {layout.fadingTextScale3} initialPosition = {layout.fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable4} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects4" lettersPerUnit = {9}  scale = {layout.fadingTextScale4} initialPosition = {layout.fadingTextPosition4} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
+                <FadingText textToFade = {TranslationTable5} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects5" lettersPerUnit = {7}  scale = {layout.fadingTextScale5} initialPosition = {layout.fadingTextPosition5} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
                 {/* <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
                 <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
@@ -502,7 +436,7 @@ export const SceneContainer = React.memo((props) => {
             </>
             
             {/* {(transitionDestination=="Skills" && transitionEnded) &&
-            <FloatingTextSkills initialPosition = {[-9, 30, -15]} textPosition = {FloatingTextSkillsPosition} /> 
+            <FloatingTextSkills initialPosition = {[-9, 30, -15]} textPosition = {layout.FloatingTextSkillsPosition} /> 
             } */}
 
             {(currentGraphicalMode === "potato")

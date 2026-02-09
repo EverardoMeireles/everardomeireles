@@ -38,8 +38,6 @@ function SceneViewer() {
   const cameraState = SystemStore((state) => state.cameraState);
   const hudMenuEnabled = SystemStore((state) => state.hudMenuEnabled);
 
-  const ResponsiveWidthHeight = { width: window.innerWidth, height: window.innerHeight };
-
   const transitionEnded = SystemStore((state) => state.transitionEnded);
 
   const message = SystemStore((state) => state.message);
@@ -327,7 +325,7 @@ function SceneViewer() {
                 />
               ))}
               <TutorialOverlay enable = {enableTutorial}/> 
-              <HudMenu responsive={ResponsiveWidthHeight} enabled={hudMenuEnabled} />
+              <HudMenu enabled={hudMenuEnabled} />
 
               <img
                     src = "textures/back_arrow.png"
@@ -366,9 +364,7 @@ function SceneViewer() {
                     onPointerLeave={() => setIsCanvasHovered(false)}
                     dpr={1}
                   >
-                    <SceneContainer
-                      responsive={ResponsiveWidthHeight}
-                    />
+                    <SceneContainer />
                     {/* <FPSLogger /> */}
                   </Canvas>
                 </Suspense>
