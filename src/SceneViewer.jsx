@@ -12,6 +12,7 @@ import * as THREE from "three";
 import { useFrame } from '@react-three/fiber'
 import config from "./config.js";
 import { useResponsive } from "./Styles.jsx";
+import { TwoDSplashScreen } from "./system_components/2DSplashScreen.jsx";
 
 import {
   BrowserRouter as Router,
@@ -360,6 +361,18 @@ function SceneViewer() {
                     onMouseUp = {()    => setIsReturnButtonPressed(false)}
                     // drag to reposition
                     alt="Return"
+              />
+              <TwoDSplashScreen
+                scale={1}
+                duration={3000}
+                animationDuration={1000}
+                animation="3D_x_rotate_back"
+                effect="lateral_glow"
+                color="#ffffff"
+                sfxAnimationEnd="click.wav"
+                interpolationAlgorithm="lerp"
+                backgroundColor="#000"
+                image="tutorial_rotate_video.png"
               />
               {canvasReady ? (
                 <Suspense>
