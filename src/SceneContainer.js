@@ -390,7 +390,7 @@ export const SceneContainer = React.memo((props) => {
     return(
     <>
         <Camera position = {config.default_Camera_starting_position} ></Camera>
-        <CircularScrollLoader />
+        {/* <CircularScrollLoader /> */}
         {(siteMode === "resume") && 
         <>
             {/* /////////////////////
@@ -449,10 +449,10 @@ export const SceneContainer = React.memo((props) => {
             <ambientLight intensity = {0.1}></ambientLight>
             }
 
-            {/* <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
+            <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
             forceLowResTrigger={forceLowresMaterial} forceMidResTrigger={forceMidresMaterial} forceHighResTrigger={forceHighResMaterial}>
                 {stableSimpleLoader}
-            </DynamicMaterialLoader> */}
+            </DynamicMaterialLoader>
             {(currentGraphicalMode !== "potato")
             &&
             <>

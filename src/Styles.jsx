@@ -80,6 +80,10 @@ export const ResponsiveTable = {
     },
 }
 
+export const ResponsiveCurveTransitions = {
+    initialPosition: {}
+};
+
 const getViewportSize = () => {
     if (typeof window === "undefined") {
         return { width: 0, height: 0 };
