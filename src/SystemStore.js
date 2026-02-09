@@ -57,6 +57,12 @@ const SystemStore = create((set) => ({
     cameraState: { position, rotation }
   })),
 
+  // Current responsive camera start position (set by SceneViewer based on layout)
+  cameraStartingPosition: config.default_Camera_starting_position.Widescreen
+    ?? config.default_Camera_starting_position,
+  // Allows runtime layout changes (e.g., resizing) to update the start position
+  setCameraStartingPosition: (position) => set(() => ({ cameraStartingPosition: position })),
+
   cameraStateTracking: false,
   setCameraStateTracking: (tracking) => set(() => ({ cameraStateTracking: tracking })),
 

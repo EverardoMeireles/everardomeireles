@@ -84,6 +84,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const isReturnButtonPressed = SystemStore((state) => state.isReturnButtonPressed);
   const setShowReturnButton = SystemStore((state) => state.setShowReturnButton);
   const setForcedCameraPosition = SystemStore((state) => state.setForcedCameraPosition);
+  const cameraStartingPosition = SystemStore((state) => state.cameraStartingPosition);
 
   const [initialPositions, setInitialPositions] = useState({});
   const [desiredPositions, setDesiredPositions] = useState({});
@@ -963,7 +964,13 @@ export const ExplodingModelLoader = React.memo((props) => {
       frameCount.current += 1;
       // Only update archCurve.current every 5 frames
       if (frameCount.current >= 5) {
-        archCurve.current = createArchCurve(foFront.current, foFocusPoint.current, camera, foArchWidth.current, foArchcurveDirection.current);
+        archCurve.current = createArchCurve(
+          foFocusPoint.current,
+          camera,
+          foArchWidth.current,
+          foArchcurveDirection.current,
+          foFront.current
+        );
         frameCount.current = 0;  // Reset the frame count after updating
       }
     }
@@ -1042,7 +1049,14 @@ export const ExplodingModelLoader = React.memo((props) => {
     if (isReturnButtonPressed) {
       setShowReturnButton(false);
       setTransitionEnded(false);
-      setForcedCameraMovePathCurve(createArchCurve([1, 0, 0], forcedCameraPositionArray ?? config.default_Camera_starting_position, camera,));
+      // Return to the responsive camera start position (or forced override if provided)
+      setForcedCameraMovePathCurve(createArchCurve(
+        forcedCameraPositionArray ?? cameraStartingPosition,
+        camera,
+        undefined,
+        undefined,
+        [1, 0, 0]
+      ));
       updateToolTipCircleVisibility();
       setForcedCameraTarget(sceneOrigin);
 

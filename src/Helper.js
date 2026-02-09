@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import SystemStore from "./SystemStore.js";
 
 // replace it by store's value later
 export const graphicsModes = {
@@ -66,11 +67,11 @@ export function createTimer() {
 
 // Create a THREE.CatmullRomCurve3 curve from the camera to a target position
 export function createArchCurve(
-    frontDirection = [1, 0, 0], // the direction of the "front" of the object
     targetPosition, // The end position of the curve
     distanceOrCamera = 1, // backward compatibility: can be the camera if distance is omitted
-    cameraOrArchWidth,
+    cameraOrArchWidth = 5,
     archWidthOrCurveDirection,
+    frontDirection = [1, 0, 0], // the direction of the "front" of the object
     maybeCurveDirection
   ) {
     let distance = 1;
@@ -81,16 +82,28 @@ export function createArchCurve(
     if (typeof distanceOrCamera === "number" || distanceOrCamera === undefined) {
       distance = typeof distanceOrCamera === "number" ? distanceOrCamera : 1;
       camera = cameraOrArchWidth;
-      archWidth = archWidthOrCurveDirection ?? 1;
+      archWidth = Number.isFinite(archWidthOrCurveDirection) ? archWidthOrCurveDirection : 1;
       curveDirection = maybeCurveDirection ?? "up";
     } else {
       camera = distanceOrCamera;
-      archWidth = cameraOrArchWidth ?? 1;
+      archWidth = Number.isFinite(cameraOrArchWidth) ? cameraOrArchWidth : 1;
       curveDirection = archWidthOrCurveDirection ?? "up";
     }
 
-    if (!camera || typeof camera.getWorldPosition !== "function") {
-      throw new Error("createArchCurve requires a THREE.Camera instance.");
+    const startPos = new THREE.Vector3();
+    if (camera && typeof camera.getWorldPosition === "function") {
+      camera.getWorldPosition(startPos);
+    } else if (camera?.isVector3) {
+      startPos.copy(camera);
+    } else if (Array.isArray(camera) && camera.length === 3) {
+      startPos.set(camera[0], camera[1], camera[2]);
+    } else {
+      const fallbackPosition = SystemStore?.getState?.().cameraState?.position;
+      if (Array.isArray(fallbackPosition) && fallbackPosition.length === 3) {
+        startPos.set(fallbackPosition[0], fallbackPosition[1], fallbackPosition[2]);
+      } else {
+        throw new Error("createArchCurve requires a THREE.Camera instance or a valid cameraState.position.");
+      }
     }
     // 1. frontDirection → normalized Vector3 * distance
     const dirVec = frontDirection.isVector3 ? frontDirection.clone() : new THREE.Vector3(...frontDirection);
@@ -102,10 +115,6 @@ export function createArchCurve(
       : targetPosition ?? new THREE.Vector3(0, 0, 0);
   
     const endPos = worldPos.clone().add(offset);
-  
-    // 3. get camera world position (start)
-    const startPos = new THREE.Vector3();
-    camera.getWorldPosition(startPos);
   
     // 4. Determine curve frontDirection based on curveDirection type
     let directionVec = new THREE.Vector3(0, 0, 0); // Default vector

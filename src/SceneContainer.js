@@ -56,6 +56,7 @@ export const SceneContainer = React.memo((props) => {
     const viewerMaterialName = SystemStore((state) => state.viewerMaterialName);
     const hudMenuEnabled = SystemStore((state) => state.hudMenuEnabled);
     const setHudMenuEnabled = SystemStore((state) => state.setHudMenuEnabled);
+    const cameraStartingPosition = SystemStore((state) => state.cameraStartingPosition);
 
     const currentSkillHovered = UserStore((state) => state.currentSkillHovered);
     const animationTriggerState = UserStore((state) => state.animationTriggerState);
@@ -275,13 +276,13 @@ export const SceneContainer = React.memo((props) => {
     // Temporary useEffect to initialize the position and camera target of both scenes
     useEffect(() => {
         if(siteMode == "resume"){
-            const tempCurve = new THREE.CatmullRomCurve3([
-                new THREE.Vector3(278, 206, -6),
-                new THREE.Vector3(260, 190, 18),
-                new THREE.Vector3(199, 150, 46)])
+            // const tempCurve = new THREE.CatmullRomCurve3([
+            //     new THREE.Vector3(278, 206, -6),
+            //     new THREE.Vector3(260, 190, 18),
+            //     new THREE.Vector3(199, 150, 46)])
 
-                setForcedCameraTarget([45, 21, -50])
-                setForcedCameraMovePathCurve(tempCurve);
+            //     setForcedCameraTarget([45, 21, -50])
+            //     setForcedCameraMovePathCurve(tempCurve);
         }else{
             // setForcedCameraTarget([166, 137, 49])
             setForcedCameraTarget([0, 0, 0])
@@ -389,7 +390,7 @@ export const SceneContainer = React.memo((props) => {
 
     return(
     <>
-        <Camera position = {config.default_Camera_starting_position} ></Camera>
+        <Camera position = {cameraStartingPosition} ></Camera>
         {/* <CircularScrollLoader /> */}
         {(siteMode === "resume") && 
         <>

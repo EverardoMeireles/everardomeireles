@@ -1,10 +1,11 @@
  import { useState, useEffect, useRef } from "react";
 import { TranslationTable } from "./TranslationTable.jsx";
-import { HudMenuStyles, useResponsive } from "./Styles.jsx";
-import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue } from "./Helper.js";
+import { HudMenuStyles, useResponsive, ResponsiveCurveTransitions } from "./Styles.jsx";
+import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue, createArchCurve } from "./Helper.js";
 import config from "./config.js";
 import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "./PathPoints.jsx";
 import SystemStore from "./SystemStore";
+import * as THREE from "three";
 
 // has jsx HudMenuStyles
 // A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx
@@ -28,6 +29,9 @@ export function HudMenu(props) {
     const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
     const setDesiredPath = SystemStore((state) => state.setDesiredPath);
     const modifyTooltipCircleData = SystemStore((state) => state.modifyTooltipCircleData);
+    const cameraState = SystemStore((state) => state.cameraState);
+    const cameraStateTracking = SystemStore((state) => state.cameraStateTracking);
+    const setCameraStateTracking = SystemStore((state) => state.setCameraStateTracking);
 
 	//DEBUG animations
     const toggleTrigger = SystemStore((state) => state.toggleTrigger);
@@ -86,7 +90,36 @@ export function HudMenu(props) {
             desiredPath.current = urlPath;
             setDesiredPath(desiredPath.current)
             setForcedCameraTarget(path_points_even_more_simple_lookat_dict[desiredPath.current].toArray())
-            setForcedCameraMovePathCurve(overrideCurves[currentPath.current + "-" + desiredPath.current]);
+            // setForcedCameraMovePathCurve(overrideCurves[currentPath.current + "-" + desiredPath.current]);
+            const transitionPositions = ResponsiveCurveTransitions?.[sceneLayoutKey]
+                ?? ResponsiveCurveTransitions?.Widescreen
+                ?? ResponsiveCurveTransitions;
+            const isCurveLike = (value) =>
+                !!value &&
+                (value.isCurve ||
+                    value.isCatmullRomCurve3 ||
+                    value instanceof THREE.CatmullRomCurve3 ||
+                    (Array.isArray(value.points) && typeof value.getPointAt === "function"));
+
+            if (isCurveLike(transitionPositions)) {
+                setForcedCameraMovePathCurve(transitionPositions);
+            } else {
+                const transitionValue = transitionPositions?.[desiredPath.current];
+                const startPosition = transitionPositions?.[currentPath.current];
+                if (isCurveLike(transitionValue)) {
+                    setForcedCameraMovePathCurve(transitionValue);
+                } else if (transitionValue) {
+                    setForcedCameraMovePathCurve(
+                        createArchCurve(
+                            transitionValue,
+                            0,
+                            startPosition ?? cameraState?.position,
+                            undefined,
+                            [1, 0, 0]
+                        )
+                    );
+                }
+            }
             setTransitionEnded(false);
         }
     };
@@ -118,6 +151,14 @@ export function HudMenu(props) {
     }
 
     const { key: hudLayoutKey } = useResponsive("hud");
+    const { key: sceneLayoutKey } = useResponsive("scene");
+
+    useEffect(() => {
+        if (!enabled) return;
+        if (!cameraStateTracking) {
+            setCameraStateTracking(true);
+        }
+    }, [enabled, cameraStateTracking, setCameraStateTracking]);
 
     if (!enabled) return null;
 

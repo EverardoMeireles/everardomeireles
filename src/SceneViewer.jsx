@@ -11,6 +11,7 @@ import UserStore from "./SystemStore";
 import * as THREE from "three";
 import { useFrame } from '@react-three/fiber'
 import config from "./config.js";
+import { useResponsive } from "./Styles.jsx";
 
 import {
   BrowserRouter as Router,
@@ -45,15 +46,26 @@ function SceneViewer() {
   const setProductInformationFromMessage = SystemStore((state) => state.setProductInformationFromMessage);
   const productInformationFromMessage = SystemStore((state) => state.productInformationFromMessage);
   const setViewerModelSelection = SystemStore((state) => state.setViewerModelSelection);
+  const setCameraStartingPosition = SystemStore((state) => state.setCameraStartingPosition);
 
   const [enableTutorial, setEnableTutorial] = useState(false);
   const setViewerBounds = SystemStore((state) => state.setViewerBounds);
   const viewerBounds = SystemStore((state) => state.viewerBounds);
   const [canvasReady, setCanvasReady] = useState(false);
+  // Use scene layout key to pick responsive camera start position
+  const { key: sceneLayoutKey } = useResponsive("scene");
 
   useEffect(() => {
     setCanvasReady(true);
   }, []);
+
+  // Keep camera start position in sync with responsive layout
+  useEffect(() => {
+    const nextPosition = config.default_Camera_starting_position?.[sceneLayoutKey]
+      ?? config.default_Camera_starting_position?.Widescreen
+      ?? config.default_Camera_starting_position;
+    setCameraStartingPosition(nextPosition);
+  }, [sceneLayoutKey, setCameraStartingPosition]);
 
   useLayoutEffect(() => {
     const viewerEl = document.getElementById("viewer-root");

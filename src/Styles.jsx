@@ -1,4 +1,76 @@
 import { useEffect, useMemo, useState } from "react";
+import * as THREE from 'three';
+
+export const HtmlDreiMenuStyles = ({
+    menu: {
+        width: "100%",
+        height: "100%",
+        padding: "10px",
+        margin: "30px",
+        backgroundColor: "rgba(255,255,255,1)",
+        borderRadius: "10%",
+        top: '6000vw',
+        left: '6000vw'
+    }
+})
+
+const simple_items_top = ( topBottomPercentage = 0, initialPosition = 0, spaceIncrement = 0, spaceMultiplier = 0, fontSize = 0 ) => ({
+    color: "white",
+    top: topBottomPercentage + "%",
+    left: initialPosition + spaceIncrement * spaceMultiplier + "%",
+    fontSize: fontSize + "px"
+})
+
+const simple_items_bottom = ( topBottomPercentage = 0, initialPosition = 0, spaceIncrement = 0, spaceMultiplier = 0, fontSize = 0 )=>( {
+    color: "white",
+    bottom: topBottomPercentage + "%",
+    left: initialPosition + spaceIncrement * spaceMultiplier + "%",
+    fontSize:fontSize + "px"
+})
+
+const FlagImgStyle = (width = 0, height = 0) => ({
+    width : width + "px",
+    height : height + "px",
+})
+
+const ListStyle = (topPercentage = 0, initialPosition = 0) => ({
+    top: topPercentage + "%",
+    left: initialPosition + "%",
+    cursor: "pointer",
+    listStyleType: "none",
+    marginBlockStart:"0px",
+    marginBlockEnd:"0px",
+    // "display":"block",
+    "position":"absolute",
+    paddingInlineStart:0
+
+})
+
+const arrowContainerStyle = {
+    position: 'fixed',
+    top: 0,
+    right: '20px',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    zIndex: 100000
+};
+
+const arrowStyle = {
+    textDecoration: 'none',
+    color: 'black',
+    cursor: 'pointer',
+    fontSize:'24px',
+};
+
+export const HudMenuStyles = {
+    simple_items_top: simple_items_top,
+    simple_items_bottom: simple_items_bottom,
+    FlagImgStyle: FlagImgStyle,
+    ListStyle: ListStyle,
+    arrowContainerStyle: arrowContainerStyle,
+    arrowStyle : arrowStyle
+}
 
 //////////////////////////////////////////////////
 /////////////// Responsive values ////////////////
@@ -81,8 +153,65 @@ export const ResponsiveTable = {
 }
 
 export const ResponsiveCurveTransitions = {
-    initialPosition: {}
+    Mobile: {
+        StartingPoint: [251, 222, -16],
+        MainMenu: [194, 150, 63],
+        Education: [-17, 97, 27],
+        Skills: [13, 35, -15],
+        ProfessionalExpProjects0: [4, 4, -71],
+        ProfessionalExpProjects1: [22, 4, -99],
+        ProfessionalExpProjects2: [-6, 4, -116],
+        ProfessionalExpProjects3: [-23, 4, -89],
+        ProfessionalExpProjects4: [5, 24, -71],
+        ProfessionalExpProjects5: [23, 24, -98],
+        ProfessionalExpProjects6: [-6, 24, -116],
+        ProfessionalExpProjects7: [-23, 24, -90],
+        ProfessionalExpProjects8: [3, 44, -70],
+        ProfessionalExpProjects9: [22, 44, -99],
+        ProfessionalExpProjects10: [-6, 44, -116],
+        ProfessionalExpProjects11: [-23, 44, -89]
+    },
+    Tablet: {
+        StartingPoint: [251, 222, -16],
+        MainMenu: [194, 150, 63],
+        Education: [-17, 97, 27],
+        Skills: [13, 35, -15],
+        ProfessionalExpProjects0: [4, 4, -71],
+        ProfessionalExpProjects1: [22, 4, -99],
+        ProfessionalExpProjects2: [-6, 4, -116],
+        ProfessionalExpProjects3: [-23, 4, -89],
+        ProfessionalExpProjects4: [5, 24, -71],
+        ProfessionalExpProjects5: [23, 24, -98],
+        ProfessionalExpProjects6: [-6, 24, -116],
+        ProfessionalExpProjects7: [-23, 24, -90],
+        ProfessionalExpProjects8: [3, 44, -70],
+        ProfessionalExpProjects9: [22, 44, -99],
+        ProfessionalExpProjects10: [-6, 44, -116],
+        ProfessionalExpProjects11: [-23, 44, -89]
+    },
+    Widescreen: {
+        StartingPoint: [251, 222, -16],
+        MainMenu: [194, 150, 63],
+        Education: [-17, 97, 27],
+        Skills: [13, 35, -15],
+        ProfessionalExpProjects0: [4, 4, -71],
+        ProfessionalExpProjects1: [22, 4, -99],
+        ProfessionalExpProjects2: [-6, 4, -116],
+        ProfessionalExpProjects3: [-23, 4, -89],
+        ProfessionalExpProjects4: [5, 24, -71],
+        ProfessionalExpProjects5: [23, 24, -98],
+        ProfessionalExpProjects6: [-6, 24, -116],
+        ProfessionalExpProjects7: [-23, 24, -90],
+        ProfessionalExpProjects8: [3, 44, -70],
+        ProfessionalExpProjects9: [22, 44, -99],
+        ProfessionalExpProjects10: [-6, 44, -116],
+        ProfessionalExpProjects11: [-23, 44, -89]
+    }
 };
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// !!!!!!!!!!!!!!!!!!!!!!!!!!! To set the camera's responsive starting position, go to config.js!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 const getViewportSize = () => {
     if (typeof window === "undefined") {
@@ -161,74 +290,3 @@ export const useResponsive = (kind = "scene") => {
 
     return { ...size, key: layoutKey, layout };
 };
-
-export const HtmlDreiMenuStyles = ({
-    menu: {
-        width: "100%",
-        height: "100%",
-        padding: "10px",
-        margin: "30px",
-        backgroundColor: "rgba(255,255,255,1)",
-        borderRadius: "10%",
-        top: '6000vw',
-        left: '6000vw'
-    }
-})
-
-const simple_items_top = ( topBottomPercentage = 0, initialPosition = 0, spaceIncrement = 0, spaceMultiplier = 0, fontSize = 0 ) => ({
-    color: "white",
-    top: topBottomPercentage + "%",
-    left: initialPosition + spaceIncrement * spaceMultiplier + "%",
-    fontSize: fontSize + "px"
-})
-
-const simple_items_bottom = ( topBottomPercentage = 0, initialPosition = 0, spaceIncrement = 0, spaceMultiplier = 0, fontSize = 0 )=>( {
-    color: "white",
-    bottom: topBottomPercentage + "%",
-    left: initialPosition + spaceIncrement * spaceMultiplier + "%",
-    fontSize:fontSize + "px"
-})
-
-const FlagImgStyle = (width = 0, height = 0) => ({
-    width : width + "px",
-    height : height + "px",
-})
-
-const ListStyle = (topPercentage = 0, initialPosition = 0) => ({
-    top: topPercentage + "%",
-    left: initialPosition + "%",
-    cursor: "pointer",
-    listStyleType: "none",
-    marginBlockStart:"0px",
-    marginBlockEnd:"0px",
-    // "display":"block",
-    "position":"absolute",
-    paddingInlineStart:0
-
-})
-
-const arrowContainerStyle = {
-    position: 'fixed',
-    top: 0,
-    right: '20px',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    zIndex: 100000
-};
-
-const arrowStyle = {
-    textDecoration: 'none',
-    color: 'black',
-    cursor: 'pointer',
-    fontSize:'24px',
-};
-
-export const HudMenuStyles = {
-    simple_items_top: simple_items_top,
-    simple_items_bottom: simple_items_bottom,
-    FlagImgStyle: FlagImgStyle,
-    ListStyle: ListStyle,
-    arrowContainerStyle: arrowContainerStyle,
-    arrowStyle : arrowStyle
-}
