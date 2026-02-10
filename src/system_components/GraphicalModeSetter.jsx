@@ -1,139 +1,238 @@
-import { useFrame } from '@react-three/fiber';
-import { getGPUTier } from 'detect-gpu';
-import React,{ useEffect, useRef } from "react";
-import { graphicsModes, CalculateAverageOfArray, increaseOrDecreaseGraphics } from "../Helper";
+import { useFrame } from "@react-three/fiber";
+import React, { useEffect, useRef, useState } from "react";
+import { increaseOrDecreaseGraphics } from "../Helper";
 import SystemStore from "../SystemStore";
 
-// set graphical by performing a gpu ier test, a fps check and a hardware acceleration check
+//////////////////////////////////////////
+/////////////// Props ////////////////////
+//////////////////////////////////////////
+// FPS-based graphical mode setter (continuous or timeboxed).
 export const GraphicalModeSetter = React.memo((props) => {
-    const {enable = true} = props;
+  const {
+    enable = true,
+    fpsToIncreaseGraphics = 60,
+    fpsToDecreaseGraphics = 30,
+    increaseStreakSeconds = 6,
+    decreaseStreakSeconds = 3,
+    fallbackStreakSeconds = decreaseStreakSeconds,
+    continous = true,
+    showFps = false,
+    startMode = "on_mount", // "on_mount", "after_delay" or "on_trigger"
+    waitSeconds = 0,
+    triggerInStart = false,
+    fpsToFallBackHigh = 5,
+    fpsToFallBackNormal = 10,
+    fpsToFallBackPotato = 15,
+    fallbackMode = "disable_canvas",
+    fallbackRedirectPath = "/",
+  } = props;
 
-    const {fpsThresholdToIncreaseGraphics = 60} = props;// Acceptable fps
-    const {fpsThresholdToDecreaseGraphics = 30} = props;// unacceptable fps
-    const {deltaCountToIncreaseGraphicsCheck = 6} = props;// n seconds to check if graphics must be increased
-    const {deltaCountToDecreaseGraphicsCheck = 3} = props; // n seconds to check if graphics must be decreased
 
-    const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
-    const setGraphicalMode = SystemStore((state) => state.setGraphicalMode);
-    const enableDynamicGraphicalModeSetting = SystemStore((state) => state.enableDynamicGraphicalModeSetting);
+  //////////////////////////////////////////
+  /////////////// State ////////////////////
+  //////////////////////////////////////////
+  const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
+  const setGraphicalMode = SystemStore((state) => state.setGraphicalMode);
+  const setCanvasEnabled = SystemStore((state) => state.setCanvasEnabled);
 
-    ////////////////////////////////////////////
-    // Initial graphical mode setting section //
-    ////////////////////////////////////////////
+  //////////////////////////////////////////
+  /////////////// Tracking /////////////////
+  //////////////////////////////////////////
+  const fpsAccuRef = useRef({ deltas: 0, frames: 0 });
+  const increaseStreakRef = useRef(0);
+  const decreaseStreakRef = useRef(0);
+  const fallbackStreakRef = useRef(0);
+  const fallbackTriggeredRef = useRef(false);
+  const elapsedSecondsRef = useRef(0);
+  const disableChecksRef = useRef(false);
+  const startTimerRef = useRef(null);
+  const [startReady, setStartReady] = useState(startMode === "on_mount");
 
-    useEffect(() => {(async () => {
-        let HardwareAccelerationCheckPassed = true;
-        const gpuTier = await getGPUTier({benchmarksURL:"benchmarks"});
-        // hardware acceleration check, if the user has hardware acceleration disabled, don't set graphical mode
-        if(gpuTier.type === "WEBGL_UNSUPPORTED" || gpuTier.tier === 0){
-            HardwareAccelerationCheckPassed = false;
-        }else{
-            if(gpuTier.isMobile){
-                if(!gpuTier.fps < 25){
-                    HardwareAccelerationCheckPassed = false;
-                }
-            }
-            // else{
-            //     if(!gpuTier.gpu.includes("intel") && !gpuTier.gpu.includes("nvidia") && !gpuTier.gpu.includes("amd") && !gpuTier.gpu.includes("apple m1") && !gpuTier.gpu.includes("apple m2") && !gpuTier.gpu.includes("apple a14")){
-            //         HardwareAccelerationCheckPassed = false;
-            //     }
-            // }
+  const autoDisableAfterSeconds =
+    ((increaseStreakSeconds + decreaseStreakSeconds) / 2) * 3;
+
+  //////////////////////////////////////////
+  /////////////// Start Gate ///////////////
+  //////////////////////////////////////////
+  useEffect(() => {
+    const resetTracking = () => {
+      elapsedSecondsRef.current = 0;
+      disableChecksRef.current = false;
+      increaseStreakRef.current = 0;
+      decreaseStreakRef.current = 0;
+      fallbackStreakRef.current = 0;
+      fpsAccuRef.current = { deltas: 0, frames: 0 };
+    };
+
+    if (startTimerRef.current) {
+      clearTimeout(startTimerRef.current);
+      startTimerRef.current = null;
+    }
+
+    if (!enable) {
+      resetTracking();
+      setStartReady(false);
+      return;
+    }
+
+    if (startMode === "on_trigger") {
+      if (!startReady) {
+        resetTracking();
+        if (triggerInStart) {
+          // Only starts once per trigger when using on_trigger.
+          setStartReady(true);
         }
-        // Sets the graphical mode
-        if(HardwareAccelerationCheckPassed){
-            // console.log("GRAPHICS index: " + gpuTier.tier);
-            setGraphicalMode(graphicsModes[gpuTier.tier]);
-        }else{
-            window.location.href = "HardwareAcceleration.html?fps=0";
+      }
+      return;
+    }
+
+    resetTracking();
+
+    if (startMode === "on_mount") {
+      setStartReady(true);
+      return;
+    }
+
+    if (startMode === "after_delay") {
+      const delayMs = Math.max(0, waitSeconds) * 1000;
+      if (delayMs === 0) {
+        setStartReady(true);
+        return;
+      }
+      setStartReady(false);
+      startTimerRef.current = setTimeout(() => {
+        setStartReady(true);
+        startTimerRef.current = null;
+      }, delayMs);
+      return () => {
+        if (startTimerRef.current) {
+          clearTimeout(startTimerRef.current);
+          startTimerRef.current = null;
         }
-    })()},[])
+      };
+    }
 
-    ////////////////////////////////////////////
-    // Dynamic graphical mode setting section //
-    ////////////////////////////////////////////
+  }, [
+    enable,
+    continous,
+    increaseStreakSeconds,
+    decreaseStreakSeconds,
+    startMode,
+    waitSeconds,
+    triggerInStart,
+    startReady,
+  ]);
 
-    const accuDeltasForHardwareAccelerationCheck = useRef(0)
-    const accuFramesForHardwareAccelerationCheck = useRef(0)
+  //////////////////////////////////////////
+  /////////////// Helpers //////////////////
+  //////////////////////////////////////////
+  const getFallbackThreshold = (mode) => {
+    switch (mode) {
+      case "high":
+        return fpsToFallBackHigh;
+      case "normal":
+        return fpsToFallBackNormal;
+      case "potato":
+        return fpsToFallBackPotato;
+      default:
+        return fpsToFallBackNormal;
+    }
+  };
 
-    let accuDeltasForFPS = 0;
-    let accuFramesForFPS = 0;
+  //////////////////////////////////////////
+  /////////////// Fallback //////////////////
+  //////////////////////////////////////////
+  const triggerFallback = () => {
+    if (fallbackTriggeredRef.current) return;
+    fallbackTriggeredRef.current = true;
 
-    // FPS counts are stored here
-    let arrayFPSToDecrease = [];
-    let arrayFPSToIncrease = [];
+    if (fallbackMode === "redirect") {
+      if (typeof window !== "undefined") {
+        window.location.assign(fallbackRedirectPath);
+      }
+    } else {
+      setCanvasEnabled(false);
+    }
+  };
 
-    // calculate framerate to check if the gpu tier check was enough to get acceptable framerate
-    useFrame((state, delta) => {
-        if(enable){
-            if(enableDynamicGraphicalModeSetting){
-                accuDeltasForFPS += delta;
-                accuFramesForFPS += 1;
-                // every second, write number of frames
-                if(accuDeltasForFPS >= 1){
-                    arrayFPSToDecrease.push(accuFramesForFPS);
-                    arrayFPSToIncrease.push(accuFramesForFPS);
+  //////////////////////////////////////////
+  /////////////// Sampling //////////////////
+  //////////////////////////////////////////
+  useFrame((state, delta) => {
+    if (!enable || fallbackTriggeredRef.current) return;
+    if (!startReady) return;
+    if (!continous && disableChecksRef.current) return;
 
-                    accuDeltasForFPS = 0;
-                    accuFramesForFPS = 0;
-                }
+    fpsAccuRef.current.deltas += delta;
+    fpsAccuRef.current.frames += 1;
 
-                // Increase graphics by one level
-                if (deltaCountToIncreaseGraphicsCheck === arrayFPSToIncrease.length && currentGraphicalMode !== "high") {
-                    if (CalculateAverageOfArray(arrayFPSToIncrease) >= fpsThresholdToIncreaseGraphics) {
-                    increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1);
-                    console.log("Graphics increased");
-                    }
-                    arrayFPSToIncrease = [];
-                }
-                
-                // Decrease graphics, added bias
-                if (deltaCountToDecreaseGraphicsCheck === arrayFPSToDecrease.length && currentGraphicalMode !== "potato") {
-                    const avgFPS = CalculateAverageOfArray(arrayFPSToDecrease);
-                    if (avgFPS <= fpsThresholdToDecreaseGraphics) {
-                    let decreaseSteps = 1;
-                    // If FPS is really low, decrease by an extra level.
-                    if (avgFPS < fpsThresholdToDecreaseGraphics / 2) {
-                        decreaseSteps = 2;
-                    }
-                    increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -decreaseSteps);
-                    console.log("Graphics decreased by", decreaseSteps, "step(s)");
-                    }
-                    arrayFPSToDecrease = [];
-                }
-            }
+    if (!continous) {
+      // Timebox the checks when continous is disabled.
+      elapsedSecondsRef.current += delta;
+      if (elapsedSecondsRef.current >= autoDisableAfterSeconds) {
+        disableChecksRef.current = true;
+        return;
+      }
+    }
 
-    //////////////////////////////////
-    // Redirection fallback section //
-    //////////////////////////////////
+    if (fpsAccuRef.current.deltas >= 1) {
+      const fpsSample =
+        fpsAccuRef.current.frames / fpsAccuRef.current.deltas;
+      fpsAccuRef.current.deltas = 0;
+      fpsAccuRef.current.frames = 0;
 
-            // if after 5 seconds in potato mode, still less than 100 frames have passed(20 fps), the site is unusable,
-            // ask the user to enable hardware acceleration by redirecting them to the hardware acceleration page
-            if(currentGraphicalMode == "potato"){
-                accuDeltasForHardwareAccelerationCheck.current += delta;
-                accuFramesForHardwareAccelerationCheck.current += 1;
+      if (showFps) {
+        console.log(`FPS: ${fpsSample.toFixed(1)}`);
+      }
 
-                if (delta > 1) {
-                    accuDeltasForHardwareAccelerationCheck.current = 0
-                    accuFramesForHardwareAccelerationCheck.current = 0
-                    return
-                }
+      const canIncrease = currentGraphicalMode !== "high";
+      const canDecrease = currentGraphicalMode !== "potato";
+      const fallbackThreshold = getFallbackThreshold(currentGraphicalMode);
 
-                if(accuDeltasForHardwareAccelerationCheck.current >= 5){
-                    if(accuFramesForHardwareAccelerationCheck.current <= 100){
-                        window.location.href = "HardwareAcceleration.html?fps=" + CalculateAverageOfArray(arrayFPSToDecrease);
-                    }
-                    else{
-                        accuDeltasForHardwareAccelerationCheck.current = 0
-                        accuFramesForHardwareAccelerationCheck.current = 0
-                    }
-                }
-            }
-            else{
-                accuDeltasForHardwareAccelerationCheck.current = 0
-                accuFramesForHardwareAccelerationCheck.current = 0
-            }
-        }
-    })
-})
+      if (fpsSample >= fpsToIncreaseGraphics) {
+        increaseStreakRef.current += 1;
+      } else {
+        increaseStreakRef.current = 0;
+      }
+
+      if (fpsSample <= fpsToDecreaseGraphics) {
+        decreaseStreakRef.current += 1;
+      } else {
+        decreaseStreakRef.current = 0;
+      }
+
+      if (
+        Number.isFinite(fallbackThreshold) &&
+        fpsSample <= fallbackThreshold
+      ) {
+        fallbackStreakRef.current += 1;
+      } else {
+        fallbackStreakRef.current = 0;
+      }
+
+      if (fallbackStreakRef.current >= fallbackStreakSeconds) {
+        triggerFallback();
+        fallbackStreakRef.current = 0;
+        return;
+      }
+
+      if (canIncrease && increaseStreakRef.current >= increaseStreakSeconds) {
+        increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1);
+        increaseStreakRef.current = 0;
+      }
+
+      if (canDecrease && decreaseStreakRef.current >= decreaseStreakSeconds) {
+        const decreaseSteps =
+          fpsSample < fpsToDecreaseGraphics / 2 ? 2 : 1;
+        increaseOrDecreaseGraphics(
+          currentGraphicalMode,
+          setGraphicalMode,
+          -decreaseSteps
+        );
+        decreaseStreakRef.current = 0;
+      }
+    }
+  });
+});
 
 GraphicalModeSetter.displayName = "GraphicalModeSetter";

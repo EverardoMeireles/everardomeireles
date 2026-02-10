@@ -34,6 +34,14 @@ const SystemStore = create((set) => ({
   currentLanguage: "Portuguese",
   setLanguage: (language) => set(() => ({ currentLanguage: language })),
 
+  hardwareAccelerationEnabled: undefined,
+  setHardwareAccelerationEnabled: (enabled) => set(() => ({
+    hardwareAccelerationEnabled: enabled
+  })),
+
+  canvasEnabled: true,
+  setCanvasEnabled: (enabled) => set(() => ({ canvasEnabled: enabled })),
+
   currentCameraMovements: { zoom: true, pan: true, rotate: true },
   setcurrentCameraMovements: (cameraMovements) => set(() => ({ currentCameraMovements: cameraMovements })),
 

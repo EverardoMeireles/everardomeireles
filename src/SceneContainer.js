@@ -10,7 +10,6 @@ import { FloatingTextSkills } from "./user_components/FloatingTextSkills.jsx";
 import { FadingText } from "./system_components/FadingText.jsx";
 import { useFrame, useThree, useLoader } from "@react-three/fiber"; // eslint-disable-line no-unused-vars
 import { VideoLoader } from "./system_components/VideoLoader.jsx";
-import { GraphicalModeSetter2 } from "./system_components/GraphicalModeSetter2.jsx";
 import { FadingTitle } from "./system_components/FadingTitle.jsx";
 import { Raycaster } from "./system_components/Raycaster.jsx";
 import { CurveInstanceAnimation } from "./system_components/CurveInstanceAnimation.jsx";
@@ -27,6 +26,7 @@ import { AnimationMixer } from 'three';
 import { customInstanceRotation, customInstanceColor } from "./PathPoints.jsx";
 import { TranslationTable } from "./TranslationTable.jsx";
 import { useResponsive } from "./Styles.jsx";
+import { FpsBenchmarkProbe } from "./system_components/FpsBenchmarkProbe.jsx";
 import { pollForFilesInTHREECache, createTimer } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
@@ -123,7 +123,6 @@ export const SceneContainer = React.memo((props) => {
                 case "potato":
                     setForceLowresMaterial(true)
                     break;
-                case "potatoPremium":
                 case "normal":
                     setForceMidresMaterial(true)
                     break;
@@ -227,6 +226,7 @@ export const SceneContainer = React.memo((props) => {
     // const accuDeltasForFPS = useRef(0);
     // const accuFramesForFPS = useRef(0);
     useFrame((state, delta)=>{
+        // console.log(currentGraphicalMode)
         // accuDeltasForFPS.current += delta;
         // accuFramesForFPS.current += 1;
         // if(accuDeltasForFPS.current >= 1){
@@ -352,6 +352,7 @@ export const SceneContainer = React.memo((props) => {
                     if (!mainScene) return null;
                     return (
                         <SimpleLoader
+                        position={[172, 139, 28]}
                             scene={mainScene}
                             objectsRevealTriggers={objectsRevealTriggers}
                             animationToPlay={animationToPlay}
@@ -400,10 +401,8 @@ export const SceneContainer = React.memo((props) => {
 
             <PreloadAssets delay={4000} texturesToLoad={texturesToLoad} scenesToLoad={scenesToLoad}></PreloadAssets>
             {/* <Raycaster enabled={raycasterEnabled} mouse={mouse} frameInterval={10} /> */}
-            {(config.check_graphics)
-            && 
-            <GraphicalModeSetter enableGraphicalModeSwapping = {false} fpsToDecreaseGraphics = {55} />
-            }
+            {/* <GraphicalModeSetter fpsToDecreaseGraphics = {55} /> */}
+            <FpsBenchmarkProbe benchmarkScene={"benchmark_scene.glb"}></FpsBenchmarkProbe>
 
             {/* /////////////////////
                 //Content system_components//

@@ -164,10 +164,8 @@ export function HudMenu(props) {
 
     return(
     <>
-        {/* hide the toggle unless the graphics toggle is enabled in the settings
-        and in case the graphics check is also enabled, wait for the benchmark to 
-        finish before showing the toggle */}
-        {(config.show_html_menu_graphics_toggle && (!config.check_graphics || (config.check_graphics))) &&
+        {/* hide the toggle unless the graphics toggle is enabled in the settings */}
+        {config.show_html_menu_graphics_toggle &&
             <div style={HudMenuStyles.arrowContainerStyle}>
                 {/* Auto button */}
                 <div
@@ -187,7 +185,7 @@ export function HudMenu(props) {
                 {graphicalLevelIndicatorIsEnabled && <img 
                     style = { {...HudMenuStyles.FlagImgStyle(24, 32), opacity: goesTransparent && isTransparent ? transparency : 1, 
                     visibility: goesInvisible && isTransparent ? 'hidden' : 'visible'}} 
-                    src = {config.resource_path + "/LevelIndicators/" + getKeyByValue(graphicsModes, currentGraphicalMode) + "of" + (numberOfGraphicalModes-1).toString() + ".png"} 
+                    src = {config.resource_path + "/LevelIndicators/" + (Number(getKeyByValue(graphicsModes, currentGraphicalMode)) + 1).toString() + "of" + numberOfGraphicalModes.toString() + ".png"} 
                     alt = "Graphic level"></img>}
             </div> 
         }

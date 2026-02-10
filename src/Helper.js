@@ -4,9 +4,8 @@ import SystemStore from "./SystemStore.js";
 // replace it by store's value later
 export const graphicsModes = {
     0:"potato",
-    1:"potatoPremium",
-    2:"normal",
-    3:"high"
+    1:"normal",
+    2:"high"
 }
 
 export var oneOrZero = {

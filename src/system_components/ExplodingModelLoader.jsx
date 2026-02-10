@@ -906,10 +906,6 @@ export const ExplodingModelLoader = React.memo((props) => {
       case "potato":
         circlePositionUpdatePixelInterval.current = 1;
       break;
-      case "potatoPremium":
-        circlePositionUpdatePixelInterval.current = 0.5;
-
-      break;
       case "normal":
         circlePositionUpdatePixelInterval.current = 0.3;
 

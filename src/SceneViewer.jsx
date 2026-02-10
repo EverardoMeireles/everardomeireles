@@ -48,6 +48,7 @@ function SceneViewer() {
   const productInformationFromMessage = SystemStore((state) => state.productInformationFromMessage);
   const setViewerModelSelection = SystemStore((state) => state.setViewerModelSelection);
   const setCameraStartingPosition = SystemStore((state) => state.setCameraStartingPosition);
+  const canvasEnabled = SystemStore((state) => state.canvasEnabled);
 
   const [enableTutorial, setEnableTutorial] = useState(false);
   const setViewerBounds = SystemStore((state) => state.setViewerBounds);
@@ -362,7 +363,7 @@ function SceneViewer() {
                     // drag to reposition
                     alt="Return"
               />
-              <TwoDSplashScreen
+              {/* <TwoDSplashScreen
                 scale={1}
                 duration={3000}
                 animationDuration={1000}
@@ -373,8 +374,8 @@ function SceneViewer() {
                 interpolationAlgorithm="lerp"
                 backgroundColor="#000"
                 image="tutorial_rotate_video.png"
-              />
-              {canvasReady ? (
+              /> */}
+              {canvasReady && canvasEnabled ? (
                 <Suspense>
                     <Canvas
                       onPointerDown={(e) => {
@@ -388,6 +389,7 @@ function SceneViewer() {
                     onPointerEnter={() => setIsCanvasHovered(true)}
                     onPointerLeave={() => setIsCanvasHovered(false)}
                     dpr={1}
+                    gl={{ powerPreference: "high-performance" }}
                   >
                     <SceneContainer />
                     {/* <FPSLogger /> */}
