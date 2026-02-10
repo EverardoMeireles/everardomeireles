@@ -12,7 +12,7 @@ import * as THREE from "three";
 import { useFrame } from '@react-three/fiber'
 import config from "./config.js";
 import { useResponsive } from "./Styles.jsx";
-import { TwoDSplashScreen } from "./system_components/2DSplashScreen.jsx";
+import { TwoDSplashScreen } from "./system_components/TwoDSplashScreen.jsx";
 
 import {
   BrowserRouter as Router,

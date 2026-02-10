@@ -83,6 +83,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
   const isReturnButtonPressed = SystemStore((state) => state.isReturnButtonPressed);
   const setShowReturnButton = SystemStore((state) => state.setShowReturnButton);
+  const showReturnButton = SystemStore((state) => state.showReturnButton);
   const setForcedCameraPosition = SystemStore((state) => state.setForcedCameraPosition);
   const cameraStartingPosition = SystemStore((state) => state.cameraStartingPosition);
 
@@ -302,6 +303,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   useFrame((state, delta) => {
     if(enableRotationAnimation.current){
       const model = modelRef.current;
+      const focusActive = Boolean(showReturnButton || currentSelectedObjectName.current);
 
       if (!model) return;
 
@@ -311,6 +313,11 @@ export const ExplodingModelLoader = React.memo((props) => {
       }
 
       if(rotationAnimationWhenToStop.current == "onScreenMouseHover" && isCanvasHovered){
+        startRotationAnimation.current = false;
+      }
+
+      // Stops animation if an object is focused
+      if(focusActive){
         startRotationAnimation.current = false;
       }
 
@@ -361,6 +368,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
       if (restartAnimationAfterStop.current && !startRotationAnimation.current
         &&
+        !focusActive &&
         ((resetInitialRotation && restoringRotation.current == false) || (!resetInitialRotation))) {
           startRotationAnimation.current = true;
       }
