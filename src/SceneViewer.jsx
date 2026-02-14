@@ -365,13 +365,12 @@ function SceneViewer() {
               />
               {/* <TwoDSplashScreen
                 scale={1}
-                duration={3000}
+                duration={1000}
                 animationDuration={1000}
                 animation="3D_x_rotate_back"
-                effect="lateral_glow"
+                effect="explosive_blur"
                 color="#ffffff"
-                sfxAnimationEnd="click.wav"
-                interpolationAlgorithm="lerp"
+                // interpolationAlgorithm="lerp"
                 backgroundColor="#000"
                 image="tutorial_rotate_video.png"
               /> */}

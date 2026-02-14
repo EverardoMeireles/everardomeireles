@@ -1,56 +1,212 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import SystemStore from "../SystemStore.js";
 
 export function TwoDSplashScreen({
-    duration = 2000,
-    animationDuration,
-    // animation options: "zoom_out_spin_right", "zoom_out_spin_left", "simple_zoom_out",
+    // Total time (ms) the splash remains active before starting the exit phase.
+    duration = 1000,
+    // Entrance animation key. Options:
+    // "zoom_out_spin_right", "zoom_out_spin_left", "simple_zoom_out",
     // "zoom_in_spin_right", "zoom_in_spin_left", "simple_zoom_in",
     // "zoom_in_bounce", "zoom_out_bounce", "ps2_blur_fadein",
     // "3D_x_rotate_front", "3D_x_rotate_back"
     animation = "3D_x_rotate_back",
-    // interpolation options: "lerp", "smoothstep", "ease", "ease-in", "ease-out", "ease-in-out"
+    // Timing function for the entrance animation.
+    // Options: "lerp", "smoothstep", "ease", "ease-in", "ease-out", "ease-in-out"
     interpolationAlgorithm = "ease-out",
-    // effect options: "wave_sound", "elastic_blur", "explosive_blur", "lateral_glow"
-    effect,
-    color = "#ffffff",
+    // Entrance animation duration (ms). Used as lead-in before the exit phase starts.
+    animationDuration = 1000,
+    // Optional visual effect.
+    // Options: "wave_sound", "elastic_blur", "explosive_blur", "lateral_glow"
+    effect = "explosive_blur",
+    // Accent color used by optional effects.
+    color = "#1226dd",
+    // Base scale of the splash image.
     scale = 1,
+    // Full-screen background color behind the image.
     backgroundColor = "#000",
+    // Background fade-out time (ms).
+    backgroundFadeOutDuration = 2500,
+    // Image filename in /public/textures (or absolute path when prefixed with "/").
     image,
+    // Target screen position for slide-out phase ([x, y] or object {x,y}/{left,top}).
+    slideOnEndPosition = [100, 100],
+    // Slide-out travel duration (ms).
+    slideDuration = 1000,
+    // Target scale reached at the end of slide-out.
+    slideSizeAfterEnd = 0.5,
+    // Timing function for slide-out position interpolation.
+    slideInterpolationAlgorithm = "ease",
+    // Store trigger key toggled to true when slide-out movement ends.
+    triggerOutSlideEnded = "trigger999",
 }) {
+    /////////////////////
+    // State and Store //
+    /////////////////////
     const [isVisible, setIsVisible] = useState(true);
+    const [isImageVisible, setIsImageVisible] = useState(true);
     const [isFading, setIsFading] = useState(false);
+    const [isSlidingOut, setIsSlidingOut] = useState(false);
     const [isEffectActive, setIsEffectActive] = useState(false);
-    const isSoundEffect = effect === "wave_sound";
+    const [slideScaleProgress, setSlideScaleProgress] = useState(0);
+    const slideScaleAnimationFrameRef = useRef(null);
+    const setTrigger = SystemStore((state) => state.setTrigger);
+
+    ///////////////////////
+    // Normalized Inputs //
+    ///////////////////////
+    const slideDurationMs = Number.isFinite(slideDuration) && slideDuration > 0 ? slideDuration : 700;
+    const animationLeadDurationMs = Number.isFinite(animationDuration) && animationDuration > 0 ? animationDuration : 0;
+    const backgroundFadeDurationMs = Number.isFinite(backgroundFadeOutDuration) && backgroundFadeOutDuration > 0 ? backgroundFadeOutDuration : 520;
+
+    ////////////////////////
+    // Effect State Flags //
+    ////////////////////////
+    const isSoudWaveEffect = effect === "wave_sound";
     const isElasticBlurEffect = effect === "elastic_blur";
     const isExplosiveBlurEffect = effect === "explosive_blur";
     const isLateralGlowEffect = effect === "lateral_glow";
+
     const effectDurationMs = isElasticBlurEffect
         ? 800
         : isExplosiveBlurEffect
         ? 700
         : isLateralGlowEffect
         ? 1000
-        : isSoundEffect
+        : isSoudWaveEffect
         ? 600
         : 700;
 
+    //////////////////////////
+    // Slide Derived Values //
+    //////////////////////////
+    const slideOutEnabled = hasSlideTargetPosition(slideOnEndPosition);
+    const slideTargetPosition = resolveSlideTargetPosition(slideOnEndPosition);
+    const slideTargetScale = resolveSlideTargetScale(slideSizeAfterEnd, scale);
+
+    // Reset trigger to false so listeners can react to the next true edge.
+    useEffect(() => {
+        if (!hasValue(triggerOutSlideEnded)) return;
+        setTrigger(triggerOutSlideEnded, false);
+    }, [setTrigger, triggerOutSlideEnded]);
+
+    // Restart slide scale interpolation when image or scale inputs change.
+    useEffect(() => {
+        setSlideScaleProgress(0);
+    }, [image, slideSizeAfterEnd, scale]);
+
+    // Main visibility lifecycle: orchestrates fade, slide, trigger, and final unmount.
     useEffect(() => {
         if (!Number.isFinite(duration) || duration <= 0) {
             return undefined;
         }
 
-        const fadeDuration = 400;
-        const fadeDelay = Math.max(duration - fadeDuration, 0);
+        setIsVisible(true);
+        setIsImageVisible(true);
+        setIsFading(false);
+        setIsSlidingOut(false);
+        setSlideScaleProgress(0);
 
-        const fadeTimer = setTimeout(() => setIsFading(true), fadeDelay);
-        const hideTimer = setTimeout(() => setIsVisible(false), duration);
+        const fadeDuration = backgroundFadeDurationMs;
+        const durationStartDelay = animationLeadDurationMs;
+        let fadeStartTimeMs = 0;
+        let fadeTimer;
+        let hideTimer;
+        let slideStartTimer;
+        let slideStartFrame;
+        let slideEndTimer;
+        let slideHideTimer;
+        let fullHideTimer;
+
+        if (slideOutEnabled) {
+            slideStartTimer = setTimeout(() => {
+                fadeStartTimeMs = performance.now();
+                setIsFading(true);
+                setSlideScaleProgress(0);
+                slideStartFrame = requestAnimationFrame(() => {
+                    setIsSlidingOut(true);
+                    slideEndTimer = setTimeout(() => {
+                        if (hasValue(triggerOutSlideEnded)) {
+                            setTrigger(triggerOutSlideEnded, true);
+                        }
+
+                        const elapsedFadeMs = performance.now() - fadeStartTimeMs;
+                        const remainingFadeMs = Math.max(fadeDuration - elapsedFadeMs, 0);
+
+                        // Wait 0.1s so trigger fires first when slide movement ends.
+                        slideHideTimer = setTimeout(() => {
+                            setIsImageVisible(false);
+                        }, 100);
+
+                        fullHideTimer = setTimeout(
+                            () => setIsVisible(false),
+                            Math.max(remainingFadeMs, 100)
+                        );
+                    }, slideDurationMs);
+                });
+            }, durationStartDelay + duration);
+        } else {
+            const fadeDelay = Math.max(duration - fadeDuration, 0);
+            fadeTimer = setTimeout(() => setIsFading(true), durationStartDelay + fadeDelay);
+            hideTimer = setTimeout(() => setIsVisible(false), durationStartDelay + duration);
+        }
 
         return () => {
             clearTimeout(fadeTimer);
             clearTimeout(hideTimer);
+            clearTimeout(slideStartTimer);
+            if (slideStartFrame !== undefined) {
+                cancelAnimationFrame(slideStartFrame);
+            }
+            clearTimeout(slideEndTimer);
+            clearTimeout(slideHideTimer);
+            clearTimeout(fullHideTimer);
         };
-    }, [duration]);
+    }, [
+        duration,
+        setTrigger,
+        slideOutEnabled,
+        slideDurationMs,
+        animationLeadDurationMs,
+        backgroundFadeDurationMs,
+        triggerOutSlideEnded,
+    ]);
 
+    // Per-frame scale interpolation during slide-out.
+    useEffect(() => {
+        if (!isSlidingOut || !slideOutEnabled) return undefined;
+
+        const startTime = performance.now();
+        const tick = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const rawProgress = slideDurationMs > 0 ? elapsed / slideDurationMs : 1;
+            const easedProgress = resolveInterpolationProgress(slideInterpolationAlgorithm, rawProgress);
+
+            setSlideScaleProgress(easedProgress);
+
+            if (rawProgress < 1) {
+                slideScaleAnimationFrameRef.current = requestAnimationFrame(tick);
+            } else {
+                setSlideScaleProgress(1);
+                slideScaleAnimationFrameRef.current = null;
+            }
+        };
+
+        slideScaleAnimationFrameRef.current = requestAnimationFrame(tick);
+
+        return () => {
+            if (slideScaleAnimationFrameRef.current !== null) {
+                cancelAnimationFrame(slideScaleAnimationFrameRef.current);
+                slideScaleAnimationFrameRef.current = null;
+            }
+        };
+    }, [
+        isSlidingOut,
+        slideDurationMs,
+        slideInterpolationAlgorithm,
+        slideOutEnabled,
+    ]);
+
+    // Activates optional image effects after the configured animation lead-in.
     useEffect(() => {
         if (!effect) return undefined;
 
@@ -69,70 +225,126 @@ export function TwoDSplashScreen({
         };
     }, [effect, animationDuration, duration, effectDurationMs]);
 
-    const resolvedImage = useMemo(() => {
-        if (!image) return "";
-        if (image.startsWith("/")) return image;
-        return `${process.env.PUBLIC_URL}/textures/${image}`;
-    }, [image]);
+    const resolvedImage = !image
+        ? ""
+        : image.startsWith("/")
+        ? image
+        : `${process.env.PUBLIC_URL}/textures/${image}`;
 
+    ////////////////////////
+    // Render Derivations //
+    ////////////////////////
     const isRotateBack = animation === "3D_x_rotate_back";
 
-    const animationName = useMemo(() => {
-        const map = {
-            zoom_out_spin_right: "zoom_out_spin_right",
-            zoom_out_spin_left: "zoom_out_spin_left",
-            simple_zoom_out: "simple_zoom_out",
-            zoom_in_spin_right: "zoom_in_spin_right",
-            zoom_in_spin_left: "zoom_in_spin_left",
-            simple_zoom_in: "simple_zoom_in",
-            zoom_in_bounce: "zoom_in_bounce",
-            zoom_out_bounce: "zoom_out_bounce",
-            ps2_blur_fadein: "ps2_blur_fadein",
-            "3D_x_rotate_front": "three_d_x_rotate_front",
-            "3D_x_rotate_back": "three_d_x_rotate_back",
-        };
-        return map[animation] ?? "zoom_out_spin_right";
-    }, [animation]);
-
-    const effectName = useMemo(() => (isSoundEffect ? "sound" : ""), [isSoundEffect]);
-
-    const timingFunction = useMemo(() => {
-        const map = {
-            lerp: "linear",
-            smoothstep: "cubic-bezier(0.42, 0, 0.58, 1)",
-            ease: "ease",
-            "ease-in": "ease-in",
-            "ease-out": "ease-out",
-            "ease-in-out": "ease-in-out",
-        };
-
-        return map[interpolationAlgorithm] ?? "ease-out";
-    }, [interpolationAlgorithm]);
+    const animationName = ANIMATION_NAME_MAP[animation] ?? "zoom_out_spin_right";
+    const timingFunction = resolveTimingFunction(interpolationAlgorithm, "ease-out");
+    const slideTimingFunction = resolveTimingFunction(slideInterpolationAlgorithm, "lerp");
+    const currentSlideScale = !slideOutEnabled || !isSlidingOut
+        ? scale
+        : scale + (slideTargetScale - scale) * slideScaleProgress;
 
     const elasticBlurActive = isElasticBlurEffect && isEffectActive;
     const explosiveBlurActive = isExplosiveBlurEffect && isEffectActive;
     const blurEffectActive = elasticBlurActive || explosiveBlurActive;
     const lateralGlowActive = isLateralGlowEffect && isEffectActive;
 
+    // Fully removed from tree after exit sequence completes.
     if (!isVisible) return null;
 
+    //////////////
+    /// Render ///
+    //////////////
     return (
         <div
             className="splash-screen-2d"
             style={{
-                backgroundColor,
                 "--splash-duration": `${duration}ms`,
                 "--splash-animation-duration": `${Number.isFinite(animationDuration) ? animationDuration : duration}ms`,
                 "--splash-animation-name": animationName,
                 "--splash-animation-timing": timingFunction,
-                "--splash-image-scale": scale,
                 "--splash-effect-duration": `${effectDurationMs}ms`,
                 "--splash-effect-color": color,
-                opacity: isFading ? 0 : 1,
-                transition: "opacity 400ms ease",
             }}
         >
-            <style>{`
+            <style>{SPLASH_SCREEN_STYLES}</style>
+            <div
+                className="splash-screen-2d__background"
+                style={{
+                    backgroundColor,
+                    opacity: isFading ? 0 : 1,
+                    transition: `opacity ${backgroundFadeDurationMs}ms ease`,
+                }}
+            />
+            {resolvedImage && isImageVisible && (
+                <div
+                    className="splash-screen-2d__image-wrap"
+                    style={{
+                        left: isSlidingOut ? slideTargetPosition.left : "50%",
+                        top: isSlidingOut ? slideTargetPosition.top : "50%",
+                        transform: `translate(-50%, -50%) scale(${currentSlideScale})`,
+                        opacity: !slideOutEnabled && isFading ? 0 : 1,
+                        transition: slideOutEnabled
+                            ? `left ${slideDurationMs}ms ${slideTimingFunction}, top ${slideDurationMs}ms ${slideTimingFunction}, opacity 400ms ease`
+                            : "opacity 400ms ease",
+                    }}
+                >
+                    <div
+                        className={`splash-screen-2d__image-anim${lateralGlowActive ? " splash-screen-2d__image-anim--sheen" : ""}${isRotateBack ? " splash-screen-2d__image-anim--back" : ""}`}
+                    >
+                        <img
+                            className="splash-screen-2d__image"
+                            src={resolvedImage}
+                            alt=""
+                        />
+                        {blurEffectActive && (
+                            <>
+                                <img
+                                    className={`splash-screen-2d__image ${elasticBlurActive ? "splash-screen-2d__image--elastic-edge" : "splash-screen-2d__image--explosive-edge"}`}
+                                    src={resolvedImage}
+                                    alt=""
+                                    aria-hidden="true"
+                                />
+                                {elasticBlurActive && (
+                                    <span className="splash-screen-2d__elastic-distort" />
+                                )}
+                                {explosiveBlurActive && (
+                                    <span className="splash-screen-2d__explosive-distort" />
+                                )}
+                            </>
+                        )}
+                        {isSoudWaveEffect && isEffectActive && (
+                            <>
+                                <span
+                                    className="splash-screen-2d__effect splash-screen-2d__effect--sound"
+                                    style={{ "--effect-delay": "0ms" }}
+                                />
+                                <span
+                                    className="splash-screen-2d__effect splash-screen-2d__effect--sound"
+                                    style={{ "--effect-delay": "140ms" }}
+                                />
+                                <span
+                                    className="splash-screen-2d__effect splash-screen-2d__effect--sound"
+                                    style={{ "--effect-delay": "280ms" }}
+                                />
+                            </>
+                        )}
+                        {lateralGlowActive && (
+                            <span className="splash-screen-2d__image-sheen" />
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+TwoDSplashScreen.displayName = "TwoDSplashScreen";
+
+//////////////
+/// Styles ///
+//////////////
+// Kept in this file intentionally; injected into the component via <style>.
+const SPLASH_SCREEN_STYLES = `
                 .splash-screen-2d {
                     position: fixed;
                     inset: 0;
@@ -143,12 +355,22 @@ export function TwoDSplashScreen({
                     overflow: hidden;
                 }
 
+                .splash-screen-2d__background {
+                    position: absolute;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
                 .splash-screen-2d__image-wrap {
-                    transform: scale(var(--splash-image-scale));
                     transform-origin: center center;
                     display: inline-block;
-                    position: relative;
+                    position: fixed;
+                    left: 50%;
+                    top: 50%;
                     overflow: visible;
+                    z-index: 1;
+                    will-change: left, top, transform, opacity;
                 }
 
                 .splash-screen-2d__image-anim {
@@ -508,53 +730,115 @@ export function TwoDSplashScreen({
                         filter: blur(0px);
                     }
                 }
-            `}</style>
-            {resolvedImage && (
-                <div className="splash-screen-2d__image-wrap">
-                    <div
-                        className={`splash-screen-2d__image-anim${lateralGlowActive ? " splash-screen-2d__image-anim--sheen" : ""}${isRotateBack ? " splash-screen-2d__image-anim--back" : ""}`}
-                    >
-                        <img className="splash-screen-2d__image" src={resolvedImage} alt="" />
-                        {blurEffectActive && (
-                            <>
-                                <img
-                                    className={`splash-screen-2d__image ${elasticBlurActive ? "splash-screen-2d__image--elastic-edge" : "splash-screen-2d__image--explosive-edge"}`}
-                                    src={resolvedImage}
-                                    alt=""
-                                    aria-hidden="true"
-                                />
-                                {elasticBlurActive && (
-                                    <span className="splash-screen-2d__elastic-distort" />
-                                )}
-                                {explosiveBlurActive && (
-                                    <span className="splash-screen-2d__explosive-distort" />
-                                )}
-                            </>
-                        )}
-                        {isSoundEffect && isEffectActive && effectName && (
-                            <>
-                                <span
-                                    className={`splash-screen-2d__effect splash-screen-2d__effect--${effectName}`}
-                                    style={{ "--effect-delay": "0ms" }}
-                                />
-                                <span
-                                    className={`splash-screen-2d__effect splash-screen-2d__effect--${effectName}`}
-                                    style={{ "--effect-delay": "140ms" }}
-                                />
-                                <span
-                                    className={`splash-screen-2d__effect splash-screen-2d__effect--${effectName}`}
-                                    style={{ "--effect-delay": "280ms" }}
-                                />
-                            </>
-                        )}
-                        {lateralGlowActive && (
-                            <span className="splash-screen-2d__image-sheen" />
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
+            
+`;
 
-TwoDSplashScreen.displayName = "TwoDSplashScreen";
+
+////////////////
+/// Helpers ///
+///////////////
+
+// Maps public animation values to CSS keyframe names.
+const ANIMATION_NAME_MAP = {
+    zoom_out_spin_right: "zoom_out_spin_right",
+    zoom_out_spin_left: "zoom_out_spin_left",
+    simple_zoom_out: "simple_zoom_out",
+    zoom_in_spin_right: "zoom_in_spin_right",
+    zoom_in_spin_left: "zoom_in_spin_left",
+    simple_zoom_in: "simple_zoom_in",
+    zoom_in_bounce: "zoom_in_bounce",
+    zoom_out_bounce: "zoom_out_bounce",
+    ps2_blur_fadein: "ps2_blur_fadein",
+    "3D_x_rotate_front": "three_d_x_rotate_front",
+    "3D_x_rotate_back": "three_d_x_rotate_back",
+};
+
+// Maps interpolation keywords to CSS timing functions.
+const INTERPOLATION_TIMING_MAP = {
+    lerp: "linear",
+    smoothstep: "cubic-bezier(0.42, 0, 0.58, 1)",
+    ease: "ease",
+    "ease-in": "ease-in",
+    "ease-out": "ease-out",
+    "ease-in-out": "ease-in-out",
+};
+
+// True when the value is not undefined, null, or empty string.
+const hasValue = (value) => value !== undefined && value !== null && value !== "";
+
+// Resolve supported timing keyword with fallback.
+const resolveTimingFunction = (algorithm, fallback = "ease-out") =>
+    INTERPOLATION_TIMING_MAP[algorithm] ?? INTERPOLATION_TIMING_MAP[fallback] ?? "ease-out";
+
+// Converts numeric values to px and preserves valid CSS strings.
+const toCssPositionValue = (value, fallback = "50%") => {
+    if (typeof value === "number" && Number.isFinite(value)) return `${value}px`;
+    if (typeof value === "string" && value.trim() !== "") return value;
+    return fallback;
+};
+
+// Supports [x, y] or object shape ({x,y}/{left,top}).
+const resolveSlideTargetPosition = (slideOnEndPosition) => {
+    if (Array.isArray(slideOnEndPosition)) {
+        const [x, y] = slideOnEndPosition;
+        return {
+            left: toCssPositionValue(x),
+            top: toCssPositionValue(y),
+        };
+    }
+
+    if (slideOnEndPosition && typeof slideOnEndPosition === "object") {
+        const x = slideOnEndPosition.left ?? slideOnEndPosition.x;
+        const y = slideOnEndPosition.top ?? slideOnEndPosition.y;
+
+        return {
+            left: toCssPositionValue(x),
+            top: toCssPositionValue(y),
+        };
+    }
+
+    return { left: "50%", top: "50%" };
+};
+
+// Uses provided scale when valid; otherwise falls back to the current base scale.
+const resolveSlideTargetScale = (slideSizeAfterEnd, fallbackScale) => {
+    const parsed = Number(slideSizeAfterEnd);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallbackScale;
+};
+
+// Runtime interpolation used for slide scale animation.
+const resolveInterpolationProgress = (algorithm, t) => {
+    const clamped = Math.max(0, Math.min(1, t));
+    switch (algorithm) {
+        case "smoothstep":
+            return clamped * clamped * (3 - 2 * clamped);
+        case "ease":
+        case "ease-in-out":
+            return clamped < 0.5
+                ? 2 * clamped * clamped
+                : 1 - ((-2 * clamped + 2) ** 2) / 2;
+        case "ease-in":
+            return clamped * clamped;
+        case "ease-out":
+            return 1 - (1 - clamped) ** 2;
+        case "lerp":
+        default:
+            return clamped;
+    }
+};
+
+// Slide mode is enabled only when a target position is provided.
+const hasSlideTargetPosition = (slideOnEndPosition) => {
+    if (Array.isArray(slideOnEndPosition)) {
+        const [x, y] = slideOnEndPosition;
+        return hasValue(x) || hasValue(y);
+    }
+
+    if (slideOnEndPosition && typeof slideOnEndPosition === "object") {
+        const x = slideOnEndPosition.left ?? slideOnEndPosition.x;
+        const y = slideOnEndPosition.top ?? slideOnEndPosition.y;
+        return hasValue(x) || hasValue(y);
+    }
+
+    return false;
+};
