@@ -44,7 +44,6 @@ export const SceneContainer = React.memo((props) => {
     const triggers = SystemStore((state) => state.triggers);
     const currentObjectClicked = SystemStore((state) => state.currentObjectClicked);
     const mouseClicked = SystemStore((state) => state.mouseClicked);
-    const preloadDone = SystemStore((state) => state.preloadDone);
     const raycasterEnabled = SystemStore((state) => state.raycasterEnabled);
     const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
     const setForcedCameraMovePathCurve = SystemStore((state) => state.setForcedCameraMovePathCurve);
@@ -161,17 +160,6 @@ export const SceneContainer = React.memo((props) => {
     ////////////////////////////////////////////////////
     //////////////// Functional effects ////////////////
     ////////////////////////////////////////////////////
-
-    // Place trigger code
-    useEffect(() => {
-        switch (triggers) {
-            case 'trigger 9':
-                // console.log("clicked")
-                // setCustomMaterial("base_material_DO_NOT_REMOVE.glb")
-                break;
-          }
-       
-    }, [triggers]);
 
     // Place transition code
     useEffect(() => {
@@ -376,7 +364,6 @@ export const SceneContainer = React.memo((props) => {
     ]);
 
     const isOrbitingMenuVisible = useRef(false)
-    const previousCameraTransitionEndedTrigger = useRef(false);
 
     useEffect(() => {
         if(transitionDestination === "Education" && transitionEnded){
@@ -386,26 +373,13 @@ export const SceneContainer = React.memo((props) => {
         }
     }, [transitionDestination, transitionEnded]);
 
-    // Trigger test: logs once when the camera transition-ended trigger turns true.
-    useEffect(() => {
-        const isOn = Boolean(triggers["trigger1"]);
-        if (isOn && !previousCameraTransitionEndedTrigger.current) {
-            console.log(`[SceneContainer] Trigger ON: `);
-        }
-        previousCameraTransitionEndedTrigger.current = isOn;
-    }, [triggers, triggers["trigger1"]]);
-
     if (!mainScene) {
         return null;
     }
 
     return(
     <>
-        <Camera
-            position={cameraStartingPosition}
-            triggerOutCameraTransitionStarted={"trigger2"}
-            triggerOutCameraTransitionEnded={"trigger1"}
-        />
+        <Camera position={cameraStartingPosition}/>
         {/* <CircularScrollLoader /> */}
         {(siteMode === "resume") && 
         <>

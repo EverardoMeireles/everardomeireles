@@ -3,19 +3,25 @@ import { useLoader } from '@react-three/fiber';
 import { TextureLoader } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import config from '../config';
-import { setNamedTrigger } from "../Helper";
+import { hasTriggerName, isNamedTriggerActive, setNamedTrigger } from "../Helper";
 import SystemStore from "../SystemStore";
 
 export const PreloadAssets = React.memo((props) => {
   const {texturesToLoad = ["image1.jpg", "image2.jpg"]} = props;
   const {scenesToLoad = ["scene1.glb", "scene2.glb"]} = props;
   const {delay = 3000} = props;
+  const {triggerInStart = false} = props;
   const {triggerOutPreloadDone = ""} = props;
 
-  const setPreloadDone = SystemStore((state) => state.setPreloadDone);
   const setTrigger = SystemStore((state) => state.setTrigger);
+  const triggers = SystemStore((state) => state.triggers);
 
   const [startLoading, setStartLoading] = useState(false);
+  const [preloadDone, setPreloadDone] = useState(false);
+
+  const shouldStartLoading = hasTriggerName(triggerInStart)
+    ? isNamedTriggerActive(triggers, triggerInStart)
+    : Boolean(triggerInStart);
 
   // Initialize trigger output to false so consumers can observe future true edges.
   useEffect(() => {
@@ -23,12 +29,17 @@ export const PreloadAssets = React.memo((props) => {
   }, [setTrigger, triggerOutPreloadDone]);
 
   useEffect(() => {
+    if (shouldStartLoading) {
+      setStartLoading(true);
+      return undefined;
+    }
+
     const timer = setTimeout(() => {
       setStartLoading(true);
     }, delay);
 
     return () => clearTimeout(timer); // Cleanup the timer if the component unmounts
-  }, [delay]);
+  }, [delay, shouldStartLoading]);
 
   const texturePaths = texturesToLoad.map(texture => config.resource_path + 'textures/' + texture);
   const scenePaths = scenesToLoad.map(scene => config.resource_path + 'models/' + scene);
@@ -37,13 +48,13 @@ export const PreloadAssets = React.memo((props) => {
   const scenes = useLoader(GLTFLoader, startLoading ? scenePaths : []);
 
   useEffect(() => {
-    if (startLoading) {
+    if (startLoading && !preloadDone) {
       // console.log("loaded textures!", textures);
       // console.log("loaded models!", scenes);
       setPreloadDone(true);
       setNamedTrigger(setTrigger, triggerOutPreloadDone, true);
     }
-  }, [startLoading, textures, scenes, setPreloadDone, setTrigger, triggerOutPreloadDone]);
+  }, [startLoading, textures, scenes, preloadDone, setTrigger, triggerOutPreloadDone]);
 
   return null;
 });

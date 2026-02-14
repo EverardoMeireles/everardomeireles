@@ -15,9 +15,6 @@ const SystemStore = create((set) => ({
   currentObjectClicked: "", // Raycaster.jsx: Object captured by mouse click while the component is on the scene.
   setCurrentObjectClicked: (object) => set(() => ({ currentObjectClicked: object })),
 
-  preloadDone: false,
-  setPreloadDone: (preloaded) => set(() => ({ preloadDone: preloaded })),
-
   // The named position that the transition is aiming to go
   transitionDestination: "MainMenu",
   setDesiredPath: (desired) => set(() => ({ transitionDestination: desired })),
