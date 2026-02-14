@@ -4,13 +4,15 @@ import * as THREE from "three";
 import { OrbitControls, PerspectiveCamera, calcPosFromAngles } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";
 import { HtmlDreiMenu } from "./HtmlDreiMenu"; // eslint-disable-line no-unused-vars
-import { smoothStep, roundToDecimalPlace, hasSignificantChange, createArchCurve, isCurveDegenerate } from "../Helper";
+import { smoothStep, roundToDecimalPlace, hasSignificantChange, createArchCurve, isCurveDegenerate, setNamedTrigger } from "../Helper";
 import SystemStore from "../SystemStore";
 
 // revisit custom camera lookat mode and simpleLookatMode
 export const Camera = React.memo((props) => {
     const {transitionSpeed = 0.5} = props;
     const {position = [0, 0, 0]} = props;
+    const {triggerOutCameraTransitionStarted = ""} = props;
+    const {triggerOutCameraTransitionEnded = ""} = props;
 
     const setTransitionEnded = SystemStore((state) => state.setTransitionEnded);
     const transitionEnded = SystemStore((state) => state.transitionEnded);
@@ -29,6 +31,7 @@ export const Camera = React.memo((props) => {
     const triggers = SystemStore((state) => state.triggers);
 
     const didMount = useRef(false);
+    const transitionInProgress = useRef(false);
 
     const updateCallNow = useRef(false);
     const cam = useRef(undefined);
@@ -56,6 +59,12 @@ export const Camera = React.memo((props) => {
     let smoothStepTick;
     let sub_points;
     let tick = useRef(1)
+
+    // Initialize output triggers to false so parent listeners can detect future true edges.
+    useEffect(() => {
+        setNamedTrigger(setTrigger, triggerOutCameraTransitionStarted, false);
+        setNamedTrigger(setTrigger, triggerOutCameraTransitionEnded, false);
+    }, [setTrigger, triggerOutCameraTransitionStarted, triggerOutCameraTransitionEnded]);
 
     // Change camera mode
     const [cameraMode, setCameraMode] = useState({LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE, RIGHT: THREE.MOUSE.RIGHT});
@@ -247,8 +256,12 @@ export const Camera = React.memo((props) => {
         if(!isCurveDegenerate(forcedCameraMovePathCurve)){
             curve.current = forcedCameraMovePathCurve;
             tick.current = 0;
+            transitionInProgress.current = true;
+
+            setNamedTrigger(setTrigger, triggerOutCameraTransitionEnded, false);
+            setNamedTrigger(setTrigger, triggerOutCameraTransitionStarted, true);
         }
-    }, [forcedCameraMovePathCurve]);
+    }, [forcedCameraMovePathCurve, setTrigger, triggerOutCameraTransitionStarted, triggerOutCameraTransitionEnded]);
 
     // Moves the camera every frame when the desired path changes
     useFrame((state, delta) => {
@@ -268,6 +281,11 @@ export const Camera = React.memo((props) => {
             setTransitionEnded(true);
             state.events.enabled = true;
             if (controls.current) controls.current.enabled = true;
+            if (transitionInProgress.current) {
+                transitionInProgress.current = false;
+                setNamedTrigger(setTrigger, triggerOutCameraTransitionStarted, false);
+                setNamedTrigger(setTrigger, triggerOutCameraTransitionEnded, true);
+            }
             return;
         }
 
@@ -324,6 +342,10 @@ export const Camera = React.memo((props) => {
             updateCallNow.current = false;
             controls.current.enabled = true;
             state.events.enabled = true;
+            transitionInProgress.current = false;
+
+            setNamedTrigger(setTrigger, triggerOutCameraTransitionStarted, false);
+            setNamedTrigger(setTrigger, triggerOutCameraTransitionEnded, true);
         }
     }
 

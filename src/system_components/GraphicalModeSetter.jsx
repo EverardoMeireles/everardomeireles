@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
 import React, { useEffect, useRef, useState } from "react";
-import { increaseOrDecreaseGraphics } from "../Helper";
+import { hasTriggerName, increaseOrDecreaseGraphics, isNamedTriggerActive, setNamedTrigger } from "../Helper";
 import SystemStore from "../SystemStore";
 
 //////////////////////////////////////////
@@ -20,6 +20,7 @@ export const GraphicalModeSetter = React.memo((props) => {
     startMode = "on_mount", // "on_mount", "after_delay" or "on_trigger"
     waitSeconds = 0,
     triggerInStart = false,
+    triggerOutFallbackTriggered = "",
     fpsToFallBackHigh = 5,
     fpsToFallBackNormal = 10,
     fpsToFallBackPotato = 15,
@@ -34,6 +35,8 @@ export const GraphicalModeSetter = React.memo((props) => {
   const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
   const setGraphicalMode = SystemStore((state) => state.setGraphicalMode);
   const setCanvasEnabled = SystemStore((state) => state.setCanvasEnabled);
+  const setTrigger = SystemStore((state) => state.setTrigger);
+  const triggers = SystemStore((state) => state.triggers);
 
   //////////////////////////////////////////
   /////////////// Tracking /////////////////
@@ -47,6 +50,7 @@ export const GraphicalModeSetter = React.memo((props) => {
   const disableChecksRef = useRef(false);
   const startTimerRef = useRef(null);
   const [startReady, setStartReady] = useState(startMode === "on_mount");
+  const previousTriggerRef = useRef(false);
 
   const autoDisableAfterSeconds =
     ((increaseStreakSeconds + decreaseStreakSeconds) / 2) * 3;
@@ -76,16 +80,21 @@ export const GraphicalModeSetter = React.memo((props) => {
     }
 
     if (startMode === "on_trigger") {
-      if (!startReady) {
+      const triggerNow = hasTriggerName(triggerInStart)
+        ? isNamedTriggerActive(triggers, triggerInStart)
+        : Boolean(triggerInStart);
+      if (triggerNow && !previousTriggerRef.current) {
+        // Re-run on every rising edge.
+        fallbackTriggeredRef.current = false;
         resetTracking();
-        if (triggerInStart) {
-          // Only starts once per trigger when using on_trigger.
-          setStartReady(true);
-        }
+        setStartReady(true);
       }
+      if (!triggerNow) setStartReady(false);
+      previousTriggerRef.current = triggerNow;
       return;
     }
 
+    previousTriggerRef.current = false;
     resetTracking();
 
     if (startMode === "on_mount") {
@@ -121,6 +130,7 @@ export const GraphicalModeSetter = React.memo((props) => {
     waitSeconds,
     triggerInStart,
     startReady,
+    triggers,
   ]);
 
   //////////////////////////////////////////
@@ -142,9 +152,14 @@ export const GraphicalModeSetter = React.memo((props) => {
   //////////////////////////////////////////
   /////////////// Fallback //////////////////
   //////////////////////////////////////////
+  useEffect(() => {
+    setNamedTrigger(setTrigger, triggerOutFallbackTriggered, false);
+  }, [setTrigger, triggerOutFallbackTriggered]);
+
   const triggerFallback = () => {
     if (fallbackTriggeredRef.current) return;
     fallbackTriggeredRef.current = true;
+    setNamedTrigger(setTrigger, triggerOutFallbackTriggered, true);
 
     if (fallbackMode === "redirect") {
       if (typeof window !== "undefined") {

@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Suspense, useEffect, useState, useRef } from 'react';
 import * as THREE from 'three';
 import React from 'react';
-import { parseJson, removeFileExtensionString, easeInCubic, easeOutCubic, createArchCurve } from "../Helper";
+import { parseJson, removeFileExtensionString, easeInCubic, easeOutCubic, createArchCurve, isNamedTriggerActive, setNamedTrigger } from "../Helper";
 import config from '../config';
 import SystemStore from "../SystemStore";
 
@@ -180,9 +180,9 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Change the camera's target on trigger
   useEffect(() => {
-    if(triggers[setCameraTargetTrigger]){
+    if (isNamedTriggerActive(triggers, setCameraTargetTrigger)) {
       setForcedCameraTarget(sceneOrigin)
-      setTrigger(setCameraTargetTrigger, false)
+      setNamedTrigger(setTrigger, setCameraTargetTrigger, false)
     }
   }, [transitionEnded]);
 
@@ -190,7 +190,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     if (setCameraTargetOnMount) {
       setForcedCameraTarget(sceneOrigin);
-      setTrigger(setCameraTargetTrigger, false); // necessary?
+      setNamedTrigger(setTrigger, setCameraTargetTrigger, false); // necessary?
     }
   }, []);
 
@@ -335,9 +335,9 @@ export const ExplodingModelLoader = React.memo((props) => {
       if (startRotationAnimation.current) {
         model.rotation.y += rotationAnimationSpeed.current * delta;
 
-        if(!triggers[mainObjectRotationAnimationIsPlayingTrigger]){
+        if (!isNamedTriggerActive(triggers, mainObjectRotationAnimationIsPlayingTrigger)) {
           // Set a trigger for parent control
-          setTrigger(mainObjectRotationAnimationIsPlayingTrigger, true)
+          setNamedTrigger(setTrigger, mainObjectRotationAnimationIsPlayingTrigger, true)
         }
 
         updateToolTipCirclePositions();
@@ -377,8 +377,8 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Set a trigger for parent control
   useEffect(() => {
-    if(mainObjectRotationAnimationIsPlayingTrigger != undefined && !startRotationAnimation.current){
-      setTrigger(mainObjectRotationAnimationIsPlayingTrigger, false)
+    if (!startRotationAnimation.current) {
+      setNamedTrigger(setTrigger, mainObjectRotationAnimationIsPlayingTrigger, false)
     }
   }, [startRotationAnimation.current]);
 

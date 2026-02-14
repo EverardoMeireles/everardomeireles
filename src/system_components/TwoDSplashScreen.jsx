@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import SystemStore from "../SystemStore.js";
+import { setNamedTrigger } from "../Helper";
 
 export function TwoDSplashScreen({
     // Total time (ms) the splash remains active before starting the exit phase.
@@ -85,8 +86,7 @@ export function TwoDSplashScreen({
 
     // Reset trigger to false so listeners can react to the next true edge.
     useEffect(() => {
-        if (!hasValue(triggerOutSlideEnded)) return;
-        setTrigger(triggerOutSlideEnded, false);
+        setNamedTrigger(setTrigger, triggerOutSlideEnded, false);
     }, [setTrigger, triggerOutSlideEnded]);
 
     // Restart slide scale interpolation when image or scale inputs change.
@@ -125,9 +125,7 @@ export function TwoDSplashScreen({
                 slideStartFrame = requestAnimationFrame(() => {
                     setIsSlidingOut(true);
                     slideEndTimer = setTimeout(() => {
-                        if (hasValue(triggerOutSlideEnded)) {
-                            setTrigger(triggerOutSlideEnded, true);
-                        }
+                        setNamedTrigger(setTrigger, triggerOutSlideEnded, true);
 
                         const elapsedFadeMs = performance.now() - fadeStartTimeMs;
                         const remainingFadeMs = Math.max(fadeDuration - elapsedFadeMs, 0);

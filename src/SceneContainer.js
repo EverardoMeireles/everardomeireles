@@ -376,6 +376,7 @@ export const SceneContainer = React.memo((props) => {
     ]);
 
     const isOrbitingMenuVisible = useRef(false)
+    const previousCameraTransitionEndedTrigger = useRef(false);
 
     useEffect(() => {
         if(transitionDestination === "Education" && transitionEnded){
@@ -385,13 +386,26 @@ export const SceneContainer = React.memo((props) => {
         }
     }, [transitionDestination, transitionEnded]);
 
+    // Trigger test: logs once when the camera transition-ended trigger turns true.
+    useEffect(() => {
+        const isOn = Boolean(triggers["trigger1"]);
+        if (isOn && !previousCameraTransitionEndedTrigger.current) {
+            console.log(`[SceneContainer] Trigger ON: `);
+        }
+        previousCameraTransitionEndedTrigger.current = isOn;
+    }, [triggers, triggers["trigger1"]]);
+
     if (!mainScene) {
         return null;
     }
 
     return(
     <>
-        <Camera position = {cameraStartingPosition} ></Camera>
+        <Camera
+            position={cameraStartingPosition}
+            triggerOutCameraTransitionStarted={"trigger2"}
+            triggerOutCameraTransitionEnded={"trigger1"}
+        />
         {/* <CircularScrollLoader /> */}
         {(siteMode === "resume") && 
         <>

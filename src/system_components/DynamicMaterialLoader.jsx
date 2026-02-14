@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { hasTriggerName, isNamedTriggerActive } from "../Helper";
+import SystemStore from "../SystemStore";
 import config from '../config';
 
 // Global material cache to prevent unnecessary loading
@@ -16,9 +18,21 @@ export const DynamicMaterialLoader = React.memo((props) => {
   const {children} = props;
 
   const sceneRef = useRef(); // Reference for the child scene
+  const triggers = SystemStore((state) => state.triggers);
 
   const [currentMaterial, setCurrentMaterial] = useState(null); // Stores the active material
   const [loadedMaterials, setLoadedMaterials] = useState({ low: null, mid: null, high: null });
+
+  const resolveTriggerInput = (triggerOrBoolean) => {
+    if (hasTriggerName(triggerOrBoolean)) {
+      return isNamedTriggerActive(triggers, triggerOrBoolean);
+    }
+    return Boolean(triggerOrBoolean);
+  };
+
+  const forceLowResActive = resolveTriggerInput(forceLowResTrigger);
+  const forceMidResActive = resolveTriggerInput(forceMidResTrigger);
+  const forceHighResActive = resolveTriggerInput(forceHighResTrigger);
 
   ///////////////////////////////////
   // Material loading and applying //
@@ -48,35 +62,35 @@ export const DynamicMaterialLoader = React.memo((props) => {
   useEffect(() => {
     loadMaterial(lowResFile, "low").then((material) => {
       setLoadedMaterials((prev) => ({ ...prev, low: material }));
-      if (!forceMidResTrigger && !forceHighResTrigger) {
+      if (!forceMidResActive && !forceHighResActive) {
         setCurrentMaterial(material);
       }
     });
-  }, [lowResFile, forceMidResTrigger, forceHighResTrigger]);
+  }, [lowResFile, forceMidResActive, forceHighResActive]);
 
   // Load mid-res material if available and not forced to low/high
   useEffect(() => {
-    if (midResFile && !forceLowResTrigger && !forceHighResTrigger) {
+    if (midResFile && !forceLowResActive && !forceHighResActive) {
       loadMaterial(midResFile, "mid").then((material) => {
         setLoadedMaterials((prev) => ({ ...prev, mid: material }));
-        if (!forceMidResTrigger) {
+        if (!forceMidResActive) {
           setCurrentMaterial(material);
         }
       });
     }
-  }, [midResFile, forceLowResTrigger, forceHighResTrigger]);
+  }, [midResFile, forceLowResActive, forceHighResActive, forceMidResActive]);
 
   // Load high-res material in the background
   useEffect(() => {
-    if (!forceLowResTrigger && !forceMidResTrigger) {
+    if (!forceLowResActive && !forceMidResActive) {
       loadMaterial(highResFile, "high").then((material) => {
         setLoadedMaterials((prev) => ({ ...prev, high: material }));
-        if (!forceHighResTrigger) {
+        if (!forceHighResActive) {
           setCurrentMaterial(material);
         }
       });
     }
-  }, [highResFile, forceLowResTrigger, forceMidResTrigger]);
+  }, [highResFile, forceLowResActive, forceMidResActive, forceHighResActive]);
 
   //////////////////////
   // Material forcing //
@@ -88,11 +102,11 @@ export const DynamicMaterialLoader = React.memo((props) => {
       sceneRef.current.traverse((child) => {
         if (child.isMesh) {
           let newMaterial = currentMaterial;
-          if (forceLowResTrigger) {
+          if (forceLowResActive) {
             newMaterial = loadedMaterials.low;
-          } else if (forceMidResTrigger && loadedMaterials.mid) {
+          } else if (forceMidResActive && loadedMaterials.mid) {
             newMaterial = loadedMaterials.mid;
-          } else if (forceHighResTrigger && loadedMaterials.high) {
+          } else if (forceHighResActive && loadedMaterials.high) {
             newMaterial = loadedMaterials.high;
           }
           // Only apply if the material is different
@@ -102,7 +116,7 @@ export const DynamicMaterialLoader = React.memo((props) => {
         }
       });
     }
-  }, [sceneRef, currentMaterial, forceLowResTrigger, forceMidResTrigger, forceHighResTrigger, loadedMaterials]);
+  }, [sceneRef, currentMaterial, forceLowResActive, forceMidResActive, forceHighResActive, loadedMaterials]);
 
   const memoizedChild = useMemo(() => {
   return React.cloneElement(children, { ref: sceneRef });

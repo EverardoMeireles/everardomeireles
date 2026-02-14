@@ -189,6 +189,17 @@ export function removeFileExtensionString(inputString) {
     }
 }
 
+export const hasTriggerName = (value) => value !== undefined && value !== null && value !== "";
+
+export const setNamedTrigger = (setTrigger, triggerName, value) => {
+    if (hasTriggerName(triggerName)) {
+        setTrigger(triggerName, value);
+    }
+};
+
+export const isNamedTriggerActive = (triggers, triggerName) =>
+    hasTriggerName(triggerName) && Boolean(triggers?.[triggerName]);
+
 // Function to parse the JSON and get a specific object, if specified
 export async function parseJson(filePath, objectToGet = null) {
     try {

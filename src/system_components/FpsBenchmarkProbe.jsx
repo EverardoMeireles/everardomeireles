@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import { CalculateAverageOfArray } from "../Helper";
+import { CalculateAverageOfArray, hasTriggerName, isNamedTriggerActive, setNamedTrigger } from "../Helper";
 import SystemStore from "../SystemStore";
 
 //////////////////////////////////////////
@@ -18,6 +19,9 @@ export const FpsBenchmarkProbe = React.memo((props) => {
     startMode = "on_mount", // "on_mount", "after_delay" or "on_trigger"
     waitSeconds = 0,
     triggerInStart = false,
+    triggerOutFallbackTriggered = "",
+    fpsNToTriggerOut = undefined,
+    triggerOutFpsReachedN = "",
     fallbackMode = "disable_canvas",
     fallbackRedirectPath = "/",
   } = props;
@@ -26,6 +30,8 @@ export const FpsBenchmarkProbe = React.memo((props) => {
   /////////////// State ////////////////////
   //////////////////////////////////////////
   const setCanvasEnabled = SystemStore((state) => state.setCanvasEnabled);
+  const setTrigger = SystemStore((state) => state.setTrigger);
+  const triggers = SystemStore((state) => state.triggers);
 
   //////////////////////////////////////////
   /////////////// Tracking /////////////////
@@ -35,13 +41,23 @@ export const FpsBenchmarkProbe = React.memo((props) => {
   const [startReady, setStartReady] = useState(startMode === "on_mount");
   const [runId, setRunId] = useState(0);
   const previousTriggerRef = useRef(false);
+  const liveFpsAccuRef = useRef({ deltas: 0, frames: 0 });
+  const wasAtOrAboveFpsNRef = useRef(false);
 
   //////////////////////////////////////////
   /////////////// Helpers //////////////////
   //////////////////////////////////////////
+  useEffect(() => {
+    setNamedTrigger(setTrigger, triggerOutFallbackTriggered, false);
+    setNamedTrigger(setTrigger, triggerOutFpsReachedN, false);
+    liveFpsAccuRef.current = { deltas: 0, frames: 0 };
+    wasAtOrAboveFpsNRef.current = false;
+  }, [setTrigger, triggerOutFallbackTriggered, triggerOutFpsReachedN, fpsNToTriggerOut]);
+
   const triggerFallback = () => {
     if (fallbackTriggeredRef.current) return;
     fallbackTriggeredRef.current = true;
+    setNamedTrigger(setTrigger, triggerOutFallbackTriggered, true);
 
     if (fallbackMode === "redirect") {
       if (typeof window !== "undefined") {
@@ -67,7 +83,9 @@ export const FpsBenchmarkProbe = React.memo((props) => {
     }
 
     if (startMode === "on_trigger") {
-      const triggerNow = Boolean(triggerInStart);
+      const triggerNow = hasTriggerName(triggerInStart)
+        ? isNamedTriggerActive(triggers, triggerInStart)
+        : Boolean(triggerInStart);
       if (triggerNow && !previousTriggerRef.current) {
         // Allow re-running the benchmark on each rising edge.
         fallbackTriggeredRef.current = false;
@@ -107,7 +125,7 @@ export const FpsBenchmarkProbe = React.memo((props) => {
       };
     }
 
-  }, [enable, startMode, waitSeconds, triggerInStart, startReady]);
+  }, [enable, startMode, waitSeconds, triggerInStart, startReady, triggers]);
 
   //////////////////////////////////////////
   /////////////// Benchmark ////////////////
@@ -289,6 +307,31 @@ export const FpsBenchmarkProbe = React.memo((props) => {
     fallbackMode,
     fallbackRedirectPath,
   ]);
+
+  //////////////////////////////////////////
+  /////////// Live FPS Trigger /////////////
+  //////////////////////////////////////////
+  useFrame((state, delta) => {
+    if (!enable || !startReady) return;
+    if (!Number.isFinite(delta) || delta <= 0) return;
+
+    liveFpsAccuRef.current.deltas += delta;
+    liveFpsAccuRef.current.frames += 1;
+
+    if (liveFpsAccuRef.current.deltas < 1) return;
+
+    const fpsSample = liveFpsAccuRef.current.frames / liveFpsAccuRef.current.deltas;
+    liveFpsAccuRef.current = { deltas: 0, frames: 0 };
+
+    const threshold = Number(fpsNToTriggerOut);
+    if (!Number.isFinite(threshold)) return;
+
+    const reachedThreshold = fpsSample >= threshold;
+    if (reachedThreshold && !wasAtOrAboveFpsNRef.current) {
+      setNamedTrigger(setTrigger, triggerOutFpsReachedN, true);
+    }
+    wasAtOrAboveFpsNRef.current = reachedThreshold;
+  });
 });
 
 FpsBenchmarkProbe.displayName = "FpsBenchmarkProbe";
