@@ -1,6 +1,16 @@
 import { useEffect, useRef } from "react";
 import { useFrame } from '@react-three/fiber'
 
+/**
+ * @param {Array<any>} [orbitCenterPosition] - Position value for orbit center position.
+ * @param {string} [orbitAxis] - Orbit axis.
+ * @param {number} [orbitDistance] - Orbit distance.
+ * @param {Array<any>} [orbitDirection] - Orbit direction.
+ * @param {number} [orbitSpeed] - Speed value for orbit speed.
+ * @param {number} [lightIntensivity] - Light intensivity.
+ * @param {number} [bloomIntensivity] - Bloom intensivity.
+ * @param {string} [lightColor] - Color value for light color.
+ */
 export function OrbitingPointLight(props) {
     const {orbitCenterPosition = [0, 0, 0]} = props;
     const {orbitAxis = 'x'} = props;

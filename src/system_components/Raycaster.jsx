@@ -3,11 +3,17 @@ import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {*} children - Children rendered inside this component.
+ * @param {*} mouse - Mouse.
+ * @param {number} [frameInterval] - Ray is casted every x frames.
+ * @param {boolean} [enabled] - enable raycaster.
+ */
 export const Raycaster = React.memo((props) => {
     const {children} = props;
     const {mouse} = props;
-    const {frameInterval = 1} = props; // Ray is casted every x frames
-    const {enabled = false} = props; // enable raycaster
+    const {frameInterval = 1} = props;
+    const {enabled = false} = props;
 
     const setCurrentObjectClicked = SystemStore((state) => state.setCurrentObjectClicked);
     const currentObjectClicked = SystemStore((state) => state.currentObjectClicked);

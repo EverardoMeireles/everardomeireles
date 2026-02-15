@@ -9,13 +9,23 @@ import SystemStore from "../SystemStore";
 // At the minimum, use setTooltipProperties({active:true});
 // You can set any of the tooltip's properties like this for example:
 // setTooltipProperties({active:false, text:"This image is very interesting!"});
+/**
+ * @param {string} [objectName] - Object name.
+ * @param {boolean} [circleIsVisible] - Whether to show the circles or not.
+ * @param {string} [textShowMode] - Canvas or Page.
+ * @param {string} [text] - Text content to display.
+ * @param {number} [image] - Image file name or path.
+ * @param {number} [circleSize] - Size of the circle.
+ * @param {boolean} [playPulseAnimation] - Whether to pulse animation.
+ * @param {Array<any>} [position] - Position in the scene.
+ */
 export const ToolTipCircle = (props) => {
     const {objectName = ""} = props;
-    const {circleIsVisible = false} = props; // Whether to show the circles or not
-    const {textShowMode = "Canvas"} = props; //Canvas or Page
+    const {circleIsVisible = false} = props;
+    const {textShowMode = "Canvas"} = props;
     const {text = "Sample text"} = props;
     const {image = config.resource_path + "/textures/4x3.png"} = props;
-    const {circleSize = 30} = props; // Size of the circle
+    const {circleSize = 30} = props;
     const {playPulseAnimation = false} = props;
     const {position = [0, 0]} = props;
 

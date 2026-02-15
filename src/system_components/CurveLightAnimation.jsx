@@ -2,33 +2,47 @@ import React, { useRef, useMemo, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
+/**
+ * @param {*} [curve] - Curve path used by the animated light.
+ * @param {string} [startingSide] - Starting side of the curve's animation.
+ * @param {boolean} [debugMode] - Mode to visualize the wireframe and current light trajectory.
+ * @param {number} [animationSpeed] - Set animation's speed manually.
+ * @param {number} [animationDurationFrames] - Set animation's duration manually.
+ * @param {boolean} [synchronizeAnimationFrames] - Whether to sync light with external animation.
+ * @param {number} [currentAnimationTime] - Current animation playtime in seconds (if synchronizeAnimationFrames = true).
+ * @param {number} [totalAnimationDuration] - Total duration of the GLTF animation in seconds (if synchronizeAnimationFrames = true).
+ * @param {Array<any>} [colors] - Colors to alternate between.
+ * @param {Array<any>} [colorFrameIntervals] - Frame intervals for each color (in frames).
+ * @param {boolean} [enableRandomColorFrameIntervals] - If true, generate random intervals for color switching.
+ * @param {Array<any>} [randomColorFrameIntervalsMargin] - [min, max] margin (in frames) for random intervals.
+ * @param {Array<any>} [randomIntensitiyMargin] - A two-element array [min, max] for random intensity.
+ * @param {boolean} [enableRandomColorOrder] - If true, shuffle the colors order on each cycle.
+ */
 export const CurveLightAnimation = React.memo((props) => {
-  const {
-    curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(1, 1, 1),
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(-1, -1, -1),
-    ]), // The curve along which the point light will go back and forth
-    startingSide = "right", // Starting side of the curve's animation
-    debugMode = true, // Mode to visualize the wireframe and current light trajectory
+  const {curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(1, 1, 1),
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(-1, -1, -1),
+  ])} = props;
+  const {startingSide = "right"} = props;
+  const {debugMode = true} = props;
 
-    animationSpeed = 0, // Set animation's speed manually
-    animationDurationFrames = 0, // Set animation's duration manually
+  const {animationSpeed = 0} = props;
+  const {animationDurationFrames = 0} = props;
 
-    synchronizeAnimationFrames = false, // Whether to sync light with external animation
-    currentAnimationTime = 0, // Current animation playtime in seconds (if synchronizeAnimationFrames = true)
-    totalAnimationDuration = 0, // Total duration of the GLTF animation in seconds (if synchronizeAnimationFrames = true)
+  const {synchronizeAnimationFrames = false} = props;
+  const {currentAnimationTime = 0} = props;
+  const {totalAnimationDuration = 0} = props;
 
-    colors = [0xffffff], // Colors to alternate between
-    colorFrameIntervals = [60], // Frame intervals for each color (in frames)
+  const {colors = [0xffffff]} = props;
+  const {colorFrameIntervals = [60]} = props;
 
-    enableRandomColorFrameIntervals = true, // If true, generate random intervals for color switching.
-    randomColorFrameIntervalsMargin = [100, 101], // [min, max] margin (in frames) for random intervals.
+  const {enableRandomColorFrameIntervals = true} = props;
+  const {randomColorFrameIntervalsMargin = [100, 101]} = props;
 
-    randomIntensitiyMargin = [0.05, 0.1], // A two-element array [min, max] for random intensity.
+  const {randomIntensitiyMargin = [0.05, 0.1]} = props;
 
-    enableRandomColorOrder = true, // If true, shuffle the colors order on each cycle.
-  } = props;
+  const {enableRandomColorOrder = true} = props;
 
   //////////////////////////////////////////////////////////
   ///////////// Variables, states and refs /////////////////
@@ -67,7 +81,12 @@ export const CurveLightAnimation = React.memo((props) => {
   );
 
   // Tube component for visualizing the curve (optional for debugging).
-  const Tube = ({ curve }) => {
+  /**
+   * @param {*} curve - Curve.
+   */
+  const Tube = (props) => {
+    const {curve} = props;
+
     const tubeGeometry = useMemo(() => {
       return new THREE.TubeGeometry(curve, 16, 2, 5);
     }, [curve]);

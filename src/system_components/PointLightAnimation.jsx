@@ -2,18 +2,26 @@ import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
+/**
+ * @param {Array<any>} [position] - Position in the scene.
+ * @param {boolean} [debugMode] - Whether debug visuals are enabled.
+ * @param {Array<any>} [colors] - Color value for colors.
+ * @param {Array<any>} [colorFrameIntervals] - Color value for color frame intervals.
+ * @param {boolean} [enableRandomColorFrameIntervals] - Whether to random color frame intervals.
+ * @param {Array<any>} [randomColorFrameIntervalsMargin] - Color value for random color frame intervals margin.
+ * @param {boolean} [enableRandomColorOrder] - Whether to random color order.
+ * @param {Array<any>} [randomIntensitiyMargin] - Random intensitiy margin.
+ */
 export const PointLightAnimation = React.memo((props) => {
-  const {
-    position = [0, 0, 0],
-    debugMode = false,
+  const {position = [0, 0, 0]} = props;
+  const {debugMode = false} = props;
 
-    colors = [0xffffff],
-    colorFrameIntervals = [60],
-    enableRandomColorFrameIntervals = true,
-    randomColorFrameIntervalsMargin = [1, 9],
-    enableRandomColorOrder = true,
-    randomIntensitiyMargin = [0.05, 0.1],
-  } = props;
+  const {colors = [0xffffff]} = props;
+  const {colorFrameIntervals = [60]} = props;
+  const {enableRandomColorFrameIntervals = true} = props;
+  const {randomColorFrameIntervalsMargin = [1, 9]} = props;
+  const {enableRandomColorOrder = true} = props;
+  const {randomIntensitiyMargin = [0.05, 0.1]} = props;
 
   const pointLightRef = useRef();
   const sphereRef = useRef();

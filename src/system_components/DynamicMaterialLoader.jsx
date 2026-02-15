@@ -8,6 +8,15 @@ import config from '../config';
 const materialCache = new Map();
 
 // This component progressively applies materials to its child scene
+/**
+ * @param {boolean} [lowResFile] - Low res file.
+ * @param {boolean} [midResFile] - Mid res file.
+ * @param {boolean} [highResFile] - High res file.
+ * @param {boolean} [forceLowResTrigger] - Force low res trigger.
+ * @param {boolean} [forceMidResTrigger] - Force mid res trigger.
+ * @param {boolean} [forceHighResTrigger] - Force high res trigger.
+ * @param {*} children - Children rendered inside this component.
+ */
 export const DynamicMaterialLoader = React.memo((props) => { 
   const {lowResFile = false} = props;
   const {midResFile = false} = props;

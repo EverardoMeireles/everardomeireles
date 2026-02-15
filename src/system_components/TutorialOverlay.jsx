@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import config from '../config';
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {boolean} [enable] - Whether this feature is enabled.
+ * @param {boolean} [showOnlyOnce] - Whether to only once.
+ * @param {Array<any>} [topImagePaths] - Top image paths.
+ * @param {Array<any>} [bottomImagePaths] - Bottom image paths.
+ * @param {Array<any>} [imageSize] - Image size.
+ * @param {string} [textH1] - Text h1.
+ * @param {string} [textH2] - Text h2.
+ * @param {string} [fontColor] - Color value for font color.
+ */
 export const TutorialOverlay = (props) => {
     const {enable = true} = props;
     const {showOnlyOnce = true} = props;

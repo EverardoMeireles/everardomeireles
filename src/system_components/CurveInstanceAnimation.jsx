@@ -6,24 +6,39 @@ import config from '../config';
 
 // Creates a animation where instances of objects follow a curve then dissapear
 // Objects must be .glb and have their origin at the center of the object (in blender: Object/set origin/geometry to origin)
+/**
+ * @param {number} [instanceInterval] - time in milliseconds between instancing objects.
+ * @param {number} [instanceSpeed] - the speed of the animation.
+ * @param {string} [instancedObject] - the name of the model, placed inside public/models.
+ * @param {number} [curveNumber] - number of curves(maximum 9), they will be instanciated around the initial curve.
+ * @param {string} [offSetAxis1] - the first axis that the curve is facing.
+ * @param {string} [offSetAxis2] - the second axis that the curve is facing.
+ * @param {number} [curveOffsetValueX] - Value which the instances will be offset in the x axis.
+ * @param {number} [curveOffsetValueY] - Value which the instances will be offset in the y axis.
+ * @param {number} [curveOffsetValueZ] - Value which the instances will be offset in the z axis.
+ * @param {boolean} [tubeWireframe] - show the wireframe tube for debugging purposes.
+ * @param {*} [wireframeColor] - Set the color of the wireframe for debugging purposes i.e: "red" or 0xff0000.
+ * @param {boolean} [includeReverse] - Show instances animating in reverse half of the time.
+ * @param {*} [curve] - Initial curve that instances follow.
+ */
 export const CurveInstanceAnimation = React.memo((props) => {
-    const {instanceInterval = 500} = props; // time in milliseconds between instancing objects
-    const {instanceSpeed = 0.001} = props; // the speed of the animation
-    const {instancedObject = "placeholder.glb"} = props; // the name of the model, placed inside public/models
-    const {curveNumber = 1 } = props; // number of curves(maximum 9), they will be instanciated around the initial curve
-    const {offSetAxis1 = "z"} = props; // the first axis that the curve is facing
-    const {offSetAxis2 = "y"} = props; // the second axis that the curve is facing
-    const {curveOffsetValueX = 10 } = props; // Value which the instances will be offset in the x axis
-    const {curveOffsetValueY = 10 } = props; // Value which the instances will be offset in the y axis
-    const {curveOffsetValueZ = 10 } = props; // Value which the instances will be offset in the z axis
-    const {tubeWireframe = false } = props; // show the wireframe tube for debugging purposes
-    const {wireframeColor = 0xffffff} = props; // Set the color of the wireframe for debugging purposes i.e: "red" or 0xff0000
-    const {includeReverse = true} = props; // Show instances animating in reverse half of the time
+    const {instanceInterval = 500} = props;
+    const {instanceSpeed = 0.001} = props;
+    const {instancedObject = "placeholder.glb"} = props;
+    const {curveNumber = 1 } = props;
+    const {offSetAxis1 = "z"} = props;
+    const {offSetAxis2 = "y"} = props;
+    const {curveOffsetValueX = 10 } = props;
+    const {curveOffsetValueY = 10 } = props;
+    const {curveOffsetValueZ = 10 } = props;
+    const {tubeWireframe = false } = props;
+    const {wireframeColor = 0xffffff} = props;
+    const {includeReverse = true} = props;
     const {curve = new THREE.CatmullRomCurve3([
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, 0),
-    ])} = props; // the initial curve that the instances will travel along
+    ])} = props;
 
     const meshRef = useRef();
     const [instancesData, setInstancesData] = useState([]);
@@ -36,7 +51,11 @@ export const CurveInstanceAnimation = React.memo((props) => {
     const [material, setMaterial] = useState(null);
     const offsetCurves = useRef([]);
 
-    const Tube = ({ curve }) => {
+    /**
+     * @param {*} curve - Curve.
+     */
+    const Tube = (props) => {
+    const {curve} = props;
     const meshRef = useRef();
     const tubeGeometry = useMemo(() => {
         const tube = new THREE.TubeGeometry(curve, 20, 2, 8, false);

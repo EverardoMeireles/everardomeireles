@@ -7,26 +7,43 @@ import SystemStore from "../SystemStore";
 /////////////// Props ////////////////////
 //////////////////////////////////////////
 // FPS-based graphical mode setter (continuous or timeboxed).
+/**
+ * @param {boolean} [enable] - Whether this feature is enabled.
+ * @param {number} [fpsToIncreaseGraphics] - Fps to increase graphics.
+ * @param {number} [fpsToDecreaseGraphics] - Fps to decrease graphics.
+ * @param {number} [increaseStreakSeconds] - Timing value for increase streak seconds.
+ * @param {number} [decreaseStreakSeconds] - Timing value for decrease streak seconds.
+ * @param {*} [fallbackStreakSeconds] - Timing value for fallback streak seconds.
+ * @param {boolean} [continous] - Continous.
+ * @param {boolean} [showFps] - Whether to fps.
+ * @param {string} [startMode] - "on_mount", "after_delay" or "on_trigger".
+ * @param {number} [waitSeconds] - Timing value for wait seconds.
+ * @param {boolean} [triggerInStart] - Trigger value used to start this behavior.
+ * @param {string} [triggerOutFallbackTriggered] - Trigger key set when this behavior finishes.
+ * @param {number} [fpsToFallBackHigh] - Fps to fall back high.
+ * @param {number} [fpsToFallBackNormal] - Fps to fall back normal.
+ * @param {number} [fpsToFallBackPotato] - Fps to fall back potato.
+ * @param {string} [fallbackMode] - Mode value for fallback mode.
+ * @param {string} [fallbackRedirectPath] - Fallback redirect path.
+ */
 export const GraphicalModeSetter = React.memo((props) => {
-  const {
-    enable = true,
-    fpsToIncreaseGraphics = 60,
-    fpsToDecreaseGraphics = 30,
-    increaseStreakSeconds = 6,
-    decreaseStreakSeconds = 3,
-    fallbackStreakSeconds = decreaseStreakSeconds,
-    continous = true,
-    showFps = false,
-    startMode = "on_mount", // "on_mount", "after_delay" or "on_trigger"
-    waitSeconds = 0,
-    triggerInStart = false,
-    triggerOutFallbackTriggered = "",
-    fpsToFallBackHigh = 5,
-    fpsToFallBackNormal = 10,
-    fpsToFallBackPotato = 15,
-    fallbackMode = "disable_canvas",
-    fallbackRedirectPath = "/",
-  } = props;
+  const {enable = true} = props;
+  const {fpsToIncreaseGraphics = 60} = props;
+  const {fpsToDecreaseGraphics = 30} = props;
+  const {increaseStreakSeconds = 6} = props;
+  const {decreaseStreakSeconds = 3} = props;
+  const {fallbackStreakSeconds = decreaseStreakSeconds} = props;
+  const {continous = true} = props;
+  const {showFps = false} = props;
+  const {startMode = "on_mount"} = props;
+  const {waitSeconds = 0} = props;
+  const {triggerInStart = false} = props;
+  const {triggerOutFallbackTriggered = ""} = props;
+  const {fpsToFallBackHigh = 5} = props;
+  const {fpsToFallBackNormal = 10} = props;
+  const {fpsToFallBackPotato = 15} = props;
+  const {fallbackMode = "disable_canvas"} = props;
+  const {fallbackRedirectPath = "/"} = props;
 
 
   //////////////////////////////////////////

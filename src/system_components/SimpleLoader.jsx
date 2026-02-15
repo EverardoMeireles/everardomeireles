@@ -7,45 +7,61 @@ import { TextureLoader } from 'three';
 import config from '../config';
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {Array<any>} [position] - Position of the model in the scene.
+ * @param {*} [scene] - Loaded scene object used by this component.
+ * @param {string} [animationToPlay] - Name of the animation clip to play.
+ * @param {string} [loopMode] - Loop mode used for the selected animation.
+ * @param {number} [playDirection] - Direction to play animation (1 forward, -1 reverse).
+ * @param {boolean} [autoPlay] - Whether the animation starts automatically after load.
+ * @param {boolean} [animationTrigger] - Trigger value used to start the animation.
+ * @param {boolean} [hover] - Enables hover scaling behavior.
+ * @param {Array<any>} [hoverAffectedObjects] - Object names that react to hover.
+ * @param {Array<any>} [hoverLinkedObjects] - Linked object groups for hover effects.
+ * @param {*} [hoveredObject] - Name of the object currently hovered.
+ * @param {*} [animationTimesToTrigger] - Clip times that fire named triggers.
+ * @param {*} [animationTriggerNames] - Trigger names mapped to animation clips.
+ * @param {*} [objectsHideRevealTriggers] - Trigger map for hide/reveal object behavior.
+ * @param {number} [objectHideRevealScaleUpSpeed] - Speed used by the hide/reveal scale animation.
+ * @param {boolean} [useAo] - Enables ambient occlusion intensity updates.
+ * @param {number} [ambientOcclusionIntensity] - Ambient occlusion intensity applied to materials.
+ * @param {boolean} [loadMaterialManually] - Loads an external material file when true.
+ * @param {string} [materialName] - Material file name to load from `/materials`.
+ * @param {Array<any>} [uvOffSet] - UV offset direction for mapped textures.
+ * @param {number} [uvOffsetAmount] - UV offset multiplier.
+ * @param {*} [customObjectsUvs] - Custom UV index map by object name.
+ */
 export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const {position = [0, 0, 0]} = props;
-    const {scene = undefined} = props; // the scene
-    
-    // feature: play animation(s) on trigger
-    const {animationToPlay = "idle"} = props; // the name of the animation to be played
-    const {loopMode = "noLoop"} = props; // Looping mode: "Loop", "noLoop" and "noLoopAndReset(return to first frame when animation finished, doesn't work with playDirection = -1)"
-    const {playDirection = 1} = props; // 1 for normal playback, -1 to play the animation backwards
-    const {autoPlay = true} = props; // Automatically plays the animation when component loads
-    const {animationTrigger = false} = props; // the trigger state to make the animation play
-    
-    // feature : hover
-    const {hover = true} = props; // wether the scene or objects within the scene should be highlighted on mouse hover
-    const {hoverAffectedObjects = []} = props; // Objects that are affected by the hover effect and the color that they will "glow"
-    const {hoverLinkedObjects = [[]]} = props; // Objects that are affected by the hover effect and the color that they will "glow"
-    const {hoveredObject = undefined} = props; // prop passed by the raycaster, its value its the current hovered object
-    
-    // Feature : toggles trigger in the middle of animation
-    const {animationTimesToTrigger = {}} = props; // Times where the triggers are set to activate, to be used with animationTriggerNames. EX:{"CharacterAction": 0.50}
-    const {animationTriggerNames = {}} = props; // Triggers to be activated by the times, to be used with animationTimesToTrigger. EX:{"CharacterAction": "trigger1"}
-    
-    // Feature : hide or reveal mesh on trigger(Assumes scale transform has been applied)
-    const {objectsHideRevealTriggers = {"Cube0001":"trigger1"}} = props; // Triggers to reveal hidden objects. Ex: {"Wardrobe001":"trigger3"}
-    const {objectHideRevealScaleUpSpeed = 0.05} = props; // speed of the scale transition animation
+    const {scene = undefined} = props;
 
-    // feature : Ambient occlusion
-    const {useAo = true} = props; // use ambient occlusion if the loaded scene supports it
-    const {ambientOcclusionIntensity = 1} = props; // intensity of the ambient occlusion
+    const {animationToPlay = "idle"} = props;
+    const {loopMode = "noLoop"} = props;
+    const {playDirection = 1} = props;
+    const {autoPlay = true} = props;
+    const {animationTrigger = false} = props;
 
-    // Feature : Manualy load the material
-    const {loadMaterialManually = false} = props; // whether to manually load and apply the material
-    const {materialName = "material001.glb"} = props; // the material's name
+    const {hover = true} = props;
+    const {hoverAffectedObjects = []} = props;
+    const {hoverLinkedObjects = [[]]} = props;
+    const {hoveredObject = undefined} = props;
 
-    // Feature : Offset UVs
-    const {uvOffSet = [0, 0]} = props; // x and y multiplier values to offset the uvs
-    const {uvOffsetAmount = 0.05} = props; // Amount of the uv offset to increment, adjust according to the space in between subtextures in the texture
+    const {animationTimesToTrigger = {}} = props;
+    const {animationTriggerNames = {}} = props;
 
-    // Feature : Set children object's custom UVs
-    const { customObjectsUvs = {} } = props; // if there are child objects with more than 1 uv map and you want to set one in particular, specify the object's name and the uv's index. EX:{"Book":2}
+    const {objectsHideRevealTriggers = {"Cube0001":"trigger1"}} = props;
+    const {objectHideRevealScaleUpSpeed = 0.05} = props;
+
+    const {useAo = true} = props;
+    const {ambientOcclusionIntensity = 1} = props;
+
+    const {loadMaterialManually = false} = props;
+    const {materialName = "material001.glb"} = props;
+
+    const {uvOffSet = [0, 0]} = props;
+    const {uvOffsetAmount = 0.05} = props;
+
+    const { customObjectsUvs = {} } = props;
 
     //////////////////////////////////////////////////////////
     ///////////// Variables, states and refs /////////////////

@@ -5,11 +5,19 @@ import config from '../config';
 import { hasTriggerName, setNamedTrigger } from "../Helper";
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {Array<any>} [texturesToLoad] - Textures to load.
+ * @param {Array<any>} [scenesToLoad] - Scenes to load.
+ * @param {number} [delay] - Timing value for delay.
+ * @param {number} [fallbackTimeout] - ms; if reached, preload completes anyway.
+ * @param {boolean} [triggerInStart] - Trigger value used to start this behavior.
+ * @param {string} [triggerOutPreloadDone] - Trigger key set when this behavior finishes.
+ */
 export const PreloadAssets = React.memo((props) => {
   const {texturesToLoad = ["image1.jpg", "image2.jpg"]} = props;
   const {scenesToLoad = ["scene1.glb", "scene2.glb"]} = props;
   const {delay = 3000} = props;
-  const {fallbackTimeout = 10000} = props; // ms; if reached, preload completes anyway.
+  const {fallbackTimeout = 10000} = props;
   const {triggerInStart = false} = props;
   const {triggerOutPreloadDone = ""} = props;
 

@@ -8,6 +8,12 @@ import { smoothStep, roundToDecimalPlace, hasSignificantChange, createArchCurve,
 import SystemStore from "../SystemStore";
 
 // revisit custom camera lookat mode and simpleLookatMode
+/**
+ * @param {number} [transitionSpeed] - Speed value for transition speed.
+ * @param {Array<any>} [position] - Position in the scene.
+ * @param {string} [triggerOutCameraTransitionStarted] - Trigger key set when this behavior finishes.
+ * @param {string} [triggerOutCameraTransitionEnded] - Trigger key set when this behavior finishes.
+ */
 export const Camera = React.memo((props) => {
     const {transitionSpeed = 0.5} = props;
     const {position = [0, 0, 0]} = props;

@@ -2,44 +2,40 @@ import { useEffect, useRef, useState } from "react";
 import SystemStore from "../SystemStore.js";
 import { setNamedTrigger } from "../Helper";
 
-export function TwoDSplashScreen({
-    // Total time (ms) the splash remains active before starting the exit phase.
-    duration = 1000,
-    // Entrance animation key. Options:
-    // "zoom_out_spin_right", "zoom_out_spin_left", "simple_zoom_out",
-    // "zoom_in_spin_right", "zoom_in_spin_left", "simple_zoom_in",
-    // "zoom_in_bounce", "zoom_out_bounce", "ps2_blur_fadein",
-    // "3D_x_rotate_front", "3D_x_rotate_back"
-    animation = "3D_x_rotate_back",
-    // Timing function for the entrance animation.
-    // Options: "lerp", "smoothstep", "ease", "ease-in", "ease-out", "ease-in-out"
-    interpolationAlgorithm = "ease-out",
-    // Entrance animation duration (ms). Used as lead-in before the exit phase starts.
-    animationDuration = 1000,
-    // Optional visual effect.
-    // Options: "wave_sound", "elastic_blur", "explosive_blur", "lateral_glow"
-    effect = "explosive_blur",
-    // Accent color used by optional effects.
-    color = "#1226dd",
-    // Base scale of the splash image.
-    scale = 1,
-    // Full-screen background color behind the image.
-    backgroundColor = "#000",
-    // Background fade-out time (ms).
-    backgroundFadeOutDuration = 2500,
-    // Image filename in /public/textures (or absolute path when prefixed with "/").
-    image,
-    // Target screen position for slide-out phase ([x, y] or object {x,y}/{left,top}).
-    slideOnEndPosition = [100, 100],
-    // Slide-out travel duration (ms).
-    slideDuration = 1000,
-    // Target scale reached at the end of slide-out.
-    slideSizeAfterEnd = 0.5,
-    // Timing function for slide-out position interpolation.
-    slideInterpolationAlgorithm = "ease",
-    // Store trigger key toggled to true when slide-out movement ends.
-    triggerOutSlideEnded = "trigger999",
-}) {
+/**
+ * @param {number} [duration] - Duration in milliseconds.
+ * @param {string} [animation] - Animation.
+ * @param {string} [interpolationAlgorithm] - Interpolation algorithm.
+ * @param {number} [animationDuration] - Timing value for animation duration.
+ * @param {string} [effect] - Effect.
+ * @param {string} [color] - Color value used by this component.
+ * @param {number} [scale] - Scale value.
+ * @param {string} [backgroundColor] - Color value for background color.
+ * @param {number} [backgroundFadeOutDuration] - Timing value for background fade out duration.
+ * @param {*} image - Image file name or path.
+ * @param {Array<any>} [slideOnEndPosition] - Position value for slide on end position.
+ * @param {number} [slideDuration] - Timing value for slide duration.
+ * @param {number} [slideSizeAfterEnd] - Slide size after end.
+ * @param {string} [slideInterpolationAlgorithm] - Slide interpolation algorithm.
+ * @param {string} [triggerOutSlideEnded] - Trigger key set when this behavior finishes.
+ */
+export function TwoDSplashScreen(props) {
+    const {duration = 1000} = props;
+    const {animation = "3D_x_rotate_back"} = props;
+    const {interpolationAlgorithm = "ease-out"} = props;
+    const {animationDuration = 1000} = props;
+    const {effect = "explosive_blur"} = props;
+    const {color = "#1226dd"} = props;
+    const {scale = 1} = props;
+    const {backgroundColor = "#000"} = props;
+    const {backgroundFadeOutDuration = 2500} = props;
+    const {image} = props;
+    const {slideOnEndPosition = [100, 100]} = props;
+    const {slideDuration = 1000} = props;
+    const {slideSizeAfterEnd = 0.5} = props;
+    const {slideInterpolationAlgorithm = "ease"} = props;
+    const {triggerOutSlideEnded = "trigger999"} = props;
+
     /////////////////////
     // State and Store //
     /////////////////////

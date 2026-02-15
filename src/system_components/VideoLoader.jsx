@@ -2,17 +2,29 @@ import * as THREE from "three";
 import React, { useEffect, useState } from "react";
 import config from '../config';
 
+/**
+ * @param {Array<any>} [position] - position on the scene.
+ * @param {Array<any>} [rotation] - rotation on the scene.
+ * @param {Array<any>} [planeDimensions] - width and height of the video "screen".
+ * @param {string} [defaultVideo] - [video name, ""] name of the default video without the extension, or empty string for no default video.
+ * @param {boolean} [loop] - [true, false] - loops video.
+ * @param {boolean} [muted] - [true, false] - loops video.
+ * @param {number} [delay] - delay in ms before triggered video is removed from memory, this prevents memory leaks.
+ * @param {boolean} [triggerMode] - [true, false] - wether the video being played is triggered.
+ * @param {string} [triggerType] - [valueString, triggerTrue] - valueString will play a video when the value of "trigger" prop is the same as the video name, triggerTrue will play the video the "trigger" prop is...
+ * @param {*} trigger - trigger to play video, either a string equal to the video name or a boolean state.
+ */
 export function VideoLoader (props) {
-    const {position = [0, 0, 0]} = props; // position on the scene
-    const {rotation = [0, 0, 0]} = props; // rotation on the scene
-    const {planeDimensions = [0, 0]} = props; // width and height of the video "screen"
-    const {defaultVideo = "Javascript"} = props; //[video name, ""] name of the default video without the extension, or empty string for no default video
-    const {loop = true} = props; // [true, false] - loops video
-    const {muted = true} = props; // [true, false] - loops video
-    const {delay = 10000} = props; // delay in ms before triggered video is removed from memory, this prevents memory leaks
-    const {triggerMode = true} = props; // [true, false] - wether the video being played is triggered
-    const {triggerType = "valueString"} = props; // [valueString, triggerTrue] - valueString will play a video when the value of "trigger" prop is the same as the video name, triggerTrue will play the video the "trigger" prop is a true boolean state
-    const {trigger} = props; // trigger to play video, either a string equal to the video name or a boolean state
+    const {position = [0, 0, 0]} = props;
+    const {rotation = [0, 0, 0]} = props;
+    const {planeDimensions = [0, 0]} = props;
+    const {defaultVideo = "Javascript"} = props;
+    const {loop = true} = props;
+    const {muted = true} = props;
+    const {delay = 10000} = props;
+    const {triggerMode = true} = props;
+    const {triggerType = "valueString"} = props;
+    const {trigger} = props;
     
     // initialize video state
     const [video, setVideo] = useState(() => {

@@ -9,22 +9,35 @@ import SystemStore from "../SystemStore";
 /////////////// Props ////////////////////
 //////////////////////////////////////////
 // Manual 1x1 FPS benchmark probe.
+/**
+ * @param {boolean} [enable] - Whether this feature is enabled.
+ * @param {number} [benchmarkSampleSeconds] - Timing value for benchmark sample seconds.
+ * @param {number} [fpsToFallBack] - Fps to fall back.
+ * @param {string} [benchmarkScene] - Benchmark scene.
+ * @param {boolean} [showFps] - Whether to fps.
+ * @param {string} [startMode] - "on_mount", "after_delay" or "on_trigger".
+ * @param {number} [waitSeconds] - Timing value for wait seconds.
+ * @param {boolean} [triggerInStart] - Trigger value used to start this behavior.
+ * @param {string} [triggerOutFallbackTriggered] - Trigger key set when this behavior finishes.
+ * @param {*} [fpsNToTriggerOut] - Fps nto trigger out.
+ * @param {string} [triggerOutFpsReachedN] - Trigger key set when this behavior finishes.
+ * @param {string} [fallbackMode] - Mode value for fallback mode.
+ * @param {string} [fallbackRedirectPath] - Fallback redirect path.
+ */
 export const FpsBenchmarkProbe = React.memo((props) => {
-  const {
-    enable = true,
-    benchmarkSampleSeconds = 3,
-    fpsToFallBack = 30,
-    benchmarkScene = "",
-    showFps = false,
-    startMode = "on_mount", // "on_mount", "after_delay" or "on_trigger"
-    waitSeconds = 0,
-    triggerInStart = false,
-    triggerOutFallbackTriggered = "",
-    fpsNToTriggerOut = undefined,
-    triggerOutFpsReachedN = "",
-    fallbackMode = "disable_canvas",
-    fallbackRedirectPath = "/",
-  } = props;
+  const {enable = true} = props;
+  const {benchmarkSampleSeconds = 3} = props;
+  const {fpsToFallBack = 30} = props;
+  const {benchmarkScene = ""} = props;
+  const {showFps = false} = props;
+  const {startMode = "on_mount"} = props;
+  const {waitSeconds = 0} = props;
+  const {triggerInStart = false} = props;
+  const {triggerOutFallbackTriggered = ""} = props;
+  const {fpsNToTriggerOut = undefined} = props;
+  const {triggerOutFpsReachedN = ""} = props;
+  const {fallbackMode = "disable_canvas"} = props;
+  const {fallbackRedirectPath = "/"} = props;
 
   //////////////////////////////////////////
   /////////////// State ////////////////////

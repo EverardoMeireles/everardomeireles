@@ -7,6 +7,11 @@ import { path_points_experience_menu_location } from "../PathPoints.jsx";
 import config from '../config';
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {number} [scale] - Scale value.
+ * @param {string} [textColor] - Color value for text color.
+ * @param {number} [transitionDuration] - Transition duration in milliseconds.
+ */
 export function ExperienceMenu(props) {
     // const {rotation = 2 * Math.PI} = props;
     // const {position = [0, 0, 0]} = props;

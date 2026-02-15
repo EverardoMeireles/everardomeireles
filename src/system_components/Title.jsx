@@ -3,8 +3,12 @@ import { Text} from "@react-three/drei";
 import * as THREE from "three";
 import config from '../config';
 
+/**
+ * @param {Array<any>} [initialPosition] - Position value for initial position.
+ * @param {number} [rotation] - Rotation in radians.
+ * @param {number} [font] - Font file path.
+ */
 export function Title(props) {
-    // default prop values:
     const {initialPosition = [0,0,0]} = props;
     const {rotation = Math.PI/2} = props;
     const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;

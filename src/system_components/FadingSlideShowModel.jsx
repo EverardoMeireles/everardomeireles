@@ -5,6 +5,13 @@ import { useSpring, a } from '@react-spring/three';
 import config from '../config';
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {string} [textModelMenu] - Mode value for text model menu.
+ * @param {number} [transitionDuration] - Transition duration in milliseconds.
+ * @param {Array<any>} [initialPosition] - Position value for initial position.
+ * @param {Array<any>} [PlaneSize] - Plane size.
+ * @param {string} [imageTexture] - Image texture.
+ */
 export function FadingSlideShowModel(props) {
     const {textModelMenu = "MainMenu"} = props;
     const {transitionDuration = 1000} = props;

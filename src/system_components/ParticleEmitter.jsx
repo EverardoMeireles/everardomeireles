@@ -6,22 +6,39 @@ import config from '../config';
 ///////////////////////////////
 // ParticleEmitter Component //
 ///////////////////////////////
+/**
+ * @param {Array<any>} [imageNames] - Array of image filenames (without path). Textures are loaded from `${config.resource_path}/textures/${name}`.
+ * @param {number} [count] - Total number of particles.
+ * @param {number} [speed] - Movement speed (m/s).
+ * @param {number} [initialSize] - Initial particle size (m).
+ * @param {number} [maxSizeOverLifespan] - Maximum particle size (m); if 0, size stays constant.
+ * @param {number} [lifespan] - Particle lifespan (s).
+ * @param {number} [spread] - Random offset (m) for each particle's start position.
+ * @param {boolean} [fadeInOut] - If true, particles fade in and out.
+ * @param {boolean} [faceCamera] - If true, particles will orient to face the camera. // revise feature later.
+ * @param {number} [faceCameraFrameCheck] - Perform face-camera orientation check and update every n frames.
+ * @param {Array<any>} [faceCameraAxisLock] - Array [x, y, z] to lock specific axes (1 = follow camera, 0 = lock).
+ * @param {number} [instanceMaxRandomDelay] - Extra random delay (s) added per particle.
+ * @param {Array<any>} [position] - Position of the emitter.
+ * @param {Array<any>} [rotation] - Rotation of the emitter if faceCamera is false.
+ * @param {Array<any>} [direction] - Direction of the particle emitter.
+ */
 export const ParticleEmitter = React.memo((props) => {
-  const { imageNames = ["fire1", "fire2"] } = props; // Array of image filenames (without path). Textures are loaded from `${config.resource_path}/textures/${name}`.
-  const { count = 100 } = props; // Total number of particles.
-  const { speed = 1 } = props; // Movement speed (m/s).
-  const { initialSize = 0.5 } = props; // Initial particle size (m).
-  const { maxSizeOverLifespan = 0 } = props; // Maximum particle size (m); if 0, size stays constant.
-  const { lifespan = 2 } = props; // Particle lifespan (s).
-  const { spread = 0.3 } = props; // Random offset (m) for each particle's start position.
-  const { fadeInOut = false } = props; // If true, particles fade in and out.
-  const { faceCamera = false } = props; // If true, particles will orient to face the camera. // revise feature later
-  const { faceCameraFrameCheck = 1 } = props; // Perform face-camera orientation check and update every n frames.
-  const { faceCameraAxisLock = [1, 1, 1] } = props; // Array [x, y, z] to lock specific axes (1 = follow camera, 0 = lock).
-  const { instanceMaxRandomDelay = 0 } = props; // Extra random delay (s) added per particle.
-  const { position = [0, 0, 0] } = props; // Position of the emitter.
-  const { rotation = [0, 0, 0] } = props; // Rotation of the emitter if faceCamera is false.
-  const { direction = [0, 1, 0] } = props; // Direction of the particle emitter.
+  const { imageNames = ["fire1", "fire2"] } = props;
+  const { count = 100 } = props;
+  const { speed = 1 } = props;
+  const { initialSize = 0.5 } = props;
+  const { maxSizeOverLifespan = 0 } = props;
+  const { lifespan = 2 } = props;
+  const { spread = 0.3 } = props;
+  const { fadeInOut = false } = props;
+  const { faceCamera = false } = props;
+  const { faceCameraFrameCheck = 1 } = props;
+  const { faceCameraAxisLock = [1, 1, 1] } = props;
+  const { instanceMaxRandomDelay = 0 } = props;
+  const { position = [0, 0, 0] } = props;
+  const { rotation = [0, 0, 0] } = props;
+  const { direction = [0, 1, 0] } = props;
 
   /////////////////////////
   // Build Texture Paths //
@@ -123,20 +140,35 @@ function lerp(a, b, t) {
 /////////////////////////////
 // ParticleGroup Component //
 /////////////////////////////
+/**
+ * @param {*} texture - Texture to use for the particles.
+ * @param {*} particles - Array of particle state objects.
+ * @param {*} speed - Movement speed in m/s.
+ * @param {*} initialSize - Initial size (in meters) of each particle.
+ * @param {*} maxSizeOverLifespan - Maximum size reached over the particle's lifespan (if 0, size remains constant).
+ * @param {*} lifespan - Particle lifespan in seconds.
+ * @param {*} fadeInOut - If true, particles fade in at spawn and fade out at end-of-life.
+ * @param {*} faceCamera - If true, particles will always orient to face the camera.
+ * @param {*} faceCameraFrameCheck - Update the face-camera orientation every n frames.
+ * @param {*} faceCameraAxisLock - Array [x, y, z]: 1 allows the axis to follow the camera, 0 locks it to the default rotation.
+ * @param {Array<any>} [rotation] - Emitter's default rotation (used if faceCamera is false or for locked axes).
+ * @param {*} direction - Movement direction vector (e.g. [0, 1, 0] for upward).
+ * @param {Array<any>} [position] - Position of the emitter.
+ */
 const ParticleGroup = (props) => {
-  const { texture } = props; // Texture to use for the particles.
-  const { particles } = props; // Array of particle state objects.
-  const { speed } = props; // Movement speed in m/s.
-  const { initialSize } = props; // Initial size (in meters) of each particle.
-  const { maxSizeOverLifespan } = props; // Maximum size reached over the particle's lifespan (if 0, size remains constant).
-  const { lifespan } = props; // Particle lifespan in seconds.
-  const { fadeInOut } = props; // If true, particles fade in at spawn and fade out at end-of-life.
-  const { faceCamera } = props; // If true, particles will always orient to face the camera.
-  const { faceCameraFrameCheck } = props; // Update the face-camera orientation every n frames.
-  const { faceCameraAxisLock } = props; // Array [x, y, z]: 1 allows the axis to follow the camera, 0 locks it to the default rotation.
-  const { rotation = [0, 0, 0]} = props; // Emitter's default rotation (used if faceCamera is false or for locked axes).
-  const { direction } = props; // Movement direction vector (e.g. [0, 1, 0] for upward).
-  const { position = [0, 0, 0] } = props; // Position of the emitter.
+  const { texture } = props;
+  const { particles } = props;
+  const { speed } = props;
+  const { initialSize } = props;
+  const { maxSizeOverLifespan } = props;
+  const { lifespan } = props;
+  const { fadeInOut } = props;
+  const { faceCamera } = props;
+  const { faceCameraFrameCheck } = props;
+  const { faceCameraAxisLock } = props;
+  const { rotation = [0, 0, 0]} = props;
+  const { direction } = props;
+  const { position = [0, 0, 0] } = props;
 
   const { camera } = useThree();
   const meshRef = useRef();

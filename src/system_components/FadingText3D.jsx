@@ -5,6 +5,20 @@ import { Text3D } from "@react-three/drei";
 import config from '../config';
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {string} [textToFade] - Text to fade.
+ * @param {string} [textModelMenu] - Mode value for text model menu.
+ * @param {string} [textColor] - Color value for text color.
+ * @param {number} [transitionDuration] - Transition duration in milliseconds.
+ * @param {Array<any>} [initialPosition] - Position value for initial position.
+ * @param {Array<any>} [planeSize] - Plane size.
+ * @param {string} [fontFileName] - put the json font file in the public folder.
+ * @param {number} [lettersPerUnit] - how many letters should fit inside a spacial unit(a [1,1,1] cube).
+ * @param {number} [rotation] - Rotation in radians.
+ * @param {boolean} [visible] - Whether this element is visible.
+ * @param {number} [scale] - Scale value.
+ * @param {Array<any>} [textPositionOffset] - Position value for text position offset.
+ */
 export function FadingText3D(props) {
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
     const {textModelMenu = "MainMenu"} = props;
@@ -12,8 +26,8 @@ export function FadingText3D(props) {
     const {transitionDuration = 1000} = props;
     const {initialPosition = [0,0,0]} = props;
     const {planeSize = [7, 6.7]} = props;
-    const {fontFileName = "/roboto.json"} = props; // put the json font file in the public folder
-    const {lettersPerUnit = 8} = props; // how many letters should fit inside a spacial unit(a [1,1,1] cube)
+    const {fontFileName = "/roboto.json"} = props;
+    const {lettersPerUnit = 8} = props;
     const {rotation = Math.PI/2} = props;
     const {visible = true} = props;
     const {scale = 1.5} = props;

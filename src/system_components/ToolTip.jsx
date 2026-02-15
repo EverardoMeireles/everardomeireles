@@ -4,11 +4,17 @@ import SystemStore from "../SystemStore";
 
 // A component that displays a message on screen for a time.
 // Usage: setTooltipProperties({ active: true, duration: 2 /*sec*/, text: "...", image: "..." })
+/**
+ * @param {number} [imagePercentHeight] - Image percent height.
+ * @param {number} [textPercentHeight] - Text percent height.
+ * @param {number} [fontSize] - Font size.
+ * @param {number} [transitionDuration] - fade time in seconds.
+ */
 export const ToolTip = (props) => {
   const {imagePercentHeight = 40} = props;
   const {textPercentHeight = 60} = props;
   const {fontSize = 18} = props;
-  const {transitionDuration = 0.5} = props; // fade time in seconds
+  const {transitionDuration = 0.5} = props;
 
   const tooltipProperties = SystemStore((state) => state.tooltipProperties);
   const setTooltipProperties = SystemStore((state) => state.setTooltipProperties);

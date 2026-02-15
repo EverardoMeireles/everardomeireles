@@ -6,9 +6,19 @@ import { oneOrZero } from "../Helper";
 import { useFrame } from "@react-three/fiber";
 import config from '../config';
 
+/**
+ * @param {string} [text] - Text content to display.
+ * @param {string} [textColor] - Color value for text color.
+ * @param {number} [fadeDuration] - Timing value for fade duration.
+ * @param {Array<any>} [initialPosition] - Position value for initial position.
+ * @param {number} [rotation] - Rotation in radians.
+ * @param {number} [scale] - Scale value.
+ * @param {number} [delay] - Timing value for delay.
+ * @param {number} [font] - Font file path.
+ */
 export const FadingTitle = React.memo((props) => {
     const {text = "Everardo Meireles"} = props;
-    const {textColor = "#000000"} = props; 
+    const {textColor = "#000000"} = props;
     const {fadeDuration = 1000} = props;
     const {initialPosition = [0,0,0]} = props;
     const {rotation = Math.PI/3 + Math.PI/6} = props;

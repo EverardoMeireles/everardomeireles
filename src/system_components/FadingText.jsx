@@ -5,6 +5,23 @@ import { Text } from "@react-three/drei";
 import config from '../config';
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {string} [textToFade] - Text to fade.
+ * @param {string} [textColor] - Color value for text color.
+ * @param {Array<any>} [initialPosition] - Position value for initial position.
+ * @param {Array<any>} [planeSize] - Plane size.
+ * @param {number} [rotation] - Rotation in radians.
+ * @param {number} [scale] - Scale value.
+ * @param {Array<any>} [textPositionOffset] - Position value for text position offset.
+ * @param {boolean} [manualLineBreaks] - true if your input text already contains line breaks('\n').
+ * @param {number} [maxCharsBeforeLineBreak] - if manualLineBreaks is false, how many characters before a line break on the previous word, default is the length of the plane times the normal length of a roboto font character.
+ * @param {number} [font] - Font file path.
+ * @param {number} [fadeDuration] - Timing value for fade duration.
+ * @param {boolean} [textIsVisible] - Text is visible.
+ * @param {boolean} [textIsVisibleByTransitionDestination] - Text is visible by transition destination.
+ * @param {boolean} [textIsVisibleByTransitionDestinationWaitForTransitionEnd] - Text is visible by transition destination wait for transition end.
+ * @param {string} [transitionDestinationToShowText] - Transition destination to show text.
+ */
 export const FadingText = React.memo((props) => {
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
     const {textColor = "#000000"} = props;
@@ -13,8 +30,8 @@ export const FadingText = React.memo((props) => {
     const {rotation = Math.PI/2} = props;
     const {scale = 1.5} = props;
     const {textPositionOffset = [0, -0.5, 0.2]} = props;
-    const {manualLineBreaks = false} = props; // true if your input text already contains line breaks('\n')
-    const {maxCharsBeforeLineBreak = planeSize[0] * 7} = props; // if manualLineBreaks is false, how many characters before a line break on the previous word, default is the length of the plane times the normal length of a roboto font character
+    const {manualLineBreaks = false} = props;
+    const {maxCharsBeforeLineBreak = planeSize[0] * 7} = props;
     const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
     const {fadeDuration = 1000} = props;
     const {textIsVisible = false} = props;

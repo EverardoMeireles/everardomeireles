@@ -238,13 +238,20 @@ export const SceneContainer = React.memo((props) => {
     const explodingConfigFile = viewerConfigFile || "base_cube_DO_NOT_REMOVE.json";
     const explodingMaterialPath = viewerMaterialName || "";
 
-    function TubeCurve({
-        curve,
-        tubularSegments = 64,
-        radius = 0.1,
-        radialSegments = 8,
-        closed = false,
-      }) {
+    /**
+     * @param {*} curve - Curve.
+     * @param {number} [tubularSegments] - Tubular segments.
+     * @param {number} [radius] - Radius.
+     * @param {number} [radialSegments] - Radial segments.
+     * @param {boolean} [closed] - Closed.
+     */
+    function TubeCurve(props) {
+        const {curve} = props;
+        const {tubularSegments = 64} = props;
+        const {radius = 0.1} = props;
+        const {radialSegments = 8} = props;
+        const {closed = false} = props;
+
         return (
           <mesh>
             <tubeGeometry

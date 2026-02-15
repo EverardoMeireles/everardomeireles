@@ -16,23 +16,37 @@ import config from '../config';
 
 // Creates an animation where instances of objects follow a curve then disappear
 // Objects must be .glb and have their origin at the center of the object (in blender: Object/set origin/geometry to origin)
+/**
+ * @param {string} [instancedObject] - Instanced object.
+ * @param {Array<any>} [initialPosition] - Position value for initial position.
+ * @param {number} [NumberOfInstances] - Number of instances.
+ * @param {number} [directionX] - Direction x.
+ * @param {number} [directionY] - Direction y.
+ * @param {number} [directionZ] - Direction z.
+ * @param {number} [distanceBetweenInstances] - Distance between instances.
+ * @param {number} [scale] - Scale value.
+ * @param {Array<any>} [rotationLimit] - Rotation value for rotation limit.
+ * @param {Array<any>} [customDistance] - Custom distance.
+ * @param {Array<any>} [customScale] - Scale value for custom scale.
+ * @param {Array<any>} [customRotation] - Rotation value for custom rotation.
+ * @param {Array<any>} [customColors] - Custom colors, object must not have an applied Material.
+ * @param {Array<any>} [customPosition] - Custom positions, value is ignored if equal to initialPosition's value.
+ */
 export const InstanceLoader = React.memo((props) => {
-    const {
-        instancedObject = "Book.glb",
-        initialPosition = [0, 0, 0],
-        NumberOfInstances = 5,
-        directionX = 1,
-        directionY = 0,
-        directionZ = 0,
-        distanceBetweenInstances = 5,
-        scale = 1,
-        rotationLimit = [Math.PI, Math.PI, Math.PI],
-        customDistance = [],
-        customScale = [],
-        customRotation = [],
-        customColors = [0x1613d1, 0xcff55d], // Custom colors, object must not have an applied Material
-        customPosition = [] // Custom positions, value is ignored if equal to initialPosition's value
-    } = props;
+    const {instancedObject = "Book.glb"} = props;
+    const {initialPosition = [0, 0, 0]} = props;
+    const {NumberOfInstances = 5} = props;
+    const {directionX = 1} = props;
+    const {directionY = 0} = props;
+    const {directionZ = 0} = props;
+    const {distanceBetweenInstances = 5} = props;
+    const {scale = 1} = props;
+    const {rotationLimit = [Math.PI, Math.PI, Math.PI]} = props;
+    const {customDistance = []} = props;
+    const {customScale = []} = props;
+    const {customRotation = []} = props;
+    const {customColors = [0x1613d1, 0xcff55d]} = props;
+    const {customPosition = []} = props;
 
     const meshRef = useRef();
     const object3D = new THREE.Object3D();

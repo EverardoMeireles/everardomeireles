@@ -9,11 +9,19 @@ import * as THREE from "three";
 
 // has jsx HudMenuStyles
 // A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx
+/**
+ * @param {boolean} [enabled] - Whether this component is enabled.
+ * @param {boolean} [graphicalLevelIndicatorIsEnabled] - Graphical level indicator is enabled.
+ * @param {boolean} [goesInvisible] - Goes invisible.
+ * @param {boolean} [goesTransparent] - setting this to true while goesInvisible is also true is useless.
+ * @param {number} [transparentTimer] - Timing value for transparent timer.
+ * @param {number} [transparency] - Transparency.
+ */
 export function HudMenu(props) {
     const { enabled = false } = props;
     const {graphicalLevelIndicatorIsEnabled = true} = props;
     const {goesInvisible = false} = props;
-    const {goesTransparent = true} = props; // setting this to true while goesInvisible is also true is useless
+    const {goesTransparent = true} = props;
     const {transparentTimer = 5000} = props;
     const {transparency = 0.15} = props;
 

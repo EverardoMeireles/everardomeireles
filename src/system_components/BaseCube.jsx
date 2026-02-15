@@ -1,14 +1,28 @@
 import {useState} from "react";
 import {useSpring, a} from '@react-spring/three';
 
+/**
+ * @param {Array<any>} [position] - Position in the scene.
+ * @param {number} [width] - Width.
+ * @param {number} [height] - Height.
+ * @param {number} [depth] - Depth.
+ * @param {Array<any>} [movementVector] - Movement vector.
+ * @param {Array<any>} [rgbHover] - RGB for mouse hover.
+ * @param {number} [minMovementDelay] - Timing value for min movement delay.
+ * @param {number} [maxMovementDelay] - Timing value for max movement delay.
+ * @param {number} [animationDelay] - Timing value for animation delay.
+ * @param {boolean} [hasMovementAnimation] - Whether to movement animation.
+ * @param {boolean} [hasScaleAnimation] - Whether to scale animation.
+ * @param {number} [opacity] - Opacity.
+ * @param {boolean} [visible] - Whether this element is visible.
+ */
 export function BaseCube(props) {
-    // default prop values:
     const {position = [0, 0, 0]} = props;
     const {width = 1} = props;
     const {height = 1} = props;
     const {depth = 1} = props;
     const {movementVector = [0.4, 0, 0]} = props;
-    const {rgbHover = [120, 120, 120]} = props; // RGB for mouse hover
+    const {rgbHover = [120, 120, 120]} = props;
     const {minMovementDelay = 150} = props;
     const {maxMovementDelay = 500} = props;
     const {animationDelay = Math.floor(Math.random() * (maxMovementDelay - minMovementDelay) + maxMovementDelay)} = props;

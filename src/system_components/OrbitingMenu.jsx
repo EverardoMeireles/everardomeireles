@@ -4,6 +4,15 @@ import * as THREE from "three";
 import config from '../config';
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {Array<any>} [orbitCenterPosition] - Position value for orbit center position.
+ * @param {Array<any>} [planeSize] - Plane size.
+ * @param {number} [orbitDistance] - Orbit distance.
+ * @param {boolean} [visible] - Whether this element is visible.
+ * @param {boolean} [enable] - Whether this feature is enabled.
+ * @param {string} [transitionDestinationToRestrictKeyboardControl] - Transition destination to restrict keyboard control.
+ * @param {number} [fadeInDuration] - Timing value for fade in duration.
+ */
 export const OrbitingMenu = React.memo((props) => {
     const {orbitCenterPosition = [15.5, 1.1, 0]} = props;
     const {planeSize = [5, 5]} = props;

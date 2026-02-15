@@ -7,6 +7,38 @@ import { parseJson, removeFileExtensionString, easeInCubic, easeOutCubic, create
 import config from '../config';
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {boolean} [animationIsPlaying] - Animation is playing.
+ * @param {Array<any>} [position] - Position in the scene.
+ * @param {string} [modelName] - Mode value for model name.
+ * @param {string} [configFile] - Config file.
+ * @param {string} [materialName] - feature: swap material. Hot swap material by changing this prop in real time.
+ * @param {Array<any>} [customOrigin] - If for any reason the imported scene's position transform is not (0, 0, 0), specify it here.
+ * @param {boolean} [animationStartOnLoad] - Animation start on load.
+ * @param {boolean} [enableRockingAnimation] - Whether to rocking animation.
+ * @param {boolean} [enableExplodeAnimation] - Whether to explode animation.
+ * @param {boolean} [setCameraTargetOnMount] - Set camera target on mount.
+ * @param {string} [setCameraTargetTrigger] - Set camera target trigger.
+ * @param {number} [rockingMaxAngle] - Rocking max angle.
+ * @param {number} [rockingDuration] - Timing value for rocking duration.
+ * @param {number} [explodingDuration] - Timing value for exploding duration.
+ * @param {number} [childDuration] - Timing value for child duration.
+ * @param {boolean} [showCirclesAfterExplodingAnimation] - If true, all tooltip circles appear automatically after the explode animation finishes. If false, visibility is set right after the scene loads.
+ * @param {boolean} [focusedObjectCloneEnable] - Rotating object's scale.
+ * @param {number} [focusedObjectCloneScale] - Rotating object's scale.
+ * @param {Array<any>} [focusedObjectCloneAxisOfRotation] - Rotating object's axis of rotation.
+ * @param {number} [focusedObjectCloneSpeedOfRotation] - Rotating object's speed of rotation.
+ * @param {*} [focusedObjectCloneForcePositionOffset] - Screen-space offset for the focused clone position.
+ * @param {boolean} [enableMainObjectRotationAnimation] - R.
+ * @param {number} [mainObjectRotationAnimationRotationSpeed] - R.
+ * @param {string} [mainObjectRotationAnimationWhenToStop] - R.
+ * @param {boolean} [mainObjectRotationAnimationResetInitialRotation] - R.
+ * @param {number} [mainObjectRotationAnimationResetInitialRotationAnimationSpeed] - R.
+ * @param {boolean} [mainObjectRotationAnimationRestartAnimationAfterStop] - R.
+ * @param {*} [stopMainObjectRotationAnimation] - A trigger that will be able to stop the animation from outside the component.
+ * @param {*} [mainObjectRotationAnimationIsPlayingTrigger] - The trigger that will be set to true when the animation stops.
+ * @param {boolean} [tubeCurveDebugMode] - Show the transition curve when circles are hovered.
+ */
 export const ExplodingModelLoader = React.memo((props) => {
 
   const {animationIsPlaying = false} = props;
@@ -14,36 +46,36 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {position = [0, 0, 0]} = props;
   const {modelName = "base_cube_DO_NOT_REMOVE.glb"} = props;
   const {configFile = "base_cube_DO_NOT_REMOVE.json"} = props;
-  const {materialName = ""} = props; // feature: swap material. Hot swap material by changing this prop in real time
-  const {customOrigin = []} = props; // If for any reason the imported scene's position transform is not (0, 0, 0), specify it here
+  const {materialName = ""} = props;
+  const {customOrigin = []} = props;
   const {animationStartOnLoad = false} = props;
   const {enableRockingAnimation = true} = props;
   const {enableExplodeAnimation = true} = props;
   const {setCameraTargetOnMount = true} = props;
   const {setCameraTargetTrigger = "trigger4"} = props;
 
-  const {rockingMaxAngle = Math.PI / 16} = props; 
+  const {rockingMaxAngle = Math.PI / 16} = props;
   const {rockingDuration = 2000} = props;
   const {explodingDuration = 2500} = props;
   const {childDuration = 700} = props;
-  const {showCirclesAfterExplodingAnimation = true} = props; // If true, all tooltip circles appear automatically after the explode animation finishes. If false, visibility is set right after the scene loads.
+  const {showCirclesAfterExplodingAnimation = true} = props;
 
-  const {focusedObjectCloneEnable = true} = props; // Rotating object's scale
-  const {focusedObjectCloneScale = 1} = props; // Rotating object's scale
-  const {focusedObjectCloneAxisOfRotation = [0, 1, 0]} = props; // Rotating object's axis of rotation
-  const {focusedObjectCloneSpeedOfRotation = 1.2} = props; // Rotating object's speed of rotation
-  const {focusedObjectCloneForcePositionOffset = {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}} = props; // Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)
+  const {focusedObjectCloneEnable = true} = props;
+  const {focusedObjectCloneScale = 1} = props;
+  const {focusedObjectCloneAxisOfRotation = [0, 1, 0]} = props;
+  const {focusedObjectCloneSpeedOfRotation = 1.2} = props;
+  const {focusedObjectCloneForcePositionOffset = {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}} = props;
 
-  const {enableMainObjectRotationAnimation = true} = props; // R
-  const {mainObjectRotationAnimationRotationSpeed = 0.5} = props; // R
-  const {mainObjectRotationAnimationWhenToStop = "onScreenMouseHover"} = props; // R
-  const {mainObjectRotationAnimationResetInitialRotation = true} = props; // R
-  const {mainObjectRotationAnimationResetInitialRotationAnimationSpeed = 8} = props; // R
-  const {mainObjectRotationAnimationRestartAnimationAfterStop = true} = props; // R
-  const {stopMainObjectRotationAnimation = undefined} = props; // A trigger that will be able to stop the animation from outside the component
-  const {mainObjectRotationAnimationIsPlayingTrigger = undefined} = props; // The trigger that will be set to true when the animation stops
+  const {enableMainObjectRotationAnimation = true} = props;
+  const {mainObjectRotationAnimationRotationSpeed = 0.5} = props;
+  const {mainObjectRotationAnimationWhenToStop = "onScreenMouseHover"} = props;
+  const {mainObjectRotationAnimationResetInitialRotation = true} = props;
+  const {mainObjectRotationAnimationResetInitialRotationAnimationSpeed = 8} = props;
+  const {mainObjectRotationAnimationRestartAnimationAfterStop = true} = props;
+  const {stopMainObjectRotationAnimation = undefined} = props;
+  const {mainObjectRotationAnimationIsPlayingTrigger = undefined} = props;
 
-  const {tubeCurveDebugMode = false} = props; // Show the transition curve when circles are hovered
+  const {tubeCurveDebugMode = false} = props;
   
 // ------------------------------------------------------------------------------------ //
   // Should these values not be specified in the model's config files, these default values will be applied
@@ -995,13 +1027,20 @@ export const ExplodingModelLoader = React.memo((props) => {
   }, [])
 
   // debug tube geometry for visualizing the transition curve
-  function TubeCurve({
-    curve,
-    tubularSegments = 64,
-    radius = 0.1,
-    radialSegments = 8,
-    closed = false,
-  }) {
+  /**
+   * @param {*} curve - Curve.
+   * @param {number} [tubularSegments] - Tubular segments.
+   * @param {number} [radius] - Radius.
+   * @param {number} [radialSegments] - Radial segments.
+   * @param {boolean} [closed] - Closed.
+   */
+  function TubeCurve(props) {
+    const {curve} = props;
+    const {tubularSegments = 64} = props;
+    const {radius = 0.1} = props;
+    const {radialSegments = 8} = props;
+    const {closed = false} = props;
+
     return (
       <mesh>
         <tubeGeometry

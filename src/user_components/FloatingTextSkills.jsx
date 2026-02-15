@@ -7,6 +7,13 @@ import config from '../config';
 import SystemStore from "../SystemStore";
 import UserStore from "../UserStore";
 
+/**
+ * @param {Array<any>} [initialPosition] - Position value for initial position.
+ * @param {Array<any>} [hitBoxSize] - Hit box size.
+ * @param {number} [rotation] - Rotation in radians.
+ * @param {number} [font] - Font file path.
+ * @param {Array<any>} [textPosition] - Position value for text position.
+ */
 export function FloatingTextSkills(props) {
     const {initialPosition = [0,0,0]} = props;
     const {hitBoxSize = [2, 1]} = props;

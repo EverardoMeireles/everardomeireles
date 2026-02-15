@@ -7,6 +7,15 @@ import { increaseOrDecreaseGraphics } from "../Helper";
 import config from '../config';
 import SystemStore from "../SystemStore";
 
+/**
+ * @param {number} [rotation] - Rotation in radians.
+ * @param {Array<any>} [position] - Position in the scene.
+ * @param {number} [scale] - Scale value.
+ * @param {string} [textColor] - Color value for text color.
+ * @param {boolean} [isMainMenu] - Whether to main menu.
+ * @param {boolean} [visible] - Whether this element is visible.
+ * @param {number} [font] - Font file path.
+ */
 export function IndexMenu(props) {
     const {rotation = 2 * Math.PI} = props;
     const {position = [0, 0, 0]} = props;

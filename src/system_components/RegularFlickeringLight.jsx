@@ -1,7 +1,12 @@
 import { useFrame } from '@react-three/fiber';
 import { useRef} from "react";
 
-export function RegularFlickeringLight({ ...lightProps }) {
+/**
+ * @param {Object} [lightProps] - Light props.
+ */
+export function RegularFlickeringLight(props) {
+  const {...lightProps} = props;
+
   const lightRef = useRef();
 
   useFrame((state) => {
