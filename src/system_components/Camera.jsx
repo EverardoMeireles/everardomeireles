@@ -234,11 +234,17 @@ export const Camera = React.memo((props) => {
         }
 
         if (!controls.current) return;
-        if(forcedCameraTarget != [])
-        {
-            controls.current.target.x = forcedCameraTarget[0]
-            controls.current.target.y = forcedCameraTarget[1]
-            controls.current.target.z = forcedCameraTarget[2]
+        const hasValidForcedTarget =
+            Array.isArray(forcedCameraTarget) &&
+            forcedCameraTarget.length >= 3 &&
+            Number.isFinite(forcedCameraTarget[0]) &&
+            Number.isFinite(forcedCameraTarget[1]) &&
+            Number.isFinite(forcedCameraTarget[2]);
+
+        if (hasValidForcedTarget) {
+            controls.current.target.x = forcedCameraTarget[0];
+            controls.current.target.y = forcedCameraTarget[1];
+            controls.current.target.z = forcedCameraTarget[2];
         }
 
     }, [forcedCameraTarget]);
@@ -298,6 +304,10 @@ export const Camera = React.memo((props) => {
         if (tick.current < 1) {
             updateCallNow.current = true;
             state.events.enabled = false;
+            if (!controls.current) {
+                // Keep transition deterministic: do not advance until OrbitControls ref is ready.
+                return;
+            }
             controls.current.enabled = false;
 
             tick.current += transitionSpeed * delta;
@@ -339,8 +349,26 @@ export const Camera = React.memo((props) => {
     // Sets values after the camera movement is done 
     function updateCall(state){
         if(updateCallNow.current){
+            if (!controls.current) {
+                // Keep finalization paused until controls are available again.
+                return;
+            }
             // If fps is too low, the camera's target might not end up where it should after transition, force it.
-            if(controls.current.target.toArray() != forcedCameraTarget){
+            const hasValidForcedTarget =
+                Array.isArray(forcedCameraTarget) &&
+                forcedCameraTarget.length >= 3 &&
+                Number.isFinite(forcedCameraTarget[0]) &&
+                Number.isFinite(forcedCameraTarget[1]) &&
+                Number.isFinite(forcedCameraTarget[2]);
+
+            if(
+                hasValidForcedTarget &&
+                (
+                    controls.current.target.x !== forcedCameraTarget[0] ||
+                    controls.current.target.y !== forcedCameraTarget[1] ||
+                    controls.current.target.z !== forcedCameraTarget[2]
+                )
+            ){
                 controls.current.target = new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]);
                 state.camera.lookAt(forcedCameraTarget)
             }
