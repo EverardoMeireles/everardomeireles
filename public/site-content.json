@@ -1,0 +1,44 @@
+{
+  "SECTION_INTRO": {
+    "telephone_1": "07 80 82 71 92",
+    "telephone_2": "07 80 82 71 92",
+    "email": "contact@jean-autret.fr",
+    "localisation_1": "Finistère",
+    "localisation_2": "Morbihan",
+    "localisation_3": "",
+    "texte_introduction": "Je suis Jean Autret, je mets mon savoir-faire au service de vos projets de rénovation.",
+    "element_liste_deroulante_1": "4.5/5⭐",
+    "element_liste_deroulante_2": "Chantier propre",
+    "element_liste_deroulante_3": "Conseil personnalisé",
+    "element_liste_deroulante_4": "Respect des délais"
+  },
+  "SECTION_SERVICES": {
+    "image_revetement_sol": "/textures/Avant.jpg",
+    "texte_revetement_sol": "Revetement de sol (parquet) : pose, rénovation et finitions adaptées à vos espaces.",
+    "image_papier_peint": "/textures/Avant.jpg",
+    "texte_papier_peint": "Pose de papier peint : préparation des murs, pose soignée et raccords invisibles.",
+    "image_toile_de_verre": "/textures/Avant.jpg",
+    "texte_toile_de_verre": "Pose de toile de verre : renfort des surfaces et finitions prêtes à peindre.",
+    "image_peiture_murale": "/textures/Avant.jpg",
+    "texte_peiture_murale": "Peinture murale : mise en couleur, protection des surfaces et rendu homogène.",
+    "image_ravalement_facade": "/textures/Avant.jpg",
+    "texte_ravalement_facade": "Ravalement de façade : nettoyage, réparation et remise en état des murs extérieurs.",
+    "image_demoussage_traitement": "/textures/Avant.jpg",
+    "texte_demoussage_traitement": "Démoussage et traitement du toit : nettoyage, traitement préventif et protection durable."
+  },
+  "SECTION_EXAMPLES": {
+    "avant_apres_projets_texte": "Quelques projets que j'ai réalisés.",
+    "image_parquet_1_avant": "/textures/Avant.jpg",
+    "image_parquet_1_apres": "/textures/Apres.jpg",
+    "image_parquet_2_avant": "/textures/Avant.jpg",
+    "image_parquet_2_apres": "/textures/Apres.jpg",
+    "image_interieur_1_avant": "/textures/Avant.jpg",
+    "image_interieur_1_apres": "/textures/Apres.jpg",
+    "image_interieur_2_avant": "/textures/Avant.jpg",
+    "image_interieur_2_apres": "/textures/Apres.jpg",
+    "image_exterieur_1_avant": "/textures/Avant.jpg",
+    "image_exterieur_1_apres": "/textures/Apres.jpg",
+    "image_exterieur_2_avant": "/textures/Avant.jpg",
+    "image_exterieur_2_apres": "/textures/Apres.jpg"
+  }
+}

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import * as THREE from 'three';
 
 export const HtmlDreiMenuStyles = ({
     menu: {
@@ -87,72 +86,144 @@ export const ResponsiveBreakpoints = {
     }
 };
 
-export const ResponsiveTable = {
-    "Mobile":{
-        "fadingTitlePosition0": [170, 148, 58],
-        "fadingTitleScale0": 17,
-        "fadingTitlePosition1": [170, 146, 59.5],
-        "fadingTitleScale1": 17,
-        "fadingTextPosition0": [-0.5, 4, -82],
-        "fadingTextScale0": 1.5,
-        // "fadingTextLettersPerUnit0": 5,d
-        "fadingTextPosition1": [11.5, 4.5, -94],
-        "fadingTextScale1": 1.3,
-        "fadingTextPosition2": [-0.5, 5.5, -105],
-        "fadingTextScale2": 1.3,
-        "fadingTextPosition3": [-11, 7, -95.5],
-        "fadingTextScale3": 1.4,
-        "fadingTextPosition4": [-1.5, 22, -82.2],
-        "fadingTextScale4": 1.4,
-        "fadingTextPosition5": [11.5, 25, -93],
-        "fadingTextScale5": 1.3,
-        "FloatingTextSkillsPosition" : [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]
+// Responsive cell arrangement, build css grid according to these values.
+const ResponsiveGridArray = {
+    Mobile: {
+        intro: [
+            { row: "13fr", columns: ["1fr"] },
+            { row: "15fr", columns: ["1fr"] },
+            { row: "50fr", columns: ["2fr", "1fr"] }
+        ],
+        services: [
+            { row: "4fr", columns: ["1fr"] },
+            { row: "66fr", columns: ["1fr"] }
+        ],
+        examples: [
+            { row: "3fr", columns: ["1fr"] },
+            { row: "5.5fr", columns: ["1fr"] },
+            { row: "2fr", columns: ["1fr"] },
+            { row: "20fr", columns: ["1fr"] },
+            { row: "2fr", columns: ["1fr"] },
+            { row: "20fr", columns: ["1fr"] },
+            { row: "2fr", columns: ["1fr"] },
+            { row: "20fr", columns: ["1fr"] }
+        ],
     },
 
-    "Tablet":{
-        "fadingTitlePosition0": [170, 148, 58],
-        "fadingTitleScale0": 17,
-        "fadingTitlePosition1": [170, 146, 59.5],
-        "fadingTitleScale1": 17,
-        "fadingTextPosition0": [1, -0.5, -82],
-        "fadingTextScale0": 2.4,
+    Tablet: {
+        intro: [
+            { row: "2.5fr", columns: ["1fr"] },
+            { row: "2.5fr", columns: ["1fr"] },
+            { row: "11fr", columns: ["2fr", "1fr"] }
+        ],
+
+        services: [
+            { row: "1fr", columns: ["1fr"] },
+            { row: "8.88fr", columns: ["1fr"] }
+        ],
+
+        examples: [
+            { row: "3fr", columns: ["1fr"] },
+            { row: "4fr", columns: ["1fr"] },
+            { row: "2fr", columns: ["1fr"] },
+            { row: "20fr", columns: ["1fr"] },
+            { row: "2fr", columns: ["1fr"] },
+            { row: "20fr", columns: ["1fr"] },
+            { row: "2fr", columns: ["1fr"] },
+            { row: "20fr", columns: ["1fr"] }
+        ],
+    },
+
+    Widescreen: {
+        intro: [
+            { row: "4.5fr", columns: ["1fr"] },
+            { row: "3fr", columns: ["1fr"] },
+            { row: "11fr", columns: ["2fr", "1fr"] }
+
+        ],
+
+        services: [
+            { row: "1fr", columns: ["1fr"] },
+            { row: "8.18fr", columns: ["1fr"] }
+        ],
+
+        examples: [
+            { row: "1fr", columns: ["1fr"] },
+            { row: "0.8fr", columns: ["1fr"] },
+            { row: "0.3fr", columns: ["1fr", "1fr", "1fr"] },
+            { row: "3.5fr", columns: ["1fr", "1fr", "1fr"] },
+            { row: "3.5fr", columns: ["1fr", "1fr", "1fr"] }
+        ],
+    }
+
+};
+
+export const ResponsiveTable = {
+    Mobile: {
+        fadingTitlePosition0: [170, 148, 58],
+        fadingTitleScale0: 17,
+        fadingTitlePosition1: [170, 146, 59.5],
+        fadingTitleScale1: 17,
+        fadingTextPosition0: [-0.5, 4, -82],
+        fadingTextScale0: 1.5,
+        // "fadingTextLettersPerUnit0": 5,d
+        fadingTextPosition1: [11.5, 4.5, -94],
+        fadingTextScale1: 1.3,
+        fadingTextPosition2: [-0.5, 5.5, -105],
+        fadingTextScale2: 1.3,
+        fadingTextPosition3: [-11, 7, -95.5],
+        fadingTextScale3: 1.4,
+        fadingTextPosition4: [-1.5, 22, -82.2],
+        fadingTextScale4: 1.4,
+        fadingTextPosition5: [11.5, 25, -93],
+        fadingTextScale5: 1.3,
+        FloatingTextSkillsPosition: [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]
+    },
+
+    Tablet: {
+        fadingTitlePosition0: [170, 148, 58],
+        fadingTitleScale0: 17,
+        fadingTitlePosition1: [170, 146, 59.5],
+        fadingTitleScale1: 17,
+        fadingTextPosition0: [1, -0.5, -82],
+        fadingTextScale0: 2.4,
         // "fadingTextLettersPerUnit0": 5,
-        "fadingTextPosition1": [11.5, 4.5, -94],
-        "fadingTextScale1": 1.8,
-        "fadingTextPosition2": [0, 5.5, -105],
-        "fadingTextScale2": 2,
-        "fadingTextPosition3": [-11, 7, -94.5],
-        "fadingTextScale3": 1.7,
-        "fadingTextPosition4": [-0.5, 22, -82.2],
-        "fadingTextScale4": 1.8,
-        "fadingTextPosition5": [11.5, 25, -93],
-        "fadingTextScale5": 2,
-        "FloatingTextSkillsPosition" : [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]
+        fadingTextPosition1: [11.5, 4.5, -94],
+        fadingTextScale1: 1.8,
+        fadingTextPosition2: [0, 5.5, -105],
+        fadingTextScale2: 2,
+        fadingTextPosition3: [-11, 7, -94.5],
+        fadingTextScale3: 1.7,
+        fadingTextPosition4: [-0.5, 22, -82.2],
+        fadingTextScale4: 1.8,
+        fadingTextPosition5: [11.5, 25, -93],
+        fadingTextScale5: 2,
+        FloatingTextSkillsPosition: [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]
     },
     
-    "Widescreen":{
-        "fadingTitlePosition0": [170, 146, 56],
-        "fadingTitleScale0": 17,
-        "fadingTitlePosition1": [170, 144, 57.5],
-        "fadingTitleScale1": 17,
-        "fadingTextPosition0": [0, 3, -82],
-        "fadingTextScale0": 2,
+    Widescreen: {
+        fadingTitlePosition0: [170, 146, 56],
+        fadingTitleScale0: 17,
+        fadingTitlePosition1: [170, 144, 57.5],
+        fadingTitleScale1: 17,
+        fadingTextPosition0: [0, 3, -82],
+        fadingTextScale0: 2,
         // "fadingTextLettersPerUnit0": 5,
-        "fadingTextPosition1": [11.5, 3.5, -92],
-        "fadingTextScale1": 2.1,
-        "fadingTextPosition2": [-1, 3, -105],
-        "fadingTextScale2": 2.3,
-        "fadingTextPosition3": [-11, 3, -95.5],
-        "fadingTextScale3": 2,
-        "fadingTextPosition4": [-1.5, 18.5, -82.2],
-        "fadingTextScale4": 2,
-        "fadingTextPosition5": [11.5, 23.5, -90.5],
-        "fadingTextScale5": 2,
-        "FloatingTextSkillsPosition" : [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]
+        fadingTextPosition1: [11.5, 3.5, -92],
+        fadingTextScale1: 2.1,
+        fadingTextPosition2: [-1, 3, -105],
+        fadingTextScale2: 2.3,
+        fadingTextPosition3: [-11, 3, -95.5],
+        fadingTextScale3: 2,
+        fadingTextPosition4: [-1.5, 18.5, -82.2],
+        fadingTextScale4: 2,
+        fadingTextPosition5: [11.5, 23.5, -90.5],
+        fadingTextScale5: 2,
+        FloatingTextSkillsPosition: [[0, 5, 0], [-3, 0, 3], [2, 5, 8], [0, 0, 4], [3, 3, 0], [-6, 3, 5], [5,0, 5], [4, 2, 6], [3, 3, 8], [0, 0, 8]]
     },
 }
 
-export const ResponsiveCurveTransitions = {
+export const Responsive3DCurveTransitions = {
     Mobile: {
         StartingPoint: [251, 222, -16],
         MainMenu: [194, 150, 63],

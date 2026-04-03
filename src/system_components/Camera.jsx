@@ -541,7 +541,7 @@ function compareCurves(curve1, curve2) {
     
     return(
         <>
-            <PerspectiveCamera makeDefault ref = {cam} position = {position} fov = {75}>
+            <PerspectiveCamera makeDefault near={0.01} ref = {cam} position = {position} fov = {75}>
             </PerspectiveCamera>
             <OrbitControls makeDefault mouseButtons={cameraMode} target={forcedCameraTarget} enableZoom = {currentCameraMovements["zoom"] && !forceDisableZoom}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
         </>

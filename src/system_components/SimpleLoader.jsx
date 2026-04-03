@@ -1,11 +1,9 @@
-import { useLoader, useFrame } from '@react-three/fiber'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { useFrame } from '@react-three/fiber'
 import { Suspense, useEffect, useState, useRef, forwardRef } from "react";
 import * as THREE from "three";
 import React from "react";
-import { TextureLoader } from 'three';
-import config from '../config';
 import SystemStore from "../SystemStore";
+import { applyMaterialsToScene } from "../Helper.js";
 
 /**
  * @param {Array<any>} [position] - Position of the model in the scene.
@@ -25,8 +23,7 @@ import SystemStore from "../SystemStore";
  * @param {number} [objectHideRevealScaleUpSpeed] - Speed used by the hide/reveal scale animation.
  * @param {boolean} [useAo] - Enables ambient occlusion intensity updates.
  * @param {number} [ambientOcclusionIntensity] - Ambient occlusion intensity applied to materials.
- * @param {boolean} [loadMaterialManually] - Loads an external material file when true.
- * @param {string} [materialName] - Material file name to load from `/materials`.
+ * @param {Object} [materialNames] - Map of material slot names to material `.glb` filenames example: materialNames={{ Wood: "oak_material.glb", Metal: "brushed_steel.glb" }}.
  * @param {Array<any>} [uvOffSet] - UV offset direction for mapped textures.
  * @param {number} [uvOffsetAmount] - UV offset multiplier.
  * @param {*} [customObjectsUvs] - Custom UV index map by object name.
@@ -55,8 +52,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const {useAo = true} = props;
     const {ambientOcclusionIntensity = 1} = props;
 
-    const {loadMaterialManually = false} = props;
-    const {materialName = "material001.glb"} = props;
+    const { materialNames = {} } = props;
 
     const {uvOffSet = [0, 0]} = props;
     const {uvOffsetAmount = 0.05} = props;
@@ -96,9 +92,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const [childObject, setChildObject] = useState(false);
     const [currentLinkedObjects, setCurrentLinkedObjects] = useState([]);
 
-    // States for material loading and error handling
-    const [materialGltf, setMaterialGltf] = useState(null);
-    const [materialError, setMaterialError] = useState(false);
+    const materialSwapId = useRef(0);
 
     //////////////////////////////////////////////////////////
     /////// Feature : Set children object's custom UVs ///////
@@ -152,37 +146,28 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
 
 
     //////////////////////////////////////////////////////////
-    ////////// Feature : Manualy load the material ///////////
+    //////// Feature : Manualy load materials ////////////////
     //////////////////////////////////////////////////////////
 
-    // Attempt to load the material if loadMaterialManually is true
     useEffect(() => {
-        if (loadMaterialManually) {
-            const loader = new GLTFLoader();
-            loader.load(
-                config.resource_path + '/materials/' + materialName,
-                (scene) => {
-                    setMaterialGltf(scene);
-                },
-                undefined,
-                (error) => {
-                    console.error('Material not found:', error);
-                    setMaterialError(true);
-                }
-            );
-        }
-    }, [loadMaterialManually, materialName]);
+        const hasMaterials =
+            materialNames &&
+            typeof materialNames === "object" &&
+            Object.keys(materialNames).length > 0;
+        if (!hasMaterials) return;
 
-    // Apply material if loadMaterialManually is true and material is loaded
-    useEffect(() => {
-        if (loadMaterialManually && !materialError && materialGltf) {
-            scene.scene.traverse((child) => {
-                if (child.isMesh) {
-                    child.material = materialGltf.scene.children[0].material;
-                }
-            });
-        }
-    }, [scene, loadMaterialManually, materialGltf, materialError]);
+        let isActive = true;
+        const swapId = ++materialSwapId.current;
+
+        (async () => {
+            await applyMaterialsToScene(scene, materialNames);
+            if (!isActive || swapId !== materialSwapId.current) return;
+        })();
+
+        return () => {
+            isActive = false;
+        };
+    }, [scene, materialNames]);
 
     
     //////////////////////////////////////////////////////////

@@ -1,6 +1,6 @@
  import { useState, useEffect, useRef } from "react";
 import { TranslationTable } from "./TranslationTable.jsx";
-import { HudMenuStyles, useResponsive, ResponsiveCurveTransitions } from "./Styles.jsx";
+import { HudMenuStyles, useResponsive, Responsive3DCurveTransitions } from "./Styles.jsx";
 import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue, createArchCurve } from "./Helper.js";
 import config from "./config.js";
 import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "./PathPoints.jsx";
@@ -99,9 +99,9 @@ export function HudMenu(props) {
             setDesiredPath(desiredPath.current)
             setForcedCameraTarget(path_points_even_more_simple_lookat_dict[desiredPath.current].toArray())
             // setForcedCameraMovePathCurve(overrideCurves[currentPath.current + "-" + desiredPath.current]);
-            const transitionPositions = ResponsiveCurveTransitions?.[sceneLayoutKey]
-                ?? ResponsiveCurveTransitions?.Widescreen
-                ?? ResponsiveCurveTransitions;
+            const transitionPositions = Responsive3DCurveTransitions?.[sceneLayoutKey]
+                ?? Responsive3DCurveTransitions?.Widescreen
+                ?? Responsive3DCurveTransitions;
             const isCurveLike = (value) =>
                 !!value &&
                 (value.isCurve ||

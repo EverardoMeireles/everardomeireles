@@ -1,5 +1,7 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import SystemStore from "./SystemStore.js";
+import config from "./config.js";
 
 // replace it by store's value later
 export const graphicsModes = {
@@ -187,6 +189,70 @@ export function removeFileExtensionString(inputString) {
         // If no dot is found, return the original string
         return inputString;
     }
+}
+
+export async function applyMaterialsToScene(gltf, materialNames = {}) {
+    if (!gltf?.scene) return;
+    if (!materialNames || typeof materialNames !== "object") return;
+
+    const entries = Object.entries(materialNames).filter(
+        ([slotName, materialFile]) => Boolean(slotName) && Boolean(materialFile)
+    );
+    if (entries.length === 0) return;
+
+    const loader = new GLTFLoader();
+    const materialsBySlot = {};
+
+    await Promise.all(
+        entries.map(async ([slotName, materialFile]) => {
+            try {
+                const materialGltf = await loader.loadAsync(
+                    `${config.materials_path}${materialFile}`
+                );
+                let material = null;
+
+                if (Array.isArray(materialGltf?.materials) && materialGltf.materials.length > 0) {
+                    material = materialGltf.materials[0];
+                }
+
+                if (!material) {
+                    materialGltf?.scene?.traverse((child) => {
+                        if (!material && child.isMesh && child.material) {
+                            material = child.material;
+                        }
+                    });
+                }
+
+                if (material) {
+                    materialsBySlot[slotName] = material;
+                } else {
+                    console.warn(`No material found in ${materialFile}`);
+                }
+            } catch (error) {
+                console.error(`Material not found: ${materialFile}`, error);
+            }
+        })
+    );
+
+    if (Object.keys(materialsBySlot).length === 0) return;
+
+    gltf.scene.traverse((child) => {
+        if (!child.isMesh || !child.material) return;
+
+        const applyMaterial = (material) => {
+            if (!material?.name) return material;
+            const replacement = materialsBySlot[material.name];
+            if (!replacement) return material;
+            replacement.needsUpdate = true;
+            return replacement;
+        };
+
+        if (Array.isArray(child.material)) {
+            child.material = child.material.map(applyMaterial);
+        } else {
+            child.material = applyMaterial(child.material);
+        }
+    });
 }
 
 export const hasTriggerName = (value) => value !== undefined && value !== null && value !== "";
