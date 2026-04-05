@@ -12,22 +12,26 @@ import SystemStore from "../SystemStore.js";
  * @param {Array<any>} [rotation] - Controller initial rotation.
  * @param {number} [eyeHeight] - Camera height above the controller base.
  * @param {boolean} [isMainCamera] - Whether this perspective camera becomes the default camera.
- * @param {boolean} [azertyMode] - Switches movement keys from WASD to ZQSD while keeping arrow keys active.
+ * @param {boolean | "auto"} [azertyMode] - Uses ZQSD when true, WASD when false, or detects the layout automatically.
  * @param {boolean} [collisionsEnabled] - Enables capsule collision checks against scene meshes.
  * @param {number} [maxStepHeight] - Maximum climbable stair height.
  * @param {number} [minStepHeight] - Minimum height that can trigger a stair climb.
  * @param {number} [climbHeightOffset] - Extra height added to the final climb target.
+ * @param {boolean} [slowDownWhileFalling] - Enables slower horizontal movement while descending.
+ * @param {number} [slowDownWhileFallingSpeedMultiplier] - Horizontal speed multiplier while descending.
  */
 export const FirstPersonController = React.memo((props) => {
     const { position = [0, 0, 0] } = props;
     const { rotation = [0, 0, 0] } = props;
     const { eyeHeight = 4 } = props;
     const { isMainCamera = true } = props;
-    const { azertyMode = false } = props;
+    const { azertyMode = "auto" } = props;
     const { collisionsEnabled = true } = props;
     const { maxStepHeight = 5.65 } = props;
     const { minStepHeight = 0.1 } = props;
     const { climbHeightOffset = 0 } = props;
+    const { slowDownWhileFalling = true } = props;
+    const { slowDownWhileFallingSpeedMultiplier = 0.5 } = props;
 
     const mainScene = SystemStore((state) => state.mainScene);
     const setCameraState = SystemStore((state) => state.setCameraState);
@@ -81,8 +85,8 @@ export const FirstPersonController = React.memo((props) => {
     ///////////////// Local helper functions /////////////////
     //////////////////////////////////////////////////////////
 
+    // Track controller capsule around the player body.
     function syncCapsuleToController() {
-        // Track controller capsule around the player body.
         if (!controllerRef.current) {
             return;
         }
@@ -100,8 +104,8 @@ export const FirstPersonController = React.memo((props) => {
         capsuleRef.current.radius = capsuleRadius;
     }
 
+    // Copy capsule position back to the controller group.
     function syncControllerToCapsule() {
-        // Copy capsule position back to the controller group.
         if (!controllerRef.current) {
             return;
         }
@@ -113,8 +117,8 @@ export const FirstPersonController = React.memo((props) => {
         );
     }
 
+    // Ignore empty or hidden intersections.
     function getFirstHit(intersections) {
-        // Ignore empty or hidden intersections.
         if (!Array.isArray(intersections) || intersections.length === 0) {
             return null;
         }
@@ -122,8 +126,8 @@ export const FirstPersonController = React.memo((props) => {
         return intersections.find((intersection) => intersection?.object?.visible) ?? null;
     }
 
+    // Probe a climbable step in front of movement.
     function detectStepTarget(currentMoveDirection, probeDistance) {
-        // Probe a climbable step in front of movement.
         if (
             !collisionsEnabled ||
             !controllerRef.current ||
@@ -189,8 +193,8 @@ export const FirstPersonController = React.memo((props) => {
         return null;
     }
 
+    // Smoothly settle onto nearby ground.
     function snapDownToGround(currentMoveDirection, delta) {
-        // Smoothly settle onto nearby ground.
         if (
             !collisionsEnabled ||
             !controllerRef.current ||
@@ -290,12 +294,11 @@ export const FirstPersonController = React.memo((props) => {
         let cancelled = false;
         let frameId = 0;
 
+        // Build a triangle octree from visible scene meshes.
         const buildCollisionWorld = () => {
             if (cancelled) {
                 return;
             }
-
-            // Build a triangle octree from visible scene meshes.
             const meshes = [];
             const octree = new Octree();
             scene.updateMatrixWorld(true);
@@ -378,8 +381,8 @@ export const FirstPersonController = React.memo((props) => {
             }
         };
 
+        // Lock pointer on click and update view angles.
         const handleMouseMove = (event) => {
-            // Lock pointer on click and update view angles.
             if (
                 document.pointerLockElement !== domElement ||
                 !controllerRef.current ||
@@ -414,10 +417,7 @@ export const FirstPersonController = React.memo((props) => {
     //////////////////////////////////////////////////////////
 
     useEffect(() => {
-        const forwardCodes = azertyMode ? ["ArrowUp", "KeyZ"] : ["ArrowUp", "KeyW"];
-        const backwardCodes = ["ArrowDown", "KeyS"];
-        const leftCodes = azertyMode ? ["ArrowLeft", "KeyQ"] : ["ArrowLeft", "KeyA"];
-        const rightCodes = ["ArrowRight", "KeyD"];
+        let resolvedAzertyMode = azertyMode === "auto" ? true : azertyMode === true;
 
         const isEditableTarget = () => {
             const activeElement = document.activeElement;
@@ -434,23 +434,67 @@ export const FirstPersonController = React.memo((props) => {
             );
         };
 
-        const updateKeyState = (code, pressed) => {
-            if (forwardCodes.includes(code)) {
+        const normalizeKey = (key) => {
+            if (typeof key !== "string") {
+                return "";
+            }
+
+            return key.length === 1 ? key.toUpperCase() : key;
+        };
+
+        const getMovementKeys = () => ({
+            forward: resolvedAzertyMode ? ["ArrowUp", "Z"] : ["ArrowUp", "W"],
+            backward: ["ArrowDown", "S"],
+            left: resolvedAzertyMode ? ["ArrowLeft", "Q"] : ["ArrowLeft", "A"],
+            right: ["ArrowRight", "D"],
+        });
+
+        const resolveAutoAzertyMode = async () => {
+            if (azertyMode !== "auto") {
+                resolvedAzertyMode = azertyMode === true;
+                return;
+            }
+
+            try {
+                const layoutMap = await navigator.keyboard?.getLayoutMap?.();
+                if (!layoutMap) {
+                    return;
+                }
+
+                const keyW = normalizeKey(layoutMap.get("KeyW"));
+                const keyA = normalizeKey(layoutMap.get("KeyA"));
+                const keyZ = normalizeKey(layoutMap.get("KeyZ"));
+                const keyQ = normalizeKey(layoutMap.get("KeyQ"));
+
+                resolvedAzertyMode = (
+                    (keyW === "Z" && keyA === "Q") ||
+                    (keyZ === "W" && keyQ === "A")
+                );
+            } catch (error) {
+                resolvedAzertyMode = true;
+            }
+        };
+
+        const updateKeyState = (key, pressed) => {
+            const normalizedKey = normalizeKey(key);
+            const movementKeys = getMovementKeys();
+
+            if (movementKeys.forward.includes(normalizedKey)) {
                 keysRef.current.forward = pressed;
                 return true;
             }
 
-            if (backwardCodes.includes(code)) {
+            if (movementKeys.backward.includes(normalizedKey)) {
                 keysRef.current.backward = pressed;
                 return true;
             }
 
-            if (leftCodes.includes(code)) {
+            if (movementKeys.left.includes(normalizedKey)) {
                 keysRef.current.left = pressed;
                 return true;
             }
 
-            if (rightCodes.includes(code)) {
+            if (movementKeys.right.includes(normalizedKey)) {
                 keysRef.current.right = pressed;
                 return true;
             }
@@ -458,13 +502,13 @@ export const FirstPersonController = React.memo((props) => {
             return false;
         };
 
+        // Map keyboard events to movement flags.
         const handleKeyDown = (event) => {
-            // Map keyboard events to movement flags.
             if (isEditableTarget()) {
                 return;
             }
 
-            if (event.code === "KeyP") {
+            if (normalizeKey(event.key) === "P") {
                 if (!event.repeat && cameraRef.current) {
                     const worldPosition = new THREE.Vector3();
                     cameraRef.current.getWorldPosition(worldPosition);
@@ -478,21 +522,31 @@ export const FirstPersonController = React.memo((props) => {
                 return;
             }
 
-            if (updateKeyState(event.code, true)) {
+            if (updateKeyState(event.key, true)) {
                 event.preventDefault();
             }
         };
 
         const handleKeyUp = (event) => {
-            if (updateKeyState(event.code, false)) {
+            if (updateKeyState(event.key, false)) {
                 event.preventDefault();
             }
         };
+
+        resolveAutoAzertyMode();
+
+        if (azertyMode === "auto") {
+            navigator.keyboard?.addEventListener?.("layoutchange", resolveAutoAzertyMode);
+        }
 
         window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("keyup", handleKeyUp);
 
         return () => {
+            if (azertyMode === "auto") {
+                navigator.keyboard?.removeEventListener?.("layoutchange", resolveAutoAzertyMode);
+            }
+
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
         };
@@ -556,8 +610,18 @@ export const FirstPersonController = React.memo((props) => {
             }
         }
 
-        velocityRef.current.x = moveDirection.x * moveSpeed;
-        velocityRef.current.z = moveDirection.z * moveSpeed;
+        // Reduce air speed while falling.
+        const currentMoveSpeed = (
+            slowDownWhileFalling &&
+            !onFloorRef.current &&
+            climbTargetRef.current === null &&
+            velocityRef.current.y < 0
+        )
+            ? moveSpeed * Math.max(slowDownWhileFallingSpeedMultiplier, 0)
+            : moveSpeed;
+
+        velocityRef.current.x = moveDirection.x * currentMoveSpeed;
+        velocityRef.current.z = moveDirection.z * currentMoveSpeed;
 
         // Apply horizontal movement and vertical climbing/gravity.
         if (climbTargetRef.current !== null) {
