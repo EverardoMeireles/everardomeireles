@@ -29,6 +29,8 @@ import { useResponsive } from "./Styles.jsx";
 import { FpsBenchmarkProbe } from "./system_components/FpsBenchmarkProbe.jsx";
 import { pollForFilesInTHREECache, createTimer } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FirstPersonController } from './system_components/FirstPersonController.jsx';
+import { PerspectiveCamera } from "@react-three/drei";
 
 import * as THREE from 'three';
 
@@ -63,7 +65,7 @@ export const SceneContainer = React.memo((props) => {
     const siteMode = UserStore((state) => state.siteMode);
 
     const sceneName = useMemo(
-        () => siteMode === "resume" ? "NewthreeJsScene.glb" : "base_cube_DO_NOT_REMOVE.glb",
+        () => siteMode === "resume" ? "Stairs.glb" : "base_cube_DO_NOT_REMOVE.glb",
         [siteMode]
     );
     const scene = useLoader(GLTFLoader, `${config.resource_path}/models/${sceneName}`);
@@ -386,7 +388,10 @@ export const SceneContainer = React.memo((props) => {
 
     return(
     <>
-        <Camera position={cameraStartingPosition}/>
+        {/* <PerspectiveCamera makeDefau={true} near={0.01} rotation={[0,0,0]} position = {[193, 149, 34]} fov = {75}>
+        </PerspectiveCamera> */}
+        {/* <Camera position={cameraStartingPosition}/> */}
+        <FirstPersonController isMainCamer={false} position={[193, 149, 34]}></FirstPersonController>
         {/* <CircularScrollLoader /> */}
         {(siteMode === "resume") && 
         <>

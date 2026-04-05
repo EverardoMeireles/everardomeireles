@@ -18,3 +18,7 @@
 - If an abstraction is added, explain why it is necessary in one sentence in the final response.
 - If unsure between “clean abstraction” and “simple explicit code,” choose simple explicit code.
 - For responsive design, use the consts inside Styles.jsx, only add new values inside ResponsiveTable.jsx if asked to do so.
+- You don't need to test with npm run build
+- When making new components, include everything other than the JSDoc inside the export element.
+- Add comments for groups of lines of code describing in up to 10 words a general idea of what they do.
+- When adding comments to a function or const, add the comment above the function and not inside it.
