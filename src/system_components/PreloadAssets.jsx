@@ -10,7 +10,7 @@ import SystemStore from "../SystemStore";
  * @param {Array<any>} [scenesToLoad] - Scenes to load.
  * @param {number} [delay] - Timing value for delay.
  * @param {number} [fallbackTimeout] - ms; if reached, preload completes anyway.
- * @param {boolean} [triggerInStart] - Trigger value used to start this behavior.
+ * @param {boolean} [start] - Trigger value used to start this behavior.
  * @param {string} [triggerOutPreloadDone] - Trigger key set when this behavior finishes.
  */
 export const PreloadAssets = React.memo((props) => {
@@ -18,20 +18,20 @@ export const PreloadAssets = React.memo((props) => {
   const {scenesToLoad = ["scene1.glb", "scene2.glb"]} = props;
   const {delay = 3000} = props;
   const {fallbackTimeout = 10000} = props;
-  const {triggerInStart = false} = props;
+  const {start = false} = props;
   const {triggerOutPreloadDone = ""} = props;
 
   const setTrigger = SystemStore((state) => state.setTrigger);
-  const triggerInStartValue = SystemStore((state) =>
-    hasTriggerName(triggerInStart) ? Boolean(state.triggers[triggerInStart]) : false
+  const startValue = SystemStore((state) =>
+    hasTriggerName(start) ? Boolean(state.triggers[start]) : false
   );
 
   const [startLoading, setStartLoading] = useState(false);
   const [preloadDone, setPreloadDone] = useState(false);
 
-  const shouldStartLoading = hasTriggerName(triggerInStart)
-    ? triggerInStartValue
-    : Boolean(triggerInStart);
+  const shouldStartLoading = hasTriggerName(start)
+    ? startValue
+    : Boolean(start);
 
   // Keep output trigger in sync with local preload completion state.
   useEffect(() => {
@@ -58,8 +58,8 @@ export const PreloadAssets = React.memo((props) => {
       };
     }
 
-    // Keep delay-based behavior only when triggerInStart is not a named trigger.
-    if (hasTriggerName(triggerInStart)) {
+    // Keep delay-based behavior only when start is not a named trigger.
+    if (hasTriggerName(start)) {
       setStartLoading(false);
       return () => {
         if (frameId !== undefined) {
@@ -76,7 +76,7 @@ export const PreloadAssets = React.memo((props) => {
         cancelAnimationFrame(frameId);
       }
     };
-  }, [delay, shouldStartLoading, triggerInStart]);
+  }, [delay, shouldStartLoading, start]);
 
   useEffect(() => {
     if (!startLoading || preloadDone) return undefined;

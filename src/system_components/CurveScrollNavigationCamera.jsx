@@ -11,8 +11,8 @@ import SystemStore from "../SystemStore.js";
  * @param {number} [navigationCurveIncrement] - Progress change per input unit.
  * @param {boolean} [loop] - Loops progress past either curve end.
  * @param {string} [triggerOutProgress] - SystemStore trigger key that receives progress.
- * @param {boolean} [triggerInBlockScroll] - Blocks wheel navigation.
- * @param {boolean} [triggerInBlockTouchNavigation] - Blocks drag and swipe navigation.
+ * @param {boolean} [blockScroll] - Blocks wheel navigation.
+ * @param {boolean} [blockTouchNavigation] - Blocks drag and swipe navigation.
  * @param {Array<any> | THREE.Vector3} [cameraLookatPoint] - Camera look-at point.
  * @param {Array<any> | THREE.Vector3} [cameraFocusDestination] - Focus destination.
  * @param {number} [cameraFocusSpeed] - Focus movement speed.
@@ -27,8 +27,8 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
     const { navigationCurveIncrement = 0.001 } = props;
     const { loop = false } = props;
     const { triggerOutProgress = "curveScrollNavigationProgress" } = props;
-    const { triggerInBlockScroll = false } = props;
-    const { triggerInBlockTouchNavigation = false } = props;
+    const { blockScroll = false } = props;
+    const { blockTouchNavigation = false } = props;
     const { cameraLookatPoint = undefined } = props;
     const { cameraFocusDestination = undefined } = props;
     const { cameraFocusSpeed = 1.8 } = props;
@@ -303,7 +303,7 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         }
 
         const handleWheel = (event) => {
-            if (triggerInBlockScroll) {
+            if (blockScroll) {
                 return;
             }
 
@@ -316,7 +316,7 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         return () => {
             domElement.removeEventListener("wheel", handleWheel);
         };
-    }, [applyNavigationInput, gl, triggerInBlockScroll]);
+    }, [applyNavigationInput, gl, blockScroll]);
 
     //////////////////////////////////////////////////////////
     ////////////////// Pointer drag input ////////////////////
@@ -329,7 +329,7 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         }
 
         const handlePointerDown = (event) => {
-            if (triggerInBlockTouchNavigation) {
+            if (blockTouchNavigation) {
                 return;
             }
 
@@ -340,7 +340,7 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
 
         const handlePointerMove = (event) => {
             if (
-                triggerInBlockTouchNavigation ||
+                blockTouchNavigation ||
                 activePointerIdRef.current !== event.pointerId
             ) {
                 return;
@@ -375,7 +375,7 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
             domElement.removeEventListener("pointerup", handlePointerEnd);
             domElement.removeEventListener("pointercancel", handlePointerEnd);
         };
-    }, [applyNavigationInput, gl, triggerInBlockTouchNavigation]);
+    }, [applyNavigationInput, gl, blockTouchNavigation]);
 
     //////////////////////////////////////////////////////////
     ////////////////////// Frame updates /////////////////////

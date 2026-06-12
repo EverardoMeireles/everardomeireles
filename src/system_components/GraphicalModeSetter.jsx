@@ -18,7 +18,7 @@ import SystemStore from "../SystemStore";
  * @param {boolean} [showFps] - Whether to fps.
  * @param {string} [startMode] - "on_mount", "after_delay" or "on_trigger".
  * @param {number} [waitSeconds] - Timing value for wait seconds.
- * @param {boolean} [triggerInStart] - Trigger value used to start this behavior.
+ * @param {boolean} [start] - Trigger value used to start this behavior.
  * @param {string} [triggerOutFallbackTriggered] - Trigger key set when this behavior finishes.
  * @param {number} [fpsToFallBackHigh] - Fps to fall back high.
  * @param {number} [fpsToFallBackNormal] - Fps to fall back normal.
@@ -37,7 +37,7 @@ export const GraphicalModeSetter = React.memo((props) => {
   const {showFps = false} = props;
   const {startMode = "on_mount"} = props;
   const {waitSeconds = 0} = props;
-  const {triggerInStart = false} = props;
+  const {start = false} = props;
   const {triggerOutFallbackTriggered = ""} = props;
   const {fpsToFallBackHigh = 5} = props;
   const {fpsToFallBackNormal = 10} = props;
@@ -97,9 +97,9 @@ export const GraphicalModeSetter = React.memo((props) => {
     }
 
     if (startMode === "on_trigger") {
-      const triggerNow = hasTriggerName(triggerInStart)
-        ? isNamedTriggerActive(triggers, triggerInStart)
-        : Boolean(triggerInStart);
+      const triggerNow = hasTriggerName(start)
+        ? isNamedTriggerActive(triggers, start)
+        : Boolean(start);
       if (triggerNow && !previousTriggerRef.current) {
         // Re-run on every rising edge.
         fallbackTriggeredRef.current = false;
@@ -145,7 +145,7 @@ export const GraphicalModeSetter = React.memo((props) => {
     decreaseStreakSeconds,
     startMode,
     waitSeconds,
-    triggerInStart,
+    start,
     startReady,
     triggers,
   ]);
