@@ -7,7 +7,8 @@ import { ToolTip } from "./system_components/ToolTip";
 import { ToolTipCircle } from "./system_components/ToolTipCircle";
 import { TutorialOverlay } from "./system_components/TutorialOverlay";
 import SystemStore from "./SystemStore";
-import UserStore from "./SystemStore";
+import UserStore from "./UserStore.js";
+import { ProgressBar } from "./user_components/ProgressBar.jsx";
 import * as THREE from "three";
 import { useFrame } from '@react-three/fiber'
 import config from "./config.js";
@@ -39,6 +40,7 @@ function SceneViewer() {
   const showReturnButton = SystemStore((state) => state.showReturnButton);
   const cameraState = SystemStore((state) => state.cameraState);
   const hudMenuEnabled = SystemStore((state) => state.hudMenuEnabled);
+  const triggers = SystemStore((state) => state.triggers);
 
   const transitionEnded = SystemStore((state) => state.transitionEnded);
 
@@ -340,6 +342,12 @@ function SceneViewer() {
               ))}
               <TutorialOverlay enable = {enableTutorial}/> 
               <HudMenu enabled={hudMenuEnabled} />
+              <ProgressBar
+                progressBarPosition="bottom"
+                progressBarSize={[300, 8]}
+                progressBarCssPreset={0}
+                progress={Number(triggers?.curveScrollNavigationProgress)}
+              />
 
               <img
                     src = "textures/back_arrow.png"

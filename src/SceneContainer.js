@@ -21,7 +21,7 @@ import { PointLightAnimation } from "./system_components/PointLightAnimation.jsx
 import { ObjectLink } from "./system_components/ObjectLink.jsx";
 import { ParticleEmitter } from "./system_components/ParticleEmitter.jsx";
 import { DynamicMaterialLoader } from "./system_components/DynamicMaterialLoader.jsx";
-import { CircularScrollLoader } from "./system_components/CircularScrollLoader.jsx";
+import { CurveScrollNavigationCamera } from "./system_components/CurveScrollNavigationCamera.jsx";
 import { AnimationMixer } from 'three';
 import { customInstanceRotation, customInstanceColor } from "./PathPoints.jsx";
 import { TranslationTable } from "./TranslationTable.jsx";
@@ -29,7 +29,7 @@ import { useResponsive } from "./Styles.jsx";
 import { FpsBenchmarkProbe } from "./system_components/FpsBenchmarkProbe.jsx";
 import { pollForFilesInTHREECache, createTimer } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { FirstPersonController } from './system_components/FirstPersonController.jsx';
+// import { FirstPersonController } from './system_components/FirstPersonController.jsx';
 import { PerspectiveCamera } from "@react-three/drei";
 
 import * as THREE from 'three';
@@ -65,7 +65,7 @@ export const SceneContainer = React.memo((props) => {
     const siteMode = UserStore((state) => state.siteMode);
 
     const sceneName = useMemo(
-        () => siteMode === "resume" ? "Stairs.glb" : "base_cube_DO_NOT_REMOVE.glb",
+        () => siteMode === "resume" ? "planet.glb" : "base_cube_DO_NOT_REMOVE.glb",
         [siteMode]
     );
     const scene = useLoader(GLTFLoader, `${config.resource_path}/models/${sceneName}`);
@@ -332,6 +332,28 @@ export const SceneContainer = React.memo((props) => {
     const objectLinkPosition1 = useMemo(() => [48, 89, -49], []);
     const objectLinkScale = useMemo(() => [1, 1, 1], []);
 
+    // Match the loaded scene position.
+    const curveScrollNavigationCenter = useMemo(() => new THREE.Vector3(0, 0, 0), []);
+
+    // Define circular scroll camera path.
+    const curveScrollNavigationCurve = useMemo(() => {
+        const radius = 90;
+        const cameraHeight = 35;
+        const pointCount = 16;
+        const curvePoints = [];
+
+        for (let index = 0; index < pointCount; index += 1) {
+            const angle = (index / pointCount) * Math.PI * 2;
+            curvePoints.push(new THREE.Vector3(
+                curveScrollNavigationCenter.x + Math.cos(angle) * radius,
+                curveScrollNavigationCenter.y + cameraHeight,
+                curveScrollNavigationCenter.z + Math.sin(angle) * radius
+            ));
+        }
+
+        return new THREE.CatmullRomCurve3(curvePoints, true);
+    }, [curveScrollNavigationCenter]);
+
     const stableOrbitingPointLightParticleEmitterAndPointLightAnimation = useMemo(() => [
         <ParticleEmitter key="particles" imageNames={["fire.png", "fire2.png"]} count={15} speed={10} initialSize={10}
             maxSizeOverLifespan={15} fadeInOut={true} faceCamera={false} faceCameraFrameCheck={80}
@@ -349,7 +371,7 @@ export const SceneContainer = React.memo((props) => {
                     if (!mainScene) return null;
                     return (
                         <SimpleLoader
-                        position={[172, 139, 28]}
+                        position={[0, 0, 0]}
                             scene={mainScene}
                             objectsRevealTriggers={objectsRevealTriggers}
                             animationToPlay={animationToPlay}
@@ -391,7 +413,16 @@ export const SceneContainer = React.memo((props) => {
         {/* <PerspectiveCamera makeDefau={true} near={0.01} rotation={[0,0,0]} position = {[193, 149, 34]} fov = {75}>
         </PerspectiveCamera> */}
         {/* <Camera position={cameraStartingPosition}/> */}
-        <FirstPersonController isMainCamer={false} position={[193, 149, 34]}></FirstPersonController>
+        {/* <FirstPersonController position={[0, 0, 0]} /> */}
+        <CurveScrollNavigationCamera
+            curve={curveScrollNavigationCurve}
+            initialPositionPoint={0}
+            navigationCurveIncrement={0.0004}
+            loop={true}
+            triggerOutProgress="curveScrollNavigationProgress"
+            cameraLookatPoint={[0, 0, 0]}
+            cameraFocusSpeed={0.5}
+        />
         {/* <CircularScrollLoader /> */}
         {(siteMode === "resume") && 
         <>
