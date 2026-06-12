@@ -1001,10 +1001,11 @@ export const ExplodingModelLoader = React.memo((props) => {
       // Only update archCurve.current every 5 frames
       if (frameCount.current >= 5) {
         archCurve.current = createArchCurve(
-          foFocusPoint.current,
           camera,
+          foFocusPoint.current,
           foArchWidth.current,
           foArchcurveDirection.current,
+          1,
           foFront.current
         );
         frameCount.current = 0;  // Reset the frame count after updating
@@ -1094,10 +1095,11 @@ export const ExplodingModelLoader = React.memo((props) => {
       setTransitionEnded(false);
       // Return to the responsive camera start position (or forced override if provided)
       setForcedCameraMovePathCurve(createArchCurve(
-        forcedCameraPositionArray ?? cameraStartingPosition,
         camera,
-        undefined,
-        undefined,
+        forcedCameraPositionArray ?? cameraStartingPosition,
+        1,
+        "up",
+        1,
         [1, 0, 0]
       ));
       updateToolTipCircleVisibility();

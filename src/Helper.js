@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import SystemStore from "./SystemStore.js";
 import config from "./config.js";
 
 // replace it by store's value later
@@ -66,92 +65,74 @@ export function createTimer() {
   return () => performance.now() - start;
 }
 
-// Create a THREE.CatmullRomCurve3 curve from the camera to a target position
+// Create a curved path between two positions.
 export function createArchCurve(
-    targetPosition, // The end position of the curve
-    distanceOrCamera = 1, // backward compatibility: can be the camera if distance is omitted
-    cameraOrArchWidth = 5,
-    archWidthOrCurveDirection,
-    frontDirection = [1, 0, 0], // the direction of the "front" of the object
-    maybeCurveDirection
+    startPosition,
+    targetPosition,
+    archWidth = 1,
+    curveDirection = "up",
+    targetOffsetDistance = 0,
+    frontDirection = [1, 0, 0]
   ) {
-    let distance = 1;
-    let camera;
-    let archWidth = 1;
-    let curveDirection = "up";
+    // Resolve arrays, vectors, cameras, and objects.
+    const resolvePosition = (value, name) => {
+      const position = new THREE.Vector3();
 
-    if (typeof distanceOrCamera === "number" || distanceOrCamera === undefined) {
-      distance = typeof distanceOrCamera === "number" ? distanceOrCamera : 1;
-      camera = cameraOrArchWidth;
-      archWidth = Number.isFinite(archWidthOrCurveDirection) ? archWidthOrCurveDirection : 1;
-      curveDirection = maybeCurveDirection ?? "up";
-    } else {
-      camera = distanceOrCamera;
-      archWidth = Number.isFinite(cameraOrArchWidth) ? cameraOrArchWidth : 1;
-      curveDirection = archWidthOrCurveDirection ?? "up";
-    }
-
-    const startPos = new THREE.Vector3();
-    if (camera && typeof camera.getWorldPosition === "function") {
-      camera.getWorldPosition(startPos);
-    } else if (camera?.isVector3) {
-      startPos.copy(camera);
-    } else if (Array.isArray(camera) && camera.length === 3) {
-      startPos.set(camera[0], camera[1], camera[2]);
-    } else {
-      const fallbackPosition = SystemStore?.getState?.().cameraState?.position;
-      if (Array.isArray(fallbackPosition) && fallbackPosition.length === 3) {
-        startPos.set(fallbackPosition[0], fallbackPosition[1], fallbackPosition[2]);
-      } else {
-        throw new Error("createArchCurve requires a THREE.Camera instance or a valid cameraState.position.");
+      if (value && typeof value.getWorldPosition === "function") {
+        value.getWorldPosition(position);
+        return position;
       }
-    }
-    // 1. frontDirection → normalized Vector3 * distance
-    const dirVec = frontDirection.isVector3 ? frontDirection.clone() : new THREE.Vector3(...frontDirection);
-    const offset = dirVec.normalize().multiplyScalar(distance);
-  
-    // 2. get object world position and compute end point
-    const worldPos = Array.isArray(targetPosition)
-      ? new THREE.Vector3(...targetPosition)
-      : targetPosition ?? new THREE.Vector3(0, 0, 0);
-  
-    const endPos = worldPos.clone().add(offset);
-  
-    // 4. Determine curve frontDirection based on curveDirection type
-    let directionVec = new THREE.Vector3(0, 0, 0); // Default vector
-  
-    if (typeof curveDirection === "string") {
-      // Handle string-based curveDirection
-      switch (curveDirection) {
+
+      if (value?.isVector3) {
+        return value.clone();
+      }
+
+      if (Array.isArray(value) && value.length >= 3) {
+        return new THREE.Vector3(value[0], value[1], value[2]);
+      }
+
+      throw new Error(`createArchCurve requires a valid ${name}.`);
+    };
+    // Resolve the arch and offset directions.
+    const resolveDirection = (value) => {
+      if (value?.isVector3) {
+        return value.clone().normalize();
+      }
+
+      if (Array.isArray(value) && value.length >= 3) {
+        return new THREE.Vector3(value[0], value[1], value[2]).normalize();
+      }
+
+      switch (value) {
         case "up":
-          directionVec.set(0, 1, 0); // Curve upwards
-          break;
+          return new THREE.Vector3(0, 1, 0);
         case "down":
-          directionVec.set(0, -1, 0); // Curve downwards
-          break;
+          return new THREE.Vector3(0, -1, 0);
         case "left":
-          directionVec.set(-1, 0, 0); // Curve left
-          break;
+          return new THREE.Vector3(-1, 0, 0);
         case "right":
-          directionVec.set(1, 0, 0); // Curve right
-          break;
+          return new THREE.Vector3(1, 0, 0);
+        case "forward":
+          return new THREE.Vector3(0, 0, -1);
+        case "backward":
+          return new THREE.Vector3(0, 0, 1);
         default:
-          console.warn("Invalid curve frontDirection, using default 'up'");
-          directionVec.set(0, 1, 0); // Default curve upwards
+          console.warn("Invalid curve direction, using default 'up'");
+          return new THREE.Vector3(0, 1, 0);
       }
-    } else if (Array.isArray(curveDirection) || curveDirection instanceof THREE.Vector3) {
-      // Handle array-based or Vector3-based curveDirection
-      directionVec = new THREE.Vector3(...curveDirection); // Convert array to Vector3
-    }
-  
-    // 5. Adjust midpoints based on the frontDirection vector
-    const p1 = startPos.clone().lerp(endPos, 0.25);
-    p1.add(directionVec.clone().multiplyScalar(archWidth)); // Use directionVec for curvature
-  
-    const p2 = startPos.clone().lerp(endPos, 0.75);
-    p2.add(directionVec.clone().multiplyScalar(archWidth)); // Similarly adjust second midpoint
-  
-    // 6. Return the Catmull-Rom curve
+    };
+
+    const safeArchWidth = Number.isFinite(archWidth) ? archWidth : 1;
+    const safeOffsetDistance = Number.isFinite(targetOffsetDistance) ? targetOffsetDistance : 0;
+    const startPos = resolvePosition(startPosition, "startPosition");
+    const targetPos = resolvePosition(targetPosition, "targetPosition");
+    const offset = resolveDirection(frontDirection).multiplyScalar(safeOffsetDistance);
+    const endPos = targetPos.clone().add(offset);
+    const archOffset = resolveDirection(curveDirection).multiplyScalar(safeArchWidth);
+
+    const p1 = startPos.clone().lerp(endPos, 0.25).add(archOffset);
+    const p2 = startPos.clone().lerp(endPos, 0.75).add(archOffset);
+
     return new THREE.CatmullRomCurve3([startPos, p1, p2, endPos]);
   }
 

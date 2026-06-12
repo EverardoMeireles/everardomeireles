@@ -117,13 +117,13 @@ export function HudMenu(props) {
                 if (isCurveLike(transitionValue)) {
                     setForcedCameraMovePathCurve(transitionValue);
                 } else if (transitionValue) {
+                    const transitionStartPosition = startPosition ?? cameraState?.position;
+                    if (!transitionStartPosition) return;
+
                     setForcedCameraMovePathCurve(
                         createArchCurve(
-                            transitionValue,
-                            0,
-                            startPosition ?? cameraState?.position,
-                            undefined,
-                            [1, 0, 0]
+                            transitionStartPosition,
+                            transitionValue
                         )
                     );
                 }

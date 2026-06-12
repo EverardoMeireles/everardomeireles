@@ -422,6 +422,7 @@ export const SceneContainer = React.memo((props) => {
             triggerOutProgress="curveScrollNavigationProgress"
             cameraLookatPoint={[0, 0, 0]}
             cameraFocusSpeed={0.5}
+            cameraFocusDestination={[0,0,0]}
         />
         {/* <CircularScrollLoader /> */}
         {(siteMode === "resume") && 

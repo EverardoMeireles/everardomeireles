@@ -152,23 +152,12 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
     const createFocusCurve = useCallback((startPosition, endPosition) => {
         const curveDistance = startPosition.distanceTo(endPosition);
         const archWidth = curveDistance * 0.25;
-        let curveDirection = cameraFocusCurveDirection;
-
-        if (cameraFocusCurveDirection === "forward") {
-            curveDirection = [0, 0, -1];
-        }
-
-        if (cameraFocusCurveDirection === "backward") {
-            curveDirection = [0, 0, 1];
-        }
 
         return createArchCurve(
-            endPosition,
-            0,
             startPosition,
+            endPosition,
             archWidth,
-            [1, 0, 0],
-            curveDirection
+            cameraFocusCurveDirection
         );
     }, [cameraFocusCurveDirection]);
 
@@ -282,11 +271,13 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
             return;
         }
 
+        // Start focus from the current camera position.
         const startPosition = cameraRef.current?.position?.clone() ?? getMainCurvePoint();
         if (!startPosition) {
             return;
         }
 
+        // Pause main navigation while focus animates.
         navigationTargetProgressRef.current = navigationProgressRef.current;
         focusCurveRef.current = createFocusCurve(startPosition, focusDestination);
         focusProgressRef.current = 0;
@@ -399,9 +390,11 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         const camera = cameraRef.current;
 
         if (cameraModeRef.current === "focus" && focusCurveRef.current) {
+            // Move forward along the focus curve.
             focusProgressRef.current = clampProgress(focusProgressRef.current + frameDelta * safeCameraFocusSpeed);
             camera.position.copy(focusCurveRef.current.getPointAt(smoothStep(focusProgressRef.current)));
         } else if (cameraModeRef.current === "returning" && returnCurveRef.current) {
+            // Ease back toward the main curve.
             returnProgressRef.current = clampProgress(returnProgressRef.current + frameDelta * 1.8);
             camera.position.copy(returnCurveRef.current.getPointAt(smoothStep(returnProgressRef.current)));
 
@@ -409,6 +402,7 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
                 cameraModeRef.current = "main";
             }
         } else {
+            // Follow the main scroll curve.
             const progressDifference = navigationTargetProgressRef.current - navigationProgressRef.current;
             const progressLerpAmount = Math.min(1, frameDelta * navigationLerpSpeed);
 
@@ -430,13 +424,17 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
             }
         }
 
+        // Choose the active look-at point.
         const focusDestination = toVector3(cameraFocusDestination);
         const lookAtTarget = toVector3(cameraLookatPoint)
             ?? (cameraModeRef.current === "focus" ? focusDestination : undefined)
             ?? new THREE.Vector3(0, 0, 0);
 
+        // Smoothly rotate toward the look-at target.
         currentLookAtRef.current.lerp(lookAtTarget, Math.min(1, frameDelta * 8));
         camera.lookAt(currentLookAtRef.current);
+
+        // Mirror local camera onto React Three Fiber.
         state.camera.position.copy(camera.position);
         state.camera.rotation.copy(camera.rotation);
     });
