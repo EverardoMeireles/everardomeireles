@@ -128,11 +128,7 @@
       0,
       0
     ],
-    "forcedCameraPosition": [
-      24,
-      12,
-      4
-    ],
+    "forcedCameraPosition": [41, 38, -16],
     "animationStartOnLoad": true,
     "enableRockingAnimation": true,
     "enableExplodeAnimation": true,

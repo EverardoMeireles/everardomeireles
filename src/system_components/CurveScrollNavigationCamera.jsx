@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef } from "react";
 import { PerspectiveCamera } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { createArchCurve, isCurveDegenerate, setNamedTrigger, smoothStep } from "../Helper.js";
+import { createArchCurve, isCurveUsable, setNamedTrigger, smoothStep } from "../Helper.js";
 import SystemStore from "../SystemStore.js";
 
 /**
@@ -109,19 +109,6 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         return undefined;
     }, []);
 
-    // Check curve usability.
-    const hasUsableCurve = useCallback((value) => {
-        if (!value || typeof value.getPointAt !== "function") {
-            return false;
-        }
-
-        if (Array.isArray(value.points)) {
-            return !isCurveDegenerate(value);
-        }
-
-        return true;
-    }, []);
-
     // Resolve initial curve progress.
     const resolveInitialProgress = useCallback((value) => {
         if (typeof value === "number") {
@@ -167,12 +154,12 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
 
     // Read the current main curve point.
     const getMainCurvePoint = useCallback((progress = navigationProgressRef.current) => {
-        if (!hasUsableCurve(curve)) {
+        if (!isCurveUsable(curve)) {
             return undefined;
         }
 
         return curve.getPointAt(normalizeProgress(progress));
-    }, [curve, hasUsableCurve, normalizeProgress]);
+    }, [curve, normalizeProgress]);
 
     // Set the requested curve progress.
     const setNavigationTargetProgress = useCallback((value) => {
@@ -238,7 +225,7 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
 
     useEffect(() => {
         const initialProgress = resolveInitialProgress(initialPositionPoint);
-        const startingPoint = hasUsableCurve(curve)
+        const startingPoint = isCurveUsable(curve)
             ? curve.getPointAt(initialProgress)
             : new THREE.Vector3(0, 0, 0);
 
@@ -249,7 +236,6 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         }
     }, [
         curve,
-        hasUsableCurve,
         initialPositionPoint,
         resolveInitialProgress,
         snapNavigationProgress

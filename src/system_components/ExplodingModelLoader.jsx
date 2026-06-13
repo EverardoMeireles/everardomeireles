@@ -33,12 +33,12 @@ import SystemStore from "../SystemStore";
  * @param {Array<any>} [focusedObjectCloneAxisOfRotation] - Rotating object's axis of rotation.
  * @param {number} [focusedObjectCloneSpeedOfRotation] - Rotating object's speed of rotation.
  * @param {*} [focusedObjectCloneForcePositionOffset] - Screen-space offset for the focused clone position.
- * @param {boolean} [enableMainObjectRotationAnimation] - R.
- * @param {number} [mainObjectRotationAnimationRotationSpeed] - R.
- * @param {string} [mainObjectRotationAnimationWhenToStop] - R.
- * @param {boolean} [mainObjectRotationAnimationResetInitialRotation] - R.
- * @param {number} [mainObjectRotationAnimationResetInitialRotationAnimationSpeed] - R.
- * @param {boolean} [mainObjectRotationAnimationRestartAnimationAfterStop] - R.
+ * @param {boolean} [enableMainObjectRotationAnimation]
+ * @param {number} [mainObjectRotationAnimationRotationSpeed]
+ * @param {string} [mainObjectRotationAnimationWhenToStop]
+ * @param {boolean} [mainObjectRotationAnimationResetInitialRotation]
+ * @param {number} [mainObjectRotationAnimationResetInitialRotationAnimationSpeed]
+ * @param {boolean} [mainObjectRotationAnimationRestartAnimationAfterStop]
  * @param {*} [stopMainObjectRotationAnimation] - A trigger that will be able to stop the animation from outside the component.
  * @param {*} [mainObjectRotationAnimationIsPlayingTrigger] - The trigger that will be set to true when the animation stops.
  * @param {boolean} [tubeCurveDebugMode] - Show the transition curve when circles are hovered.

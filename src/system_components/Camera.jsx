@@ -1,25 +1,29 @@
-import { useFrame, useThree } from '@react-three/fiber';
-import { path_points_simple_lookat_dict, path_points_lookat_dict, path_points_speed, CreateNavigationCurve, firstPoint} from "../PathPoints.jsx";
+import { useFrame } from '@react-three/fiber';
 import * as THREE from "three";
-import { OrbitControls, PerspectiveCamera, calcPosFromAngles } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import React, { useRef, useEffect, useState } from "react";
-import { HtmlDreiMenu } from "./HtmlDreiMenu"; // eslint-disable-line no-unused-vars
-import { smoothStep, roundToDecimalPlace, hasSignificantChange, createArchCurve, isCurveDegenerate, setNamedTrigger } from "../Helper";
+import { smoothStep, roundToDecimalPlace, hasSignificantChange, isCurveDegenerate, setNamedTrigger } from "../Helper";
 import SystemStore from "../SystemStore";
 
 /**
- * Purpose: Legacy OrbitControls camera that moves along forced CatmullRom curves.
- * Relationships: Reads SystemStore camera targets and forced curves; superseded in SceneContainer by CurveScrollNavigationCamera unless re-enabled.
+ * Purpose: OrbitControls camera that moves along a prop-provided CatmullRom curve.
+ * Relationships: Can still fall back to SystemStore's forced camera values for legacy HudMenu and ExplodingModelLoader flows.
  * Example:
- * <Camera transitionSpeed={0.5} position={[0, 0, 0]} triggerOutCameraTransitionStarted="cameraStarted" triggerOutCameraTransitionEnded="cameraEnded" />
+ * <Camera transitionSpeed={0.5} position={[0, 0, 0]} cameraMovePathCurve={curve} cameraTarget={[0, 0, 0]} cameraPosition={[0, 5, 10]} triggerOutCameraTransitionStarted="cameraStarted" triggerOutCameraTransitionEnded="cameraEnded" />
  * @param {number} [transitionSpeed] - Speed value for transition speed.
  * @param {Array<any>} [position] - Position in the scene.
- * @param {string} [triggerOutCameraTransitionStarted] - Trigger key set when this behavior finishes.
+ * @param {*} [cameraMovePathCurve] - Curve that starts a camera transition when changed.
+ * @param {Array<any> | THREE.Vector3} [cameraTarget] - Camera look-at and orbit target.
+ * @param {Array<any> | THREE.Vector3} [cameraPosition] - Forced camera position.
+ * @param {string} [triggerOutCameraTransitionStarted] - Trigger key set when this behavior starts.
  * @param {string} [triggerOutCameraTransitionEnded] - Trigger key set when this behavior finishes.
  */
 export const Camera = React.memo((props) => {
     const {transitionSpeed = 0.5} = props;
     const {position = [0, 0, 0]} = props;
+    const {cameraMovePathCurve = undefined} = props;
+    const {cameraTarget = undefined} = props;
+    const {cameraPosition = undefined} = props;
     const {triggerOutCameraTransitionStarted = ""} = props;
     const {triggerOutCameraTransitionEnded = ""} = props;
 
@@ -34,46 +38,114 @@ export const Camera = React.memo((props) => {
     const setTrigger = SystemStore((state) => state.setTrigger);
     const setCameraState = SystemStore((state) => state.setCameraState);
     const cameraStateTracking = SystemStore((state) => state.cameraStateTracking);
-    const forcedCameraTarget = SystemStore((state) => state.forcedCameraTarget);
-    const forcedCameraMovePathCurve = SystemStore((state) => state.forcedCameraMovePathCurve);
-    const forcedCameraPosition = SystemStore((state) => state.forcedCameraPosition);
-    const triggers = SystemStore((state) => state.triggers);
+    const storeCameraTarget = SystemStore((state) => state.forcedCameraTarget);
+    const storeCameraMovePathCurve = SystemStore((state) => state.forcedCameraMovePathCurve);
+    const storeCameraPosition = SystemStore((state) => state.forcedCameraPosition);
 
-    const didMount = useRef(false);
-    const transitionInProgress = useRef(false);
+    const activeCameraTarget = cameraTarget ?? storeCameraTarget;
+    const activeCameraMovePathCurve = cameraMovePathCurve ?? storeCameraMovePathCurve;
+    const activeCameraPosition = cameraPosition ?? storeCameraPosition;
 
-    const updateCallNow = useRef(false);
     const cam = useRef(undefined);
-    const { camera, events } = useThree();
     
     const controls = useRef();
-    // const current_path = useRef("StartingPoint");
-    const current_lookat = useRef(new THREE.Vector3(0,0,0))
+    const currentLookAtRef = useRef(new THREE.Vector3(0, 0, 0));
+    const targetRef = useRef(new THREE.Vector3(0, 0, 0));
+    const transitionCurveRef = useRef();
+    const transitionProgressRef = useRef(1);
+    const transitionInProgressRef = useRef(false);
+    const previousTransitionCurveKeyRef = useRef("");
 
     const isMouseNearEdge = useRef(false);
     
     const keyboardControlsSpeed = 0.4;
 
-    const gravitationalPullPoint = forcedCameraMovePathCurve?.points[forcedCameraMovePathCurve.points.length - 1] ?? new THREE.Vector3(0,0,0) // the point to return to in panDirectional mode
+    const gravitationalPullPoint = activeCameraMovePathCurve?.points?.[activeCameraMovePathCurve.points.length - 1] ?? new THREE.Vector3(0,0,0) // the point to return to in panDirectional mode
     const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
     const pullInterval = 10; // How often the pull is applied in milliseconds
-
-    const nullCurve = new THREE.CatmullRomCurve3([        
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, 0)])
-
-    const curve = useRef(nullCurve);
-
-    let smoothStepTick;
-    let sub_points;
-    let tick = useRef(1)
 
     // Initialize output triggers to false so parent listeners can detect future true edges.
     useEffect(() => {
         setNamedTrigger(setTrigger, triggerOutCameraTransitionStarted, false);
         setNamedTrigger(setTrigger, triggerOutCameraTransitionEnded, false);
     }, [setTrigger, triggerOutCameraTransitionStarted, triggerOutCameraTransitionEnded]);
+
+    // Convert supported position inputs to Vector3.
+    function toVector3(value) {
+        if (value?.isVector3) {
+            return value.clone();
+        }
+
+        if (Array.isArray(value) && value.length >= 3 && Number.isFinite(value[0]) && Number.isFinite(value[1]) && Number.isFinite(value[2]))
+            {
+                return new THREE.Vector3(value[0], value[1], value[2]);
+            }
+
+        return undefined;
+    }
+
+    // Check whether a curve can drive a transition.
+    function hasUsableCurve(value) {
+        if (!value || typeof value.getPointAt !== "function") {
+            return false;
+        }
+
+        if (!Array.isArray(value.points) || value.points.length < 2) {
+            return false;
+        }
+
+        return (
+            value.points.every((point) => (point && Number.isFinite(point.x) && Number.isFinite(point.y) && Number.isFinite(point.z)))
+            &&
+            !isCurveDegenerate(value)
+        );
+    }
+
+    // Build a stable key for repeated curve values.
+    function getCurveKey(value) {
+        if (!Array.isArray(value?.points)) {
+            return "";
+        }
+
+        return value.points.map((point) => `${point.x},${point.y},${point.z}`).join("|");
+    }
+
+    // Publish transition started and ended states.
+    function setTransitionTriggers(started, ended) {
+        setNamedTrigger(setTrigger, triggerOutCameraTransitionStarted, started);
+        setNamedTrigger(setTrigger, triggerOutCameraTransitionEnded, ended);
+    }
+
+    // Complete the active curve transition.
+    function finishTransition(state) {
+        transitionInProgressRef.current = false;
+        transitionProgressRef.current = 1;
+        setTransitionEnded(true);
+        setTransitionTriggers(false, true);
+
+        if (controls.current) {
+            currentLookAtRef.current.copy(targetRef.current);
+            controls.current.target.copy(targetRef.current);
+            controls.current.enabled = true;
+        }
+
+        if (state?.camera) {
+            state.camera.lookAt(targetRef.current);
+        }
+
+        if (state?.events) {
+            state.events.enabled = true;
+        }
+    }
+
+    // Start a new prop or store-driven curve transition.
+    function startTransition(nextCurve) {
+        transitionCurveRef.current = nextCurve;
+        transitionProgressRef.current = 0;
+        transitionInProgressRef.current = true;
+        setTransitionEnded(false);
+        setTransitionTriggers(true, false);
+    }
 
     // Change camera mode
     const [cameraMode, setCameraMode] = useState({LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE, RIGHT: THREE.MOUSE.RIGHT});
@@ -185,7 +257,8 @@ export const Camera = React.memo((props) => {
 
         // Determine if the mouse is near the edge of the screen
         isMouseNearEdge.current =
-            event.clientX < panDirectionalEdgethreshold || event.clientX > innerWidth - panDirectionalEdgethreshold ||
+            event.clientX < panDirectionalEdgethreshold || event.clientX > innerWidth - panDirectionalEdgethreshold 
+            ||
             event.clientY < panDirectionalEdgethreshold || event.clientY > innerHeight - panDirectionalEdgethreshold;
         };
 
@@ -217,253 +290,128 @@ export const Camera = React.memo((props) => {
         }
     }, [currentCameraMode, transitionEnded]);
 
-    // Set the transition speed if a if a tick, speed value pair is provided
-    // function setCustomSpeed(currentTick, path_speeds){
-    //     var tickKey = Number(currentTick.toPrecision(13));
-    //     var currentKey = Object.keys(path_speeds).find(key => key >= tickKey);
-    //     // if currentKey on last element of path_speeds, default to last element
-    //     if(currentKey === undefined){
-    //         currentKey = Object.keys(path_speeds).pop();
-    //     }
-
-    //     return path_speeds[currentKey];
-    // }
-
-    // if the target is forced
+    // Keep the latest camera target available.
     useEffect(() => {
-        if (!didMount.current) {
-            didMount.current = true;
+        const nextTarget = toVector3(activeCameraTarget);
+
+        if (!nextTarget) {
             return;
         }
 
-        if (!controls.current) return;
-        const hasValidForcedTarget =
-            Array.isArray(forcedCameraTarget) &&
-            forcedCameraTarget.length >= 3 &&
-            Number.isFinite(forcedCameraTarget[0]) &&
-            Number.isFinite(forcedCameraTarget[1]) &&
-            Number.isFinite(forcedCameraTarget[2]);
+        targetRef.current.copy(nextTarget);
 
-        if (hasValidForcedTarget) {
-            controls.current.target.x = forcedCameraTarget[0];
-            controls.current.target.y = forcedCameraTarget[1];
-            controls.current.target.z = forcedCameraTarget[2];
+        if (!transitionInProgressRef.current && controls.current) {
+            currentLookAtRef.current.copy(controls.current.target);
+            controls.current.target.copy(nextTarget);
         }
+    }, [activeCameraTarget]);
 
-    }, [forcedCameraTarget]);
-
-    // if the camera path is forced, reset the animation tick
-    // useEffect(() => {
-    //     if (!didMount.current) {
-    //         didMount.current = true;
-    //         return;
-    //     }
-    // }, [forcedCameraTarget]);
-
-    // if the camera path is forced, reset the animation tick
+    // Start transitions when the curve changes.
     useEffect(() => {
-        if (!didMount.current) {
-            didMount.current = true;
+        if (!hasUsableCurve(activeCameraMovePathCurve)) {
             return;
         }
 
-        // Only starts a transition on valid curves
-        if(!isCurveDegenerate(forcedCameraMovePathCurve)){
-            curve.current = forcedCameraMovePathCurve;
-            tick.current = 0;
-            transitionInProgress.current = true;
-
-            setNamedTrigger(setTrigger, triggerOutCameraTransitionEnded, false);
-            setNamedTrigger(setTrigger, triggerOutCameraTransitionStarted, true);
+        const curveKey = getCurveKey(activeCameraMovePathCurve);
+        if (curveKey === previousTransitionCurveKeyRef.current) {
+            return;
         }
-    }, [forcedCameraMovePathCurve, setTrigger, triggerOutCameraTransitionStarted, triggerOutCameraTransitionEnded]);
 
-    // Moves the camera every frame when the desired path changes
+        previousTransitionCurveKeyRef.current = curveKey;
+        startTransition(activeCameraMovePathCurve);
+    }, [activeCameraMovePathCurve]);
+
+    // Move along the active transition curve.
     useFrame((state, delta) => {
-        const curvePoints = curve.current?.points;
-        const invalidCurve =
-            !curvePoints ||
-            curvePoints.length < 2 ||
-            curvePoints.some(
-                (p) =>
-                    !p ||
-                    !Number.isFinite(p.x) ||
-                    !Number.isFinite(p.y) ||
-                    !Number.isFinite(p.z)
-            );
-
-        if (invalidCurve) {
-            setTransitionEnded(true);
-            state.events.enabled = true;
-            if (controls.current) controls.current.enabled = true;
-            if (transitionInProgress.current) {
-                transitionInProgress.current = false;
-                setNamedTrigger(setTrigger, triggerOutCameraTransitionStarted, false);
-                setNamedTrigger(setTrigger, triggerOutCameraTransitionEnded, true);
-            }
+        if (!transitionInProgressRef.current) {
             return;
         }
 
-        if (tick.current < 1) {
-            updateCallNow.current = true;
-            state.events.enabled = false;
-            if (!controls.current) {
-                // Keep transition deterministic: do not advance until OrbitControls ref is ready.
-                return;
-            }
-            controls.current.enabled = false;
+        const activeCurve = transitionCurveRef.current;
+        if (!hasUsableCurve(activeCurve)) {
+            finishTransition(state);
+            return;
+        }
 
-            tick.current += transitionSpeed * delta;
+        state.events.enabled = false;
 
-            // Smooth out the movement
-            smoothStepTick = smoothStep(tick.current);
+        if (!controls.current) {
+            return;
+        }
 
-            // Determines the next point for the camera to look at
-            current_lookat.current.lerp(new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]), 0.03);
+        controls.current.enabled = false;
+        transitionProgressRef.current = Math.min(
+            1,
+            transitionProgressRef.current + transitionSpeed * delta
+        );
 
-            state.camera.lookAt(current_lookat.current);
-            // Updates the orbitcontrol's target
-            controls.current.target.x = current_lookat.current.x;
-            controls.current.target.y = current_lookat.current.y;
-            controls.current.target.z = current_lookat.current.z;
+        const smoothProgress = smoothStep(transitionProgressRef.current);
+        let curvePoint;
 
-            // Get the current point along the curve
-            let sub_points_local = null;
-            try {
-                sub_points_local = curve.current.getPointAt(Math.min(Math.max(smoothStepTick, 0), 0.99999));
-            } catch (err) {
-                setTransitionEnded(true);
-                state.events.enabled = true;
-                if (controls.current) controls.current.enabled = true;
-                return;
-            }
+        try {
+            curvePoint = activeCurve.getPointAt(Math.min(Math.max(smoothProgress, 0), 0.99999));
+        } catch {
+            finishTransition(state);
+            return;
+        }
 
-            if (sub_points_local) {
-                // Updates the camera's position
-                state.camera.position.x = sub_points_local.x;
-                state.camera.position.y = sub_points_local.y;
-                state.camera.position.z = sub_points_local.z;
-            }
-        } else {
-            updateCall(state);
+        if (curvePoint) {
+            state.camera.position.copy(curvePoint);
+        }
+
+        // Ease orbit target toward destination.
+        currentLookAtRef.current.lerp(targetRef.current, 0.03);
+        state.camera.lookAt(currentLookAtRef.current);
+        controls.current.target.copy(currentLookAtRef.current);
+
+        if (transitionProgressRef.current >= 1) {
+            finishTransition(state);
         }
     });
 
-    // Sets values after the camera movement is done 
-    function updateCall(state){
-        if(updateCallNow.current){
-            if (!controls.current) {
-                // Keep finalization paused until controls are available again.
-                return;
-            }
-            // If fps is too low, the camera's target might not end up where it should after transition, force it.
-            const hasValidForcedTarget =
-                Array.isArray(forcedCameraTarget) &&
-                forcedCameraTarget.length >= 3 &&
-                Number.isFinite(forcedCameraTarget[0]) &&
-                Number.isFinite(forcedCameraTarget[1]) &&
-                Number.isFinite(forcedCameraTarget[2]);
-
-            if(
-                hasValidForcedTarget &&
-                (
-                    controls.current.target.x !== forcedCameraTarget[0] ||
-                    controls.current.target.y !== forcedCameraTarget[1] ||
-                    controls.current.target.z !== forcedCameraTarget[2]
-                )
-            ){
-                controls.current.target = new THREE.Vector3(forcedCameraTarget[0], forcedCameraTarget[1], forcedCameraTarget[2]);
-                state.camera.lookAt(forcedCameraTarget)
-            }
-            setTransitionEnded(true);
-            updateCallNow.current = false;
-            controls.current.enabled = true;
-            state.events.enabled = true;
-            transitionInProgress.current = false;
-
-            setNamedTrigger(setTrigger, triggerOutCameraTransitionStarted, false);
-            setNamedTrigger(setTrigger, triggerOutCameraTransitionEnded, true);
-        }
-    }
-
-//useFrame((state,delta)=>{
-    // console.log(controls)
-    // console.log(cameraMode)
-//})
-
-// Function to compare arrays of Vector3
-function compareCurves(curve1, curve2) {
-    if (curve1.points.length !== curve2.points.length) {
-        return false;
-    }
-    
-    for (let i = 0; i < curve1.points.length; i++) {
-        if (!curve1.points[i].equals(curve2.points[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-    // orbitcontrols keyboard control is not working, that's a workaround
+    // Camera-relative AZERTY keyboard movement.
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (!cam.current || !controls.current) return;
-            // eslint-disable-next-line default-case
-            switch(event.code) {
-                case "KeyP":
+
+            const key = event.key.toLowerCase();
+
+            if (key === "p") {
                 console.log([Math.floor(cam.current.position.x), Math.floor(cam.current.position.y), Math.floor(cam.current.position.z)]);
-                break;
-                case "KeyW":
-                cam.current.position.x += -keyboardControlsSpeed;
-                controls.current.target.x += -keyboardControlsSpeed;
-                break;
-                case "KeyA":
-                    cam.current.position.z += keyboardControlsSpeed;
-                    controls.current.target.z += keyboardControlsSpeed;
-                break;
-                case "KeyS":
-                    cam.current.position.x += keyboardControlsSpeed;
-                    controls.current.target.x += keyboardControlsSpeed;
-                break;
-                case "KeyD":
-                    cam.current.position.z += -keyboardControlsSpeed;
-                    controls.current.target.z += -keyboardControlsSpeed;
-                break;
-                case "KeyQ":
-                    cam.current.position.y += keyboardControlsSpeed;
-                    controls.current.target.y += keyboardControlsSpeed;
-                    cam.current.position.z += keyboardControlsSpeed;
-                    controls.current.target.z += keyboardControlsSpeed;
-                break;
-                case "KeyE":
-                    cam.current.position.y += keyboardControlsSpeed;
-                    controls.current.target.y += keyboardControlsSpeed;
-                    cam.current.position.z += -keyboardControlsSpeed;
-                    controls.current.target.z += -keyboardControlsSpeed;
-                break;
-                case "KeyC":
-                    cam.current.position.y += -keyboardControlsSpeed;
-                    controls.current.target.y += -keyboardControlsSpeed;
-                    cam.current.position.z += -keyboardControlsSpeed;
-                    controls.current.target.z += -keyboardControlsSpeed;
-                break;
-                case "KeyZ":
-                    cam.current.position.y += -keyboardControlsSpeed;
-                    controls.current.target.y += -keyboardControlsSpeed;
-                    cam.current.position.z += keyboardControlsSpeed;
-                    controls.current.target.z += keyboardControlsSpeed;
-                break;
-                case "KeyR":
-                    cam.current.position.y += keyboardControlsSpeed;
-                    controls.current.target.y += keyboardControlsSpeed;
-                break;
-                case "KeyF":
-                    cam.current.position.y += -keyboardControlsSpeed;
-                    controls.current.target.y += -keyboardControlsSpeed;
-                break;
+                return;
             }
-            setCameraState(//error while holding any key after a full renrender(by modifying this comment for example)
+
+            const forward = new THREE.Vector3();
+            cam.current.getWorldDirection(forward);
+            forward.y = 0;
+
+            if (forward.lengthSq() === 0) {
+                return;
+            }
+
+            forward.normalize();
+            const right = new THREE.Vector3().crossVectors(forward, cam.current.up).normalize();
+            const movement = new THREE.Vector3();
+
+            if (key === "z") {
+                movement.copy(forward);
+            } else if (key === "s") {
+                movement.copy(forward).negate();
+            } else if (key === "q") {
+                movement.copy(right).negate();
+            } else if (key === "d") {
+                movement.copy(right);
+            } else {
+                return;
+            }
+
+            event.preventDefault();
+            movement.multiplyScalar(keyboardControlsSpeed);
+            cam.current.position.add(movement);
+            controls.current.target.add(movement);
+            controls.current.update();
+
+            setCameraState(
                 [cam.current.position.x, cam.current.position.y, cam.current.position.z],
                 [cam.current.rotation.x, cam.current.rotation.y, cam.current.rotation.z]
             );
@@ -532,21 +480,20 @@ function compareCurves(curve1, curve2) {
     ////////////////////////////////////////////////////////////
 
     useEffect(() => {
-        if(!forcedCameraPosition || !cam.current){
+        const nextPosition = toVector3(activeCameraPosition);
+
+        if(!nextPosition || !cam.current){
             return;
         }
-        if(forcedCameraPosition){
-            cam.current.position.x = forcedCameraPosition[0];
-            cam.current.position.y = forcedCameraPosition[1];
-            cam.current.position.z = forcedCameraPosition[2];
-        }
-    }, [forcedCameraPosition]);
+
+        cam.current.position.copy(nextPosition);
+    }, [activeCameraPosition]);
     
     return(
         <>
             <PerspectiveCamera makeDefault near={0.01} ref = {cam} position = {position} fov = {75}>
             </PerspectiveCamera>
-            <OrbitControls makeDefault mouseButtons={cameraMode} target={forcedCameraTarget} enableZoom = {currentCameraMovements["zoom"] && !forceDisableZoom}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
+            <OrbitControls makeDefault mouseButtons={cameraMode} target={activeCameraTarget} enableZoom = {currentCameraMovements["zoom"] && !forceDisableZoom}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
         </>
     )
 });

@@ -20,6 +20,7 @@ import { useResponsive } from "./Styles.jsx";
 import { FpsBenchmarkProbe } from "./system_components/FpsBenchmarkProbe.jsx";
 import { pollForFilesInTHREECache } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Camera } from "./system_components/Camera.jsx";
 
 import * as THREE from 'three';
 
@@ -355,18 +356,18 @@ export const SceneContainer = React.memo((props) => {
 
     return(
     <>
-        <CurveScrollNavigationCamera
-            curve={curveScrollNavigationCurve}
-            initialPositionPoint={0}
-            navigationCurveIncrement={0.0004}
-            loop={true}
-            triggerOutProgress="curveScrollNavigationProgress"
-            cameraLookatPoint={[0, 0, 0]}
-            cameraFocusSpeed={0.5}
-            cameraFocusDestination={[0,0,0]}
-        />
         {(siteMode === "resume") && 
         <>
+            <CurveScrollNavigationCamera
+                curve={curveScrollNavigationCurve}
+                initialPositionPoint={0}
+                navigationCurveIncrement={0.0004}
+                loop={true}
+                triggerOutProgress="curveScrollNavigationProgress"
+                cameraLookatPoint={[0, 0, 0]}
+                cameraFocusSpeed={0.5}
+            // cameraFocusDestination={[0,0,0]}
+            />
             {/* /////////////////////
                 //System system_components//
                 ///////////////////// */}
@@ -425,10 +426,11 @@ export const SceneContainer = React.memo((props) => {
 
         {(siteMode === "store") && 
         <>
+            <Camera transitionSpeed={0.5} cameraTarget={[13, 26, -21]} cameraMovePathCurve={undefined}  triggerOutCameraTransitionStarted="cameraStarted" triggerOutCameraTransitionEnded="cameraEnded" />
             <ambientLight intensity = {1}></ambientLight>
             {(explodingModelPath != "")
             &&
-            <ExplodingModelLoader 
+            <ExplodingModelLoader
             modelName={
                 // "Roomba.glb"
                 explodingModelPath || "base_cube_DO_NOT_REMOVE.glb" 

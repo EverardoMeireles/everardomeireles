@@ -56,6 +56,8 @@ function SceneViewer() {
   const setCameraStartingPosition = SystemStore((state) => state.setCameraStartingPosition);
   const canvasEnabled = SystemStore((state) => state.canvasEnabled);
 
+  const siteMode = UserStore((state) => state.siteMode);
+
   const [enableTutorial, setEnableTutorial] = useState(false);
   const setViewerBounds = SystemStore((state) => state.setViewerBounds);
   const viewerBounds = SystemStore((state) => state.viewerBounds);
@@ -351,20 +353,18 @@ function SceneViewer() {
                   playPulseAnimation={props.playPulseAnimation}
                   position={props.position || [0, 0]}
                   circleIsVisible = {props.circleIsVisible}
-                  isFocusable = {props.isFocusable}
-                  focusTarget = {props.focusTarget}
-                  focusGroup = {props.focusGroup}
                 />
               ))}
-              <TutorialOverlay enable = {enableTutorial}/> 
+              <TutorialOverlay enable = {enableTutorial}/>
               <HudMenu enabled={hudMenuEnabled} />
-              <ProgressBar
-                progressBarPosition="bottom"
-                progressBarSize={[300, 8]}
-                progressBarCssPreset={0}
-                progress={Number(triggers?.curveScrollNavigationProgress)}
-              />
-
+              {(siteMode === "resume") &&
+                <ProgressBar
+                  progressBarPosition="bottom"
+                  progressBarSize={[300, 8]}
+                  progressBarCssPreset={0}
+                  progress={Number(triggers?.curveScrollNavigationProgress)}
+                />
+              }
               <img
                     src = "textures/back_arrow.png"
                     width = {64}

@@ -49,7 +49,7 @@ export function smoothStep(x) {
     return Sn;
 }
 
-// Checks if a curve is valid(all its points are not the same, its an array, every entry valid and not undefined)
+// Checks if all curve points collapse together.
 export function isCurveDegenerate(curve) {
   if (!curve) return true;
   if (!Array.isArray(curve.points) || curve.points.length === 0) return true;
@@ -58,6 +58,19 @@ export function isCurveDegenerate(curve) {
   if (!first || typeof first.equals !== "function") return true;
 
   return curve.points.every((p) => p && typeof p.equals === "function" && p.equals(first));
+}
+
+// Checks whether a curve can be safely sampled.
+export function isCurveUsable(curve) {
+  if (!curve || typeof curve.getPointAt !== "function") return false;
+  if (!Array.isArray(curve.points)) return true;
+  if (curve.points.length < 2) return false;
+
+  return (
+    curve.points.every((point) => (point && Number.isFinite(point.x) && Number.isFinite(point.y) && Number.isFinite(point.z))) 
+    &&
+    !isCurveDegenerate(curve)
+  );
 }
 
 export function createTimer() {
