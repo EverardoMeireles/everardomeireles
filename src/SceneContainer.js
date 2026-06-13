@@ -1,22 +1,13 @@
-import { Environment } from "@react-three/drei";
 import React, { Suspense, useState, useEffect, useRef, useMemo  } from "react";
-import { Camera } from "./system_components/Camera.jsx";
 import { SimpleLoader } from "./system_components/SimpleLoader.jsx";
 import { OrbitingPointLight } from './system_components/OrbitingPointLights.jsx';
-import { GraphicalModeSetter } from './system_components/GraphicalModeSetter.jsx';
-import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { OrbitingMenu } from "./system_components/OrbitingMenu.jsx";
-import { FloatingTextSkills } from "./user_components/FloatingTextSkills.jsx";
 import { FadingText } from "./system_components/FadingText.jsx";
-import { useFrame, useThree, useLoader } from "@react-three/fiber"; // eslint-disable-line no-unused-vars
-import { VideoLoader } from "./system_components/VideoLoader.jsx";
+import { useLoader } from "@react-three/fiber";
 import { FadingTitle } from "./system_components/FadingTitle.jsx";
-import { Raycaster } from "./system_components/Raycaster.jsx";
-import { CurveInstanceAnimation } from "./system_components/CurveInstanceAnimation.jsx";
 import { InstanceLoader } from "./system_components/InstanceLoader.jsx";
 import { PreloadAssets } from "./system_components/PreloadAssets.jsx";
 import { ExplodingModelLoader } from "./system_components/ExplodingModelLoader.jsx";
-import { CurveLightAnimation } from "./system_components/CurveLightAnimation.jsx";
 import { PointLightAnimation } from "./system_components/PointLightAnimation.jsx";
 import { ObjectLink } from "./system_components/ObjectLink.jsx";
 import { ParticleEmitter } from "./system_components/ParticleEmitter.jsx";
@@ -27,10 +18,8 @@ import { customInstanceRotation, customInstanceColor } from "./PathPoints.jsx";
 import { TranslationTable } from "./TranslationTable.jsx";
 import { useResponsive } from "./Styles.jsx";
 import { FpsBenchmarkProbe } from "./system_components/FpsBenchmarkProbe.jsx";
-import { pollForFilesInTHREECache, createTimer } from "./Helper.js";
+import { pollForFilesInTHREECache } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-// import { FirstPersonController } from './system_components/FirstPersonController.jsx';
-import { PerspectiveCamera } from "@react-three/drei";
 
 import * as THREE from 'three';
 
@@ -38,6 +27,12 @@ import config from './config.js';
 import SystemStore from "./SystemStore.js";
 import UserStore from "./UserStore.js";
 
+/**
+ * Purpose: Builds the active React Three Fiber scene for resume and store modes.
+ * Relationships: Mounted by SceneViewer; orchestrates CurveScrollNavigationCamera, loaders, lights, HUD-driven transitions, and SystemStore/UserStore state.
+ * Example:
+ * <SceneContainer />
+ */
 export const SceneContainer = React.memo((props) => {
     const transitionDestination = SystemStore((state) => state.transitionDestination);
     const transitionEnded = SystemStore((state) => state.transitionEnded);
@@ -46,22 +41,16 @@ export const SceneContainer = React.memo((props) => {
     const triggers = SystemStore((state) => state.triggers);
     const currentObjectClicked = SystemStore((state) => state.currentObjectClicked);
     const mouseClicked = SystemStore((state) => state.mouseClicked);
-    const raycasterEnabled = SystemStore((state) => state.raycasterEnabled);
     const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
     const setForcedCameraMovePathCurve = SystemStore((state) => state.setForcedCameraMovePathCurve);
-    const setTrigger = SystemStore((state) => state.setTrigger);
     const setMainScene = SystemStore((state) => state.setMainScene);
     const mainScene = SystemStore((state) => state.mainScene);
     const viewerModelName = SystemStore((state) => state.viewerModelName);
     const viewerConfigFile = SystemStore((state) => state.viewerConfigFile);
     const viewerMaterialName = SystemStore((state) => state.viewerMaterialName);
-    const hudMenuEnabled = SystemStore((state) => state.hudMenuEnabled);
     const setHudMenuEnabled = SystemStore((state) => state.setHudMenuEnabled);
-    const cameraStartingPosition = SystemStore((state) => state.cameraStartingPosition);
 
-    const currentSkillHovered = UserStore((state) => state.currentSkillHovered);
     const animationTriggerState = UserStore((state) => state.animationTriggerState);
-    const setAnimationTriggerState = UserStore((state) => state.setAnimationTriggerState);
     const siteMode = UserStore((state) => state.siteMode);
 
     const sceneName = useMemo(
@@ -74,8 +63,6 @@ export const SceneContainer = React.memo((props) => {
         setMainScene(scene);
     }, [scene, setMainScene]);
 
-    const { gl } = useThree();
-    const { mouse } = useThree();
     let mixer;
 
     const animTimeRef = useRef(0);
@@ -212,59 +199,17 @@ export const SceneContainer = React.memo((props) => {
     //         };
     // },[])
 
-    // FPS counter
-    // const accuDeltasForFPS = useRef(0);
-    // const accuFramesForFPS = useRef(0);
-    useFrame((state, delta)=>{
-        // console.log(currentGraphicalMode)
-        // accuDeltasForFPS.current += delta;
-        // accuFramesForFPS.current += 1;
-        // if(accuDeltasForFPS.current >= 1){
-        //     console.log("FPS:" + accuFramesForFPS.current);
-        //     accuDeltasForFPS.current = 0;
-        //     accuFramesForFPS.current = 0;
-        // }
-                            //   console.log(modelsConfiguration)
-
-    });
-    
     ///////////////////////////
     // E-comerce integration //
     ///////////////////////////
 
     useEffect(() => {
         setHudMenuEnabled(siteMode === "resume");
-    }, [siteMode, hudMenuEnabled]);
+    }, [siteMode, setHudMenuEnabled]);
 
     const explodingModelPath = viewerModelName || "base_cube_DO_NOT_REMOVE.glb";
     const explodingConfigFile = viewerConfigFile || "base_cube_DO_NOT_REMOVE.json";
     const explodingMaterialPath = viewerMaterialName || "";
-
-    /**
-     * @param {*} curve - Curve.
-     * @param {number} [tubularSegments] - Tubular segments.
-     * @param {number} [radius] - Radius.
-     * @param {number} [radialSegments] - Radial segments.
-     * @param {boolean} [closed] - Closed.
-     */
-    function TubeCurve(props) {
-        const {curve} = props;
-        const {tubularSegments = 64} = props;
-        const {radius = 0.1} = props;
-        const {radialSegments = 8} = props;
-        const {closed = false} = props;
-
-        return (
-          <mesh>
-            <tubeGeometry
-              args={[curve, tubularSegments, radius, radialSegments, closed]}
-            />
-            <meshBasicMaterial wireframe={true} />
-          </mesh>
-        )
-      }
-
-    const [trig, setTrig] = useState(false);
 
     //////////////////////////////////
     // Temporary initial transition //
@@ -410,10 +355,6 @@ export const SceneContainer = React.memo((props) => {
 
     return(
     <>
-        {/* <PerspectiveCamera makeDefau={true} near={0.01} rotation={[0,0,0]} position = {[193, 149, 34]} fov = {75}>
-        </PerspectiveCamera> */}
-        {/* <Camera position={cameraStartingPosition}/> */}
-        {/* <FirstPersonController position={[0, 0, 0]} /> */}
         <CurveScrollNavigationCamera
             curve={curveScrollNavigationCurve}
             initialPositionPoint={0}
@@ -424,7 +365,6 @@ export const SceneContainer = React.memo((props) => {
             cameraFocusSpeed={0.5}
             cameraFocusDestination={[0,0,0]}
         />
-        {/* <CircularScrollLoader /> */}
         {(siteMode === "resume") && 
         <>
             {/* /////////////////////
@@ -432,18 +372,11 @@ export const SceneContainer = React.memo((props) => {
                 ///////////////////// */}
 
             <PreloadAssets delay={4000} texturesToLoad={texturesToLoad} scenesToLoad={scenesToLoad}></PreloadAssets>
-            {/* <Raycaster enabled={raycasterEnabled} mouse={mouse} frameInterval={10} /> */}
-            {/* <GraphicalModeSetter fpsToDecreaseGraphics = {55} /> */}
             <FpsBenchmarkProbe benchmarkScene={"benchmark_scene.glb"}></FpsBenchmarkProbe>
 
             {/* /////////////////////
                 //Content system_components//
                 ///////////////////// */}
-
-
-
-            {/* <Environment files = {config.resource_path + "/textures/dikhololo_night_1k.hdr"} background /> */}
-            {/* <Environment files = {config.resource_path + "/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr"} background={"only"} /> */}
             {(transitionDestination === "Education") 
             && (
             <OrbitingMenu transitionDestinationToRestrictKeyboardControl = {"Education"} visible={isOrbitingMenuVisible.current} orbitDistance={7.5} orbitCenterPosition={orbitCenterPosition} />
@@ -459,17 +392,7 @@ export const SceneContainer = React.memo((props) => {
                 <FadingText textToFade = {TranslationTable3} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {layout.fadingTextScale3} initialPosition = {layout.fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
                 <FadingText textToFade = {TranslationTable4} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects4" lettersPerUnit = {9}  scale = {layout.fadingTextScale4} initialPosition = {layout.fadingTextPosition4} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
                 <FadingText textToFade = {TranslationTable5} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects5" lettersPerUnit = {7}  scale = {layout.fadingTextScale5} initialPosition = {layout.fadingTextPosition5} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                {/* <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects6" initialPosition={[-4, 28, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects7" initialPosition={[-11, 28, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects8" initialPosition={[4, 49, -82.2]} rotation={2 * Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects9" initialPosition={[11, 49, -97]} rotation={Math.PI/2} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects10" initialPosition={[-4, 49, -105]} rotation={Math.PI} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} />
-                <FadingText textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText="ProfessionalExpProjects11" initialPosition={[-11, 49, -90]} rotation={3*(Math.PI/2)} visible={false} textColor={"#FFFFFF"} manualLineBreaks={true} /> */}
             </>
-            
-            {/* {(transitionDestination=="Skills" && transitionEnded) &&
-            <FloatingTextSkills initialPosition = {[-9, 30, -15]} textPosition = {layout.FloatingTextSkillsPosition} /> 
-            } */}
 
             {(currentGraphicalMode === "potato")
             && 
@@ -489,10 +412,7 @@ export const SceneContainer = React.memo((props) => {
             &&
             <>
                 <ObjectLink position={objectLinkPosition1} scale={objectLinkScale} scene={mainScene} linkedObjectName = {"Lamp"} >
-                    {/* <pointLight position={ [46, 83, -47]} color={0xb8774f}></pointLight> */}
- 
                     {stableOrbitingPointLightParticleEmitterAndPointLightAnimation}
-
                 </ObjectLink>
                 
                 <InstanceLoader instancedObject={"Book.glb"} initialPosition = {initialPosition} directionX = {0} directionY = {0} 
@@ -500,19 +420,6 @@ export const SceneContainer = React.memo((props) => {
                     distanceBetweenInstances={3} />
             </>
             }
-            {/* <VideoLoader triggerMode={true} triggerType = {"valueString"} trigger={currentSkillHovered} defaultVideo = {"Python"} rotation={[0, Math.PI/2, 0]} position={[-13.5, 46.2, -17.1]} planeDimensions={[31, 16.1]}></VideoLoader>
-            <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI/2 + 0.5235, 0]} position={[-6.45, 46.5, 14.65]} planeDimensions={[31, 16.1]}></VideoLoader>
-            <VideoLoader triggerMode={false} defaultVideo = {"JavaScript"} rotation={[0, Math.PI*2 + 1.048, 0]} position={[-6.4, 46.5, -48.9]} planeDimensions={[31, 16.1]}></VideoLoader> */}
-            {/* <CurveInstanceAnimation curveNumber = {5} instanceInterval = {1000} tubeWireframe={false} instancedObject={"Plant.glb"} position={[0, 0, 0]} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(-250, 40, 20), new THREE.Vector3(47, 20, -20), new THREE.Vector3(47, 40, -40)])} /> */}
-            
-            {(currentGraphicalMode === "high")
-            &&
-            <group>
-                {/* <OrbitingPointLight orbitDirection = {[0, 1, 0]} orbitSpeed = {0.01} orbitAxis = {"x"} orbitDistance = {60} orbitCenterPosition = {[-40, 30, 0]} lightIntensivity = {1}></OrbitingPointLight> */}
-                {/* <EffectComposer renderPriority = {1}>
-                    <Bloom luminanceThreshold = {1} mipmapBlur />
-                </EffectComposer> CAUSES ERROR WHY?*/}
-            </group>}
         </>
         }
 
@@ -534,23 +441,12 @@ export const SceneContainer = React.memo((props) => {
                 explodingConfigFile || "base_cube_DO_NOT_REMOVE.json"
             } 
             animationIsPlaying={animationTriggerState}
-            /*position={[175, 135, 50]}*/ 
             setCameraTargetTrigger={"trigger4"} 
-            stopMainObjectRotationAnimation={trig} 
+            stopMainObjectRotationAnimation={false}
             mainObjectRotationAnimationIsPlayingTrigger={"trigger5"} />
             }
         </>
         }
-
-{/* <TubeCurve
-        curve={    new THREE.CatmullRomCurve3( [        
-                new THREE.Vector3(188, 145, 58),
-                new THREE.Vector3(12, 35, -73),
-                new THREE.Vector3(13, 35, -15)])}
-        tubularSegments={8}
-        radius={0.2}
-        radialSegments={8}
-      /> */}
     </>
     );
 });

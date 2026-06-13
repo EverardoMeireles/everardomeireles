@@ -6,8 +6,11 @@ import SystemStore from "../SystemStore";
 //////////////////////////////////////////
 /////////////// Props ////////////////////
 //////////////////////////////////////////
-// FPS-based graphical mode setter (continuous or timeboxed).
 /**
+ * Purpose: Automatically raises or lowers graphical mode based on measured FPS streaks.
+ * Relationships: Reads and writes SystemStore graphical mode and can trigger fallback behavior alongside FpsBenchmarkProbe.
+ * Example:
+ * <GraphicalModeSetter enable={true} fpsToIncreaseGraphics={60} fpsToDecreaseGraphics={30} increaseStreakSeconds={6} decreaseStreakSeconds={3} fallbackStreakSeconds={3} continous={true} showFps={false} startMode="on_mount" waitSeconds={0} start={false} triggerOutFallbackTriggered="fallbackTriggered" fpsToFallBackHigh={5} fpsToFallBackNormal={10} fpsToFallBackPotato={15} fallbackMode="disable_canvas" fallbackRedirectPath="/" />
  * @param {boolean} [enable] - Whether this feature is enabled.
  * @param {number} [fpsToIncreaseGraphics] - Fps to increase graphics.
  * @param {number} [fpsToDecreaseGraphics] - Fps to decrease graphics.

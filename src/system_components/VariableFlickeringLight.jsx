@@ -3,6 +3,10 @@ import React, { useRef } from "react";
 import { getRandomInt } from "../Helper";
 
 /**
+ * Purpose: Renders a pointLight with random stepped intensity flicker.
+ * Relationships: Standalone light helper that uses getRandomInt from Helper.
+ * Example:
+ * <VariableFlickeringLight flickerFrameInterval={3} flickerLightIntensivityRangeTuple={[0.1, 0.2]} />
  * @param {number} [flickerFrameInterval] - Timing value for flicker frame interval.
  * @param {*} [flickerLightIntensivityRangeTuple] - Flicker light intensivity range tuple.
  */

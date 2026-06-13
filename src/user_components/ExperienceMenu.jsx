@@ -8,6 +8,10 @@ import config from '../config';
 import SystemStore from "../SystemStore";
 
 /**
+ * Purpose: Renders the old 3D professional-experience submenu.
+ * Relationships: Uses BaseCube and SystemStore to navigate between PathPoints professional-experience sections.
+ * Example:
+ * <ExperienceMenu scale={1} textColor="#062d69" transitionDuration={1000} />
  * @param {number} [scale] - Scale value.
  * @param {string} [textColor] - Color value for text color.
  * @param {number} [transitionDuration] - Transition duration in milliseconds.

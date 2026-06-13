@@ -3,6 +3,10 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 /**
+ * Purpose: Flickers a point light through configured colors and intensity ranges.
+ * Relationships: Used by SceneContainer effect groups, often alongside ParticleEmitter and OrbitingPointLight.
+ * Example:
+ * <PointLightAnimation position={[0, 0, 0]} debugMode={false} colors={[0xffffff]} colorFrameIntervals={[60]} enableRandomColorFrameIntervals={true} randomColorFrameIntervalsMargin={[1, 9]} enableRandomColorOrder={true} randomIntensitiyMargin={[0.05, 0.1]} />
  * @param {Array<any>} [position] - Position in the scene.
  * @param {boolean} [debugMode] - Whether debug visuals are enabled.
  * @param {Array<any>} [colors] - Color value for colors.

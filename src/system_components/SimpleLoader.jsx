@@ -6,6 +6,10 @@ import SystemStore from "../SystemStore";
 import { applyMaterialsToScene } from "../Helper.js";
 
 /**
+ * Purpose: Renders a loaded GLTF scene with animation, hover, material, UV, and hide/reveal behavior.
+ * Relationships: Used by SceneContainer, often wrapped by DynamicMaterialLoader, and writes animation triggers through SystemStore.
+ * Example:
+ * <SimpleLoader position={[0, 0, 0]} scene={scene} animationToPlay="idle" loopMode="noLoop" playDirection={1} autoPlay={true} animationTrigger={false} hover={true} hoverAffectedObjects={[]} hoverLinkedObjects={[[]]} hoveredObject={undefined} animationTimesToTrigger={{}} animationTriggerNames={{}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
  * @param {Array<any>} [position] - Position of the model in the scene.
  * @param {*} [scene] - Loaded scene object used by this component.
  * @param {string} [animationToPlay] - Name of the animation clip to play.

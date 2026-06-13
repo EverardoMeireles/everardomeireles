@@ -8,8 +8,11 @@ import SystemStore from "../SystemStore";
 //////////////////////////////////////////
 /////////////// Props ////////////////////
 //////////////////////////////////////////
-// Manual 1x1 FPS benchmark probe.
 /**
+ * Purpose: Runs an off-screen FPS benchmark and triggers a fallback when performance is too low.
+ * Relationships: Used by SceneContainer and writes fallback/progress triggers through SystemStore.
+ * Example:
+ * <FpsBenchmarkProbe enable={true} benchmarkSampleSeconds={3} fpsToFallBack={30} benchmarkScene="benchmark_scene.glb" showFps={false} startMode="on_mount" waitSeconds={0} start={false} triggerOutFallbackTriggered="fallbackTriggered" fpsNToTriggerOut={60} triggerOutFpsReachedN="fpsReached" fallbackMode="disable_canvas" fallbackRedirectPath="/" />
  * @param {boolean} [enable] - Whether this feature is enabled.
  * @param {number} [benchmarkSampleSeconds] - Timing value for benchmark sample seconds.
  * @param {number} [fpsToFallBack] - Fps to fall back.

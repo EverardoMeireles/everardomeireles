@@ -8,6 +8,10 @@ import { hasSignificantChange, roundToDecimalPlace } from "../Helper.js";
 import SystemStore from "../SystemStore.js";
 
 /**
+ * Purpose: First-person camera rig with keyboard/mouse movement, gravity, stairs, and optional collisions.
+ * Relationships: Alternative camera for SceneContainer that reads mainScene and publishes cameraState through SystemStore.
+ * Example:
+ * <FirstPersonController position={[0, 0, 0]} rotation={[0, 0, 0]} eyeHeight={4} isMainCamera={true} azertyMode="auto" collisionsEnabled={true} maxStepHeight={5.65} minStepHeight={0.1} climbHeightOffset={0} slowDownWhileFalling={true} slowDownWhileFallingSpeedMultiplier={0.5} />
  * @param {Array<any>} [position] - Controller initial position.
  * @param {Array<any>} [rotation] - Controller initial rotation.
  * @param {number} [eyeHeight] - Camera height above the controller base.

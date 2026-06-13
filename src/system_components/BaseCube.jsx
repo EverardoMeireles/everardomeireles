@@ -2,6 +2,10 @@ import {useState} from "react";
 import {useSpring, a} from '@react-spring/three';
 
 /**
+ * Purpose: Renders an animated cube that can move, scale on hover, and wrap children.
+ * Relationships: Used by menu components such as ExperienceMenu and IndexMenu as a 3D button base.
+ * Example:
+ * <BaseCube position={[0, 0, 0]} width={1} height={1} depth={1} movementVector={[0.4, 0, 0]} rgbHover={[120, 120, 120]} minMovementDelay={150} maxMovementDelay={500} animationDelay={300} hasMovementAnimation={true} hasScaleAnimation={true} opacity={1} visible={true}><mesh /></BaseCube>
  * @param {Array<any>} [position] - Position in the scene.
  * @param {number} [width] - Width.
  * @param {number} [height] - Height.

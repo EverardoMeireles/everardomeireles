@@ -14,9 +14,11 @@ import config from '../config';
 /// TODO:END ///
 //////////////////
 
-// Creates an animation where instances of objects follow a curve then disappear
-// Objects must be .glb and have their origin at the center of the object (in blender: Object/set origin/geometry to origin)
 /**
+ * Purpose: Loads a GLB mesh once and renders many static instanced copies.
+ * Relationships: Used by SceneContainer for repeated objects and can consume custom rotations/colors from PathPoints.
+ * Example:
+ * <InstanceLoader instancedObject="Book.glb" initialPosition={[0, 0, 0]} NumberOfInstances={5} directionX={1} directionY={0} directionZ={0} distanceBetweenInstances={5} scale={1} rotationLimit={[Math.PI, Math.PI, Math.PI]} customDistance={[]} customScale={[]} customRotation={[]} customColors={[0x1613d1, 0xcff55d]} customPosition={[]} />
  * @param {string} [instancedObject] - Instanced object.
  * @param {Array<any>} [initialPosition] - Position value for initial position.
  * @param {number} [NumberOfInstances] - Number of instances.

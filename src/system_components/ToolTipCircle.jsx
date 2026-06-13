@@ -3,13 +3,11 @@ import '../PulsatingAnimation.css'; // Adjust the path as necessary
 import config from '../config';
 import SystemStore from "../SystemStore";
 
-// A component that displays a message on screen for a time.
-// How to use:
-// To activate the tooltip, set the zustand state: tooltipProperties with setTooltipProperties()
-// At the minimum, use setTooltipProperties({active:true});
-// You can set any of the tooltip's properties like this for example:
-// setTooltipProperties({active:false, text:"This image is very interesting!"});
 /**
+ * Purpose: Renders a screen-space focus/tooltip circle over a projected object.
+ * Relationships: Created by SceneViewer from SystemStore tooltipCirclesData and drives ToolTip or parent-page messages.
+ * Example:
+ * <ToolTipCircle objectName="Lamp" circleIsVisible={true} textShowMode="Canvas" text="Sample text" image="textures/4x3.png" circleSize={30} playPulseAnimation={false} position={[50, 50]} />
  * @param {string} [objectName] - Object name.
  * @param {boolean} [circleIsVisible] - Whether to show the circles or not.
  * @param {string} [textShowMode] - Canvas or Page.

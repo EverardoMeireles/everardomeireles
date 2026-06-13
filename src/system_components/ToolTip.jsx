@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import config from '../config';
 import SystemStore from "../SystemStore";
 
-// A component that displays a message on screen for a time.
-// Usage: setTooltipProperties({ active: true, duration: 2 /*sec*/, text: "...", image: "..." })
 /**
+ * Purpose: Displays the active tooltip panel next to the selected tooltip circle.
+ * Relationships: Mounted by SceneViewer and driven by ToolTipCircle through SystemStore tooltipProperties.
+ * Example:
+ * <ToolTip imagePercentHeight={40} textPercentHeight={60} fontSize={18} transitionDuration={0.5} />
  * @param {number} [imagePercentHeight] - Image percent height.
  * @param {number} [textPercentHeight] - Text percent height.
  * @param {number} [fontSize] - Font size.

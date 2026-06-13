@@ -6,6 +6,10 @@ import config from '../config';
 import SystemStore from "../SystemStore";
 
 /**
+ * Purpose: Renders 3D text that fades in by direct visibility or transition destination.
+ * Relationships: Used by SceneContainer resume sections and reads transition state from SystemStore.
+ * Example:
+ * <FadingText textToFade="Hello" textColor="#000000" initialPosition={[0, 0, 0]} planeSize={[7, 6.7]} rotation={Math.PI / 2} scale={1.5} textPositionOffset={[0, -0.5, 0.2]} manualLineBreaks={false} maxCharsBeforeLineBreak={49} font="KFOmCnqEu92Fr1Mu4mxM.woff" fadeDuration={1000} textIsVisible={false} textIsVisibleByTransitionDestination={true} textIsVisibleByTransitionDestinationWaitForTransitionEnd={false} transitionDestinationToShowText="MainMenu" />
  * @param {string} [textToFade] - Text to fade.
  * @param {string} [textColor] - Color value for text color.
  * @param {Array<any>} [initialPosition] - Position value for initial position.

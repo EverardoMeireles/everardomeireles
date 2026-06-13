@@ -1,4 +1,8 @@
 /**
+ * Purpose: Shows fixed screen progress for scroll or transition state.
+ * Relationships: Used by SceneViewer to display CurveScrollNavigationCamera progress from SystemStore triggers.
+ * Example:
+ * <ProgressBar progressBarPosition="bottom" progressBarSize={[300, 8]} progressBarCssPreset={0} progress={0.5} />
  * @param {Array<any> | Object | string} [progressBarPosition] - Screen position.
  * @param {Array<any> | Object | number} [progressBarSize] - Bar size.
  * @param {number} [progressBarCssPreset] - Visual preset from 0 to 5.

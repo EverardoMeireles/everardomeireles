@@ -7,6 +7,10 @@ import config from '../config';
 // ParticleEmitter Component //
 ///////////////////////////////
 /**
+ * Purpose: Emits textured instanced particles from a point with optional fade and face-camera behavior.
+ * Relationships: Used by SceneContainer effect groups and delegates per-texture rendering to internal ParticleGroup.
+ * Example:
+ * <ParticleEmitter imageNames={["fire.png", "fire2.png"]} count={100} speed={1} initialSize={0.5} maxSizeOverLifespan={0} lifespan={2} spread={0.3} fadeInOut={false} faceCamera={false} faceCameraFrameCheck={1} faceCameraAxisLock={[1, 1, 1]} instanceMaxRandomDelay={0} position={[0, 0, 0]} rotation={[0, 0, 0]} direction={[0, 1, 0]} />
  * @param {Array<any>} [imageNames] - Array of image filenames (without path). Textures are loaded from `${config.resource_path}/textures/${name}`.
  * @param {number} [count] - Total number of particles.
  * @param {number} [speed] - Movement speed (m/s).
@@ -141,6 +145,10 @@ function lerp(a, b, t) {
 // ParticleGroup Component //
 /////////////////////////////
 /**
+ * Purpose: Renders one instanced particle mesh for particles sharing a texture.
+ * Relationships: Internal child of ParticleEmitter; updates particle transforms each frame.
+ * Example:
+ * <ParticleGroup texture={texture} particles={particles} speed={1} initialSize={0.5} maxSizeOverLifespan={0} lifespan={2} fadeInOut={false} faceCamera={false} faceCameraFrameCheck={1} faceCameraAxisLock={[1, 1, 1]} rotation={[0, 0, 0]} direction={[0, 1, 0]} position={[0, 0, 0]} />
  * @param {*} texture - Texture to use for the particles.
  * @param {*} particles - Array of particle state objects.
  * @param {*} speed - Movement speed in m/s.

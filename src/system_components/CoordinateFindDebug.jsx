@@ -1,5 +1,11 @@
 import { useRef } from "react";
 
+/**
+ * Purpose: Provides clickable debug cubes for nudging and logging a pivot position.
+ * Relationships: Standalone scene helper for manual coordinate finding.
+ * Example:
+ * <CoordinateFindDebug />
+ */
 export function CoordinateFindDebug(){
     const pivotCube = useRef();
 

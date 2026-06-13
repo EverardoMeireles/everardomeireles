@@ -2,6 +2,10 @@ import { useEffect, useRef } from "react";
 import { useFrame } from '@react-three/fiber'
 
 /**
+ * Purpose: Moves a point light around a center point on a selected axis.
+ * Relationships: Used by SceneContainer inside ObjectLink and other effect groups.
+ * Example:
+ * <OrbitingPointLight orbitCenterPosition={[0, 0, 0]} orbitAxis="x" orbitDistance={4} orbitDirection={[0, 1, 0]} orbitSpeed={0.01} lightIntensivity={2} bloomIntensivity={10} lightColor="white" />
  * @param {Array<any>} [orbitCenterPosition] - Position value for orbit center position.
  * @param {string} [orbitAxis] - Orbit axis.
  * @param {number} [orbitDistance] - Orbit distance.

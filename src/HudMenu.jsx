@@ -7,9 +7,11 @@ import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurve
 import SystemStore from "./SystemStore";
 import * as THREE from "three";
 
-// has jsx HudMenuStyles
-// A menu that is supposed to go on top of the canvas, use with PathNavigation.jsx
 /**
+ * Purpose: Renders the HTML navigation and graphics controls over the Canvas.
+ * Relationships: Used by SceneViewer; drives camera transitions through SystemStore, PathPoints, and Responsive3DCurveTransitions.
+ * Example:
+ * <HudMenu enabled={true} graphicalLevelIndicatorIsEnabled={true} goesInvisible={false} goesTransparent={true} transparentTimer={5000} transparency={0.15} />
  * @param {boolean} [enabled] - Whether this component is enabled.
  * @param {boolean} [graphicalLevelIndicatorIsEnabled] - Graphical level indicator is enabled.
  * @param {boolean} [goesInvisible] - Goes invisible.

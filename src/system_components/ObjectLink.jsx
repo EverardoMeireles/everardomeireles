@@ -3,6 +3,10 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 /**
+ * Purpose: Attaches child content to a named object's world position and rotation.
+ * Relationships: Used by SceneContainer to bind effects and lights to GLTF scene objects.
+ * Example:
+ * <ObjectLink position={[0, 0, 0]} scale={[1, 1, 1]} scene={scene} linkedObjectName="Lamp"><pointLight /></ObjectLink>
  * @param {Array<any>} [position] - Position in the scene.
  * @param {Array<any>} [scale] - Scale value.
  * @param {*} scene - Scene object used by this component.

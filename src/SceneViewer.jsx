@@ -21,8 +21,12 @@ import {
 Route
 } from "react-router-dom";
 
-
-
+/**
+ * Purpose: Top-level 3D viewer shell with routing, overlays, and the Canvas.
+ * Relationships: Mounts SceneContainer inside Canvas and coordinates HudMenu, ToolTip, ToolTipCircle, TutorialOverlay, Alert, and ProgressBar with SystemStore.
+ * Example:
+ * <SceneViewer />
+ */
 function SceneViewer() {
   THREE.Cache.enabled = true;
   
@@ -255,7 +259,12 @@ function SceneViewer() {
       window.UserStore = UserStore;
     }
 
-  // Console logs the current fps
+  /**
+   * Purpose: Logs the current React Three Fiber frame rate once per second.
+   * Relationships: Intended as a local debug child of Canvas.
+   * Example:
+   * <FPSLogger />
+   */
   function FPSLogger() {
     const frameCount = useRef(0);
     const timeAccumulator = useRef(0);
@@ -305,6 +314,12 @@ function SceneViewer() {
     };
   }, [isMouseDown]);
 
+  /**
+   * Purpose: Shows a simple blocked-access route page.
+   * Relationships: Rendered by SceneViewer's /401 route.
+   * Example:
+   * <UnauthorizedPage />
+   */
   function UnauthorizedPage() {
   return (
     <div style={{ textAlign: "center", marginTop: "100px", fontSize: "24px" }}>
@@ -321,6 +336,7 @@ function SceneViewer() {
           <Route path="*" element=
             {!forceDisableRender && (
               <>
+              {/* 2D HTML overlays belong above the Canvas. */}
               <Alert />
               <ToolTip transitionDuration={0.5} />
               {/* Create info circles on the screen */}

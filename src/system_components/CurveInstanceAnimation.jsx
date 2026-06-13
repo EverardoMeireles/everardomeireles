@@ -4,9 +4,11 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import * as THREE from 'three';
 import config from '../config';
 
-// Creates a animation where instances of objects follow a curve then dissapear
-// Objects must be .glb and have their origin at the center of the object (in blender: Object/set origin/geometry to origin)
 /**
+ * Purpose: Spawns repeated GLB instances that travel along one or more offset curves.
+ * Relationships: Uses public model assets and optional debug tubes; can be placed directly in SceneContainer.
+ * Example:
+ * <CurveInstanceAnimation instanceInterval={500} instanceSpeed={0.001} instancedObject="Plant.glb" curveNumber={1} offSetAxis1="z" offSetAxis2="y" curveOffsetValueX={10} curveOffsetValueY={10} curveOffsetValueZ={10} tubeWireframe={false} wireframeColor={0xffffff} includeReverse={true} curve={new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1), new THREE.Vector3(2, 0, 0)])} />
  * @param {number} [instanceInterval] - time in milliseconds between instancing objects.
  * @param {number} [instanceSpeed] - the speed of the animation.
  * @param {string} [instancedObject] - the name of the model, placed inside public/models.
@@ -52,6 +54,10 @@ export const CurveInstanceAnimation = React.memo((props) => {
     const offsetCurves = useRef([]);
 
     /**
+     * Purpose: Shows the curve path used by CurveInstanceAnimation.
+     * Relationships: Internal debug helper rendered only when tubeWireframe is enabled.
+     * Example:
+     * <Tube curve={new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1)])} />
      * @param {*} curve - Curve.
      */
     const Tube = (props) => {

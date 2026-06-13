@@ -2,6 +2,10 @@ import { useFrame } from '@react-three/fiber';
 import { useRef} from "react";
 
 /**
+ * Purpose: Renders a pointLight with sinusoidal intensity flicker.
+ * Relationships: Standalone light helper that forwards extra props directly to pointLight.
+ * Example:
+ * <RegularFlickeringLight color="white" position={[0, 0, 0]} intensity={1} />
  * @param {Object} [lightProps] - Light props.
  */
 export function RegularFlickeringLight(props) {

@@ -3,6 +3,10 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 /**
+ * Purpose: Animates a point light along a curve while cycling color and intensity.
+ * Relationships: Can sync to external GLTF animation time and pairs with SimpleLoader animation state.
+ * Example:
+ * <CurveLightAnimation curve={new THREE.CatmullRomCurve3([new THREE.Vector3(1, 1, 1), new THREE.Vector3(0, 0, 0), new THREE.Vector3(-1, -1, -1)])} startingSide="right" debugMode={true} animationSpeed={0} animationDurationFrames={0} synchronizeAnimationFrames={false} currentAnimationTime={0} totalAnimationDuration={0} colors={[0xffffff]} colorFrameIntervals={[60]} enableRandomColorFrameIntervals={true} randomColorFrameIntervalsMargin={[100, 101]} randomIntensitiyMargin={[0.05, 0.1]} enableRandomColorOrder={true} />
  * @param {*} [curve] - Curve path used by the animated light.
  * @param {string} [startingSide] - Starting side of the curve's animation.
  * @param {boolean} [debugMode] - Mode to visualize the wireframe and current light trajectory.
@@ -80,8 +84,11 @@ export const CurveLightAnimation = React.memo((props) => {
     enableRandomColorFrameIntervals ? getRandomInterval() : colorFrameIntervals[0]
   );
 
-  // Tube component for visualizing the curve (optional for debugging).
   /**
+   * Purpose: Renders a debug tube for the animated light curve.
+   * Relationships: Internal to CurveLightAnimation and shown when debugMode is true.
+   * Example:
+   * <Tube curve={new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1)])} />
    * @param {*} curve - Curve.
    */
   const Tube = (props) => {

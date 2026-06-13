@@ -8,6 +8,10 @@ import config from '../config';
 import SystemStore from "../SystemStore";
 
 /**
+ * Purpose: Legacy 3D main menu built from BaseCube buttons and Text labels.
+ * Relationships: Uses BaseCube and SystemStore to set navigation destinations.
+ * Example:
+ * <IndexMenu rotation={Math.PI * 2} position={[0, 0, 0]} scale={1} textColor="#000000" isMainMenu={false} visible={true} font="KFOmCnqEu92Fr1Mu4mxM.woff" />
  * @param {number} [rotation] - Rotation in radians.
  * @param {Array<any>} [position] - Position in the scene.
  * @param {number} [scale] - Scale value.

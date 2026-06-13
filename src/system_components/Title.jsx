@@ -4,6 +4,10 @@ import * as THREE from "three";
 import config from '../config';
 
 /**
+ * Purpose: Renders the static portfolio title text in 3D.
+ * Relationships: Standalone text component that uses drei Text and the configured font asset.
+ * Example:
+ * <Title initialPosition={[0, 0, 0]} rotation={Math.PI / 2} font="KFOmCnqEu92Fr1Mu4mxM.woff" />
  * @param {Array<any>} [initialPosition] - Position value for initial position.
  * @param {number} [rotation] - Rotation in radians.
  * @param {number} [font] - Font file path.

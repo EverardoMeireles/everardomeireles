@@ -8,12 +8,12 @@ const icons = {
   Success: '✓',
 };
 
-// A component that displays a message on screen for a time.
-// How to use:
-// To activate the alert, set the zustand state: alertProperties with setAlertProperties()
-// At the minimum, use setAlertProperties({active:true});
-// You can set any of the alert's properties like this for example:
-// setAlertProperties({active:false, type:'Success', text:"the button was pressed successfully!"});
+/**
+ * Purpose: Displays timed global alert messages over the viewer.
+ * Relationships: Used by SceneViewer and driven by SystemStore alertProperties.
+ * Example:
+ * <Alert />
+ */
 export const Alert = () => {  
   const alertProperties = SystemStore((state) => state.alertProperties);
   const setAlertProperties = SystemStore((state) => state.setAlertProperties);

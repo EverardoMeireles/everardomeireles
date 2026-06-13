@@ -8,6 +8,10 @@ import config from '../config';
 import SystemStore from "../SystemStore";
 
 /**
+ * Purpose: Loads a configurable product model with explode, focus, tooltip-circle, material, and rotation behavior.
+ * Relationships: Used by SceneContainer store mode; coordinates SystemStore camera state, ToolTipCircle data, model JSON config, and createArchCurve focus transitions.
+ * Example:
+ * <ExplodingModelLoader animationIsPlaying={false} position={[0, 0, 0]} modelName="base_cube_DO_NOT_REMOVE.glb" configFile="base_cube_DO_NOT_REMOVE.json" materialName="" customOrigin={[]} animationStartOnLoad={false} enableRockingAnimation={true} enableExplodeAnimation={true} setCameraTargetOnMount={true} setCameraTargetTrigger="trigger4" rockingMaxAngle={Math.PI / 16} rockingDuration={2000} explodingDuration={2500} childDuration={700} showCirclesAfterExplodingAnimation={true} focusedObjectCloneEnable={true} focusedObjectCloneScale={1} focusedObjectCloneAxisOfRotation={[0, 1, 0]} focusedObjectCloneSpeedOfRotation={1.2} focusedObjectCloneForcePositionOffset={{left: -0.5, right: 0.5, top: 0.25, bottom: -0.25}} enableMainObjectRotationAnimation={true} mainObjectRotationAnimationRotationSpeed={0.5} mainObjectRotationAnimationWhenToStop="onScreenMouseHover" mainObjectRotationAnimationResetInitialRotation={true} mainObjectRotationAnimationResetInitialRotationAnimationSpeed={8} mainObjectRotationAnimationRestartAnimationAfterStop={true} stopMainObjectRotationAnimation={false} mainObjectRotationAnimationIsPlayingTrigger="trigger5" tubeCurveDebugMode={false} />
  * @param {boolean} [animationIsPlaying] - Animation is playing.
  * @param {Array<any>} [position] - Position in the scene.
  * @param {string} [modelName] - Mode value for model name.
@@ -1029,6 +1033,10 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // debug tube geometry for visualizing the transition curve
   /**
+   * Purpose: Visualizes a focus transition curve for debugging.
+   * Relationships: Internal to ExplodingModelLoader and shown only by tubeCurveDebugMode.
+   * Example:
+   * <TubeCurve curve={new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1)])} tubularSegments={64} radius={0.1} radialSegments={8} closed={false} />
    * @param {*} curve - Curve.
    * @param {number} [tubularSegments] - Tubular segments.
    * @param {number} [radius] - Radius.

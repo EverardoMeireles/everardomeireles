@@ -3,6 +3,10 @@ import SystemStore from "../SystemStore.js";
 import { setNamedTrigger } from "../Helper";
 
 /**
+ * Purpose: Displays a 2D splash image with configurable intro, effect, fade, and slide-out animation.
+ * Relationships: Optional SceneViewer overlay that writes slide completion to SystemStore triggers.
+ * Example:
+ * <TwoDSplashScreen duration={1000} animation="3D_x_rotate_back" interpolationAlgorithm="ease-out" animationDuration={1000} effect="explosive_blur" color="#1226dd" scale={1} backgroundColor="#000" backgroundFadeOutDuration={2500} image="tutorial_rotate_video.png" slideOnEndPosition={[100, 100]} slideDuration={1000} slideSizeAfterEnd={0.5} slideInterpolationAlgorithm="ease" triggerOutSlideEnded="trigger999" />
  * @param {number} [duration] - Duration in milliseconds.
  * @param {string} [animation] - Animation.
  * @param {string} [interpolationAlgorithm] - Interpolation algorithm.

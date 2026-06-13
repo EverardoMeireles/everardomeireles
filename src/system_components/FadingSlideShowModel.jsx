@@ -6,6 +6,10 @@ import config from '../config';
 import SystemStore from "../SystemStore";
 
 /**
+ * Purpose: Shows a textured plane that fades in for a selected transition destination.
+ * Relationships: Reads transitionDestination and transitionEnded from SystemStore.
+ * Example:
+ * <FadingSlideShowModel textModelMenu="MainMenu" transitionDuration={1000} initialPosition={[0, 0, 0]} PlaneSize={[10, 10]} imageTexture="placeHolderImage.png" />
  * @param {string} [textModelMenu] - Mode value for text model menu.
  * @param {number} [transitionDuration] - Transition duration in milliseconds.
  * @param {Array<any>} [initialPosition] - Position value for initial position.

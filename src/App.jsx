@@ -1,3 +1,9 @@
+/**
+ * Purpose: Reserved root wrapper for application-level layout.
+ * Relationships: The actual viewer is mounted from index through SceneViewer.
+ * Example:
+ * <App />
+ */
 function App() {
 
   // Padding around the viewport, order: left, top, right, bottom

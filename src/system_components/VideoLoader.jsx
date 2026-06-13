@@ -3,6 +3,10 @@ import React, { useEffect, useState } from "react";
 import config from '../config';
 
 /**
+ * Purpose: Plays a video texture on a 3D plane.
+ * Relationships: Legacy scene media component that can react to external hover/trigger state.
+ * Example:
+ * <VideoLoader position={[0, 0, 0]} rotation={[0, 0, 0]} planeDimensions={[16, 9]} defaultVideo="Javascript" loop={true} muted={true} delay={10000} triggerMode={true} triggerType="valueString" trigger="Javascript" />
  * @param {Array<any>} [position] - position on the scene.
  * @param {Array<any>} [rotation] - rotation on the scene.
  * @param {Array<any>} [planeDimensions] - width and height of the video "screen".

@@ -4,8 +4,12 @@ import { useFrame } from "@react-three/fiber";
 import { HtmlDreiMenuStyles } from "../Styles.jsx";
 import SystemStore from "../SystemStore";
 
-// has jsx styles
-// Put inside default camera(tested in perspective camera)
+/**
+ * Purpose: Legacy HTML menu rendered inside the 3D scene through drei Html.
+ * Relationships: Writes desired path and transition state to SystemStore; replaced by HudMenu in the current SceneViewer flow.
+ * Example:
+ * <HtmlDreiMenu />
+ */
 export function HtmlDreiMenu(props) {
     const setDesiredPath = SystemStore((state) => state.setDesiredPath);
     const setTransitionEnded = SystemStore((state) => state.setTransitionEnded);

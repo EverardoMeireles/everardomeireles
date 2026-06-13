@@ -7,6 +7,10 @@ import { useFrame } from "@react-three/fiber";
 import config from '../config';
 
 /**
+ * Purpose: Renders a title that fades in after an optional delay.
+ * Relationships: Used by SceneContainer for resume landing titles and independent from SystemStore.
+ * Example:
+ * <FadingTitle text="Everardo Meireles" textColor="#000000" fadeDuration={1000} initialPosition={[0, 0, 0]} rotation={Math.PI / 2} scale={10} delay={0} font="KFOmCnqEu92Fr1Mu4mxM.woff" />
  * @param {string} [text] - Text content to display.
  * @param {string} [textColor] - Color value for text color.
  * @param {number} [fadeDuration] - Timing value for fade duration.

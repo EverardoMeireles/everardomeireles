@@ -5,6 +5,10 @@ import config from '../config';
 import SystemStore from "../SystemStore";
 
 /**
+ * Purpose: Legacy circular 3D menu for education and professional navigation.
+ * Relationships: Reads transition and language from SystemStore and writes navigation destinations back to SystemStore.
+ * Example:
+ * <OrbitingMenu orbitCenterPosition={[15.5, 1.1, 0]} planeSize={[5, 5]} orbitDistance={1.5} visible={true} enable={false} transitionDestinationToRestrictKeyboardControl="MainMenu" fadeInDuration={300} />
  * @param {Array<any>} [orbitCenterPosition] - Position value for orbit center position.
  * @param {Array<any>} [planeSize] - Plane size.
  * @param {number} [orbitDistance] - Orbit distance.

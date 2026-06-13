@@ -4,6 +4,10 @@ import * as THREE from 'three';
 import SystemStore from "../SystemStore";
 
 /**
+ * Purpose: Performs periodic raycasts and passes hovered object names to children.
+ * Relationships: Reads the active R3F scene/camera and writes clicked object names to SystemStore.
+ * Example:
+ * <Raycaster children={<group />} mouse={mouse} frameInterval={1} enabled={false} />
  * @param {*} children - Children rendered inside this component.
  * @param {*} mouse - Mouse.
  * @param {number} [frameInterval] - Ray is casted every x frames.

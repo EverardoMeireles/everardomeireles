@@ -7,8 +7,11 @@ import { HtmlDreiMenu } from "./HtmlDreiMenu"; // eslint-disable-line no-unused-
 import { smoothStep, roundToDecimalPlace, hasSignificantChange, createArchCurve, isCurveDegenerate, setNamedTrigger } from "../Helper";
 import SystemStore from "../SystemStore";
 
-// revisit custom camera lookat mode and simpleLookatMode
 /**
+ * Purpose: Legacy OrbitControls camera that moves along forced CatmullRom curves.
+ * Relationships: Reads SystemStore camera targets and forced curves; superseded in SceneContainer by CurveScrollNavigationCamera unless re-enabled.
+ * Example:
+ * <Camera transitionSpeed={0.5} position={[0, 0, 0]} triggerOutCameraTransitionStarted="cameraStarted" triggerOutCameraTransitionEnded="cameraEnded" />
  * @param {number} [transitionSpeed] - Speed value for transition speed.
  * @param {Array<any>} [position] - Position in the scene.
  * @param {string} [triggerOutCameraTransitionStarted] - Trigger key set when this behavior finishes.

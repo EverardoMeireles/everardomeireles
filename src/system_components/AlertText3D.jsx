@@ -3,6 +3,10 @@ import { useFrame } from "@react-three/fiber";
 import React, { useState } from "react";
 
 /**
+ * Purpose: Shows temporary HTML alert text anchored inside the 3D scene.
+ * Relationships: Uses drei Html and is independent from the global Alert overlay.
+ * Example:
+ * <AlertText3D textTitle="Saved" text="Changes applied" titleColor="red" textColor="blue" textSize={23} positionX="-10" positionY="-50" width={1000} durationMiliseconds={6000} />
  * @param {string} [textTitle] - Text title.
  * @param {string} [text] - Text content to display.
  * @param {string} [titleColor] - Color value for title color.

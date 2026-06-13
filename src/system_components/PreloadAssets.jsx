@@ -6,6 +6,10 @@ import { hasTriggerName, setNamedTrigger } from "../Helper";
 import SystemStore from "../SystemStore";
 
 /**
+ * Purpose: Preloads texture and GLB assets before related scene features need them.
+ * Relationships: Used by SceneContainer and writes completion to SystemStore through triggerOutPreloadDone.
+ * Example:
+ * <PreloadAssets texturesToLoad={["image1.jpg", "image2.jpg"]} scenesToLoad={["scene1.glb", "scene2.glb"]} delay={3000} fallbackTimeout={10000} start={false} triggerOutPreloadDone="preloadDone" />
  * @param {Array<any>} [texturesToLoad] - Textures to load.
  * @param {Array<any>} [scenesToLoad] - Scenes to load.
  * @param {number} [delay] - Timing value for delay.

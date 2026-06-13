@@ -3,6 +3,10 @@ import config from '../config';
 import SystemStore from "../SystemStore";
 
 /**
+ * Purpose: Shows first-use tutorial images and copy over the viewer.
+ * Relationships: Mounted by SceneViewer and closes itself through SystemStore tutorialClosed state.
+ * Example:
+ * <TutorialOverlay enable={true} showOnlyOnce={true} topImagePaths={["/textures/tutorial_rotate_video.png", "/textures/tutorial_zoom_video.png"]} bottomImagePaths={["/textures/tutorial_rotate.png", "/textures/tutorial_zoom.png"]} imageSize={[260, 216]} textH1="Use left click to rotate, shift + left click to pan and the mouseWheel to zoom" textH2="Click to go to the page" fontColor="white" />
  * @param {boolean} [enable] - Whether this feature is enabled.
  * @param {boolean} [showOnlyOnce] - Whether to only once.
  * @param {Array<any>} [topImagePaths] - Top image paths.

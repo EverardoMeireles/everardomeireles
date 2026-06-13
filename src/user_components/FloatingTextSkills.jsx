@@ -8,6 +8,10 @@ import SystemStore from "../SystemStore";
 import UserStore from "../UserStore";
 
 /**
+ * Purpose: Displays hoverable 3D skill labels.
+ * Relationships: Reads translated text from TranslationTable and writes the hovered skill to UserStore for related media or UI.
+ * Example:
+ * <FloatingTextSkills initialPosition={[0, 0, 0]} hitBoxSize={[2, 1]} rotation={Math.PI / 2} font="KFOmCnqEu92Fr1Mu4mxM.woff" textPosition={[[0, 5, 0]]} />
  * @param {Array<any>} [initialPosition] - Position value for initial position.
  * @param {Array<any>} [hitBoxSize] - Hit box size.
  * @param {number} [rotation] - Rotation in radians.

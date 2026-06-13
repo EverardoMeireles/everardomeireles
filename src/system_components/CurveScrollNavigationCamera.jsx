@@ -6,6 +6,10 @@ import { createArchCurve, isCurveDegenerate, setNamedTrigger, smoothStep } from 
 import SystemStore from "../SystemStore.js";
 
 /**
+ * Purpose: Default scroll and drag camera that moves along a curve and can focus on temporary destinations.
+ * Relationships: Mounted by SceneContainer and publishes progress to SystemStore triggers for ProgressBar.
+ * Example:
+ * <CurveScrollNavigationCamera curve={new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -10)])} initialPositionPoint={0} navigationCurveIncrement={0.001} loop={false} triggerOutProgress="curveScrollNavigationProgress" blockScroll={false} blockTouchNavigation={false} cameraLookatPoint={[0, 0, 0]} cameraFocusDestination={[1, 1, 1]} cameraFocusSpeed={1.8} cameraFocusCurveDirection="up" />
  * @param {*} [curve] - Curve used by the camera.
  * @param {number | Array<any> | THREE.Vector3} [initialPositionPoint] - Initial curve point.
  * @param {number} [navigationCurveIncrement] - Progress change per input unit.

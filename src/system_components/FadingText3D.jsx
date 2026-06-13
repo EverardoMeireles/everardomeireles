@@ -6,6 +6,10 @@ import config from '../config';
 import SystemStore from "../SystemStore";
 
 /**
+ * Purpose: Renders Text3D rows that fade with transition state.
+ * Relationships: Older 3D text variant that reads SystemStore transition state.
+ * Example:
+ * <FadingText3D textToFade="Hello" textModelMenu="MainMenu" textColor="#000000" transitionDuration={1000} initialPosition={[0, 0, 0]} planeSize={[7, 6.7]} fontFileName="/roboto.json" lettersPerUnit={8} rotation={Math.PI / 2} visible={true} scale={1.5} textPositionOffset={[0, -0.5, 0.2]} />
  * @param {string} [textToFade] - Text to fade.
  * @param {string} [textModelMenu] - Mode value for text model menu.
  * @param {string} [textColor] - Color value for text color.
