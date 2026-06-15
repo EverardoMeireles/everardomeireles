@@ -86,7 +86,7 @@
   },
   "ObjectProperties": [
     {
-      "objectName": "Elevator",
+      "circleName": "Elevator",
       "textShowMode": "Canvas",
       "text": "Right text",
       "image": "/textures/4x3.png",

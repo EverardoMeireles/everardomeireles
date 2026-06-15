@@ -3,7 +3,7 @@ import { SimpleLoader } from "./system_components/SimpleLoader.jsx";
 import { OrbitingPointLight } from './system_components/OrbitingPointLights.jsx';
 import { OrbitingMenu } from "./system_components/OrbitingMenu.jsx";
 import { FadingText } from "./system_components/FadingText.jsx";
-import { useLoader } from "@react-three/fiber";
+import { useLoader, useFrame } from "@react-three/fiber";
 import { FadingTitle } from "./system_components/FadingTitle.jsx";
 import { InstanceLoader } from "./system_components/InstanceLoader.jsx";
 import { PreloadAssets } from "./system_components/PreloadAssets.jsx";
@@ -49,7 +49,6 @@ export const SceneContainer = React.memo((props) => {
     const viewerModelName = SystemStore((state) => state.viewerModelName);
     const viewerConfigFile = SystemStore((state) => state.viewerConfigFile);
     const viewerMaterialName = SystemStore((state) => state.viewerMaterialName);
-    const setHudMenuEnabled = SystemStore((state) => state.setHudMenuEnabled);
 
     const animationTriggerState = UserStore((state) => state.animationTriggerState);
     const siteMode = UserStore((state) => state.siteMode);
@@ -68,7 +67,6 @@ export const SceneContainer = React.memo((props) => {
 
     const animTimeRef = useRef(0);
 
-
     const [forceLowresMaterial, setForceLowresMaterial] = useState(false);
     const [forceMidresMaterial, setForceMidresMaterial] = useState(false);
     const [forceHighResMaterial, setForceHighResMaterial] = useState(false);
@@ -78,6 +76,7 @@ export const SceneContainer = React.memo((props) => {
     const filesToLoadBeforeEnablingMaterialSwap = ["/materials/low_512.glb", "/materials/high_4096_NOPBR.glb", "/materials/high_4096_PBR.glb"]; 
 
     const { layout } = useResponsive("scene");
+    const tooltipCirclesData = SystemStore((state) => state.tooltipCirclesData);
 
     ////////////////////////////////////////////////////
     ///////////////// One-time effects /////////////////
@@ -172,13 +171,6 @@ export const SceneContainer = React.memo((props) => {
         }
         // Clicked 3D objects END
     }, [mouseClicked]);
-
-    // For ExplodingModelLoader
-    useEffect(() => {
-        // Clicked 3D objects:
-        // console.log("animationTriggerState: " + animationTriggerState)
-        // Clicked 3D objects END
-    }, [animationTriggerState]);
     
     ////////////////////////////////////////////////////
     /////////////////////// Debug //////////////////////
@@ -203,10 +195,6 @@ export const SceneContainer = React.memo((props) => {
     ///////////////////////////
     // E-comerce integration //
     ///////////////////////////
-
-    useEffect(() => {
-        setHudMenuEnabled(siteMode === "resume");
-    }, [siteMode, setHudMenuEnabled]);
 
     const explodingModelPath = viewerModelName || "base_cube_DO_NOT_REMOVE.glb";
     const explodingConfigFile = viewerConfigFile || "base_cube_DO_NOT_REMOVE.json";
@@ -314,21 +302,21 @@ export const SceneContainer = React.memo((props) => {
     ], []);
 
     const stableSimpleLoader = useMemo(() => {
-                    if (!mainScene) return null;
-                    return (
-                        <SimpleLoader
-                        position={[0, 0, 0]}
-                            scene={mainScene}
-                            objectsRevealTriggers={objectsRevealTriggers}
-                            animationToPlay={animationToPlay}
-                            loopMode={"Loop"}
-                            animationTrigger={animationTrigger}
-                            animationTimesToTrigger={animationTimesToTrigger}
-                            animationTriggerNames={animationTriggerNames}
-                            hoverAffectedObjects={hoverAffectedObjects}
-                            hoverLinkedObjects={hoverLinkedObjects}
-                        />
-                    );
+        if (!mainScene) return null;
+        return (
+            <SimpleLoader
+                position={[0, 0, 0]}
+                scene={mainScene}
+                objectsRevealTriggers={objectsRevealTriggers}
+                animationToPlay={animationToPlay}
+                loopMode={"Loop"}
+                animationTrigger={animationTrigger}
+                animationTimesToTrigger={animationTimesToTrigger}
+                animationTriggerNames={animationTriggerNames}
+                hoverAffectedObjects={hoverAffectedObjects}
+                hoverLinkedObjects={hoverLinkedObjects}
+            />
+        );
     }, [
         mainScene,
         objectsRevealTriggers,

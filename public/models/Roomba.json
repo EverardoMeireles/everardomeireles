@@ -146,7 +146,7 @@
   },
   "ObjectProperties": [
     {
-      "objectName": "Motor_gearbox_1TT1",
+      "circleName": "Motor_gearbox_1TT1",
       "text": "Right text",
       "image": "back_arrow.png",
       "circleSize": 30,
@@ -194,7 +194,7 @@
       "isFocusable": true
     },
     {
-      "objectName": "Wheel_1_1BB1",
+      "circleName": "Wheel_1_1BB1",
       "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
       "image": "AfficheDUT-French.png",
       "circleSize": 30,
@@ -241,7 +241,7 @@
       "focusGroup": ""
     },
     {
-      "objectName": "Gearbox_body_0BB1",
+      "circleName": "Gearbox_body_0BB1",
       "text": "G0",
       "image": "AfficheMicrolins1-French.jpg",
       "position": [
@@ -288,7 +288,7 @@
       }
     },
     {
-      "objectName": "LUL_0BB1",
+      "circleName": "LUL_0BB1",
       "text": "G0",
       "image": "AfficheDUT-French.png",
       "position": [
@@ -335,7 +335,7 @@
       }
     },
     {
-      "objectName": "Gear_1_0TL1",
+      "circleName": "Gear_1_0TL1",
       "text": "G1",
       "image": "AfficheDUT-French.png",
       "circleSize": 30,
@@ -382,7 +382,7 @@
       }
     },
     {
-      "objectName": "Gear_2_1TT1",
+      "circleName": "Gear_2_1TT1",
       "text": "G2",
       "image": "AfficheDUT-French.png",
       "circleSize": 30,
@@ -429,7 +429,7 @@
       }
     },
     {
-      "objectName": "Gear_3_2TR1",
+      "circleName": "Gear_3_2TR1",
       "text": "G3",
       "image": "AfficheDUT-French.png",
       "circleSize": 30,

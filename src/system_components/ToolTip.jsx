@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import config from '../config';
 import SystemStore from "../SystemStore";
 
@@ -19,57 +19,31 @@ export const ToolTip = (props) => {
   const {transitionDuration = 0.5} = props;
 
   const tooltipProperties = SystemStore((state) => state.tooltipProperties);
-  const setTooltipProperties = SystemStore((state) => state.setTooltipProperties);
-  const isCircleOnLeftSelected = SystemStore((state) => state.isCircleOnLeftSelected);
-
-  const [isVisible, setIsVisible] = useState(false);
-  const [isDivDisabled, setIsDivDisabled] = useState(true);
+  const tooltipCirclesData = SystemStore((state) => state.tooltipCirclesData);
+  const currentCircleNameSelected = SystemStore((state) => state.currentCircleNameSelected);
   const viewerBounds = SystemStore((state) => state.viewerBounds);
 
-  // 1) Show + auto-hide
-  useEffect(() => {
-    let timeoutId;
-    if (tooltipProperties.active) {
-      setIsVisible(true);
-      setIsDivDisabled(false);
+  const lastSelectedCirclePositionX = useRef(50);
 
-      // fallback to 3s if duration is undefined
-      const displaySec = tooltipProperties.duration ?? 3;
-
-      timeoutId = setTimeout(() => {
-        setIsVisible(false);
-        setTooltipProperties({ active: false });
-      }, displaySec * 50000); // Stay on screen a long time before disappearing on its own(see if there are leaks)
-    } else {
-      setIsVisible(false);
-    }
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [
-    tooltipProperties.active,
-    tooltipProperties.duration,
-    setTooltipProperties,
-  ]);
-
-  // 2) After fade-out, collapse the div
-  useEffect(() => {
-    if (!isVisible) {
-      const id = setTimeout(() => {
-        setIsDivDisabled(true);
-      }, transitionDuration * 1000);
-      return () => clearTimeout(id);
-    }
-  }, [isVisible, transitionDuration]);
-
+  const isVisible = Boolean(tooltipProperties.active);
   const boxWidth = viewerBounds.width * 0.4;
   const verticalMargin = viewerBounds.height * 0.05;
   const horizontalMargin = verticalMargin;
+  const selectedCircleData = tooltipCirclesData.find((circle) => circle.circleName === currentCircleNameSelected);
+  const selectedCirclePositionX = selectedCircleData?.position?.[0];
+
+  // Keep the side stable while fading out.
+  if (selectedCirclePositionX !== undefined) {
+    lastSelectedCirclePositionX.current = selectedCirclePositionX;
+  }
+
+  const tooltipPositionX = selectedCirclePositionX ?? lastSelectedCirclePositionX.current;
+  const isSelectedCircleOnLeft = tooltipPositionX < 50;
 
   const boxStyle = {
     position: 'fixed',
-    width:  isDivDisabled ? 0 : `${boxWidth}px`,
-    height: isDivDisabled ? 0 : `${viewerBounds.height * 0.9}px`,
+    width: `${boxWidth}px`,
+    height: `${viewerBounds.height * 0.9}px`,
     borderRadius: '50px',
     display: 'flex',
     flexDirection: 'column',
@@ -80,10 +54,9 @@ export const ToolTip = (props) => {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     color: '#FFF',
     top: `${viewerBounds.top + verticalMargin}px`,
-    left: isCircleOnLeftSelected
+    left: isSelectedCircleOnLeft
       ? `${viewerBounds.left + viewerBounds.width - boxWidth - horizontalMargin}px`
       : `${viewerBounds.left + horizontalMargin}px`,
-    right: 'auto',
     pointerEvents: 'none',
   };
 

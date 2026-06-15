@@ -1,10 +1,10 @@
- import { useState, useEffect, useRef } from "react";
-import { TranslationTable } from "./TranslationTable.jsx";
-import { HudMenuStyles, useResponsive, Responsive3DCurveTransitions } from "./Styles.jsx";
-import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue, createArchCurve } from "./Helper.js";
-import config from "./config.js";
-import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "./PathPoints.jsx";
-import SystemStore from "./SystemStore";
+import { useState, useEffect, useRef } from "react";
+import { TranslationTable } from "../TranslationTable.jsx";
+import { HudMenuStyles, useResponsive, Responsive3DCurveTransitions } from "../Styles.jsx";
+import { increaseOrDecreaseGraphics, graphicsModes, getKeyByValue, createArchCurve } from "../Helper.js";
+import config from "../config.js";
+import { path_points_even_more_simple_lookat_dict, overrideCurves, overrideCurvesSimple} from "../PathPoints.jsx";
+import SystemStore from "../SystemStore";
 import * as THREE from "three";
 
 /**
@@ -140,12 +140,12 @@ export function HudMenu(props) {
         window.removeEventListener('popstate', handlePopState);
     };
 }, [enabled, setDesiredPath, setForcedCameraTarget, setForcedCameraMovePathCurve, setTransitionEnded]);
-    
+
 
     /////////////
     /// DEBUG ///
     /////////////
-    
+
     // Once the transition is over, set the new current path position
     useEffect(() => {
         if (!enabled) return;
@@ -190,14 +190,14 @@ export function HudMenu(props) {
                 {/* Graphical mode arrows */}
                 <b onClick={() => {increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, -1); setEnableDynamicGraphicalModeSetting(false); test()}} style = {HudMenuStyles.arrowStyle}>&#x2190;</b>
                 <b onClick={() => {increaseOrDecreaseGraphics(currentGraphicalMode, setGraphicalMode, 1); setEnableDynamicGraphicalModeSetting(false); test()}} style = {HudMenuStyles.arrowStyle}>&#x2192;</b>
-                
+
                 {/* Graphical mode indicator */}
-                {graphicalLevelIndicatorIsEnabled && <img 
-                    style = { {...HudMenuStyles.FlagImgStyle(24, 32), opacity: goesTransparent && isTransparent ? transparency : 1, 
-                    visibility: goesInvisible && isTransparent ? 'hidden' : 'visible'}} 
-                    src = {config.resource_path + "/LevelIndicators/" + (Number(getKeyByValue(graphicsModes, currentGraphicalMode)) + 1).toString() + "of" + numberOfGraphicalModes.toString() + ".png"} 
+                {graphicalLevelIndicatorIsEnabled && <img
+                    style = { {...HudMenuStyles.FlagImgStyle(24, 32), opacity: goesTransparent && isTransparent ? transparency : 1,
+                    visibility: goesInvisible && isTransparent ? 'hidden' : 'visible'}}
+                    src = {config.resource_path + "/LevelIndicators/" + (Number(getKeyByValue(graphicsModes, currentGraphicalMode)) + 1).toString() + "of" + numberOfGraphicalModes.toString() + ".png"}
                     alt = "Graphic level"></img>}
-            </div> 
+            </div>
         }
         {hudLayoutKey === "Mobile" &&
         <>
@@ -217,7 +217,7 @@ export function HudMenu(props) {
             <a href = "#Skills" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(6, 30, 20, 0, 17)} children = {TranslationTable[currentLanguage]["Menu_Skills"]} />
             {/* This menu element is supposed to have sub elements */}
             <a href = "#ProfessionalExpProjects0" onClick = {() => (setProfExpClicked(true))} style = {HudMenuStyles.simple_items_top(6, 30, 20, 1, 17)} children = {TranslationTable[currentLanguage]["Menu_ProfessionalExperience"]} />
-            
+
             { (profExpClicked === true) &&
             // the sub elements
             <div>
@@ -227,7 +227,7 @@ export function HudMenu(props) {
                 <a href = "#ProfessionalExpProjects3" style = {HudMenuStyles.simple_items_bottom(7, 8, 35, 0, 13)} children = {TranslationTable[currentLanguage]["Menu_BresilEcoBuggy"]} />
                 <a href = "#ProfessionalExpProjects4" style = {HudMenuStyles.simple_items_bottom(7, 8, 35, 1, 13)} children = {TranslationTable[currentLanguage]["Menu_EFN1"]} />
                 <a href = "#ProfessionalExpProjects5" style = {HudMenuStyles.simple_items_bottom(7, 8, 35, 2, 13)} children = {TranslationTable[currentLanguage]["Menu_EFN2"]} />
-            </div>    
+            </div>
             }
         </>
         }
@@ -250,7 +250,7 @@ export function HudMenu(props) {
             <a href = "#Skills" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 15, 20, 2, 20)} children = {TranslationTable[currentLanguage]["Menu_Skills"]} />
             {/* This menu element is supposed to have sub elements */}
             <a href = "#ProfessionalExpProjects0" onClick = {() => (setProfExpClicked(true))} style = {HudMenuStyles.simple_items_top(5, 10, 20, 3, 20)} children = {TranslationTable[currentLanguage]["Menu_ProfessionalExperience"]} />
-                    
+
             { (profExpClicked === true) &&
             // the sub elements
             <div>
@@ -260,7 +260,7 @@ export function HudMenu(props) {
                 <a href = "#ProfessionalExpProjects3" style = {HudMenuStyles.simple_items_bottom(5, 8, 35, 0, 20)} children = {TranslationTable[currentLanguage]["Menu_BresilEcoBuggy"]} />
                 <a href = "#ProfessionalExpProjects4" style = {HudMenuStyles.simple_items_bottom(5, 8, 35, 1, 20)} children = {TranslationTable[currentLanguage]["Menu_EFN1"]} />
                 <a href = "#ProfessionalExpProjects5" style = {HudMenuStyles.simple_items_bottom(5, 8, 35, 2, 20)} children = {TranslationTable[currentLanguage]["Menu_EFN2"]} />
-            </div>    
+            </div>
             }
         </>
         }
@@ -283,7 +283,7 @@ export function HudMenu(props) {
             <a href = "#Skills" onClick = {() => setProfExpClicked(false)} style = {HudMenuStyles.simple_items_top(5, 15, 20, 2, 30)} children = {TranslationTable[currentLanguage]["Menu_Skills"]} />
             {/* This menu element is supposed to have sub elements */}
             <a href = "#ProfessionalExpProjects0" onClick = {() => (setProfExpClicked(true))} style = {HudMenuStyles.simple_items_top(5, 10, 20, 3, 30)} children = {TranslationTable[currentLanguage]["Menu_ProfessionalExperience"]} />
-                    
+
             { (profExpClicked === true) &&
             // the sub elements
             <div>
@@ -293,7 +293,7 @@ export function HudMenu(props) {
                 <a href = "#ProfessionalExpProjects3" style = {HudMenuStyles.simple_items_bottom(5, 8, 15, 3, 30)} children = {TranslationTable[currentLanguage]["Menu_BresilEcoBuggy"]} />
                 <a href = "#ProfessionalExpProjects4" style = {HudMenuStyles.simple_items_bottom(5, 8, 15, 4, 30)} children = {TranslationTable[currentLanguage]["Menu_EFN1"]} />
                 <a href = "#ProfessionalExpProjects5" style = {HudMenuStyles.simple_items_bottom(5, 8, 15, 5, 30)} children = {TranslationTable[currentLanguage]["Menu_EFN2"]} />
-            </div>    
+            </div>
             }
         </>
         }

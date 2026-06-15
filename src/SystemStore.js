@@ -164,7 +164,7 @@ const SystemStore = create((set) => ({
   addTooltipCirclesData: (newData) => set((state) => { // Add new data, in case of duplicate keys, the object will be overwritten
     const updatedData = [...state.tooltipCirclesData];
     newData.forEach(newItem => {
-      const existingIndex = updatedData.findIndex(item => item.objectName === newItem.objectName);
+      const existingIndex = updatedData.findIndex(item => item.circleName === newItem.circleName);
       if (existingIndex !== -1) {
         updatedData[existingIndex] = newItem;
       } else {
@@ -175,9 +175,9 @@ const SystemStore = create((set) => ({
       tooltipCirclesData: updatedData
     };
   }),
-  modifyTooltipCircleData: (objectName, newProperties) => set((state) => {
+  modifyTooltipCircleData: (circleName, newProperties) => set((state) => {
     const updatedData = state.tooltipCirclesData.map(item =>
-      item.objectName === objectName ? { ...item, ...newProperties } : item
+      item.circleName === circleName ? { ...item, ...newProperties } : item
     );
     return {
       tooltipCirclesData: updatedData
@@ -190,8 +190,8 @@ const SystemStore = create((set) => ({
   isCircleOnTopSelected: false,
   setIsCircleOnTopSelected: (isTop) => set(() => ({ isCircleOnTopSelected: isTop })),
 
-  tooltipCurrentObjectNameSelected: undefined, // ToolTipCircle.jsx: Represents the name of the current hovered object when the component is present.
-  setTooltipCurrentObjectNameSelected: (object) => set(() => ({ tooltipCurrentObjectNameSelected: object })),
+  currentCircleNameSelected: undefined, // ToolTipCircle.jsx: Represents the name of the current hovered circle when the component is present.
+  setCurrentCircleNameSelected: (circleName) => set(() => ({ currentCircleNameSelected: circleName })),
 
   message: {
     type: undefined,

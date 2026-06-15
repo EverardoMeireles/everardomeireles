@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { Canvas } from "@react-three/fiber";
 import { SceneContainer } from "./SceneContainer";
-import { HudMenu } from "./HudMenu";
+import { HudMenu } from "./user_components/HudMenu";
 import { Alert } from "./system_components/Alert";
 import { ToolTip } from "./system_components/ToolTip";
 import { ToolTipCircle } from "./system_components/ToolTipCircle";
@@ -43,7 +43,6 @@ function SceneViewer() {
   const returnButtonPosition = SystemStore((state) => state.returnButtonPosition);
   const showReturnButton = SystemStore((state) => state.showReturnButton);
   const cameraState = SystemStore((state) => state.cameraState);
-  const hudMenuEnabled = SystemStore((state) => state.hudMenuEnabled);
   const triggers = SystemStore((state) => state.triggers);
 
   const transitionEnded = SystemStore((state) => state.transitionEnded);
@@ -344,8 +343,8 @@ function SceneViewer() {
               {/* Create info circles on the screen */}
               {tooltipCirclesData?.length > 0 && tooltipCirclesData?.map((props, index) => (
                 <ToolTipCircle
-                  key={props.objectName || `tooltip-${index}`}
-                  objectName={props.objectName}
+                  key={props.circleName || `tooltip-${index}`}
+                  circleName={props.circleName}
                   textShowMode={props.textShowMode}
                   text={props.text}
                   image={props.image}
@@ -356,7 +355,7 @@ function SceneViewer() {
                 />
               ))}
               <TutorialOverlay enable = {enableTutorial}/>
-              <HudMenu enabled={hudMenuEnabled} />
+              <HudMenu enabled={siteMode === "resume"} />
               {(siteMode === "resume") &&
                 <ProgressBar
                   progressBarPosition="bottom"

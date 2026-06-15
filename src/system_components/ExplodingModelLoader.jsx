@@ -105,9 +105,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const setTransitionEnded = SystemStore((state) => state.setTransitionEnded);
   const triggers = SystemStore((state) => state.triggers);
   const setTrigger = SystemStore((state) => state.setTrigger);
-  const isCircleOnLeftSelected = SystemStore((state) => state.isCircleOnLeftSelected);
-  const isCircleOnTopSelected = SystemStore((state) => state.isCircleOnTopSelected);
-  const tooltipCurrentObjectNameSelected = SystemStore((state) => state.tooltipCurrentObjectNameSelected);
+  const currentCircleNameSelected = SystemStore((state) => state.currentCircleNameSelected);
   const tooltipCirclesData = SystemStore((state) => state.tooltipCirclesData);
   const addTooltipCirclesData = SystemStore((state) => state.addTooltipCirclesData);
   const modifyTooltipCircleData = SystemStore((state) => state.modifyTooltipCircleData);
@@ -234,11 +232,11 @@ export const ExplodingModelLoader = React.memo((props) => {
   /// Sets properties by with props or by json config files ///
   /////////////////////////////////////////////////////////////
 
-  // Use the tooltipCurrentObjectNameSelected in a local context
+  // Use the selected circle name in a local context
   const currentSelectedObjectName = useRef(undefined);
   useEffect(() => {
-    currentSelectedObjectName.current = tooltipCurrentObjectNameSelected
-  }, [tooltipCurrentObjectNameSelected])
+    currentSelectedObjectName.current = currentCircleNameSelected
+  }, [currentCircleNameSelected])
 
   const jsonFileRef = useRef(undefined);
   //Parses a 3D model's corresponding to a json file to create info circles on the screen
@@ -259,7 +257,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const focusedObjectWorldPosition = useRef(new THREE.Vector3())
   // Set the tooltip circle's properties
   useEffect(() => {
-    const tCircleData = tooltipCirclesData.find(item => item.objectName === currentSelectedObjectName.current);
+    const tCircleData = tooltipCirclesData.find(item => item.circleName === currentSelectedObjectName.current);
     focusedObjectWorldPosition.current = currentSelectedObjectName.current == undefined ? focusedObjectWorldPosition.current : gltf.scene.getObjectByName(currentSelectedObjectName.current)?.getWorldPosition(new THREE.Vector3());
     
     foFront.current = tCircleData?.focusedObjectFront ?? focusedObjectFrontDefault;
@@ -282,7 +280,7 @@ export const ExplodingModelLoader = React.memo((props) => {
     foCloneAxisOfRotation.current = tCircleData?.focusedObjectCloneAxisOfRotation ?? focusedObjectCloneAxisOfRotation;
     foCloneSpeedOfRotation.current = tCircleData?.focusedObjectCloneSpeedOfRotation ?? focusedObjectCloneSpeedOfRotation;
     foCloneForcePositionOffset.current = tCircleData?.focusedObjectCloneForcePositionOffset ?? focusedObjectCloneForcePositionOffset;
-  }, [tooltipCurrentObjectNameSelected, jsonDataParsed.current]);
+  }, [currentCircleNameSelected, jsonDataParsed.current]);
 
   // Set the model's properties by parsing a json or defaults to prop value
   useEffect(() => {
@@ -358,7 +356,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       }
 
       // Stops animation if a circle is hovered
-      if(tooltipCurrentObjectNameSelected){
+      if(currentCircleNameSelected){
         startRotationAnimation.current = false;
       }
       
@@ -464,29 +462,25 @@ export const ExplodingModelLoader = React.memo((props) => {
       const clonedObject = originalObject.clone(true); // Clone the object deeply
       objectToRotate.current = clonedObject;
 
-      var ndcX = 0
-      var ndcY = 0
+      const selectedCircleData = tooltipCirclesData.find(
+        (circle) => circle.circleName === currentSelectedObjectName.current
+      );
+      const selectedCirclePosition = selectedCircleData?.position ?? [50, 50];
+      const isCircleOnLeft = selectedCirclePosition[0] < 50;
+      const isCircleOnTop = selectedCirclePosition[1] < 50;
+      const cloneOffset = foCloneForcePositionOffset.current ?? focusedObjectCloneForcePositionOffset;
 
-      if (isCircleOnLeftSelected) {
-        // Place the object on the left side of the viewport
-        ndcX = foCloneForcePositionOffset.current["left"]
-      } else {
-        // Place the object on the right side of the viewport
-        ndcX = foCloneForcePositionOffset.current["right"]
-      }
-  
-      if (isCircleOnTopSelected) {
-        // Place the object on the top side of the viewport
-        ndcY = foCloneForcePositionOffset.current["bottom"]
-      } else {
-        // Place the object on the bottom side of the viewport
-        ndcY = foCloneForcePositionOffset.current["top"]
-      }
-
-      ndcX > 1 ? ndcX = 1 : ndcX = ndcX
-      ndcX < -1 ? ndcX = -1 : ndcX = ndcX
-      ndcY > 1 ? ndcY = 1 : ndcY = ndcY
-      ndcY < -1 ? ndcY = -1 : ndcY = ndcY
+      // Place the clone away from the hovered circle.
+      const ndcX = THREE.MathUtils.clamp(
+        isCircleOnLeft ? cloneOffset.left : cloneOffset.right,
+        -1,
+        1
+      );
+      const ndcY = THREE.MathUtils.clamp(
+        isCircleOnTop ? cloneOffset.bottom : cloneOffset.top,
+        -1,
+        1
+      );
 
       const ndc = new THREE.Vector3(ndcX, ndcY, -1)
       raycaster.setFromCamera(ndc, camera);
@@ -511,7 +505,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       }
 
     }
-  }, [tooltipCurrentObjectNameSelected, isCircleOnLeftSelected, isCircleOnTopSelected, gltf.scene]);
+  }, [currentCircleNameSelected, gltf.scene]);
 
   // Focused object rotation animation
   useFrame((state, delta) => {
@@ -733,8 +727,8 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Use recorded values to reverse the exploding animation of an object if a different object is clicked
   useEffect(() => {
-    const selectedObject = tooltipCirclesData.find(item => item.objectName === previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current);
-    const childInitialPositions = getChildrenInitialPositions(gltf, [selectedObject?.objectName]);
+    const selectedObject = tooltipCirclesData.find(item => item.circleName === previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current);
+    const childInitialPositions = getChildrenInitialPositions(gltf, [selectedObject?.circleName]);
     const childNames = Object.keys(childInitialPositions);
     const allHaveExploded = childNames.every(name => objectsThatHaveExploded.current.includes(name));
     if(childAnimationUpdateFlag && selectedObject){
@@ -754,21 +748,21 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     if(!childAnimationUpdateFlag) return;
 
-    const selectedObject = tooltipCirclesData.find(item => item.objectName === childAnimationCurrentSelectedObjectNameUpdateFlag.current);
+    const selectedObject = tooltipCirclesData.find(item => item.circleName === childAnimationCurrentSelectedObjectNameUpdateFlag.current);
     if(!selectedObject) return;
 
-    const childInitialPositions = getChildrenInitialPositions(gltf, [selectedObject?.objectName]);
+    const childInitialPositions = getChildrenInitialPositions(gltf, [selectedObject?.circleName]);
     const childNames = Object.keys(childInitialPositions);
     const allHaveExploded = childNames.every(name => objectsThatHaveExploded.current.includes(name));
-    const parentHasChildren = gltf.scene.getObjectByName(selectedObject.objectName)?.children.length > 0;
+    const parentHasChildren = gltf.scene.getObjectByName(selectedObject.circleName)?.children.length > 0;
     const shouldWaitForFocus = selectedObject.waitForFocusBeforeExplodeAnimation !== false;
     const focusComplete = !shouldWaitForFocus || transitionEnded;
 
     // Defer starting the new object's animation until the previous one has fully reversed
-    const previousObjectName = previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current;
+    const previousCircleName = previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current;
     let previousStillExploded = false;
-    if(previousObjectName && previousObjectName !== selectedObject.objectName){
-      const previousChildren = getChildrenInitialPositions(gltf, [previousObjectName]);
+    if(previousCircleName && previousCircleName !== selectedObject.circleName){
+      const previousChildren = getChildrenInitialPositions(gltf, [previousCircleName]);
       const previousChildNames = Object.keys(previousChildren);
       previousStillExploded = previousChildNames.length > 0 && previousChildNames.every(name => objectsThatHaveExploded.current.includes(name));
     }
@@ -794,7 +788,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     const eligibleItems = tooltipCirclesData.filter((item) => Object.prototype.hasOwnProperty.call(item, 'waitForFocusBeforeExplodeAnimation') && item.waitForFocusBeforeExplodeAnimation !== true);
     if(explodeAnimationPlayed.current && animationDirectionForward && tooltipCirclesData.length != 0 && eligibleItems.length != 0){
-      const parentArray = eligibleItems.map(item => item.objectName);
+      const parentArray = eligibleItems.map(item => item.circleName);
       const childInitialPositions = getChildrenInitialPositions(gltf, parentArray);
       const childDesiredPositions = getDesiredPositions(childInitialPositions);
 
@@ -886,7 +880,7 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   // Use recorded values to determine the circle's visibility and whether chil objects should animate when a circle is clicked
   useEffect(() => {
-    const selectedObject = tooltipCirclesData.find(item => item.objectName === currentSelectedObjectNameUpdateFlag.current);
+    const selectedObject = tooltipCirclesData.find(item => item.circleName === currentSelectedObjectNameUpdateFlag.current);
     if(visibilityUpdateFlag.current && selectedObject){
       if ((selectedObject.showCirclesAfterFocusAnimation && transitionEnded) || (!selectedObject.showCirclesAfterFocusAnimation)) {
         currentSelectedObjectNameUpdateFlag.current = "";
@@ -930,7 +924,7 @@ export const ExplodingModelLoader = React.memo((props) => {
           item.focusGroup === undefined;
       }
 
-      modifyTooltipCircleData(item.objectName, {
+      modifyTooltipCircleData(item.circleName, {
         circleIsVisible: shouldBeVisible
       });
     });
@@ -958,7 +952,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   // Makes the tooltip circles follow the objects and update the invisible plane when camera position and rotation values change
   function updateToolTipCirclePositions() {
     tooltipCirclesData.forEach(data => {
-      const obj = gltf.scene.getObjectByName(data.objectName);
+      const obj = gltf.scene.getObjectByName(data.circleName);
       if (!obj) return;
 
       const vec = new THREE.Vector3();
@@ -971,7 +965,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       // only update if difference in new and old position is greater than a certain pixel interval
       const [oldX, oldY] = data.position || [null, null];
       if (oldX === null || Math.hypot(oldX - x, oldY - y) > circlePositionUpdatePixelInterval.current) {
-        modifyTooltipCircleData(data.objectName, { position: [x, y] });
+        modifyTooltipCircleData(data.circleName, { position: [x, y] });
       }
     });
   }
