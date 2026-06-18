@@ -4,7 +4,7 @@ import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./user_components/HudMenu";
 import { Alert } from "./system_components/Alert";
 import { ToolTip } from "./system_components/ToolTip";
-import { ToolTipCircle } from "./system_components/ToolTipCircle";
+import { Circle } from "./system_components/Circle";
 import { TutorialOverlay } from "./system_components/TutorialOverlay";
 import SystemStore from "./SystemStore";
 import UserStore from "./UserStore.js";
@@ -23,17 +23,21 @@ Route
 
 /**
  * Purpose: Top-level 3D viewer shell with routing, overlays, and the Canvas.
- * Relationships: Mounts SceneContainer inside Canvas and coordinates HudMenu, ToolTip, ToolTipCircle, TutorialOverlay, Alert, and ProgressBar with SystemStore.
+ * Relationships: Mounts SceneContainer inside Canvas and coordinates HudMenu, ToolTip, Circle, TutorialOverlay, Alert, and ProgressBar with SystemStore.
  * Example:
  * <SceneViewer />
  */
 function SceneViewer() {
   THREE.Cache.enabled = true;
-  
+
+  //////////////////////////////////////
+  ////////// Store selectors ///////////
+  //////////////////////////////////////
+
   const setIsCanvasHovered = SystemStore((state) => state.setIsCanvasHovered);
-  const tooltipCirclesData = SystemStore((state) => state.tooltipCirclesData);
-  const setTooltipCirclesData = SystemStore((state) => state.setTooltipCirclesData);
-  const tooltipProperties = SystemStore((state) => state.tooltipProperties);
+  const circlesData = SystemStore((state) => state.circlesData);
+  const circleProperties = SystemStore((state) => state.circleProperties);
+  const currentCircleNameSelected = SystemStore((state) => state.currentCircleNameSelected);
   const forceDisableRender = SystemStore((state) => state.forceDisableRender);
   const setIsDragging = SystemStore((state) => state.setIsDragging);
   const isDragging = SystemStore((state) => state.isDragging);
@@ -44,9 +48,7 @@ function SceneViewer() {
   const showReturnButton = SystemStore((state) => state.showReturnButton);
   const cameraState = SystemStore((state) => state.cameraState);
   const triggers = SystemStore((state) => state.triggers);
-
   const transitionEnded = SystemStore((state) => state.transitionEnded);
-
   const message = SystemStore((state) => state.message);
   const setMessage = SystemStore((state) => state.setMessage);
   const setProductInformationFromMessage = SystemStore((state) => state.setProductInformationFromMessage);
@@ -57,18 +59,40 @@ function SceneViewer() {
 
   const siteMode = UserStore((state) => state.siteMode);
 
+  //////////////////////////////////////
+  ////////// Local state ///////////////
+  //////////////////////////////////////
+
   const [enableTutorial, setEnableTutorial] = useState(false);
+  const [tooltipProps, setTooltipProps] = useState({
+    active: false,
+    text: "",
+    image: ""
+  });
   const setViewerBounds = SystemStore((state) => state.setViewerBounds);
   const viewerBounds = SystemStore((state) => state.viewerBounds);
   const [canvasReady, setCanvasReady] = useState(false);
-  // Use scene layout key to pick responsive camera start position
-  const { key: sceneLayoutKey } = useResponsive("scene");
+  const previousCircleData = useRef();
 
+  //////////////////////////////////////
+  ////////// Derived data //////////////
+  //////////////////////////////////////
+
+  // Use scene layout key to pick responsive camera start position.
+  const { key: sceneLayoutKey } = useResponsive("scene");
+  const selectedCircleData = circlesData.find((circle) => circle.circleName === currentCircleNameSelected);
+  const selectedCirclePositionX = selectedCircleData?.position?.[0];
+
+  //////////////////////////////////////
+  ////////// Viewer setup //////////////
+  //////////////////////////////////////
+
+  // Mark the Canvas as ready after the first render.
   useEffect(() => {
     setCanvasReady(true);
   }, []);
 
-  // Keep camera start position in sync with responsive layout
+  // Keep camera start position in sync with responsive layout.
   useEffect(() => {
     const nextPosition = config.default_Camera_starting_position?.[sceneLayoutKey]
       ?? config.default_Camera_starting_position?.Widescreen
@@ -76,10 +100,12 @@ function SceneViewer() {
     setCameraStartingPosition(nextPosition);
   }, [sceneLayoutKey, setCameraStartingPosition]);
 
+  // Keep viewer bounds current for fixed-position overlays.
   useLayoutEffect(() => {
     const viewerEl = document.getElementById("viewer-root");
     if (!viewerEl) return;
 
+    // Read the current viewer DOM bounds.
     const updateBounds = () => {
       const rect = viewerEl.getBoundingClientRect();
 
@@ -97,36 +123,83 @@ function SceneViewer() {
     const resizeObserver = new ResizeObserver(updateBounds);
     resizeObserver.observe(viewerEl);
 
+    // Remove bound listeners and observers.
     return () => {
       window.removeEventListener("resize", updateBounds);
       resizeObserver.disconnect();
     };
   }, [setViewerBounds]);
 
-  useEffect(() => {
-    // console.log(tooltipCirclesData)
-  }, [tooltipCirclesData]);
+  //////////////////////////////////////
+  ////////// Overlay state /////////////
+  //////////////////////////////////////
 
-  // Handle events when transition ends
+  // Enable the tutorial after a scene transition ends.
   useEffect(() => {
-    // enable the tutorial when the transition ends, if the tutorial is shown only at the first transition end, the showOnlyOnce prop is set to true in the TutorialOverlay
     if(transitionEnded){
       setEnableTutorial(true)
     }
-    
   }, [transitionEnded]);
 
+  // Update tooltip props from the currently hovered circle.
   useEffect(() => {
-    // console.log(toolTipCirclePositions)
+    if (!circleProperties.active || !selectedCircleData) {
+      if (previousCircleData.current?.textShowMode === "Page") {
+        setMessage('3D_TOOLTIP_HOVER_LEAVE', '');
+      }
 
-  }, [tooltipProperties, setTooltipCirclesData]);
+      previousCircleData.current = undefined;
+      setTooltipProps((previousTooltipProps) => (
+        previousTooltipProps.active
+          ? { ...previousTooltipProps, active: false }
+          : previousTooltipProps
+      ));
+      return;
+    }
 
-  // Select model/material based on product info + modelRecords.json
+    if (previousCircleData.current?.textShowMode === "Page" && previousCircleData.current.circleName !== selectedCircleData.circleName
+    ) {
+      setMessage('3D_TOOLTIP_HOVER_LEAVE', '');
+    }
+
+    previousCircleData.current = selectedCircleData;
+
+    if (selectedCircleData.textShowMode === "Page") {
+      setMessage('3D_TOOLTIP_HOVER', {
+        text: selectedCircleData.text,
+        image: selectedCircleData.image
+      });
+      setTooltipProps((previousTooltipProps) => (
+        previousTooltipProps.active
+          ? { ...previousTooltipProps, active: false }
+          : previousTooltipProps
+      ));
+      return;
+    }
+
+    setTooltipProps({active: true,
+      text: selectedCircleData.text ?? "",
+      image: selectedCircleData.image ?? ""});
+  }, [
+    circleProperties.active,
+    selectedCircleData?.circleName,
+    selectedCircleData?.textShowMode,
+    selectedCircleData?.text,
+    selectedCircleData?.image,
+    setMessage
+  ]);
+
+  //////////////////////////////////////
+  ////////// Product selection /////////
+  //////////////////////////////////////
+
+  // Select model/material based on product info and modelRecords.json.
   useEffect(() => {
     let isActive = true;
     const productId = Number(productInformationFromMessage?.id);
     if (!Number.isFinite(productId)) return () => {};
 
+    // Normalize product attributes for variation matching.
     const normalizeAttributes = (attrs = {}) => {
       const normalized = {};
       if (!attrs || typeof attrs !== "object") return normalized;
@@ -144,6 +217,7 @@ function SceneViewer() {
       return normalized;
     };
 
+    // Load the matching model and material selection.
     const loadSelection = async () => {
       try {
         const recordsRes = await fetch(`${config.models_path}/modelRecords.json`);
@@ -220,6 +294,7 @@ function SceneViewer() {
 
     loadSelection();
 
+    // Prevent stale async results from updating state.
     return () => {
       isActive = false;
     };
@@ -229,36 +304,40 @@ function SceneViewer() {
   ////////// Message handling //////////
   //////////////////////////////////////
 
-  // Handle sending messages to parent
+  // Post outbound messages to the parent page.
   useEffect(() => {
     if (message?.type && message.payload !== undefined) {
       window.parent.postMessage(message, "*");
     }
   }, [message]);
 
-  // Request product information
+  // Request product information from the parent page.
   useEffect(() => {
-  setMessage('REQUEST_PRODUCT_INFORMATION', 'TRUE')
-  window.addEventListener('message', handleMessage);
+    setMessage('REQUEST_PRODUCT_INFORMATION', 'TRUE')
+    window.addEventListener('message', handleMessage);
 
   }, []);
 
-  // Handle receiving e-comerce product information
-		function handleMessage(event) {
-			if (
-				typeof event.data === 'object' &&
-				event.data.type === 'PRODUCT_INFO' &&
-				event.data.payload
-			) {
-				setProductInformationFromMessage(event.data.payload);
-			}
-		}
-    
-    // exposes the store to the global context to change states on chrome devtools
-    if (typeof window !== "undefined") {
-      window.SystemStore = SystemStore;
-      window.UserStore = UserStore;
+  // Handle incoming e-commerce product information.
+  function handleMessage(event) {
+    if (
+      typeof event.data === 'object' &&
+      event.data.type === 'PRODUCT_INFO' &&
+      event.data.payload
+    ) {
+      setProductInformationFromMessage(event.data.payload);
     }
+  }
+
+  //////////////////////////////////////
+  ////////// Debug helpers /////////////
+  //////////////////////////////////////
+
+  // Expose stores for Chrome DevTools debugging.
+  if (typeof window !== "undefined") {
+    window.SystemStore = SystemStore;
+    window.UserStore = UserStore;
+  }
 
   /**
    * Purpose: Logs the current React Three Fiber frame rate once per second.
@@ -270,6 +349,7 @@ function SceneViewer() {
     const frameCount = useRef(0);
     const timeAccumulator = useRef(0);
 
+    // Count rendered frames during each one-second window.
     useFrame((state, delta) => {
       frameCount.current += 1;
       timeAccumulator.current += delta;
@@ -286,10 +366,15 @@ function SceneViewer() {
     return null; // No visual component
   }
 
+  //////////////////////////////////////
+  ////////// Pointer tracking //////////
+  //////////////////////////////////////
+
   const mouseDownPosition = useRef({ x: 0, y: 0 });
 
-  // Tracks actual drag distance after pointer down
+  // Track drag state after pointer down.
   useEffect(() => {
+    // Mark pointer as dragging after a movement threshold.
     const handlePointerMove = (e) => {
       if (!isMouseDown) return;
 
@@ -301,9 +386,9 @@ function SceneViewer() {
       }
     };
 
+    // Clear dragging when the pointer is released.
     const handlePointerUp = () => {
-
-    setIsDragging(false);
+      setIsDragging(false);
     };
 
     window.addEventListener("pointermove", handlePointerMove);
@@ -314,6 +399,42 @@ function SceneViewer() {
       window.removeEventListener("pointerup", handlePointerUp);
     };
   }, [isMouseDown]);
+
+  // Mark the return button as pressed.
+  const handleReturnButtonMouseDown = () => {
+    setIsReturnButtonPressed(true);
+  };
+
+  // Mark the return button as released.
+  const handleReturnButtonMouseUp = () => {
+    setIsReturnButtonPressed(false);
+  };
+
+  // Start mouse tracking for Canvas interactions.
+  const handleCanvasPointerDown = (e) => {
+    setIsMouseDown(true);
+    mouseDownPosition.current = { x: e.clientX, y: e.clientY };
+    setIsDragging(false);
+  };
+
+  // Clear mouse-down state after Canvas pointer release.
+  const handleCanvasPointerUp = () => {
+    setIsMouseDown(false);
+  };
+
+  // Mark the Canvas as hovered.
+  const handleCanvasPointerEnter = () => {
+    setIsCanvasHovered(true);
+  };
+
+  // Mark the Canvas as not hovered.
+  const handleCanvasPointerLeave = () => {
+    setIsCanvasHovered(false);
+  };
+
+  //////////////////////////////////////
+  ////////// Route helpers /////////////
+  //////////////////////////////////////
 
   /**
    * Purpose: Shows a simple blocked-access route page.
@@ -329,6 +450,10 @@ function SceneViewer() {
   );
 }
 
+  //////////////////////////////////////
+  ////////// Render output /////////////
+  //////////////////////////////////////
+
   return (
     <>
       <Router>
@@ -339,15 +464,19 @@ function SceneViewer() {
               <>
               {/* 2D HTML overlays belong above the Canvas. */}
               <Alert />
-              <ToolTip transitionDuration={0.5} />
+              <ToolTip
+                active={tooltipProps.active}
+                text={tooltipProps.text}
+                image={tooltipProps.image}
+                selectedCirclePositionX={selectedCirclePositionX}
+                viewerBounds={viewerBounds}
+                transitionDuration={0.5}
+              />
               {/* Create info circles on the screen */}
-              {tooltipCirclesData?.length > 0 && tooltipCirclesData?.map((props, index) => (
-                <ToolTipCircle
-                  key={props.circleName || `tooltip-${index}`}
+              {circlesData?.length > 0 && circlesData?.map((props, index) => (
+                <Circle
+                  key={props.circleName || `circle-${index}`}
                   circleName={props.circleName}
-                  textShowMode={props.textShowMode}
-                  text={props.text}
-                  image={props.image}
                   circleSize={props.circleSize}
                   playPulseAnimation={props.playPulseAnimation}
                   position={props.position || [0, 0]}
@@ -381,8 +510,8 @@ function SceneViewer() {
                       zIndex: 100000
                     }}
                     // press state
-                    onMouseDown = {()  => setIsReturnButtonPressed(true)}
-                    onMouseUp = {()    => setIsReturnButtonPressed(false)}
+                    onMouseDown = {handleReturnButtonMouseDown}
+                    onMouseUp = {handleReturnButtonMouseUp}
                     // drag to reposition
                     alt="Return"
               />
@@ -400,16 +529,10 @@ function SceneViewer() {
               {canvasReady && canvasEnabled ? (
                 <Suspense>
                     <Canvas
-                      onPointerDown={(e) => {
-                        setIsMouseDown(true);
-                        mouseDownPosition.current = { x: e.clientX, y: e.clientY };
-                        setIsDragging(false);
-                    }}
-                    onPointerUp={() => {
-                      setIsMouseDown(false);
-                    }}
-                    onPointerEnter={() => setIsCanvasHovered(true)}
-                    onPointerLeave={() => setIsCanvasHovered(false)}
+                    onPointerDown={handleCanvasPointerDown}
+                    onPointerUp={handleCanvasPointerUp}
+                    onPointerEnter={handleCanvasPointerEnter}
+                    onPointerLeave={handleCanvasPointerLeave}
                     dpr={1}
                     gl={{ powerPreference: "high-performance" }}
                   >

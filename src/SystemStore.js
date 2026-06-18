@@ -143,26 +143,20 @@ const SystemStore = create((set) => ({
     }
   })),
 
-  tooltipProperties: {
-    active: false,
-    visible: false,
-    type: 'Success',
-    displaySide: 'topRight',
-    transitionDuration: 0.5,
-    text: 'Lorem Ipsum Dolor!',
-    image: ""
+  circleProperties: {
+    active: false
   },
-  setTooltipProperties: (newProperties) => set((state) => ({
-    tooltipProperties: {
-      ...state.tooltipProperties,
+  setCircleProperties: (newProperties) => set((state) => ({
+    circleProperties: {
+      ...state.circleProperties,
       ...newProperties
     }
-  })), // to be used like this: setTooltipProperties({active:false, visible:false});
+  })),
 
-  tooltipCirclesData: [],
-  setTooltipCirclesData: (data) => set(() => ({ tooltipCirclesData: data })),
-  addTooltipCirclesData: (newData) => set((state) => { // Add new data, in case of duplicate keys, the object will be overwritten
-    const updatedData = [...state.tooltipCirclesData];
+  circlesData: [],
+  setCirclesData: (data) => set(() => ({ circlesData: data })),
+  addCirclesData: (newData) => set((state) => { // Add new data, in case of duplicate keys, the object will be overwritten
+    const updatedData = [...state.circlesData];
     newData.forEach(newItem => {
       const existingIndex = updatedData.findIndex(item => item.circleName === newItem.circleName);
       if (existingIndex !== -1) {
@@ -172,15 +166,15 @@ const SystemStore = create((set) => ({
       }
     });
     return {
-      tooltipCirclesData: updatedData
+      circlesData: updatedData
     };
   }),
-  modifyTooltipCircleData: (circleName, newProperties) => set((state) => {
-    const updatedData = state.tooltipCirclesData.map(item =>
+  modifyCircleData: (circleName, newProperties) => set((state) => {
+    const updatedData = state.circlesData.map(item =>
       item.circleName === circleName ? { ...item, ...newProperties } : item
     );
     return {
-      tooltipCirclesData: updatedData
+      circlesData: updatedData
     };
   }),
 
@@ -190,7 +184,7 @@ const SystemStore = create((set) => ({
   isCircleOnTopSelected: false,
   setIsCircleOnTopSelected: (isTop) => set(() => ({ isCircleOnTopSelected: isTop })),
 
-  currentCircleNameSelected: undefined, // ToolTipCircle.jsx: Represents the name of the current hovered circle when the component is present.
+  currentCircleNameSelected: undefined, // Circle.jsx: Represents the name of the current hovered circle when the component is present.
   setCurrentCircleNameSelected: (circleName) => set(() => ({ currentCircleNameSelected: circleName })),
 
   message: {

@@ -1,36 +1,38 @@
 import React, { useRef } from 'react';
 import config from '../config';
-import SystemStore from "../SystemStore";
 
 /**
- * Purpose: Displays the active tooltip panel next to the selected tooltip circle.
- * Relationships: Mounted by SceneViewer and driven by ToolTipCircle through SystemStore tooltipProperties.
+ * Purpose: Displays the active tooltip panel next to the selected circle.
+ * Relationships: Mounted by SceneViewer, which derives its props from circlesData and currentCircleNameSelected.
  * Example:
- * <ToolTip imagePercentHeight={40} textPercentHeight={60} fontSize={18} transitionDuration={0.5} />
+ * <ToolTip active={true} text="Sample text" image="textures/4x3.png" selectedCirclePositionX={25} viewerBounds={{left: 0, top: 0, width: 800, height: 600}} imagePercentHeight={40} textPercentHeight={60} fontSize={18} transitionDuration={0.5} />
+ * @param {boolean} [active] - Whether the tooltip is visible.
+ * @param {string} [text] - Text content to display.
+ * @param {string} [image] - Image file name or path.
+ * @param {number} [selectedCirclePositionX] - Selected circle X position in percent.
+ * @param {*} [viewerBounds] - Viewer bounds used to position the tooltip.
  * @param {number} [imagePercentHeight] - Image percent height.
  * @param {number} [textPercentHeight] - Text percent height.
  * @param {number} [fontSize] - Font size.
  * @param {number} [transitionDuration] - fade time in seconds.
  */
 export const ToolTip = (props) => {
+  const {active = false} = props;
+  const {text = ""} = props;
+  const {image = ""} = props;
+  const {selectedCirclePositionX = undefined} = props;
+  const {viewerBounds = { left: 0, top: 0, width: 0, height: 0 }} = props;
   const {imagePercentHeight = 40} = props;
   const {textPercentHeight = 60} = props;
   const {fontSize = 18} = props;
   const {transitionDuration = 0.5} = props;
 
-  const tooltipProperties = SystemStore((state) => state.tooltipProperties);
-  const tooltipCirclesData = SystemStore((state) => state.tooltipCirclesData);
-  const currentCircleNameSelected = SystemStore((state) => state.currentCircleNameSelected);
-  const viewerBounds = SystemStore((state) => state.viewerBounds);
-
   const lastSelectedCirclePositionX = useRef(50);
 
-  const isVisible = Boolean(tooltipProperties.active);
+  const isVisible = Boolean(active);
   const boxWidth = viewerBounds.width * 0.4;
   const verticalMargin = viewerBounds.height * 0.05;
   const horizontalMargin = verticalMargin;
-  const selectedCircleData = tooltipCirclesData.find((circle) => circle.circleName === currentCircleNameSelected);
-  const selectedCirclePositionX = selectedCircleData?.position?.[0];
 
   // Keep the side stable while fading out.
   if (selectedCirclePositionX !== undefined) {
@@ -92,12 +94,12 @@ export const ToolTip = (props) => {
   return (
     <div style={boxStyle}>
       <div style={textStyle}>
-        {tooltipProperties.text}
+        {text}
       </div>
       <div style={imgContainer}>
         <img
           style={imgStyle}
-          src={`${config.resource_path}/textures/${tooltipProperties.image}`}
+          src={`${config.resource_path}/textures/${image}`}
           alt="Tooltip"
         />
       </div>

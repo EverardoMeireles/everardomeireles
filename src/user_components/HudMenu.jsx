@@ -38,7 +38,6 @@ export function HudMenu(props) {
     const setForcedCameraMovePathCurve = SystemStore((state) => state.setForcedCameraMovePathCurve);
     const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
     const setDesiredPath = SystemStore((state) => state.setDesiredPath);
-    const modifyTooltipCircleData = SystemStore((state) => state.modifyTooltipCircleData);
     const cameraState = SystemStore((state) => state.cameraState);
     const cameraStateTracking = SystemStore((state) => state.cameraStateTracking);
     const setCameraStateTracking = SystemStore((state) => state.setCameraStateTracking);
@@ -154,10 +153,6 @@ export function HudMenu(props) {
 
     function test(){
         console.log("Arrow pressed")
-
-        // modifyTooltipCircleData("Motor_gearbox_1TT1", {
-        //     circleIsVisible: true
-        // });
     }
 
     const { key: hudLayoutKey } = useResponsive("hud");

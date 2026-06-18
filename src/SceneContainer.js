@@ -76,7 +76,6 @@ export const SceneContainer = React.memo((props) => {
     const filesToLoadBeforeEnablingMaterialSwap = ["/materials/low_512.glb", "/materials/high_4096_NOPBR.glb", "/materials/high_4096_PBR.glb"]; 
 
     const { layout } = useResponsive("scene");
-    const tooltipCirclesData = SystemStore((state) => state.tooltipCirclesData);
 
     ////////////////////////////////////////////////////
     ///////////////// One-time effects /////////////////
