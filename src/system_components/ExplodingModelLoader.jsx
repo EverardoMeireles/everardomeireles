@@ -11,7 +11,7 @@ import SystemStore from "../SystemStore";
  * Purpose: Loads a configurable product model with explode, focus, circle, material, and rotation behavior.
  * Relationships: Used by SceneContainer store mode; coordinates SystemStore camera state, Circle data, model JSON config, and createArchCurve focus transitions.
  * Example:
- * <ExplodingModelLoader animationIsPlaying={false} position={[0, 0, 0]} modelName="base_cube_DO_NOT_REMOVE.glb" configFile="base_cube_DO_NOT_REMOVE.json" materialName="" customOrigin={[]} animationStartOnLoad={false} enableRockingAnimation={true} enableExplodeAnimation={true} setCameraTargetOnMount={true} setCameraTargetTrigger="trigger4" rockingMaxAngle={Math.PI / 16} rockingDuration={2000} explodingDuration={2500} childDuration={700} showCirclesAfterExplodingAnimation={true} focusedObjectCloneEnable={true} focusedObjectCloneScale={1} focusedObjectCloneAxisOfRotation={[0, 1, 0]} focusedObjectCloneSpeedOfRotation={1.2} focusedObjectCloneForcePositionOffset={{left: -0.5, right: 0.5, top: 0.25, bottom: -0.25}} enableMainObjectRotationAnimation={true} mainObjectRotationAnimationRotationSpeed={0.5} mainObjectRotationAnimationWhenToStop="onScreenMouseHover" mainObjectRotationAnimationResetInitialRotation={true} mainObjectRotationAnimationResetInitialRotationAnimationSpeed={8} mainObjectRotationAnimationRestartAnimationAfterStop={true} stopMainObjectRotationAnimation={false} mainObjectRotationAnimationIsPlayingTrigger="trigger5" tubeCurveDebugMode={false} />
+ * <ExplodingModelLoader animationIsPlaying={false} position={[0, 0, 0]} modelName="base_cube_DO_NOT_REMOVE.glb" configFile="base_cube_DO_NOT_REMOVE.json" materialName="" customOrigin={[]} animationStartOnLoad={false} enableRockingAnimation={true} enableExplodeAnimation={true} setCameraTargetOnMount={true} setCameraTargetTrigger="trigger4" returnCameraPosition={[0, 0, 0]} rockingMaxAngle={Math.PI / 16} rockingDuration={2000} explodingDuration={2500} childDuration={700} showCirclesAfterExplodingAnimation={true} focusedObjectCloneEnable={true} focusedObjectCloneScale={1} focusedObjectCloneAxisOfRotation={[0, 1, 0]} focusedObjectCloneSpeedOfRotation={1.2} focusedObjectCloneForcePositionOffset={{left: -0.5, right: 0.5, top: 0.25, bottom: -0.25}} enableMainObjectRotationAnimation={true} mainObjectRotationAnimationRotationSpeed={0.5} mainObjectRotationAnimationWhenToStop="onScreenMouseHover" mainObjectRotationAnimationResetInitialRotation={true} mainObjectRotationAnimationResetInitialRotationAnimationSpeed={8} mainObjectRotationAnimationRestartAnimationAfterStop={true} stopMainObjectRotationAnimation={false} mainObjectRotationAnimationIsPlayingTrigger="trigger5" tubeCurveDebugMode={false} />
  * @param {boolean} [animationIsPlaying] - Animation is playing.
  * @param {Array<any>} [position] - Position in the scene.
  * @param {string} [modelName] - Mode value for model name.
@@ -23,6 +23,7 @@ import SystemStore from "../SystemStore";
  * @param {boolean} [enableExplodeAnimation] - Whether to explode animation.
  * @param {boolean} [setCameraTargetOnMount] - Set camera target on mount.
  * @param {string} [setCameraTargetTrigger] - Set camera target trigger.
+ * @param {Array<any>} [returnCameraPosition] - Default camera position to return to.
  * @param {number} [rockingMaxAngle] - Rocking max angle.
  * @param {number} [rockingDuration] - Timing value for rocking duration.
  * @param {number} [explodingDuration] - Timing value for exploding duration.
@@ -57,6 +58,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {enableExplodeAnimation = true} = props;
   const {setCameraTargetOnMount = true} = props;
   const {setCameraTargetTrigger = "trigger4"} = props;
+  const {returnCameraPosition = [0, 0, 0]} = props;
 
   const {rockingMaxAngle = Math.PI / 16} = props;
   const {rockingDuration = 2000} = props;
@@ -119,7 +121,6 @@ export const ExplodingModelLoader = React.memo((props) => {
   const setShowReturnButton = SystemStore((state) => state.setShowReturnButton);
   const showReturnButton = SystemStore((state) => state.showReturnButton);
   const setForcedCameraPosition = SystemStore((state) => state.setForcedCameraPosition);
-  const cameraStartingPosition = SystemStore((state) => state.cameraStartingPosition);
 
   const [initialPositions, setInitialPositions] = useState({});
   const [desiredPositions, setDesiredPositions] = useState({});
@@ -1098,7 +1099,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       // Return to the responsive camera start position (or forced override if provided)
       setForcedCameraMovePathCurve(createArchCurve(
         camera,
-        forcedCameraPositionArray ?? cameraStartingPosition,
+        forcedCameraPositionArray ?? returnCameraPosition,
         1,
         "up",
         1,

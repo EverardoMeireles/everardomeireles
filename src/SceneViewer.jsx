@@ -12,7 +12,6 @@ import { ProgressBar } from "./user_components/ProgressBar.jsx";
 import * as THREE from "three";
 import { useFrame } from '@react-three/fiber'
 import config from "./config.js";
-import { useResponsive } from "./Styles.jsx";
 import { TwoDSplashScreen } from "./system_components/TwoDSplashScreen.jsx";
 
 import {
@@ -54,7 +53,6 @@ function SceneViewer() {
   const setProductInformationFromMessage = SystemStore((state) => state.setProductInformationFromMessage);
   const productInformationFromMessage = SystemStore((state) => state.productInformationFromMessage);
   const setViewerModelSelection = SystemStore((state) => state.setViewerModelSelection);
-  const setCameraStartingPosition = SystemStore((state) => state.setCameraStartingPosition);
   const canvasEnabled = SystemStore((state) => state.canvasEnabled);
 
   const siteMode = UserStore((state) => state.siteMode);
@@ -78,8 +76,6 @@ function SceneViewer() {
   ////////// Derived data //////////////
   //////////////////////////////////////
 
-  // Use scene layout key to pick responsive camera start position.
-  const { key: sceneLayoutKey } = useResponsive("scene");
   const selectedCircleData = circlesData.find((circle) => circle.circleName === currentCircleNameSelected);
   const selectedCirclePositionX = selectedCircleData?.position?.[0];
 
@@ -91,14 +87,6 @@ function SceneViewer() {
   useEffect(() => {
     setCanvasReady(true);
   }, []);
-
-  // Keep camera start position in sync with responsive layout.
-  useEffect(() => {
-    const nextPosition = config.default_Camera_starting_position?.[sceneLayoutKey]
-      ?? config.default_Camera_starting_position?.Widescreen
-      ?? config.default_Camera_starting_position;
-    setCameraStartingPosition(nextPosition);
-  }, [sceneLayoutKey, setCameraStartingPosition]);
 
   // Keep viewer bounds current for fixed-position overlays.
   useLayoutEffect(() => {

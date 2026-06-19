@@ -75,7 +75,12 @@ export const SceneContainer = React.memo((props) => {
 
     const filesToLoadBeforeEnablingMaterialSwap = ["/materials/low_512.glb", "/materials/high_4096_NOPBR.glb", "/materials/high_4096_PBR.glb"]; 
 
-    const { layout } = useResponsive("scene");
+    const { layout, key: sceneLayoutKey } = useResponsive("scene");
+    const initialCameraPosition = {
+        Mobile: [0, 10, 0],
+        Tablet: [0, 100, 0],
+        Widescreen: [0, 500, 0],
+    }[sceneLayoutKey] ?? [0, 0, 0];
 
     ////////////////////////////////////////////////////
     ///////////////// One-time effects /////////////////
@@ -430,6 +435,7 @@ export const SceneContainer = React.memo((props) => {
                 explodingConfigFile || "base_cube_DO_NOT_REMOVE.json"
             } 
             animationIsPlaying={animationTriggerState}
+            returnCameraPosition={initialCameraPosition}
             setCameraTargetTrigger={"trigger4"} 
             stopMainObjectRotationAnimation={false}
             mainObjectRotationAnimationIsPlayingTrigger={"trigger5"} />
