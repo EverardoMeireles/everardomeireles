@@ -9,10 +9,10 @@ import { applyMaterialsToScene } from "../Helper.js";
  * Purpose: Renders a loaded GLTF scene with animation, hover, material, UV, and hide/reveal behavior.
  * Relationships: Used by SceneContainer, often wrapped by DynamicMaterialLoader, and writes animation triggers through SystemStore.
  * Example:
- * <SimpleLoader position={[0, 0, 0]} scene={scene} animationToPlay="idle" loopMode="noLoop" playDirection={1} autoPlay={true} animationTrigger={false} hover={true} hoverAffectedObjects={[]} hoverLinkedObjects={[[]]} hoveredObject={undefined} animationTimesToTrigger={{}} animationTriggerNames={{}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
+ * <SimpleLoader position={[0, 0, 0]} scene={scene} animationToPlay={["idle"]} loopMode="noLoop" playDirection={1} autoPlay={true} animationTrigger={false} hover={true} hoverAffectedObjects={[]} hoverLinkedObjects={[[]]} hoveredObject={undefined} animationTimesToTrigger={{}} animationTriggerNames={{}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
  * @param {Array<any>} [position] - Position of the model in the scene.
  * @param {*} [scene] - Loaded scene object used by this component.
- * @param {string} [animationToPlay] - Name of the animation clip to play.
+ * @param {Array<any>} [animationToPlay] - Names of the animation clips to play.
  * @param {string} [loopMode] - Loop mode used for the selected animation.
  * @param {number} [playDirection] - Direction to play animation (1 forward, -1 reverse).
  * @param {boolean} [autoPlay] - Whether the animation starts automatically after load.
@@ -36,7 +36,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const {position = [0, 0, 0]} = props;
     const {scene = undefined} = props;
 
-    const {animationToPlay = "idle"} = props;
+    const {animationToPlay = []} = props;
     const {loopMode = "noLoop"} = props;
     const {playDirection = 1} = props;
     const {autoPlay = true} = props;
@@ -310,6 +310,8 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
 
     // updates deltas for animations
     useFrame((state, delta) => {
+        if (!scene.animations.length) return;
+
         mixer.current?.update(delta);
         AnimationTimeTriggerCheck(mixer);
     })
