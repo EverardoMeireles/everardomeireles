@@ -27,7 +27,10 @@ import { applyMaterialsToScene } from "../Helper.js";
  * @param {*} [customObjectsUvs] - Custom UV index map by object name.
  */
 export const SimpleLoader = React.memo(forwardRef((props, ref) => {
+    // Example: [0, 0, 0]
     const {position = [0, 0, 0]} = props;
+
+    // Example: loaded GLTF returned by useLoader(GLTFLoader, modelPath)
     const {scene = undefined} = props;
 
     // Example: [{ animation_name: "idle", loop_mode: "Loop", play_direction: 1, autoplay: true, play_trigger: "trigger1" }]

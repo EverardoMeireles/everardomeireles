@@ -12,6 +12,8 @@ import { getRandomInt } from "../Helper";
  */
 export function VariableFlickeringLight(props) {
   const {flickerFrameInterval = 3} = props;
+
+  // Example: [0.1, 0.2]
   const {flickerLightIntensivityRangeTuple = (0.1, 0.2)} = props;
 
   const lightRef = useRef();

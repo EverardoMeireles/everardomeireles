@@ -38,14 +38,20 @@ export const GraphicalModeSetter = React.memo((props) => {
   const {fallbackStreakSeconds = decreaseStreakSeconds} = props;
   const {continous = true} = props;
   const {showFps = false} = props;
+
+  // Example: "on_mount"
   const {startMode = "on_mount"} = props;
   const {waitSeconds = 0} = props;
   const {start = false} = props;
+  // Example: "fallbackTriggered"
   const {triggerOutFallbackTriggered = ""} = props;
   const {fpsToFallBackHigh = 5} = props;
   const {fpsToFallBackNormal = 10} = props;
   const {fpsToFallBackPotato = 15} = props;
+  // Example: "disable_canvas"
   const {fallbackMode = "disable_canvas"} = props;
+
+  // Example: "/401"
   const {fallbackRedirectPath = "/"} = props;
 
 

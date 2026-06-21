@@ -20,11 +20,23 @@ import SystemStore from "../SystemStore";
  */
 export const Camera = React.memo((props) => {
     const {transitionSpeed = 0.5} = props;
+
+    // Example: [0, 0, 0]
     const {position = [0, 0, 0]} = props;
+
+    // Example: new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 5, 5)])
     const {cameraMovePathCurve = undefined} = props;
+
+    // Example: [0, 0, 0]
     const {cameraTarget = undefined} = props;
+
+    // Example: [0, 5, 10]
     const {cameraPosition = undefined} = props;
+
+    // Example: "cameraStarted"
     const {triggerOutCameraTransitionStarted = ""} = props;
+
+    // Example: "cameraEnded"
     const {triggerOutCameraTransitionEnded = ""} = props;
 
     const setTransitionEnded = SystemStore((state) => state.setTransitionEnded);

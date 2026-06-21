@@ -18,6 +18,8 @@ export const Circle = (props) => {
     const {circleIsVisible = false} = props;
     const {circleSize = 30} = props;
     const {playPulseAnimation = false} = props;
+
+    // Example: [50, 50]
     const {position = [0, 0]} = props;
 
     const setCircleProperties = SystemStore((state) => state.setCircleProperties);

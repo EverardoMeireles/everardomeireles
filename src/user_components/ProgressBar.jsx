@@ -9,8 +9,13 @@
  * @param {number} [progress] - Progress value from 0 to 1.
  */
 export function ProgressBar(props) {
+    // Example: "bottom"
     const { progressBarPosition = "bottom" } = props;
+
+    // Example: [260, 8]
     const { progressBarSize = [260, 8] } = props;
+
+    // Example: 0
     const { progressBarCssPreset = 0 } = props;
     const { progress = 0 } = props;
 

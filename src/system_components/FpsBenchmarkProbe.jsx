@@ -31,15 +31,26 @@ export const FpsBenchmarkProbe = React.memo((props) => {
   const {enable = true} = props;
   const {benchmarkSampleSeconds = 3} = props;
   const {fpsToFallBack = 30} = props;
+
+  // Example: "benchmark_scene.glb"
   const {benchmarkScene = ""} = props;
   const {showFps = false} = props;
+
+  // Example: "on_mount"
   const {startMode = "on_mount"} = props;
   const {waitSeconds = 0} = props;
   const {start = false} = props;
+  // Example: "fallbackTriggered"
   const {triggerOutFallbackTriggered = ""} = props;
   const {fpsNToTriggerOut = undefined} = props;
+
+  // Example: "fpsReached"
   const {triggerOutFpsReachedN = ""} = props;
+
+  // Example: "disable_canvas"
   const {fallbackMode = "disable_canvas"} = props;
+
+  // Example: "/401"
   const {fallbackRedirectPath = "/"} = props;
 
   //////////////////////////////////////////

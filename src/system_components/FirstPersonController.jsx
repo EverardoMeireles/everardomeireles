@@ -25,10 +25,14 @@ import SystemStore from "../SystemStore.js";
  * @param {number} [slowDownWhileFallingSpeedMultiplier] - Horizontal speed multiplier while descending.
  */
 export const FirstPersonController = React.memo((props) => {
+    // Example: [0, 0, 0]
     const { position = [0, 0, 0] } = props;
+
+    // Example: [0, Math.PI / 2, 0]
     const { rotation = [0, 0, 0] } = props;
     const { eyeHeight = 4 } = props;
     const { isMainCamera = true } = props;
+    // Example: "auto"
     const { azertyMode = "auto" } = props;
     const { collisionsEnabled = true } = props;
     const { maxStepHeight = 5.65 } = props;

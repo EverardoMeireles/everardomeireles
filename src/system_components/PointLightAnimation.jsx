@@ -17,14 +17,20 @@ import * as THREE from "three";
  * @param {Array<any>} [randomIntensitiyMargin] - Random intensitiy margin.
  */
 export const PointLightAnimation = React.memo((props) => {
+  // Example: [0, 0, 0]
   const {position = [0, 0, 0]} = props;
   const {debugMode = false} = props;
 
+  // Example: [0xffffff, 0xff8c00]
   const {colors = [0xffffff]} = props;
+
+  // Example: [60, 45]
   const {colorFrameIntervals = [60]} = props;
   const {enableRandomColorFrameIntervals = true} = props;
+  // Example: [1, 9]
   const {randomColorFrameIntervalsMargin = [1, 9]} = props;
   const {enableRandomColorOrder = true} = props;
+  // Example: [0.05, 0.1]
   const {randomIntensitiyMargin = [0.05, 0.1]} = props;
 
   const pointLightRef = useRef();

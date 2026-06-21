@@ -29,18 +29,28 @@ import SystemStore from "../SystemStore";
 export const FadingText = React.memo((props) => {
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
     const {textColor = "#000000"} = props;
+
+    // Example: [0, 0, 0]
     const {initialPosition = [0, 0, 0]} = props;
+
+    // Example: [7, 6.7]
     const {planeSize = [7, 6.7]} = props;
+
+    // Example: Math.PI / 2
     const {rotation = Math.PI/2} = props;
     const {scale = 1.5} = props;
+
+    // Example: [0, -0.5, 0.2]
     const {textPositionOffset = [0, -0.5, 0.2]} = props;
     const {manualLineBreaks = false} = props;
     const {maxCharsBeforeLineBreak = planeSize[0] * 7} = props;
+    // Example: config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"
     const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
     const {fadeDuration = 1000} = props;
     const {textIsVisible = false} = props;
     const {textIsVisibleByTransitionDestination = false} = props;
     const {textIsVisibleByTransitionDestinationWaitForTransitionEnd = false} = props;
+    // Example: "ProfessionalExpProjects0"
     const {transitionDestinationToShowText = "MainMenu"} = props;
 
     const TextMaterialRef = useRef();

@@ -28,6 +28,7 @@ import config from '../config';
  * @param {Array<any>} [direction] - Direction of the particle emitter.
  */
 export const ParticleEmitter = React.memo((props) => {
+  // Example: ["fire.png", "fire2.png"]
   const { imageNames = ["fire1", "fire2"] } = props;
   const { count = 100 } = props;
   const { speed = 1 } = props;
@@ -38,10 +39,16 @@ export const ParticleEmitter = React.memo((props) => {
   const { fadeInOut = false } = props;
   const { faceCamera = false } = props;
   const { faceCameraFrameCheck = 1 } = props;
+  // Example: [1, 1, 1]
   const { faceCameraAxisLock = [1, 1, 1] } = props;
   const { instanceMaxRandomDelay = 0 } = props;
+  // Example: [0, 0, 0]
   const { position = [0, 0, 0] } = props;
+
+  // Example: [0, Math.PI / 2, 0]
   const { rotation = [0, 0, 0] } = props;
+
+  // Example: [0, 1, 0]
   const { direction = [0, 1, 0] } = props;
 
   /////////////////////////
@@ -160,11 +167,13 @@ function lerp(a, b, t) {
  * @param {*} faceCameraFrameCheck - Update the face-camera orientation every n frames.
  * @param {*} faceCameraAxisLock - Array [x, y, z]: 1 allows the axis to follow the camera, 0 locks it to the default rotation.
  * @param {Array<any>} [rotation] - Emitter's default rotation (used if faceCamera is false or for locked axes).
- * @param {*} direction - Movement direction vector (e.g. [0, 1, 0] for upward).
+ * @param {*} direction - Movement direction vector.
  * @param {Array<any>} [position] - Position of the emitter.
  */
 const ParticleGroup = (props) => {
   const { texture } = props;
+
+  // Example: [{ position: new THREE.Vector3(), velocity: new THREE.Vector3(), startDelay: 0 }]
   const { particles } = props;
   const { speed } = props;
   const { initialSize } = props;
@@ -173,9 +182,16 @@ const ParticleGroup = (props) => {
   const { fadeInOut } = props;
   const { faceCamera } = props;
   const { faceCameraFrameCheck } = props;
+  // Example: [1, 1, 1]
   const { faceCameraAxisLock } = props;
+
+  // Example: [0, Math.PI / 2, 0]
   const { rotation = [0, 0, 0]} = props;
+
+  // Example: [0, 1, 0]
   const { direction } = props;
+
+  // Example: [0, 0, 0]
   const { position = [0, 0, 0] } = props;
 
   const { camera } = useThree();

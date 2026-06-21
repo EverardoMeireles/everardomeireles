@@ -14,9 +14,16 @@ import * as THREE from "three";
  * @param {*} children - Children rendered inside this component.
  */
 export const ObjectLink = React.memo((props) => {
+  // Example: [0, 0, 0]
   const {position = [0, 0, 0]} = props;
+
+  // Example: [1, 1, 1]
   const {scale = [1, 1, 1]} = props;
+
+  // Example: loaded GLTF scene object
   const {scene} = props;
+
+  // Example: "Lamp"
   const {linkedObjectName = "Lamp"} = props;
   const {children} = props;
 

@@ -19,23 +19,33 @@ import config from '../config';
  * @param {number} [curveOffsetValueY] - Value which the instances will be offset in the y axis.
  * @param {number} [curveOffsetValueZ] - Value which the instances will be offset in the z axis.
  * @param {boolean} [tubeWireframe] - show the wireframe tube for debugging purposes.
- * @param {*} [wireframeColor] - Set the color of the wireframe for debugging purposes i.e: "red" or 0xff0000.
+ * @param {*} [wireframeColor] - Set the color of the wireframe for debugging purposes.
  * @param {boolean} [includeReverse] - Show instances animating in reverse half of the time.
  * @param {*} [curve] - Initial curve that instances follow.
  */
 export const CurveInstanceAnimation = React.memo((props) => {
     const {instanceInterval = 500} = props;
     const {instanceSpeed = 0.001} = props;
+
+    // Example: "Plant.glb"
     const {instancedObject = "placeholder.glb"} = props;
     const {curveNumber = 1 } = props;
+
+    // Example: "z"
     const {offSetAxis1 = "z"} = props;
+
+    // Example: "y"
     const {offSetAxis2 = "y"} = props;
     const {curveOffsetValueX = 10 } = props;
     const {curveOffsetValueY = 10 } = props;
     const {curveOffsetValueZ = 10 } = props;
     const {tubeWireframe = false } = props;
+
+    // Example: 0xff0000
     const {wireframeColor = 0xffffff} = props;
     const {includeReverse = true} = props;
+
+    // Example: new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1)])
     const {curve = new THREE.CatmullRomCurve3([
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, 0),
@@ -61,6 +71,7 @@ export const CurveInstanceAnimation = React.memo((props) => {
      * @param {*} curve - Curve.
      */
     const Tube = (props) => {
+    // Example: new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1)])
     const {curve} = props;
     const meshRef = useRef();
     const tubeGeometry = useMemo(() => {

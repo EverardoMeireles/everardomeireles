@@ -21,12 +21,16 @@ import SystemStore from "../SystemStore";
  * @param {number} [font] - Font file path.
  */
 export function IndexMenu(props) {
+    // Example: Math.PI
     const {rotation = 2 * Math.PI} = props;
+
+    // Example: [0, 0, 0]
     const {position = [0, 0, 0]} = props;
     const {scale = 1} = props;
     const {textColor = "#000000"} = props;
     const {isMainMenu = false} = props;
     const {visible = true} = props;
+    // Example: config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"
     const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
     const {setDesiredPath, setTransitionEnded} = SystemStore();

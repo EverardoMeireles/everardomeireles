@@ -10,24 +10,34 @@ import config from '../config';
  * @param {Array<any>} [position] - position on the scene.
  * @param {Array<any>} [rotation] - rotation on the scene.
  * @param {Array<any>} [planeDimensions] - width and height of the video "screen".
- * @param {string} [defaultVideo] - [video name, ""] name of the default video without the extension, or empty string for no default video.
- * @param {boolean} [loop] - [true, false] - loops video.
- * @param {boolean} [muted] - [true, false] - loops video.
+ * @param {string} [defaultVideo] - Name of the default video without the extension, or empty string for no default video.
+ * @param {boolean} [loop] - Loops video.
+ * @param {boolean} [muted] - Mutes video.
  * @param {number} [delay] - delay in ms before triggered video is removed from memory, this prevents memory leaks.
- * @param {boolean} [triggerMode] - [true, false] - wether the video being played is triggered.
- * @param {string} [triggerType] - [valueString, triggerTrue] - valueString will play a video when the value of "trigger" prop is the same as the video name, triggerTrue will play the video the "trigger" prop is...
+ * @param {boolean} [triggerMode] - Whether the video being played is triggered.
+ * @param {string} [triggerType] - Trigger mode used to play videos.
  * @param {*} trigger - trigger to play video, either a string equal to the video name or a boolean state.
  */
 export function VideoLoader (props) {
+    // Example: [0, 0, 0]
     const {position = [0, 0, 0]} = props;
+
+    // Example: [0, Math.PI / 2, 0]
     const {rotation = [0, 0, 0]} = props;
+
+    // Example: [16, 9]
     const {planeDimensions = [0, 0]} = props;
+
+    // Example: "Javascript"
     const {defaultVideo = "Javascript"} = props;
     const {loop = true} = props;
     const {muted = true} = props;
     const {delay = 10000} = props;
     const {triggerMode = true} = props;
+    // Example: "valueString"
     const {triggerType = "valueString"} = props;
+
+    // Example: "Javascript"
     const {trigger} = props;
     
     // initialize video state

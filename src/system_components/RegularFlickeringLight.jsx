@@ -9,6 +9,7 @@ import { useRef} from "react";
  * @param {Object} [lightProps] - Light props.
  */
 export function RegularFlickeringLight(props) {
+  // Example: { color: "white", position: [0, 0, 0], intensity: 1 }
   const {...lightProps} = props;
 
   const lightRef = useRef();

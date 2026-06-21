@@ -21,11 +21,16 @@ import {useSpring, a} from '@react-spring/three';
  * @param {boolean} [visible] - Whether this element is visible.
  */
 export function BaseCube(props) {
+    // Example: [0, 0, 0]
     const {position = [0, 0, 0]} = props;
     const {width = 1} = props;
     const {height = 1} = props;
     const {depth = 1} = props;
+
+    // Example: [0.4, 0, 0]
     const {movementVector = [0.4, 0, 0]} = props;
+
+    // Example: [120, 120, 120]
     const {rgbHover = [120, 120, 120]} = props;
     const {minMovementDelay = 150} = props;
     const {maxMovementDelay = 500} = props;

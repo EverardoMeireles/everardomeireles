@@ -35,7 +35,10 @@ import config from '../config';
  * @param {Array<any>} [customPosition] - Custom positions, value is ignored if equal to initialPosition's value.
  */
 export const InstanceLoader = React.memo((props) => {
+    // Example: "Book.glb"
     const {instancedObject = "Book.glb"} = props;
+
+    // Example: [0, 0, 0]
     const {initialPosition = [0, 0, 0]} = props;
     const {NumberOfInstances = 5} = props;
     const {directionX = 1} = props;
@@ -43,11 +46,22 @@ export const InstanceLoader = React.memo((props) => {
     const {directionZ = 0} = props;
     const {distanceBetweenInstances = 5} = props;
     const {scale = 1} = props;
+    // Example: [Math.PI, Math.PI, Math.PI]
     const {rotationLimit = [Math.PI, Math.PI, Math.PI]} = props;
+
+    // Example: [0, 2, 4]
     const {customDistance = []} = props;
+
+    // Example: [1, 0.8, 1.2]
     const {customScale = []} = props;
+
+    // Example: [[0, 0, 0], [0, Math.PI / 2, 0]]
     const {customRotation = []} = props;
+
+    // Example: [0x1613d1, 0xcff55d]
     const {customColors = [0x1613d1, 0xcff55d]} = props;
+
+    // Example: [[0, 0, 0], [1, 0, 0]]
     const {customPosition = []} = props;
 
     const meshRef = useRef();

@@ -20,6 +20,8 @@ export function ExperienceMenu(props) {
     // const {rotation = 2 * Math.PI} = props;
     // const {position = [0, 0, 0]} = props;
     const {scale = 1} = props;
+
+    // Example: "#062d69"
     const {textColor = "#062d69"} = props;
     const {transitionDuration = 1000} = props;
 

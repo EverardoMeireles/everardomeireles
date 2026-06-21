@@ -16,13 +16,19 @@ import { useFrame } from '@react-three/fiber'
  * @param {string} [lightColor] - Color value for light color.
  */
 export function OrbitingPointLight(props) {
+    // Example: [0, 0, 0]
     const {orbitCenterPosition = [0, 0, 0]} = props;
+
+    // Example: "x"
     const {orbitAxis = 'x'} = props;
     const {orbitDistance = 4} = props;
+
+    // Example: [0, 1, 0]
     const {orbitDirection = [0, 1, 0]} = props;
     const {orbitSpeed = 0.01} = props;
     const {lightIntensivity = 2} = props;
     const {bloomIntensivity = 10} = props;
+    // Example: 0xb8774f
     const {lightColor = 'white'} = props;
 
     const orbitRef = useRef();
