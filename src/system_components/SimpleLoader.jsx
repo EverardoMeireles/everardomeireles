@@ -9,14 +9,10 @@ import { applyMaterialsToScene } from "../Helper.js";
  * Purpose: Renders a loaded GLTF scene with animation, object scale, material, UV, and hide/reveal behavior.
  * Relationships: Used by SceneContainer, often wrapped by DynamicMaterialLoader, and writes animation triggers through SystemStore.
  * Example:
- * <SimpleLoader position={[0, 0, 0]} scene={scene} animationToPlay={["idle"]} loopMode="noLoop" playDirection={1} autoPlay={true} animationTrigger={false} objectScaleUpTriggers={[]} scaleAmount={1.3} animationTimesToTrigger={{}} animationTriggerNames={{}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
+ * <SimpleLoader position={[0, 0, 0]} scene={scene} animationPlayTrigger={[{animation_name: "idleAnimation", loop_mode: "noLoop", play_direction: 1, autoplay: true, play_trigger: "trigger5"}]} objectScaleUpTriggers={[]} scaleAmount={1.3} animationTimesToTrigger={{}} animationTriggerNames={{}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
  * @param {Array<any>} [position] - Position of the model in the scene.
  * @param {*} [scene] - Loaded scene object used by this component.
- * @param {Array<any>} [animationToPlay] - Names of the animation clips to play.
- * @param {string} [loopMode] - Loop mode used for the selected animation.
- * @param {number} [playDirection] - Direction to play animation (1 forward, -1 reverse).
- * @param {boolean} [autoPlay] - Whether the animation starts automatically after load.
- * @param {boolean} [animationTrigger] - Trigger value used to start the animation.
+ * @param {Array<any>} [animationPlayTrigger] - Animation play records.
  * @param {Array<any>} [objectScaleUpTriggers] - Object names currently scaling up.
  * @param {number} [scaleAmount] - Scale multiplier for triggered objects.
  * @param {*} [animationTimesToTrigger] - Clip times that fire named triggers.
@@ -25,7 +21,7 @@ import { applyMaterialsToScene } from "../Helper.js";
  * @param {number} [objectHideRevealScaleUpSpeed] - Speed used by the hide/reveal scale animation.
  * @param {boolean} [useAo] - Enables ambient occlusion intensity updates.
  * @param {number} [ambientOcclusionIntensity] - Ambient occlusion intensity applied to materials.
- * @param {Object} [materialNames] - Map of material slot names to material `.glb` filenames example: materialNames={{ Wood: "oak_material.glb", Metal: "brushed_steel.glb" }}.
+ * @param {Object} [materialNames] - Map of material slot names to material `.glb` filenames.
  * @param {Array<any>} [uvOffSet] - UV offset direction for mapped textures.
  * @param {number} [uvOffsetAmount] - UV offset multiplier.
  * @param {*} [customObjectsUvs] - Custom UV index map by object name.
@@ -34,29 +30,34 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const {position = [0, 0, 0]} = props;
     const {scene = undefined} = props;
 
-    const {animationToPlay = []} = props;
-    const {loopMode = "noLoop"} = props;
-    const {playDirection = 1} = props;
-    const {autoPlay = true} = props;
-    const {animationTrigger = false} = props;
+    // Example: [{ animation_name: "idle", loop_mode: "Loop", play_direction: 1, autoplay: true, play_trigger: "trigger1" }]
+    const {animationPlayTrigger = []} = props;
 
+    // Example: ["LeftDoor", "RightDoor", "MainBody"]
     const {objectScaleUpTriggers = []} = props;
     const {scaleAmount = 1.3} = props;
 
+    // Example: { CharacterAction: 0.5 }
     const {animationTimesToTrigger = {}} = props;
+
+    // Example: { CharacterAction: "trigger2" }
     const {animationTriggerNames = {}} = props;
 
+    // Example: { Cube0001: "trigger1" }
     const {objectsHideRevealTriggers = {"Cube0001":"trigger1"}} = props;
     const {objectHideRevealScaleUpSpeed = 0.05} = props;
 
     const {useAo = true} = props;
     const {ambientOcclusionIntensity = 1} = props;
 
+    // Example: { Wood: "oak_material.glb", Metal: "brushed_steel.glb" }
     const { materialNames = {} } = props;
 
+    // Example: [1, 0]
     const {uvOffSet = [0, 0]} = props;
     const {uvOffsetAmount = 0.05} = props;
 
+    // Example: { Cube0001: 1 }
     const { customObjectsUvs = {} } = props;
 
     //////////////////////////////////////////////////////////
@@ -88,6 +89,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
 
     // Refs for the object scale-up feature.
     const scaledObjectsRef = useRef({});
+    const animationTriggerValuesRef = useRef({});
 
     const materialSwapId = useRef(0);
 
@@ -171,51 +173,107 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     ////////// Feature : play animation(s) on trigger/////////
     //////////////////////////////////////////////////////////
 
-    // stops execution if the animation's name string is not inside an array
-    if(!Array.isArray(animationToPlay)){
-        throw new Error("the animation's name must be inside an array");
+    // Stops execution if animation play records are not inside an array.
+    if(!Array.isArray(animationPlayTrigger)){
+        throw new Error("animationPlayTrigger must be an array");
     }
 
-    // Checks loopMode before the animation plays
-    function setupLoopMode(action){
-        if(loopMode != "Loop"){
-            action.setLoop(THREE.LoopOnce);
-            if(loopMode != "noLoopAndReset") action.clampWhenFinished = true;
+    // Checks loop mode before the animation plays.
+    function setupLoopMode(action, recordLoopMode){
+        if(recordLoopMode == "Loop"){
+            action.setLoop(THREE.LoopRepeat);
+            action.clampWhenFinished = false;
+            return;
         }
+
+        action.setLoop(THREE.LoopOnce);
+        if(recordLoopMode != "noLoopAndReset") action.clampWhenFinished = true;
     }
 
-    // Checks play direction before the animation plays
-    function setupReverseMode(action){
-        action.timeScale = playDirection;
-        if(loopMode != "Loop" && playDirection == -1){
+    // Checks play direction before the animation plays.
+    function setupReverseMode(action, recordLoopMode, recordPlayDirection){
+        action.timeScale = recordPlayDirection;
+        if(recordLoopMode != "Loop" && recordPlayDirection == -1){
             action.time = action.getClip().duration;
         }
     }
 
-    // start to play the animation when scene loads if the prop autoPlay is true
-    useEffect(() => {
-        if (autoPlay && scene.animations.length) {
-            playAnimation();
-        }
-    }, [autoPlay]);
+    // Play one configured animation record.
+    function playAnimation(animationPlayRecord){
+        const animationName = animationPlayRecord?.animation_name;
+        if (!animationName) return;
 
-    // trigger the animation(trigger is set to true)
-    useEffect(() => {
-        if(animationTrigger){
-            playAnimation()
-        }
-    }, [animationTrigger, animationToPlay]);
+        const recordLoopMode = animationPlayRecord.loop_mode ?? "noLoop";
+        const recordPlayDirection = animationPlayRecord.play_direction ?? 1;
 
-    // plays the animation
-    function playAnimation(){
         scene.animations.forEach(clip => {
-            if(animationToPlay.includes(clip.name)){
+            if(clip.name == animationName){
                 const action = mixer.current.clipAction(clip);
-                setupLoopMode(action)
-                setupReverseMode(action)
+                setupLoopMode(action, recordLoopMode)
+                setupReverseMode(action, recordLoopMode, recordPlayDirection)
                 action.play();
             }
         });
+    }
+
+    // Start configured autoplay animations when the scene loads.
+    useEffect(() => {
+        if (!scene.animations.length) return;
+
+        animationPlayTrigger.forEach((animationPlayRecord) => {
+            if (animationPlayRecord?.autoplay) {
+                playAnimation(animationPlayRecord);
+            }
+        });
+    }, [scene, animationPlayTrigger]);
+
+    // Reset tracked trigger values when the scene changes.
+    useEffect(() => {
+        animationTriggerValuesRef.current = {};
+    }, [scene]);
+
+    // Play configured animations when their named trigger turns on.
+    useEffect(() => {
+        animationPlayTrigger.forEach((animationPlayRecord) => {
+            const triggerName = animationPlayRecord?.play_trigger;
+            if (!triggerName) return;
+
+            const animationName = animationPlayRecord?.animation_name ?? "";
+            const triggerKey = `${animationName}:${triggerName}`;
+            const triggerValue = Boolean(triggers[triggerName]);
+            const previousTriggerValue = animationTriggerValuesRef.current[triggerKey];
+
+            if (triggerValue && !previousTriggerValue) {
+                playAnimation(animationPlayRecord);
+            }
+
+            animationTriggerValuesRef.current[triggerKey] = triggerValue;
+        });
+    }, [scene, triggers, animationPlayTrigger]);
+
+    // Forget removed animation trigger records.
+    useEffect(() => {
+        const activeTriggerKeys = animationPlayTrigger
+            .filter((animationPlayRecord) => animationPlayRecord?.play_trigger)
+            .map((animationPlayRecord) => {
+                const animationName = animationPlayRecord?.animation_name ?? "";
+                return `${animationName}:${animationPlayRecord.play_trigger}`;
+            });
+
+        Object.keys(animationTriggerValuesRef.current).forEach((triggerKey) => {
+            if (!activeTriggerKeys.includes(triggerKey)) {
+                delete animationTriggerValuesRef.current[triggerKey];
+            }
+        });
+    }, [animationPlayTrigger]);
+
+    // Checks whether an animation is configured for mid-animation triggers.
+    function hasAnimationTimeTrigger(animationName){
+        if(Object.keys(animationTriggerNames).includes(animationName)){
+            return true;
+        }
+
+        return false;
     }
 
     //////////////////////////////////////////////////////////
@@ -303,7 +361,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     function AnimationTimeTriggerCheck(mixer){
         if(Object.keys(animationTriggerNames).length != 0){
             mixer.current._actions.forEach(action => {
-                if(Object.keys(animationTriggerNames).includes(action._clip.name)){
+                if(hasAnimationTimeTrigger(action._clip.name)){
                     animationCurrentTime = action.time;
                     animationDuration = action._clip.duration;
                     normalizedClipTime = (animationCurrentTime) / (animationDuration);

@@ -40,7 +40,6 @@ export const SceneContainer = React.memo((props) => {
     const transitionEnded = SystemStore((state) => state.transitionEnded);
     const currentLanguage = SystemStore((state) => state.currentLanguage);
     const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
-    const triggers = SystemStore((state) => state.triggers);
     const currentObjectClicked = SystemStore((state) => state.currentObjectClicked);
     const mouseClicked = SystemStore((state) => state.mouseClicked);
     const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
@@ -264,8 +263,24 @@ export const SceneContainer = React.memo((props) => {
     const objectsRevealTriggers = useMemo(() => ({"Wardrobe001":"trigger3"}), []);
     const animationTimesToTrigger = useMemo(() => ({"CharacterAction": 0.50}), []);
     const animationTriggerNames = useMemo(() => ({"CharacterAction": "trigger2"}), []);
-    const animationToPlay = useMemo(() => ["LampAction.001","RopeAction"], []);
-    const animationTrigger = useMemo(() => triggers["trigger1"], []);
+
+    // Configure model animations and their play triggers.
+    const animationPlayTrigger = useMemo(() => [
+        {
+            animation_name: "LampAction.001",
+            loop_mode: "Loop",
+            play_direction: 1,
+            autoplay: true,
+            play_trigger: "trigger1"
+        },
+        {
+            animation_name: "RopeAction",
+            loop_mode: "Loop",
+            play_direction: 1,
+            autoplay: true,
+            play_trigger: "trigger1"
+        }
+    ], []);
 
     // Objects that scale as one group.
     const objectScaleUpGroup = useMemo(() => ["LeftDoor","RightDoor", "MainBody"], []);
@@ -324,9 +339,7 @@ export const SceneContainer = React.memo((props) => {
                 position={[0, 0, 0]}
                 scene={mainScene}
                 objectsRevealTriggers={objectsRevealTriggers}
-                animationToPlay={animationToPlay}
-                loopMode={"Loop"}
-                animationTrigger={animationTrigger}
+                animationPlayTrigger={animationPlayTrigger}
                 animationTimesToTrigger={animationTimesToTrigger}
                 animationTriggerNames={animationTriggerNames}
                 objectScaleUpTriggers={objectScaleUpTriggers}
@@ -336,8 +349,7 @@ export const SceneContainer = React.memo((props) => {
     }, [
         mainScene,
         objectsRevealTriggers,
-        animationToPlay,
-        animationTrigger,
+        animationPlayTrigger,
         animationTimesToTrigger,
         animationTriggerNames,
         objectScaleUpTriggers
