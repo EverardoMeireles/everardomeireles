@@ -9,7 +9,7 @@ import { applyMaterialsToScene } from "../Helper.js";
  * Purpose: Renders a loaded GLTF scene with animation, hover, material, UV, and hide/reveal behavior.
  * Relationships: Used by SceneContainer, often wrapped by DynamicMaterialLoader, and writes animation triggers through SystemStore.
  * Example:
- * <SimpleLoader position={[0, 0, 0]} scene={scene} animationToPlay={["idle"]} loopMode="noLoop" playDirection={1} autoPlay={true} animationTrigger={false} hover={true} hoverAffectedObjects={[]} hoverLinkedObjects={[[]]} hoveredObject={undefined} animationTimesToTrigger={{}} animationTriggerNames={{}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
+ * <SimpleLoader position={[0, 0, 0]} scene={scene} animationToPlay={["idle"]} loopMode="noLoop" playDirection={1} autoPlay={true} animationTrigger={false} hover={true} hoverAffectedObjects={[]} hoverLinkedObjects={[[]]} animationTimesToTrigger={{}} animationTriggerNames={{}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
  * @param {Array<any>} [position] - Position of the model in the scene.
  * @param {*} [scene] - Loaded scene object used by this component.
  * @param {Array<any>} [animationToPlay] - Names of the animation clips to play.
@@ -20,7 +20,6 @@ import { applyMaterialsToScene } from "../Helper.js";
  * @param {boolean} [hover] - Enables hover scaling behavior.
  * @param {Array<any>} [hoverAffectedObjects] - Object names that react to hover.
  * @param {Array<any>} [hoverLinkedObjects] - Linked object groups for hover effects.
- * @param {*} [hoveredObject] - Name of the object currently hovered.
  * @param {*} [animationTimesToTrigger] - Clip times that fire named triggers.
  * @param {*} [animationTriggerNames] - Trigger names mapped to animation clips.
  * @param {*} [objectsHideRevealTriggers] - Trigger map for hide/reveal object behavior.
@@ -45,7 +44,6 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const {hover = true} = props;
     const {hoverAffectedObjects = []} = props;
     const {hoverLinkedObjects = [[]]} = props;
-    const {hoveredObject = undefined} = props;
 
     const {animationTimesToTrigger = {}} = props;
     const {animationTriggerNames = {}} = props;
@@ -82,6 +80,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     // Load Model
     const toggleTrigger = SystemStore((state) => state.toggleTrigger);
     const triggers = SystemStore((state) => state.triggers);
+    const hoveredObject = SystemStore((state) => state.currentObjectHovered);
 
     // initialize the animation mixer
     const mixer = useRef(new THREE.AnimationMixer(scene.scene));

@@ -1,70 +1,63 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import SystemStore from "../SystemStore";
 
 /**
- * Purpose: Performs periodic raycasts and passes hovered object names to children.
- * Relationships: Reads the active R3F scene/camera and writes clicked object names to SystemStore.
+ * Purpose: Performs periodic raycasts and stores the hovered object name.
+ * Relationships: Reads the active R3F scene/camera and writes the hovered object name to SystemStore.
  * Example:
- * <Raycaster children={<group />} mouse={mouse} frameInterval={1} enabled={false} />
- * @param {*} children - Children rendered inside this component.
- * @param {*} mouse - Mouse.
+ * <Raycaster frameInterval={1} enabled={true} />
  * @param {number} [frameInterval] - Ray is casted every x frames.
  * @param {boolean} [enabled] - enable raycaster.
  */
 export const Raycaster = React.memo((props) => {
-    const {children} = props;
-    const {mouse} = props;
     const {frameInterval = 1} = props;
-    const {enabled = false} = props;
+    const {enabled = true} = props;
 
-    const setCurrentObjectClicked = SystemStore((state) => state.setCurrentObjectClicked);
-    const currentObjectClicked = SystemStore((state) => state.currentObjectClicked);
-    
-    const { scene, camera } = useThree();
-    const [hoveredObject, setHoveredObject] = useState(null);
-    const raycaster = new THREE.Raycaster();
-    let frameCount = 0;
+    const setCurrentObjectHovered = SystemStore((state) => state.setCurrentObjectHovered);
 
+    const { scene, camera, mouse } = useThree();
+    const frameCountRef = useRef(0);
+    const hoveredObjectRef = useRef("");
+    const raycasterRef = useRef(new THREE.Raycaster());
+    const isEnabled = enabled;
+    const raycastFrameInterval = Math.max(1, frameInterval);
+
+    // Clear hover state when the raycaster is disabled.
+    useEffect(() => {
+        if (isEnabled) return;
+
+        hoveredObjectRef.current = "";
+        setCurrentObjectHovered("");
+    }, [isEnabled, setCurrentObjectHovered]);
+
+    // Clear hover state when this component unmounts.
+    useEffect(() => {
+        return () => {
+            hoveredObjectRef.current = "";
+            setCurrentObjectHovered("");
+        };
+    }, [setCurrentObjectHovered]);
+
+    // Store the hovered object name when it changes.
     useFrame(() => {
-        if(enabled){
-        // Perform raycasting every 'frameInterval' frames
-            if (++frameCount % frameInterval === 0) {
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(scene.children, true);
+        if (!isEnabled) return;
 
-            if (intersects.length > 0) {
-                if (hoveredObject !== intersects[0].object) {
-                setHoveredObject(intersects[0].object.name);
-                console.log("hover: "+hoveredObject)
-                }
-            } else if (hoveredObject) {
-                setHoveredObject(null);
-            }
-            }
-        }
+        frameCountRef.current += 1;
+        if (frameCountRef.current % raycastFrameInterval !== 0) return;
+
+        raycasterRef.current.setFromCamera(mouse, camera);
+        const intersects = raycasterRef.current.intersectObjects(scene.children, true);
+        const hoveredObjectName = intersects[0]?.object?.name || "";
+
+        if (hoveredObjectRef.current === hoveredObjectName) return;
+
+        hoveredObjectRef.current = hoveredObjectName;
+        setCurrentObjectHovered(hoveredObjectName);
     });
 
-    const handleRaycastClick = () => {
-        if(enabled){
-            if (hoveredObject) {
-                setCurrentObjectClicked(hoveredObject);
-                console.log(currentObjectClicked)
-            } 
-            else {
-                setCurrentObjectClicked(""); // Optionally clear the clicked object if clicking on empty space
-            }
-        }
-    };
-
-    return(
-        <group onClick={handleRaycastClick}>
-        {React.Children.map(children, child => 
-            React.isValidElement(child) ? React.cloneElement(child, { hoveredObject }) : child
-            )}
-        </group>
-    );
+    return null;
 });
 
 Raycaster.displayName = "Raycaster";

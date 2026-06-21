@@ -9,11 +9,11 @@ const SystemStore = create((set) => ({
   forceDisableRender: false, // will disable the app's render
   setForceDisableRender: (DisableRender) => set(() => ({ forceDisableRender: DisableRender })),
 
-  raycasterEnabled: true,
-  setRaycasterEnabled: (loaded) => set(() => ({ raycasterEnabled: loaded })),
-
-  currentObjectClicked: "", // Raycaster.jsx: Object captured by mouse click while the component is on the scene.
+  currentObjectClicked: "", // Object captured by mouse click handlers.
   setCurrentObjectClicked: (object) => set(() => ({ currentObjectClicked: object })),
+
+  currentObjectHovered: "", // Raycaster.jsx: Object currently under the pointer.
+  setCurrentObjectHovered: (object) => set(() => ({ currentObjectHovered: object })),
 
   // The named position that the transition is aiming to go
   transitionDestination: "MainMenu",

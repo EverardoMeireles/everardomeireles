@@ -21,6 +21,7 @@ import { FpsBenchmarkProbe } from "./system_components/FpsBenchmarkProbe.jsx";
 import { pollForFilesInTHREECache } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Camera } from "./system_components/Camera.jsx";
+import { Raycaster } from "./system_components/Raycaster.jsx";
 
 import * as THREE from 'three';
 
@@ -360,6 +361,7 @@ export const SceneContainer = React.memo((props) => {
                 cameraFocusSpeed={0.5}
             // cameraFocusDestination={[0,0,0]}
             />
+            <Raycaster frameInterval={1} />
             {/* /////////////////////
                 //System system_components//
                 ///////////////////// */}
