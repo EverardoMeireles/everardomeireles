@@ -18,9 +18,11 @@ export const Raycaster = React.memo((props) => {
     const setCurrentObjectHovered = SystemStore((state) => state.setCurrentObjectHovered);
 
     const { scene, camera, mouse } = useThree();
+
     const frameCountRef = useRef(0);
     const hoveredObjectRef = useRef("");
     const raycasterRef = useRef(new THREE.Raycaster());
+    
     const isEnabled = enabled;
     const raycastFrameInterval = Math.max(1, frameInterval);
 

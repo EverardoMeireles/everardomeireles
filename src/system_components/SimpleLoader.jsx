@@ -6,10 +6,10 @@ import SystemStore from "../SystemStore";
 import { applyMaterialsToScene } from "../Helper.js";
 
 /**
- * Purpose: Renders a loaded GLTF scene with animation, hover, material, UV, and hide/reveal behavior.
+ * Purpose: Renders a loaded GLTF scene with animation, object scale, material, UV, and hide/reveal behavior.
  * Relationships: Used by SceneContainer, often wrapped by DynamicMaterialLoader, and writes animation triggers through SystemStore.
  * Example:
- * <SimpleLoader position={[0, 0, 0]} scene={scene} animationToPlay={["idle"]} loopMode="noLoop" playDirection={1} autoPlay={true} animationTrigger={false} hover={true} hoverAffectedObjects={[]} hoverLinkedObjects={[[]]} animationTimesToTrigger={{}} animationTriggerNames={{}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
+ * <SimpleLoader position={[0, 0, 0]} scene={scene} animationToPlay={["idle"]} loopMode="noLoop" playDirection={1} autoPlay={true} animationTrigger={false} objectScaleUpTriggers={[]} scaleAmount={1.3} animationTimesToTrigger={{}} animationTriggerNames={{}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
  * @param {Array<any>} [position] - Position of the model in the scene.
  * @param {*} [scene] - Loaded scene object used by this component.
  * @param {Array<any>} [animationToPlay] - Names of the animation clips to play.
@@ -17,9 +17,8 @@ import { applyMaterialsToScene } from "../Helper.js";
  * @param {number} [playDirection] - Direction to play animation (1 forward, -1 reverse).
  * @param {boolean} [autoPlay] - Whether the animation starts automatically after load.
  * @param {boolean} [animationTrigger] - Trigger value used to start the animation.
- * @param {boolean} [hover] - Enables hover scaling behavior.
- * @param {Array<any>} [hoverAffectedObjects] - Object names that react to hover.
- * @param {Array<any>} [hoverLinkedObjects] - Linked object groups for hover effects.
+ * @param {Array<any>} [objectScaleUpTriggers] - Object names currently scaling up.
+ * @param {number} [scaleAmount] - Scale multiplier for triggered objects.
  * @param {*} [animationTimesToTrigger] - Clip times that fire named triggers.
  * @param {*} [animationTriggerNames] - Trigger names mapped to animation clips.
  * @param {*} [objectsHideRevealTriggers] - Trigger map for hide/reveal object behavior.
@@ -41,9 +40,8 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const {autoPlay = true} = props;
     const {animationTrigger = false} = props;
 
-    const {hover = true} = props;
-    const {hoverAffectedObjects = []} = props;
-    const {hoverLinkedObjects = [[]]} = props;
+    const {objectScaleUpTriggers = []} = props;
+    const {scaleAmount = 1.3} = props;
 
     const {animationTimesToTrigger = {}} = props;
     const {animationTriggerNames = {}} = props;
@@ -80,7 +78,6 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     // Load Model
     const toggleTrigger = SystemStore((state) => state.toggleTrigger);
     const triggers = SystemStore((state) => state.triggers);
-    const hoveredObject = SystemStore((state) => state.currentObjectHovered);
 
     // initialize the animation mixer
     const mixer = useRef(new THREE.AnimationMixer(scene.scene));
@@ -89,11 +86,8 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const fadeInObjectsKeysRef = useRef([]);
     const [fade, setFadeIn] = useState(false);
 
-    // states for the hover feature
-    const [triggerScaleAnimation, setTriggerScaleAnimation] = useState(false);
-    const [animationFadeOut, setAnimationFadeOut] = useState(false);
-    const [childObject, setChildObject] = useState(false);
-    const [currentLinkedObjects, setCurrentLinkedObjects] = useState([]);
+    // Refs for the object scale-up feature.
+    const scaledObjectsRef = useRef({});
 
     const materialSwapId = useRef(0);
 
@@ -225,82 +219,72 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     }
 
     //////////////////////////////////////////////////////////
-    /////////////////// Feature : Hover //////////////////////
+    //////////// Feature : Object scale-up ///////////////////
     //////////////////////////////////////////////////////////
 
-    // Modify this to only reset appropriate objects???
-    // Resets the scale of all objects back to 0
-    function resetObjectsScale(){
-        scene.scene.traverse((child) => {
-                child.scale.x = 1
-                child.scale.y = 1
-                child.scale.z = 1
-        })
+    // Move one scale axis toward its target.
+    function moveScaleAxis(currentScale, targetScale) {
+        const scaleStep = 0.1;
+        const scaleDifference = targetScale - currentScale;
+
+        if (Math.abs(scaleDifference) <= scaleStep) {
+            return targetScale;
+        }
+
+        return currentScale + Math.sign(scaleDifference) * scaleStep;
     }
 
-    function getLinkedObjects(object){
-        var returnedObjects = [];
-
-        hoverLinkedObjects.forEach(function(objectGroupNames) {
-            if(objectGroupNames.includes(object.name)){
-                scene.scene.traverse((child) => {
-                    if(objectGroupNames.includes(child.name)){
-                        returnedObjects.push(child)
-                    }
-                })
-            }
-            });
-
-            // simplify this?
-            if(returnedObjects.length > 1){
-                return returnedObjects
-            }else{
-                return [object]
-            }
-    }
-
-    // trigger the scale animation based on hover state(assumes that base object scales are [x:1, y:1, z:1])
+    // Track triggered objects and remember their original scales.
     useEffect(() => {
-        if(hover && hoveredObject != undefined && hoverAffectedObjects.includes(hoveredObject) ){
-            scene.scene.traverse((child) => {
-                if(child.name == hoveredObject){
-                    resetObjectsScale();
-                    setCurrentLinkedObjects(getLinkedObjects(child))
-                    setChildObject(child);
-                    setTriggerScaleAnimation(true)
-                    return;
-                }
-            })
-        }else{
-            setAnimationFadeOut(true)
-            setTriggerScaleAnimation(false);
-        }
-    }, [scene.scene, hoveredObject]);
+        if (!Array.isArray(objectScaleUpTriggers) || objectScaleUpTriggers.length === 0) return;
 
-    // Animation where the object scales up and down
+        scene.scene.traverse((child) => {
+            if (!child?.scale || !objectScaleUpTriggers.includes(child.name)) return;
+
+            if (!scaledObjectsRef.current[child.name]) {
+                scaledObjectsRef.current[child.name] = {
+                    object: child,
+                    originalScale: child.scale.clone()
+                };
+            } else {
+                scaledObjectsRef.current[child.name].object = child;
+            }
+        });
+    }, [scene.scene, objectScaleUpTriggers]);
+
+    // Animate triggered objects up and removed objects back down.
     useFrame(() => {
-        if (triggerScaleAnimation) {
-            if(childObject != undefined && childObject.scale != undefined && childObject.scale.x < 1.3 && childObject.scale.y < 1.3 && childObject.scale.z < 1.3){
-                currentLinkedObjects.forEach((object)=>{
-                    object.scale.x += 0.1
-                    object.scale.y += 0.1
-                    object.scale.z += 0.1
-                })
+        const activeScaleTriggers = Array.isArray(objectScaleUpTriggers) ? objectScaleUpTriggers : [];
+        const objectNames = Object.keys(scaledObjectsRef.current);
+        if (objectNames.length === 0) return;
+
+        objectNames.forEach((objectName) => {
+            const scaleData = scaledObjectsRef.current[objectName];
+            const object = scaleData.object;
+            const originalScale = scaleData.originalScale;
+            if (!object?.scale || !originalScale) {
+                delete scaledObjectsRef.current[objectName];
+                return;
             }
-        }else{
-            if(animationFadeOut){
-                if(childObject != undefined && childObject.scale != undefined && childObject.scale.x > 1 && childObject.scale.y > 1 && childObject.scale.z > 1){
-                    currentLinkedObjects.forEach((object)=>{
-                        object.scale.x -= 0.1
-                        object.scale.y -= 0.1
-                        object.scale.z -= 0.1
-                    })
-                }
-                else{
-                    setAnimationFadeOut(false)
-                }
+
+            const shouldScaleUp = activeScaleTriggers.includes(objectName);
+            const targetScaleMultiplier = shouldScaleUp ? scaleAmount : 1;
+            const targetScale = {
+                x: originalScale.x * targetScaleMultiplier,
+                y: originalScale.y * targetScaleMultiplier,
+                z: originalScale.z * targetScaleMultiplier
+            };
+
+            object.scale.set(
+                moveScaleAxis(object.scale.x, targetScale.x),
+                moveScaleAxis(object.scale.y, targetScale.y),
+                moveScaleAxis(object.scale.z, targetScale.z)
+            );
+
+            if (!shouldScaleUp && object.scale.equals(originalScale)) {
+                delete scaledObjectsRef.current[objectName];
             }
-        }
+        });
     });
 
     //////////////////////////////////////////////////////////

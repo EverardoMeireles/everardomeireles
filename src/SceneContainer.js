@@ -47,6 +47,7 @@ export const SceneContainer = React.memo((props) => {
     const setForcedCameraMovePathCurve = SystemStore((state) => state.setForcedCameraMovePathCurve);
     const setMainScene = SystemStore((state) => state.setMainScene);
     const mainScene = SystemStore((state) => state.mainScene);
+    const currentObjectHovered = SystemStore((state) => state.currentObjectHovered);
     const viewerModelName = SystemStore((state) => state.viewerModelName);
     const viewerConfigFile = SystemStore((state) => state.viewerConfigFile);
     const viewerMaterialName = SystemStore((state) => state.viewerMaterialName);
@@ -265,8 +266,18 @@ export const SceneContainer = React.memo((props) => {
     const animationTriggerNames = useMemo(() => ({"CharacterAction": "trigger2"}), []);
     const animationToPlay = useMemo(() => ["LampAction.001","RopeAction"], []);
     const animationTrigger = useMemo(() => triggers["trigger1"], []);
-    const hoverAffectedObjects = useMemo(() => ["LeftDoor","RightDoor", "MainBody"], []);
-    const hoverLinkedObjects = useMemo(() => [["LeftDoor","RightDoor", "MainBody"], ["Monitor_1", "Monitor_2"]], []);
+
+    // Objects that scale as one group.
+    const objectScaleUpGroup = useMemo(() => ["LeftDoor","RightDoor", "MainBody"], []);
+
+    // Trigger scaling for the selected group.
+    const objectScaleUpTriggers = useMemo(() => {
+        if (objectScaleUpGroup.includes(currentObjectHovered)) {
+            return objectScaleUpGroup;
+        }
+
+        return [];
+    }, [currentObjectHovered, objectScaleUpGroup]);
 
     const objectLinkPosition1 = useMemo(() => [48, 89, -49], []);
     const objectLinkScale = useMemo(() => [1, 1, 1], []);
@@ -318,8 +329,8 @@ export const SceneContainer = React.memo((props) => {
                 animationTrigger={animationTrigger}
                 animationTimesToTrigger={animationTimesToTrigger}
                 animationTriggerNames={animationTriggerNames}
-                hoverAffectedObjects={hoverAffectedObjects}
-                hoverLinkedObjects={hoverLinkedObjects}
+                objectScaleUpTriggers={objectScaleUpTriggers}
+                scaleAmount={1.3}
             />
         );
     }, [
@@ -329,8 +340,7 @@ export const SceneContainer = React.memo((props) => {
         animationTrigger,
         animationTimesToTrigger,
         animationTriggerNames,
-        hoverAffectedObjects,
-        hoverLinkedObjects
+        objectScaleUpTriggers
     ]);
 
     const isOrbitingMenuVisible = useRef(false)
