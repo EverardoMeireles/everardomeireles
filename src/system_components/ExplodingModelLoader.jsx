@@ -126,8 +126,8 @@ export const ExplodingModelLoader = React.memo((props) => {
   const isCanvasHovered = SystemStore((state) => state.isCanvasHovered);
   const cameraState = SystemStore((state) => state.cameraState);
   const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
-  const transitionEnded = SystemStore((state) => state.transitionEnded);
-  const setTransitionEnded = SystemStore((state) => state.setTransitionEnded);
+  const isCameraMoving = SystemStore((state) => state.isCameraMoving);
+  const setIsCameraMoving = SystemStore((state) => state.setIsCameraMoving);
   const triggers = SystemStore((state) => state.triggers);
   const setTrigger = SystemStore((state) => state.setTrigger);
   const currentCircleNameSelected = SystemStore((state) => state.currentCircleNameSelected);
@@ -242,7 +242,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       setForcedCameraTarget(sceneOrigin)
       setNamedTrigger(setTrigger, setCameraTargetTrigger, false)
     }
-  }, [transitionEnded]);
+  }, [isCameraMoving]);
 
   // Force change the camera's target on component mount
   useEffect(() => {
@@ -780,7 +780,7 @@ export const ExplodingModelLoader = React.memo((props) => {
     const allHaveExploded = childNames.every(name => objectsThatHaveExploded.current.includes(name));
     const parentHasChildren = gltf.scene.getObjectByName(selectedObject.circleName)?.children.length > 0;
     const shouldWaitForFocus = selectedObject.waitForFocusBeforeExplodeAnimation !== false;
-    const focusComplete = !shouldWaitForFocus || transitionEnded;
+    const focusComplete = !shouldWaitForFocus || !isCameraMoving;
 
     // Defer starting the new object's animation until the previous one has fully reversed
     const previousCircleName = previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current;
@@ -806,7 +806,7 @@ export const ExplodingModelLoader = React.memo((props) => {
       previousChildAnimationCurrentSelectedObjectNameUpdateFlag.current = childAnimationCurrentSelectedObjectNameUpdateFlag.current;
       childAnimationCurrentSelectedObjectNameUpdateFlag.current = "";
     }
-  }, [childAnimationUpdateFlag, transitionEnded, explodedObjectsVersion]);
+  }, [childAnimationUpdateFlag, isCameraMoving, explodedObjectsVersion]);
 
   // Right off the bat, explode all objects with children whose waitForFocusBeforeExplodeAnimation flag equal false
   useEffect(() => {
@@ -906,13 +906,13 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     const selectedObject = circlesData.find(item => item.circleName === currentSelectedObjectNameUpdateFlag.current);
     if(visibilityUpdateFlag.current && selectedObject){
-      if ((selectedObject.showCirclesAfterFocusAnimation && transitionEnded) || (!selectedObject.showCirclesAfterFocusAnimation)) {
+      if ((selectedObject.showCirclesAfterFocusAnimation && !isCameraMoving) || (!selectedObject.showCirclesAfterFocusAnimation)) {
         currentSelectedObjectNameUpdateFlag.current = "";
         updateCircleVisibility(selectedObject);
         visibilityUpdateFlag.current = false;
       }
     }
-  }, [visibilityUpdateFlag.current, transitionEnded]);
+  }, [visibilityUpdateFlag.current, isCameraMoving]);
 
   // See if user dragged the mouse around...
   const hasDraggedMouse = useRef(false);
@@ -1039,7 +1039,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     const handleMouseClick = (event) => {
       if(!childAnimationIsPlaying.current && currentSelectedObjectName.current && isFocusable.current){
-        setTransitionEnded(false)
+        setIsCameraMoving(true);
         setForcedCameraMovePathCurve(archCurve.current) // Starts the camera transition
         setForcedCameraTarget(foCameraTargetPoint.current) // Makes the camera follow the object
         setShowReturnButton(true);
@@ -1119,7 +1119,7 @@ export const ExplodingModelLoader = React.memo((props) => {
   useEffect(() => {
     if (isReturnButtonPressed) {
       setShowReturnButton(false);
-      setTransitionEnded(false);
+      setIsCameraMoving(true);
       // Return to the responsive camera start position (or forced override if provided)
       setForcedCameraMovePathCurve(createArchCurve(
         camera,

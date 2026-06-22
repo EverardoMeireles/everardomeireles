@@ -19,8 +19,8 @@ const SystemStore = create((set) => ({
   transitionDestination: "MainMenu",
   setDesiredPath: (desired) => set(() => ({ transitionDestination: desired })),
 
-  transitionEnded: false,
-  setTransitionEnded: (ended) => set(() => ({ transitionEnded: ended })),
+  isCameraMoving: false,
+  setIsCameraMoving: (moving) => set(() => ({ isCameraMoving: moving })),
 
   currentGraphicalMode: config.default_graphical_setting,
   setGraphicalMode: (mode) => set(() => ({ currentGraphicalMode: mode })),

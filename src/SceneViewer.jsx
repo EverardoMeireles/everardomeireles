@@ -47,7 +47,7 @@ function SceneViewer() {
   const showReturnButton = SystemStore((state) => state.showReturnButton);
   const cameraState = SystemStore((state) => state.cameraState);
   const triggers = SystemStore((state) => state.triggers);
-  const transitionEnded = SystemStore((state) => state.transitionEnded);
+  const isCameraMoving = SystemStore((state) => state.isCameraMoving);
   const message = SystemStore((state) => state.message);
   const setMessage = SystemStore((state) => state.setMessage);
   const setProductInformationFromMessage = SystemStore((state) => state.setProductInformationFromMessage);
@@ -70,6 +70,7 @@ function SceneViewer() {
   const setViewerBounds = SystemStore((state) => state.setViewerBounds);
   const viewerBounds = SystemStore((state) => state.viewerBounds);
   const [canvasReady, setCanvasReady] = useState(false);
+  const cameraMovedOnce = useRef(false);
   const previousCircleData = useRef();
 
   //////////////////////////////////////
@@ -122,12 +123,17 @@ function SceneViewer() {
   ////////// Overlay state /////////////
   //////////////////////////////////////
 
-  // Enable the tutorial after a scene transition ends.
+  // Enable the tutorial after the first camera movement.
   useEffect(() => {
-    if(transitionEnded){
+    if(isCameraMoving){
+      cameraMovedOnce.current = true;
+      return;
+    }
+
+    if(cameraMovedOnce.current){
       setEnableTutorial(true)
     }
-  }, [transitionEnded]);
+  }, [isCameraMoving]);
 
   // Update tooltip props from the currently hovered circle.
   useEffect(() => {

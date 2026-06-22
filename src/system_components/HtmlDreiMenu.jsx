@@ -12,7 +12,7 @@ import SystemStore from "../SystemStore";
  */
 export function HtmlDreiMenu(props) {
     const setDesiredPath = SystemStore((state) => state.setDesiredPath);
-    const setTransitionEnded = SystemStore((state) => state.setTransitionEnded);
+    const setIsCameraMoving = SystemStore((state) => state.setIsCameraMoving);
 
     const meshHtmlRef = useRef();
 
@@ -35,10 +35,10 @@ export function HtmlDreiMenu(props) {
         <mesh position={[0,0,0]} ref={meshHtmlRef}>
             <Html position={[-1200,-100,-140]} >
                 <div /*id='menu'*/ style={HtmlDreiMenuStyles.menu}>
-                    <p onClick={()=> {setDesiredPath("MainMenu"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Main Menu" />
-                    <p onClick={()=> {setDesiredPath("Education"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Education" />
-                    <p onClick={()=> {setDesiredPath("Skills"); setTransitionEnded(false); setParentMenuClicked(false)}}  children="Skills" />
-                    <p onClick={()=> {setDesiredPath("ProfessionalExpProjects0"); setTransitionEnded(true); setParentMenuClicked(true)}}  children="Professional experience" />
+                    <p onClick={()=> {setDesiredPath("MainMenu"); setIsCameraMoving(true); setParentMenuClicked(false)}}  children="Main Menu" />
+                    <p onClick={()=> {setDesiredPath("Education"); setIsCameraMoving(true); setParentMenuClicked(false)}}  children="Education" />
+                    <p onClick={()=> {setDesiredPath("Skills"); setIsCameraMoving(true); setParentMenuClicked(false)}}  children="Skills" />
+                    <p onClick={()=> {setDesiredPath("ProfessionalExpProjects0"); setIsCameraMoving(false); setParentMenuClicked(true)}}  children="Professional experience" />
                 {(parentMenuClicked === true) &&
                 <div>
                     <p onClick={()=> {setDesiredPath("ProfessionalExpProjects0"); }} children="Prospere ITB" />

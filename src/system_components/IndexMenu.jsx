@@ -33,7 +33,7 @@ export function IndexMenu(props) {
     // Example: config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"
     const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
-    const {setDesiredPath, setTransitionEnded} = SystemStore();
+    const {setDesiredPath, setIsCameraMoving} = SystemStore();
     
     const setGraphicalMode = SystemStore((state) => state.setGraphicalMode);
     const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
@@ -66,7 +66,7 @@ export function IndexMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("MainMenu");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,3,2]}
             >
@@ -98,7 +98,7 @@ export function IndexMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("Education");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,2,2]}
             >
@@ -130,7 +130,7 @@ export function IndexMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("Skills");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,1,2]}
             >
@@ -162,7 +162,7 @@ export function IndexMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects0");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,0,2]}
             >

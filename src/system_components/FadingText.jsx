@@ -58,7 +58,7 @@ export const FadingText = React.memo((props) => {
     const [playAnimation, setPlayAnimation] = useState(false); //true or false
     const [materialOpacity, setMaterialOpacity] = useState(0);
 
-    const transitionEnded = SystemStore((state) => state.transitionEnded);
+    const isCameraMoving = SystemStore((state) => state.isCameraMoving);
     const transitionDestination = SystemStore((state) => state.transitionDestination);
     const currentTransitionDestination = useRef("");
 
@@ -67,7 +67,7 @@ export const FadingText = React.memo((props) => {
     // Activate the animation
     useEffect(() => {
         if((textIsVisibleByTransitionDestination && transitionDestination == transitionDestinationToShowText 
-            && (textIsVisibleByTransitionDestinationWaitForTransitionEnd && transitionEnded || !textIsVisibleByTransitionDestinationWaitForTransitionEnd)
+            && ((textIsVisibleByTransitionDestinationWaitForTransitionEnd && !isCameraMoving) || !textIsVisibleByTransitionDestinationWaitForTransitionEnd)
             &&  currentTransitionDestination.current != transitionDestination) // ????????? Keep this condition ??????????
             || (!textIsVisibleByTransitionDestination && textIsVisible))
         {
@@ -81,7 +81,7 @@ export const FadingText = React.memo((props) => {
             setFadeFactor(-1)
         }
         
-    },[transitionDestination, transitionEnded])
+    },[transitionDestination, isCameraMoving])
 
     // Fade in and out animation
     useFrame((state, delta)=> {

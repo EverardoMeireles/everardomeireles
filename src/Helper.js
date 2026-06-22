@@ -106,6 +106,7 @@ export function createArchCurve(
 
       throw new Error(`createArchCurve requires a valid ${name}.`);
     };
+    
     // Resolve the arch and offset directions.
     const resolveDirection = (value) => {
       if (value?.isVector3) {

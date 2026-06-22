@@ -33,8 +33,8 @@ export function HudMenu(props) {
     const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
     const enableDynamicGraphicalModeSetting = SystemStore((state) => state.enableDynamicGraphicalModeSetting);
     const setEnableDynamicGraphicalModeSetting = SystemStore((state) => state.setEnableDynamicGraphicalModeSetting);
-    const setTransitionEnded = SystemStore((state) => state.setTransitionEnded);
-    const transitionEnded = SystemStore((state) => state.transitionEnded);
+    const setIsCameraMoving = SystemStore((state) => state.setIsCameraMoving);
+    const isCameraMoving = SystemStore((state) => state.isCameraMoving);
     const setForcedCameraMovePathCurve = SystemStore((state) => state.setForcedCameraMovePathCurve);
     const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
     const setDesiredPath = SystemStore((state) => state.setDesiredPath);
@@ -97,6 +97,7 @@ export function HudMenu(props) {
 
         if (desiredPath.current !== urlPath) {
             desiredPath.current = urlPath;
+            setIsCameraMoving(true);
             setDesiredPath(desiredPath.current)
             setForcedCameraTarget(path_points_even_more_simple_lookat_dict[desiredPath.current].toArray())
             // setForcedCameraMovePathCurve(overrideCurves[currentPath.current + "-" + desiredPath.current]);
@@ -129,7 +130,6 @@ export function HudMenu(props) {
                     );
                 }
             }
-            setTransitionEnded(false);
         }
     };
 
@@ -138,18 +138,20 @@ export function HudMenu(props) {
     return () => {
         window.removeEventListener('popstate', handlePopState);
     };
-}, [enabled, setDesiredPath, setForcedCameraTarget, setForcedCameraMovePathCurve, setTransitionEnded]);
+}, [enabled, setDesiredPath, setForcedCameraTarget, setForcedCameraMovePathCurve, setIsCameraMoving]);
 
 
     /////////////
     /// DEBUG ///
     /////////////
 
-    // Once the transition is over, set the new current path position
+    // Save the new current path after camera movement.
     useEffect(() => {
         if (!enabled) return;
+        if (isCameraMoving) return;
+
         currentPath.current = desiredPath.current;
-    }, [transitionEnded, enabled]);
+    }, [isCameraMoving, enabled]);
 
     function test(){
         console.log("Arrow pressed")

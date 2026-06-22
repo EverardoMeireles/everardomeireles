@@ -37,7 +37,7 @@ import UserStore from "./UserStore.js";
  */
 export const SceneContainer = React.memo((props) => {
     const transitionDestination = SystemStore((state) => state.transitionDestination);
-    const transitionEnded = SystemStore((state) => state.transitionEnded);
+    const isCameraMoving = SystemStore((state) => state.isCameraMoving);
     const currentLanguage = SystemStore((state) => state.currentLanguage);
     const currentGraphicalMode = SystemStore((state) => state.currentGraphicalMode);
     const currentObjectClicked = SystemStore((state) => state.currentObjectClicked);
@@ -358,12 +358,12 @@ export const SceneContainer = React.memo((props) => {
     const isOrbitingMenuVisible = useRef(false)
 
     useEffect(() => {
-        if(transitionDestination === "Education" && transitionEnded){
+        if(transitionDestination === "Education" && !isCameraMoving){
             isOrbitingMenuVisible.current = true;
         }else{
             isOrbitingMenuVisible.current = false;
         }
-    }, [transitionDestination, transitionEnded]);
+    }, [transitionDestination, isCameraMoving]);
 
     if (!mainScene) {
         return null;

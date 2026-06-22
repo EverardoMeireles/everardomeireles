@@ -47,11 +47,11 @@ export function FadingText3D(props) {
     // Example: [0, -0.5, 0.2]
     const {textPositionOffset = [0, -0.5, 0.2]} = props;
 
-    const {transitionEnded, transitionDestination} = SystemStore();
+    const {isCameraMoving, transitionDestination} = SystemStore();
 
     // Fade in and out animation
     const springFade = useSpring({
-        opacity: (transitionEnded && transitionDestination === textModelMenu) ? 1 : 0,
+        opacity: (!isCameraMoving && transitionDestination === textModelMenu) ? 1 : 0,
         config: {
             duration:transitionDuration
         }

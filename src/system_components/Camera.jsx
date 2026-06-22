@@ -39,8 +39,8 @@ export const Camera = React.memo((props) => {
     // Example: "cameraEnded"
     const {triggerOutCameraTransitionEnded = ""} = props;
 
-    const setTransitionEnded = SystemStore((state) => state.setTransitionEnded);
-    const transitionEnded = SystemStore((state) => state.transitionEnded);
+    const setIsCameraMoving = SystemStore((state) => state.setIsCameraMoving);
+    const isCameraMoving = SystemStore((state) => state.isCameraMoving);
     const currentCameraMovements = SystemStore((state) => state.currentCameraMovements);
     const setcurrentCameraMovements = SystemStore((state) => state.setcurrentCameraMovements);
     const forceDisableZoom = SystemStore((state) => state.forceDisableZoom);
@@ -132,7 +132,7 @@ export const Camera = React.memo((props) => {
     function finishTransition(state) {
         transitionInProgressRef.current = false;
         transitionProgressRef.current = 1;
-        setTransitionEnded(true);
+        setIsCameraMoving(false);
         setTransitionTriggers(false, true);
 
         if (controls.current) {
@@ -155,34 +155,34 @@ export const Camera = React.memo((props) => {
         transitionCurveRef.current = nextCurve;
         transitionProgressRef.current = 0;
         transitionInProgressRef.current = true;
-        setTransitionEnded(false);
+        setIsCameraMoving(true);
         setTransitionTriggers(true, false);
     }
 
     // Change camera mode
     const [cameraMode, setCameraMode] = useState({LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE, RIGHT: THREE.MOUSE.RIGHT});
     useEffect(()=>{
-        if(currentCameraMode === "NormalMovement" && transitionEnded){
+        if(currentCameraMode === "NormalMovement" && !isCameraMoving){
             setcurrentCameraMovements({"zoom":true, "pan":true, "rotate":true});
             setCameraMode({ RIGHT: THREE.MOUSE.RIGHT, LEFT: THREE.MOUSE.LEFT, MIDDLE: THREE.MOUSE.MIDDLE });
         }
         else
-        if(currentCameraMode === "panOnly" && transitionEnded){
+        if(currentCameraMode === "panOnly" && !isCameraMoving){
             setcurrentCameraMovements({"zoom":false, "pan":true, "rotate":false});
             setCameraMode({ LEFT: THREE.MOUSE.RIGHT});
         }
         else
-        if(currentCameraMode === "rotateOnly" && transitionEnded){
+        if(currentCameraMode === "rotateOnly" && !isCameraMoving){
             setcurrentCameraMovements({"zoom":false, "pan":false, "rotate":true});
             setCameraMode({ LEFT: THREE.MOUSE.LEFT});
         }
         else
-        if(currentCameraMode === "zoomOnly" && transitionEnded){
+        if(currentCameraMode === "zoomOnly" && !isCameraMoving){
             setcurrentCameraMovements({"zoom":true, "pan":false, "rotate":false});
             setCameraMode({ MIDDLE: THREE.MOUSE.MIDDLE});
         }
         else
-        if (currentCameraMode === "panDirectional" && transitionEnded) {
+        if (currentCameraMode === "panDirectional" && !isCameraMoving) {
             setcurrentCameraMovements({"zoom":false, "pan":true, "rotate":false});
             // these variables and the if else statements determine whether to increment or decrement the two axies by the camera event's output by multiplying it by 1 or -1
             let horizontalPanSign;
@@ -261,7 +261,7 @@ export const Camera = React.memo((props) => {
             // Clean up the event listener when the component unmounts or when the camera mode changes
             return () => window.removeEventListener('mousemove', handleMouseMove);
         }
-    }, [panDirectionalEdgethreshold, currentCameraMode, transitionEnded]);
+    }, [panDirectionalEdgethreshold, currentCameraMode, isCameraMoving]);
 
     useEffect(() => {
         const handleMouseMove = (event) => {
@@ -282,7 +282,7 @@ export const Camera = React.memo((props) => {
     }, [panDirectionalEdgethreshold]);
 
     useEffect(() => {
-        if (currentCameraMode === "panDirectional" && transitionEnded) {
+        if (currentCameraMode === "panDirectional" && !isCameraMoving) {
             const intervalId = setInterval(() => {
                 if (!isMouseNearEdge.current && cam.current) {
                     const direction = gravitationalPullPoint.clone().sub(cam.current.position).normalize();
@@ -300,7 +300,7 @@ export const Camera = React.memo((props) => {
             // Clean up the interval when the component unmounts
             return () => clearInterval(intervalId);
         }
-    }, [currentCameraMode, transitionEnded]);
+    }, [currentCameraMode, isCameraMoving]);
 
     // Keep the latest camera target available.
     useEffect(() => {

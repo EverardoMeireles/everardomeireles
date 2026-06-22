@@ -25,7 +25,7 @@ export function ExperienceMenu(props) {
     const {textColor = "#062d69"} = props;
     const {transitionDuration = 1000} = props;
 
-    const {setDesiredPath, setTransitionEnded, transitionDestination} = SystemStore();
+    const {setDesiredPath, setIsCameraMoving, isCameraMoving, transitionDestination} = SystemStore();
 
     const isPathExperienceMenu = transitionDestination.includes("ProfessionalExpProjects"); // is the user going to the professional experience and projects
 
@@ -38,7 +38,7 @@ export function ExperienceMenu(props) {
     }
 
     const spring = useSpring({
-        position: setTransitionEnded ? position : [0,0,0],
+        position: !isCameraMoving ? position : [0,0,0],
         config: {
             duration:transitionDuration
         }
@@ -64,7 +64,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("MainMenu");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,13,2]}
             >
@@ -95,7 +95,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("Education");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,12,2]}
             >
@@ -126,7 +126,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("Skills");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,11,2]}
             >
@@ -157,7 +157,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects0");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,10,2]}
             >
@@ -188,7 +188,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects1");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,9,2]}
             >
@@ -218,7 +218,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects2");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,8,2]}
             >
@@ -248,7 +248,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects3");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,7,2]}
             >
@@ -278,7 +278,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects4");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,6,2]}
             >
@@ -308,7 +308,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects5");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,5,2]}
             >
@@ -338,7 +338,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects6");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,4,2]}
             >
@@ -370,7 +370,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects7");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,3,2]}
             >
@@ -402,7 +402,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects8");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,2,2]}
             >
@@ -434,7 +434,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects9");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,1,2]}
             >
@@ -466,7 +466,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects10");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,0,2]}
             >
@@ -498,7 +498,7 @@ export function ExperienceMenu(props) {
             onClick = {(e) => {
                 e.stopPropagation();
                 setDesiredPath("ProfessionalExpProjects11");
-                setTransitionEnded(false);
+                setIsCameraMoving(true);
             }}
             position = {[0,-1,2]}
             >

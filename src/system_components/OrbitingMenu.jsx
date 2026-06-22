@@ -31,7 +31,7 @@ export const OrbitingMenu = React.memo((props) => {
 
     const {fadeInDuration = 300} = props;
 
-    const transitionEnded = SystemStore((state) => state.transitionEnded);
+    const isCameraMoving = SystemStore((state) => state.isCameraMoving);
     const transitionDestination = SystemStore((state) => state.transitionDestination);
     const currentLanguage = SystemStore((state) => state.currentLanguage);
 
@@ -181,7 +181,7 @@ export const OrbitingMenu = React.memo((props) => {
 
     useEffect(()=>{
         window.addEventListener("keydown", (event) => {
-            if(!clicked.current && transitionDestination == transitionDestinationToRestrictKeyboardControl && transitionEnded){
+            if(!clicked.current && transitionDestination == transitionDestinationToRestrictKeyboardControl && !isCameraMoving){
                 switch(event.code) {
                     case "ArrowLeft":
                         setOrbitDirection(-1);
