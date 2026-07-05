@@ -9,7 +9,7 @@ import SystemStore from "../SystemStore";
  * Purpose: OrbitControls camera that moves along a prop-provided CatmullRom curve.
  * Relationships: Can still fall back to SystemStore's forced camera values for legacy HudMenu and ExplodingModelLoader flows.
  * Example:
- * <Camera transitionSpeed={0.5} position={[0, 0, 0]} cameraMovePathCurve={curve} cameraTarget={[0, 0, 0]} cameraPosition={[0, 5, 10]} triggerOutCameraTransitionStarted="cameraStarted" triggerOutCameraTransitionEnded="cameraEnded" />
+ * <Camera transitionSpeed={0.5} position={[0, 0, 0]} cameraMovePathCurve={curve} cameraTarget={[0, 0, 0]} cameraPosition={[0, 5, 10]} triggerOutCameraTransitionStarted="cameraStarted" triggerOutCameraTransitionEnded="cameraEnded" idleCameraAnimationEnable={true} idleCameraAnimationDelay={3000} idleCameraAnimationSphericalAreaDiameter={5} idleCameraAnimationSpeed={0.08} />
  * @param {number} [transitionSpeed] - Speed value for transition speed.
  * @param {Array<any>} [position] - Position in the scene.
  * @param {*} [cameraMovePathCurve] - Curve that starts a camera transition when changed.
@@ -17,6 +17,10 @@ import SystemStore from "../SystemStore";
  * @param {Array<any> | THREE.Vector3} [cameraPosition] - Forced camera position.
  * @param {string} [triggerOutCameraTransitionStarted] - Trigger key set when this behavior starts.
  * @param {string} [triggerOutCameraTransitionEnded] - Trigger key set when this behavior finishes.
+ * @param {boolean} [idleCameraAnimationEnable] - Whether idle camera animation is enabled.
+ * @param {number} [idleCameraAnimationDelay] - Idle delay in milliseconds.
+ * @param {number} [idleCameraAnimationSphericalAreaDiameter] - Idle movement sphere diameter.
+ * @param {number} [idleCameraAnimationSpeed] - Idle curve progress speed.
  */
 export const Camera = React.memo((props) => {
     const {transitionSpeed = 0.5} = props;
@@ -38,6 +42,18 @@ export const Camera = React.memo((props) => {
 
     // Example: "cameraEnded"
     const {triggerOutCameraTransitionEnded = ""} = props;
+
+    // Example: true
+    const {idleCameraAnimationEnable = false} = props;
+
+    // Example: 3000
+    const {idleCameraAnimationDelay = 3000} = props;
+
+    // Example: 5
+    const {idleCameraAnimationSphericalAreaDiameter = 5} = props;
+
+    // Example: 0.08
+    const {idleCameraAnimationSpeed = 0.08} = props;
 
     const setIsCameraMoving = SystemStore((state) => state.setIsCameraMoving);
     const isCameraMoving = SystemStore((state) => state.isCameraMoving);
@@ -67,6 +83,11 @@ export const Camera = React.memo((props) => {
     const transitionProgressRef = useRef(1);
     const transitionInProgressRef = useRef(false);
     const previousTransitionCurveKeyRef = useRef("");
+    const idleCameraAnimationCurveRef = useRef();
+    const idleCameraAnimationProgressRef = useRef(0);
+    const idleCameraAnimationActiveRef = useRef(false);
+    const idleCameraLastMovementTimeRef = useRef(getTimeNow());
+    const orbitControlsActiveRef = useRef(false);
 
     const isMouseNearEdge = useRef(false);
     
@@ -75,6 +96,16 @@ export const Camera = React.memo((props) => {
     const gravitationalPullPoint = activeCameraMovePathCurve?.points?.[activeCameraMovePathCurve.points.length - 1] ?? new THREE.Vector3(0,0,0) // the point to return to in panDirectional mode
     const pullStrength = 0.03; // How strongly the camera is pulled towards the point, between 0 and 1
     const pullInterval = 10; // How often the pull is applied in milliseconds
+
+    const safeIdleCameraAnimationDelay = Number.isFinite(idleCameraAnimationDelay)
+        ? Math.max(idleCameraAnimationDelay, 0)
+        : 3000;
+    const safeIdleCameraAnimationSphericalAreaDiameter = Number.isFinite(idleCameraAnimationSphericalAreaDiameter)
+        ? Math.max(idleCameraAnimationSphericalAreaDiameter, 0)
+        : 5;
+    const safeIdleCameraAnimationSpeed = Number.isFinite(idleCameraAnimationSpeed)
+        ? Math.max(idleCameraAnimationSpeed, 0)
+        : 0.08;
 
     // Initialize output triggers to false so parent listeners can detect future true edges.
     useEffect(() => {
@@ -128,12 +159,126 @@ export const Camera = React.memo((props) => {
         setNamedTrigger(setTrigger, triggerOutCameraTransitionEnded, ended);
     }
 
+    //////////////////////////////////////////////////////////
+    ////////////////// Idle camera animation /////////////////
+    //////////////////////////////////////////////////////////
+
+    // Read a monotonic-ish timestamp.
+    function getTimeNow() {
+        return typeof performance !== "undefined" ? performance.now() : Date.now();
+    }
+
+    // Stop the idle camera curve.
+    function stopIdleCameraAnimation() {
+        idleCameraAnimationActiveRef.current = false;
+        idleCameraAnimationCurveRef.current = undefined;
+        idleCameraAnimationProgressRef.current = 0;
+    }
+
+    // Track intentional camera movement.
+    function markControlledCameraMovement() {
+        stopIdleCameraAnimation();
+        idleCameraLastMovementTimeRef.current = getTimeNow();
+    }
+
+    // Create eight random idle bends inside a sphere.
+    function createIdleCameraAnimationCurve(startPosition) {
+        const radius = safeIdleCameraAnimationSphericalAreaDiameter / 2;
+        if (!startPosition || radius <= 0) {
+            return undefined;
+        }
+
+        const center = startPosition.clone();
+        const points = [startPosition.clone()];
+
+        for (let index = 0; index < 8; index += 1) {
+            const angle = Math.random() * Math.PI * 2;
+            const height = (Math.random() * 2) - 1;
+            const circleRadius = Math.sqrt(1 - (height * height));
+            const direction = new THREE.Vector3(
+                Math.cos(angle) * circleRadius,
+                height,
+                Math.sin(angle) * circleRadius
+            );
+            const distance = index === 7
+                ? radius
+                : radius * (0.35 + (Math.random() * 0.65));
+
+            points.push(center.clone().add(direction.multiplyScalar(distance)));
+        }
+
+        return new THREE.CatmullRomCurve3(points, true, "centripetal");
+    }
+
+    // Sample idle curve at constant progress speed.
+    function getIdleCameraAnimationPoint(curve, progress) {
+        if (!Array.isArray(curve?.points) || curve.points.length < 2) {
+            return undefined;
+        }
+
+        const segmentCount = curve.points.length;
+        const wrappedProgress = ((progress % 1) + 1) % 1;
+        const rawSegmentProgress = wrappedProgress * segmentCount;
+        const segmentIndex = Math.floor(rawSegmentProgress);
+        const segmentProgress = rawSegmentProgress - segmentIndex;
+        return curve.getPoint(((segmentIndex + segmentProgress) / segmentCount) % 1);
+    }
+
+    // Start transitions from the current camera position.
+    function createTransitionCurveFromCurrentPosition(nextCurve) {
+        if (!cam.current || !Array.isArray(nextCurve?.points)) {
+            return nextCurve;
+        }
+
+        const currentPosition = cam.current.position.clone();
+        const transitionPoints = nextCurve.points.map((point) => point.clone());
+
+        if (transitionPoints[0]?.distanceTo(currentPosition) < 0.001) {
+            return nextCurve;
+        }
+
+        transitionPoints[0] = currentPosition;
+
+        return new THREE.CatmullRomCurve3(
+            transitionPoints,
+            Boolean(nextCurve.closed),
+            nextCurve.curveType ?? "centripetal",
+            nextCurve.tension ?? 0.5
+        );
+    }
+
+    // Mark OrbitControls drag start.
+    function handleOrbitControlsStart() {
+        orbitControlsActiveRef.current = true;
+        markControlledCameraMovement();
+    }
+
+    // Mark OrbitControls camera changes.
+    function handleOrbitControlsChange() {
+        if (!orbitControlsActiveRef.current) {
+            return;
+        }
+
+        markControlledCameraMovement();
+    }
+
+    // Mark OrbitControls drag end.
+    function handleOrbitControlsEnd() {
+        orbitControlsActiveRef.current = false;
+        markControlledCameraMovement();
+    }
+
+    //////////////////////////////////////////////////////////
+    //////////////// Camera transition state /////////////////
+    //////////////////////////////////////////////////////////
+
     // Complete the active curve transition.
     function finishTransition(state) {
         transitionInProgressRef.current = false;
         transitionProgressRef.current = 1;
         setIsCameraMoving(false);
         setTransitionTriggers(false, true);
+        idleCameraLastMovementTimeRef.current = getTimeNow();
 
         if (controls.current) {
             currentLookAtRef.current.copy(targetRef.current);
@@ -152,9 +297,11 @@ export const Camera = React.memo((props) => {
 
     // Start a new prop or store-driven curve transition.
     function startTransition(nextCurve) {
-        transitionCurveRef.current = nextCurve;
+        transitionCurveRef.current = createTransitionCurveFromCurrentPosition(nextCurve);
         transitionProgressRef.current = 0;
         transitionInProgressRef.current = true;
+        stopIdleCameraAnimation();
+        idleCameraLastMovementTimeRef.current = getTimeNow();
         setIsCameraMoving(true);
         setTransitionTriggers(true, false);
     }
@@ -381,6 +528,64 @@ export const Camera = React.memo((props) => {
         }
     });
 
+    //////////////////////////////////////////////////////////
+    ////////////////// Idle camera animation /////////////////
+    //////////////////////////////////////////////////////////
+
+    useFrame((state, delta) => {
+        if (
+            !idleCameraAnimationEnable ||
+            !cam.current ||
+            transitionInProgressRef.current ||
+            orbitControlsActiveRef.current ||
+            safeIdleCameraAnimationSphericalAreaDiameter <= 0 ||
+            safeIdleCameraAnimationSpeed <= 0
+        ) {
+            stopIdleCameraAnimation();
+            return;
+        }
+
+        const now = getTimeNow();
+        const idleDelayElapsed = now - idleCameraLastMovementTimeRef.current >= safeIdleCameraAnimationDelay;
+
+        if (!idleCameraAnimationActiveRef.current && idleDelayElapsed) {
+            idleCameraAnimationCurveRef.current = createIdleCameraAnimationCurve(cam.current.position.clone());
+            idleCameraAnimationProgressRef.current = 0;
+            idleCameraAnimationActiveRef.current = Boolean(idleCameraAnimationCurveRef.current);
+        }
+
+        if (!idleCameraAnimationActiveRef.current || !idleCameraAnimationCurveRef.current) {
+            return;
+        }
+
+        const frameDelta = Math.min(delta, 0.05);
+        idleCameraAnimationProgressRef.current = (
+            idleCameraAnimationProgressRef.current +
+            (frameDelta * safeIdleCameraAnimationSpeed)
+        ) % 1;
+
+        const curvePoint = getIdleCameraAnimationPoint(
+            idleCameraAnimationCurveRef.current,
+            idleCameraAnimationProgressRef.current
+        );
+
+        if (!curvePoint) {
+            stopIdleCameraAnimation();
+            return;
+        }
+
+        cam.current.position.copy(curvePoint);
+        currentLookAtRef.current.lerp(targetRef.current, Math.min(1, frameDelta * 8));
+        cam.current.lookAt(currentLookAtRef.current);
+
+        if (controls.current) {
+            controls.current.target.copy(targetRef.current);
+        }
+
+        state.camera.position.copy(cam.current.position);
+        state.camera.rotation.copy(cam.current.rotation);
+    });
+
     // Camera-relative AZERTY keyboard movement.
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -418,6 +623,7 @@ export const Camera = React.memo((props) => {
             }
 
             event.preventDefault();
+            markControlledCameraMovement();
             movement.multiplyScalar(keyboardControlsSpeed);
             cam.current.position.add(movement);
             controls.current.target.add(movement);
@@ -499,13 +705,14 @@ export const Camera = React.memo((props) => {
         }
 
         cam.current.position.copy(nextPosition);
+        markControlledCameraMovement();
     }, [activeCameraPosition]);
     
     return(
         <>
             <PerspectiveCamera makeDefault near={0.01} ref = {cam} position = {position} fov = {75}>
             </PerspectiveCamera>
-            <OrbitControls makeDefault mouseButtons={cameraMode} target={activeCameraTarget} enableZoom = {currentCameraMovements["zoom"] && !forceDisableZoom}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} />
+            <OrbitControls makeDefault mouseButtons={cameraMode} target={activeCameraTarget} enableZoom = {currentCameraMovements["zoom"] && !forceDisableZoom}  enablePan = {currentCameraMovements["pan"]} enableRotate = {currentCameraMovements["rotate"]} ref = {controls} onStart={handleOrbitControlsStart} onChange={handleOrbitControlsChange} onEnd={handleOrbitControlsEnd} />
         </>
     )
 });

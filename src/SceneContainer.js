@@ -381,6 +381,10 @@ export const SceneContainer = React.memo((props) => {
                 triggerOutProgress="curveScrollNavigationProgress"
                 cameraLookatPoint={[0, 0, 0]}
                 cameraFocusSpeed={0.5}
+                idleCameraAnimationEnable={true}
+                idleCameraAnimationDelay={3000}
+                idleCameraAnimationSphericalAreaDiameter={8}
+                idleCameraAnimationSpeed={0.04}
             // cameraFocusDestination={[0,0,0]}
             />
             <Raycaster frameInterval={1} />
@@ -442,7 +446,9 @@ export const SceneContainer = React.memo((props) => {
 
         {(siteMode === "store") && 
         <>
-            <Camera transitionSpeed={0.5} cameraTarget={[13, 26, -21]} cameraMovePathCurve={undefined}  triggerOutCameraTransitionStarted="cameraStarted" triggerOutCameraTransitionEnded="cameraEnded" />
+            <Camera idleCameraAnimationDelay={3000}
+                idleCameraAnimationSphericalAreaDiameter={8}
+                idleCameraAnimationSpeed={0.04} idleCameraAnimationEnable={true} transitionSpeed={0.5} cameraTarget={[13, 26, -21]} cameraMovePathCurve={undefined}  triggerOutCameraTransitionStarted="cameraStarted" triggerOutCameraTransitionEnded="cameraEnded" />
             <ambientLight intensity = {1}></ambientLight>
             {(explodingModelPath != "")
             &&

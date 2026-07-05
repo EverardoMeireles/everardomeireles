@@ -9,7 +9,7 @@ import SystemStore from "../SystemStore.js";
  * Purpose: Default scroll and drag camera that moves along a curve and can focus on temporary destinations.
  * Relationships: Mounted by SceneContainer and publishes progress to SystemStore triggers for ProgressBar.
  * Example:
- * <CurveScrollNavigationCamera curve={new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -10)])} initialPositionPoint={0} navigationCurveIncrement={0.001} loop={false} triggerOutProgress="curveScrollNavigationProgress" blockScroll={false} blockTouchNavigation={false} cameraLookatPoint={[0, 0, 0]} cameraFocusDestination={[1, 1, 1]} cameraFocusSpeed={1.8} cameraFocusCurveDirection="up" />
+ * <CurveScrollNavigationCamera curve={new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -10)])} initialPositionPoint={0} navigationCurveIncrement={0.001} loop={false} triggerOutProgress="curveScrollNavigationProgress" blockScroll={false} blockTouchNavigation={false} cameraLookatPoint={[0, 0, 0]} cameraFocusDestination={[1, 1, 1]} cameraFocusSpeed={1.8} cameraFocusCurveDirection="up" idleCameraAnimationEnable={true} idleCameraAnimationDelay={3000} idleCameraAnimationSphericalAreaDiameter={5} idleCameraAnimationSpeed={0.08} />
  * @param {*} [curve] - Curve used by the camera.
  * @param {number | Array<any> | THREE.Vector3} [initialPositionPoint] - Initial curve point.
  * @param {number} [navigationCurveIncrement] - Progress change per input unit.
@@ -21,6 +21,10 @@ import SystemStore from "../SystemStore.js";
  * @param {Array<any> | THREE.Vector3} [cameraFocusDestination] - Focus destination.
  * @param {number} [cameraFocusSpeed] - Focus movement speed.
  * @param {string | Array<any> | THREE.Vector3} [cameraFocusCurveDirection] - Focus curve direction.
+ * @param {boolean} [idleCameraAnimationEnable] - Whether idle camera animation is enabled.
+ * @param {number} [idleCameraAnimationDelay] - Idle delay in milliseconds.
+ * @param {number} [idleCameraAnimationSphericalAreaDiameter] - Idle movement sphere diameter.
+ * @param {number} [idleCameraAnimationSpeed] - Idle curve progress speed.
  */
 export const CurveScrollNavigationCamera = React.memo((props) => {
     // Example: new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -10)])
@@ -49,6 +53,18 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
     // Example: "up"
     const { cameraFocusCurveDirection = "up" } = props;
 
+    // Example: true
+    const { idleCameraAnimationEnable = false } = props;
+
+    // Example: 3000
+    const { idleCameraAnimationDelay = 3000 } = props;
+
+    // Example: 5
+    const { idleCameraAnimationSphericalAreaDiameter = 5 } = props;
+
+    // Example: 0.08
+    const { idleCameraAnimationSpeed = 0.08 } = props;
+
     const { gl } = useThree();
     const setTrigger = SystemStore((state) => state.setTrigger);
 
@@ -66,14 +82,111 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
     const returnCurveRef = useRef();
     const returnProgressRef = useRef(0);
     const previousFocusDestinationKeyRef = useRef("");
+    const idleCameraAnimationCurveRef = useRef();
+    const idleCameraAnimationProgressRef = useRef(0);
+    const idleCameraAnimationActiveRef = useRef(false);
+    const idleCameraLastMovementTimeRef = useRef(getTimeNow());
+    const mainCurveBlendStartPositionRef = useRef();
+    const mainCurveBlendProgressRef = useRef(1);
     const activePointerIdRef = useRef(undefined);
     const previousPointerYRef = useRef(0);
     const navigationLerpSpeed = 7;
+    const mainCurveBlendSpeed = 3;
 
     // Keep focus speed valid.
     const safeCameraFocusSpeed = Number.isFinite(cameraFocusSpeed)
         ? Math.max(cameraFocusSpeed, 0)
         : 1.8;
+    const safeIdleCameraAnimationDelay = Number.isFinite(idleCameraAnimationDelay)
+        ? Math.max(idleCameraAnimationDelay, 0)
+        : 3000;
+    const safeIdleCameraAnimationSphericalAreaDiameter = Number.isFinite(idleCameraAnimationSphericalAreaDiameter)
+        ? Math.max(idleCameraAnimationSphericalAreaDiameter, 0)
+        : 5;
+    const safeIdleCameraAnimationSpeed = Number.isFinite(idleCameraAnimationSpeed)
+        ? Math.max(idleCameraAnimationSpeed, 0)
+        : 0.08;
+
+    //////////////////////////////////////////////////////////
+    ////////////////// Idle camera animation /////////////////
+    //////////////////////////////////////////////////////////
+
+    // Read a monotonic-ish timestamp.
+    function getTimeNow() {
+        return typeof performance !== "undefined" ? performance.now() : Date.now();
+    }
+
+    // Stop the idle camera curve.
+    function stopIdleCameraAnimation() {
+        idleCameraAnimationActiveRef.current = false;
+        idleCameraAnimationCurveRef.current = undefined;
+        idleCameraAnimationProgressRef.current = 0;
+    }
+
+    // Track intentional camera movement.
+    function markControlledCameraMovement() {
+        stopIdleCameraAnimation();
+        idleCameraLastMovementTimeRef.current = getTimeNow();
+    }
+
+    // Create eight random idle bends inside a sphere.
+    function createIdleCameraAnimationCurve(startPosition) {
+        const radius = safeIdleCameraAnimationSphericalAreaDiameter / 2;
+        if (!startPosition || radius <= 0) {
+            return undefined;
+        }
+
+        const center = startPosition.clone();
+        const points = [startPosition.clone()];
+
+        for (let index = 0; index < 8; index += 1) {
+            const angle = Math.random() * Math.PI * 2;
+            const height = (Math.random() * 2) - 1;
+            const circleRadius = Math.sqrt(1 - (height * height));
+            const direction = new THREE.Vector3(
+                Math.cos(angle) * circleRadius,
+                height,
+                Math.sin(angle) * circleRadius
+            );
+            const distance = index === 7
+                ? radius
+                : radius * (0.35 + (Math.random() * 0.65));
+
+            points.push(center.clone().add(direction.multiplyScalar(distance)));
+        }
+
+        return new THREE.CatmullRomCurve3(points, true, "centripetal");
+    }
+
+    // Ease each idle curve segment separately.
+    function getIdleCameraAnimationPoint(curve, progress) {
+        if (!Array.isArray(curve?.points) || curve.points.length < 2) {
+            return undefined;
+        }
+
+        const segmentCount = curve.points.length;
+        const wrappedProgress = ((progress % 1) + 1) % 1;
+        const rawSegmentProgress = wrappedProgress * segmentCount;
+        const segmentIndex = Math.floor(rawSegmentProgress);
+        const segmentProgress = rawSegmentProgress - segmentIndex;
+        return curve.getPoint(((segmentIndex + segmentProgress) / segmentCount) % 1);
+    }
+
+    // Blend idle position into the main curve.
+    function startMainCurveBlendFromCurrentPosition() {
+        if (!cameraRef.current) {
+            return;
+        }
+
+        mainCurveBlendStartPositionRef.current = cameraRef.current.position.clone();
+        mainCurveBlendProgressRef.current = 0;
+    }
+
+    // Stop blending into the main curve.
+    function stopMainCurveBlend() {
+        mainCurveBlendStartPositionRef.current = undefined;
+        mainCurveBlendProgressRef.current = 1;
+    }
 
     //////////////////////////////////////////////////////////
     ////////////////// Local value helpers ///////////////////
@@ -202,6 +315,9 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
             return;
         }
 
+        stopIdleCameraAnimation();
+        stopMainCurveBlend();
+
         const mainCurvePoint = getMainCurvePoint();
         if (!mainCurvePoint) {
             return;
@@ -219,14 +335,27 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         }
 
         if (cameraModeRef.current === "focus") {
+            markControlledCameraMovement();
             returnToMainCurve();
             return;
         }
 
-        if (cameraModeRef.current === "returning") {
+        if (cameraModeRef.current === "idle") {
+            setNavigationTargetProgress(navigationTargetProgressRef.current + inputAmount * navigationCurveIncrement);
+
+            startMainCurveBlendFromCurrentPosition();
+            stopIdleCameraAnimation();
+            idleCameraLastMovementTimeRef.current = getTimeNow();
+            cameraModeRef.current = "main";
             return;
         }
 
+        if (cameraModeRef.current === "returning") {
+            markControlledCameraMovement();
+            return;
+        }
+
+        markControlledCameraMovement();
         setNavigationTargetProgress(navigationTargetProgressRef.current + inputAmount * navigationCurveIncrement);
     }, [navigationCurveIncrement, returnToMainCurve, setNavigationTargetProgress]);
 
@@ -245,6 +374,9 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         if (cameraRef.current) {
             cameraRef.current.position.copy(startingPoint);
         }
+
+        stopMainCurveBlend();
+        markControlledCameraMovement();
     }, [
         curve,
         initialPositionPoint,
@@ -260,7 +392,8 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         const focusDestination = toVector3(cameraFocusDestination);
 
         if (!focusDestination) {
-            if (cameraModeRef.current === "focus") {
+            if (cameraModeRef.current === "focus" || cameraModeRef.current === "idle") {
+                markControlledCameraMovement();
                 returnToMainCurve();
             }
             previousFocusDestinationKeyRef.current = "";
@@ -282,6 +415,8 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         navigationTargetProgressRef.current = navigationProgressRef.current;
         focusCurveRef.current = createFocusCurve(startPosition, focusDestination);
         focusProgressRef.current = 0;
+        stopMainCurveBlend();
+        markControlledCameraMovement();
         cameraModeRef.current = "focus";
         previousFocusDestinationKeyRef.current = focusDestinationKey;
     }, [
@@ -389,8 +524,67 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
 
         const frameDelta = Math.min(delta, 0.05);
         const camera = cameraRef.current;
+        const now = getTimeNow();
+        const mainProgressDifference = navigationTargetProgressRef.current - navigationProgressRef.current;
+        const mainCurveBlendIsActive = Boolean(mainCurveBlendStartPositionRef.current);
+        const controlledCameraIsMoving =
+            (cameraModeRef.current === "focus" && focusProgressRef.current < 1)
+            || cameraModeRef.current === "returning"
+            || (cameraModeRef.current === "main" && (mainCurveBlendIsActive || Math.abs(mainProgressDifference) >= 0.00001));
 
-        if (cameraModeRef.current === "focus" && focusCurveRef.current) {
+        if (controlledCameraIsMoving) {
+            idleCameraLastMovementTimeRef.current = now;
+        }
+
+        if (
+            cameraModeRef.current === "idle" &&
+            (
+                !idleCameraAnimationEnable ||
+                safeIdleCameraAnimationSphericalAreaDiameter <= 0 ||
+                safeIdleCameraAnimationSpeed <= 0
+            )
+        ) {
+            markControlledCameraMovement();
+            returnToMainCurve();
+        }
+
+        const idleDelayElapsed = now - idleCameraLastMovementTimeRef.current >= safeIdleCameraAnimationDelay;
+        if (
+            idleCameraAnimationEnable &&
+            !controlledCameraIsMoving &&
+            activePointerIdRef.current === undefined &&
+            cameraModeRef.current !== "idle" &&
+            idleDelayElapsed &&
+            safeIdleCameraAnimationSphericalAreaDiameter > 0 &&
+            safeIdleCameraAnimationSpeed > 0
+        ) {
+            idleCameraAnimationCurveRef.current = createIdleCameraAnimationCurve(camera.position.clone());
+            idleCameraAnimationProgressRef.current = 0;
+            idleCameraAnimationActiveRef.current = Boolean(idleCameraAnimationCurveRef.current);
+
+            if (idleCameraAnimationActiveRef.current) {
+                cameraModeRef.current = "idle";
+            }
+        }
+
+        if (cameraModeRef.current === "idle" && idleCameraAnimationCurveRef.current) {
+            // Move around the current idle sphere.
+            idleCameraAnimationProgressRef.current = (
+                idleCameraAnimationProgressRef.current +
+                (frameDelta * safeIdleCameraAnimationSpeed)
+            ) % 1;
+            const idleCurvePoint = getIdleCameraAnimationPoint(
+                idleCameraAnimationCurveRef.current,
+                idleCameraAnimationProgressRef.current
+            );
+
+            if (!idleCurvePoint) {
+                stopIdleCameraAnimation();
+                cameraModeRef.current = "main";
+            } else {
+                camera.position.copy(idleCurvePoint);
+            }
+        } else if (cameraModeRef.current === "focus" && focusCurveRef.current) {
             // Move forward along the focus curve.
             focusProgressRef.current = clampProgress(focusProgressRef.current + frameDelta * safeCameraFocusSpeed);
             camera.position.copy(focusCurveRef.current.getPointAt(smoothStep(focusProgressRef.current)));
@@ -404,7 +598,6 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
             }
         } else {
             // Follow the main scroll curve.
-            const progressDifference = navigationTargetProgressRef.current - navigationProgressRef.current;
             const progressLerpAmount = Math.min(1, frameDelta * navigationLerpSpeed);
 
             // Smoothly move toward input target.
@@ -414,13 +607,30 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
                 progressLerpAmount
             );
 
-            if (Math.abs(progressDifference) < 0.00001) {
+            if (Math.abs(mainProgressDifference) < 0.00001) {
                 navigationProgressRef.current = navigationTargetProgressRef.current;
             }
 
             const mainCurvePoint = getMainCurvePoint();
             if (mainCurvePoint) {
-                camera.position.copy(mainCurvePoint);
+                if (mainCurveBlendStartPositionRef.current) {
+                    mainCurveBlendProgressRef.current = clampProgress(
+                        mainCurveBlendProgressRef.current + (frameDelta * mainCurveBlendSpeed)
+                    );
+                    const blendedPoint = mainCurveBlendStartPositionRef.current.clone().lerp(
+                        mainCurvePoint,
+                        smoothStep(mainCurveBlendProgressRef.current)
+                    );
+
+                    camera.position.copy(blendedPoint);
+
+                    if (mainCurveBlendProgressRef.current >= 1) {
+                        stopMainCurveBlend();
+                    }
+                } else {
+                    camera.position.copy(mainCurvePoint);
+                }
+
                 setProgressTrigger(normalizeProgress(navigationProgressRef.current));
             }
         }
@@ -428,7 +638,7 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         // Choose the active look-at point.
         const focusDestination = toVector3(cameraFocusDestination);
         const lookAtTarget = toVector3(cameraLookatPoint)
-            ?? (cameraModeRef.current === "focus" ? focusDestination : undefined)
+            ?? ((cameraModeRef.current === "focus" || cameraModeRef.current === "idle") ? focusDestination : undefined)
             ?? new THREE.Vector3(0, 0, 0);
 
         // Smoothly rotate toward the look-at target.
