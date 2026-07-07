@@ -9,14 +9,13 @@ import { applyMaterialsToScene } from "../Helper.js";
  * Purpose: Renders a loaded GLTF scene with animation, object scale, material, UV, and hide/reveal behavior.
  * Relationships: Used by SceneContainer, often wrapped by DynamicMaterialLoader, and writes animation triggers through SystemStore.
  * Example:
- * <SimpleLoader position={[0, 0, 0]} scene={scene} animationPlayTrigger={[{animation_name: "idleAnimation", loop_mode: "noLoop", play_direction: 1, autoplay: true, play_trigger: "trigger5"}]} objectScaleUpTriggers={[]} scaleAmount={1.3} animationTimesToTrigger={{}} animationTriggerNames={{}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
+ * <SimpleLoader position={[0, 0, 0]} scene={scene} animationPlayTrigger={[{animation_name: "idleAnimation", loop_mode: "noLoop", play_direction: 1, autoplay: true, play_trigger: "trigger5"}]} objectScaleUpTriggers={[]} scaleAmount={1.3} animationTriggerTimes={{idleAnimation: {time: 0.5, trigger: "trigger2"}}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
  * @param {Array<any>} [position] - Position of the model in the scene.
  * @param {*} [scene] - Loaded scene object used by this component.
  * @param {Array<any>} [animationPlayTrigger] - Animation play records.
  * @param {Array<any>} [objectScaleUpTriggers] - Object names currently scaling up.
  * @param {number} [scaleAmount] - Scale multiplier for triggered objects.
- * @param {*} [animationTimesToTrigger] - Clip times that fire named triggers.
- * @param {*} [animationTriggerNames] - Trigger names mapped to animation clips.
+ * @param {Object} [animationTriggerTimes] - Trigger timing and name mapped by animation clip.
  * @param {*} [objectsHideRevealTriggers] - Trigger map for hide/reveal object behavior.
  * @param {number} [objectHideRevealScaleUpSpeed] - Speed used by the hide/reveal scale animation.
  * @param {boolean} [useAo] - Enables ambient occlusion intensity updates.
@@ -40,11 +39,8 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const {objectScaleUpTriggers = []} = props;
     const {scaleAmount = 1.3} = props;
 
-    // Example: { CharacterAction: 0.5 }
-    const {animationTimesToTrigger = {}} = props;
-
-    // Example: { CharacterAction: "trigger2" }
-    const {animationTriggerNames = {}} = props;
+    // Example: { CharacterAction: { time: 0.5, trigger: "trigger2" } }
+    const {animationTriggerTimes = {}} = props;
 
     // Example: { Cube0001: "trigger1" }
     const {objectsHideRevealTriggers = {"Cube0001":"trigger1"}} = props;
@@ -67,11 +63,6 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     ///////////// Variables, states and refs /////////////////
     //////////////////////////////////////////////////////////
 
-    // variables for the animation trigger feature
-    let normalizedClipTime; 
-    let animationCurrentTime;
-    let animationDuration;
-
     // variables for the toggle trigger in the middle of animation feature( Useless??? )
     let fpsTriggerAnimationIsPlaying = false;
     let currentAnimationFrame = 0;
@@ -81,6 +72,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
 
     // Load Model
     const toggleTrigger = SystemStore((state) => state.toggleTrigger);
+    const setTrigger = SystemStore((state) => state.setTrigger);
     const triggers = SystemStore((state) => state.triggers);
 
     // initialize the animation mixer
@@ -270,15 +262,6 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
         });
     }, [animationPlayTrigger]);
 
-    // Checks whether an animation is configured for mid-animation triggers.
-    function hasAnimationTimeTrigger(animationName){
-        if(Object.keys(animationTriggerNames).includes(animationName)){
-            return true;
-        }
-
-        return false;
-    }
-
     //////////////////////////////////////////////////////////
     //////////// Feature : Object scale-up ///////////////////
     //////////////////////////////////////////////////////////
@@ -349,35 +332,38 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     });
 
     //////////////////////////////////////////////////////////
-    // Feature : toggles trigger in the middle of animation //
+    // Feature: sets triggers during configured animation ranges
     //////////////////////////////////////////////////////////
 
-    // updates deltas for animations
+    // Update animations and their timed triggers.
     useFrame((state, delta) => {
         if (!scene.animations.length) return;
 
         mixer.current?.update(delta);
-        AnimationTimeTriggerCheck(mixer);
+        updateAnimationTimeTriggers();
     })
 
-    // Checks whether to toggle trigger on a set
-    function AnimationTimeTriggerCheck(mixer){
-        if(Object.keys(animationTriggerNames).length != 0){
-            mixer.current._actions.forEach(action => {
-                if(hasAnimationTimeTrigger(action._clip.name)){
-                    animationCurrentTime = action.time;
-                    animationDuration = action._clip.duration;
-                    normalizedClipTime = (animationCurrentTime) / (animationDuration);
-                    if(normalizedClipTime >= 0.98){
-                        toggleTrigger(animationTriggerNames[action._clip.name])
-                    }
-                    
-                    if(normalizedClipTime >= animationTimesToTrigger[action._clip.name] && !triggers[animationTriggerNames[action._clip.name]]){
-                        toggleTrigger(animationTriggerNames[action._clip.name])
-                    }
-                }
-            });
-        }
+    // Set each trigger from its animation progress.
+    function updateAnimationTimeTriggers(){
+        Object.entries(animationTriggerTimes).forEach(([animationName, triggerSettings]) => {
+            const clip = THREE.AnimationClip.findByName(scene.animations, animationName);
+            const action = clip ? mixer.current.existingAction(clip) : null;
+            const triggerName = triggerSettings?.trigger;
+            const triggerTime = triggerSettings?.time;
+            if (!action || !clip.duration || !triggerName || typeof triggerTime !== "number") return;
+
+            const normalizedClipTime = THREE.MathUtils.clamp(action.time / clip.duration, 0, 1);
+            const playsInReverse = action.getEffectiveTimeScale() < 0;
+            const playbackProgress = playsInReverse ? 1 - normalizedClipTime : normalizedClipTime;
+            const shouldTrigger = action.isRunning()
+                && playbackProgress >= triggerTime
+                && playbackProgress < 0.98;
+            const currentTriggerValue = SystemStore.getState().triggers[triggerName];
+
+            if (currentTriggerValue !== shouldTrigger) {
+                setTrigger(triggerName, shouldTrigger);
+            }
+        });
     }
     
     //////////////////////////////////////////////////////////

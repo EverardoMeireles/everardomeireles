@@ -261,8 +261,14 @@ export const SceneContainer = React.memo((props) => {
     const initialPosition = useMemo(() => [-2, 75, 32], []);
 
     const objectsRevealTriggers = useMemo(() => ({"Wardrobe001":"trigger3"}), []);
-    const animationTimesToTrigger = useMemo(() => ({"CharacterAction": 0.50}), []);
-    const animationTriggerNames = useMemo(() => ({"CharacterAction": "trigger2"}), []);
+
+    // Configure trigger ranges within animation playback.
+    const animationTriggerTimes = useMemo(() => ({
+        "CharacterAction": {
+            time: 0.50,
+            trigger: "trigger2"
+        }
+    }), []);
 
     // Configure model animations and their play triggers.
     const animationPlayTrigger = useMemo(() => [
@@ -279,6 +285,12 @@ export const SceneContainer = React.memo((props) => {
             play_direction: 1,
             autoplay: true,
             play_trigger: "trigger1"
+        },
+        {
+            animation_name: "CharacterAction",
+            loop_mode: "noLoop",
+            play_direction: 1,
+            autoplay: true
         }
     ], []);
 
@@ -340,8 +352,7 @@ export const SceneContainer = React.memo((props) => {
                 scene={mainScene}
                 objectsRevealTriggers={objectsRevealTriggers}
                 animationPlayTrigger={animationPlayTrigger}
-                animationTimesToTrigger={animationTimesToTrigger}
-                animationTriggerNames={animationTriggerNames}
+                animationTriggerTimes={animationTriggerTimes}
                 objectScaleUpTriggers={objectScaleUpTriggers}
                 scaleAmount={1.3}
             />
@@ -350,8 +361,7 @@ export const SceneContainer = React.memo((props) => {
         mainScene,
         objectsRevealTriggers,
         animationPlayTrigger,
-        animationTimesToTrigger,
-        animationTriggerNames,
+        animationTriggerTimes,
         objectScaleUpTriggers
     ]);
 
