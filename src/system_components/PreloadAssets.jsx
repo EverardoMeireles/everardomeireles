@@ -18,15 +18,12 @@ import SystemStore from "../SystemStore";
  * @param {string} [triggerOutPreloadDone] - Trigger key set when this behavior finishes.
  */
 export const PreloadAssets = React.memo((props) => {
-  // Example: ["image1.jpg", "image2.jpg"]
   const {texturesToLoad = ["image1.jpg", "image2.jpg"]} = props;
 
-  // Example: ["scene1.glb", "scene2.glb"]
   const {scenesToLoad = ["scene1.glb", "scene2.glb"]} = props;
   const {delay = 3000} = props;
   const {fallbackTimeout = 10000} = props;
   const {start = false} = props;
-  // Example: "preloadDone"
   const {triggerOutPreloadDone = ""} = props;
 
   const setTrigger = SystemStore((state) => state.setTrigger);

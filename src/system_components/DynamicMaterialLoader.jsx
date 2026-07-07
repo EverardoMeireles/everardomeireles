@@ -21,22 +21,16 @@ const materialCache = new Map();
  * @param {*} children - Children rendered inside this component.
  */
 export const DynamicMaterialLoader = React.memo((props) => {
-  // Example: "low_512.glb"
   const {lowResFile = false} = props;
 
-  // Example: "high_4096_NOPBR.glb"
   const {midResFile = false} = props;
 
-  // Example: "high_4096_PBR.glb"
   const {highResFile = false} = props;
 
-  // Example: "forceLowRes"
   const {forceLowResTrigger = false} = props;
 
-  // Example: "forceMidRes"
   const {forceMidResTrigger = false} = props;
 
-  // Example: "forceHighRes"
   const {forceHighResTrigger = false} = props;
   const {children} = props;
 

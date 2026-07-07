@@ -26,29 +26,26 @@ import { setNamedTrigger } from "../Helper";
 export function TwoDSplashScreen(props) {
     const {duration = 1000} = props;
 
-    // Example: "3D_x_rotate_back"
+    // Usage: ANIMATION_NAME_MAP key
     const {animation = "3D_x_rotate_back"} = props;
 
-    // Example: "ease-out"
+    // Usage: INTERPOLATION_TIMING_MAP key
     const {interpolationAlgorithm = "ease-out"} = props;
     const {animationDuration = 1000} = props;
-    // Example: "explosive_blur"
+    // Usage: "wave_sound", "elastic_blur", "explosive_blur", "lateral_glow"
     const {effect = "explosive_blur"} = props;
     const {color = "#1226dd"} = props;
     const {scale = 1} = props;
     const {backgroundColor = "#000"} = props;
     const {backgroundFadeOutDuration = 2500} = props;
-    // Example: "tutorial_rotate_video.png"
     const {image} = props;
 
-    // Example: [100, 100]
     const {slideOnEndPosition = [100, 100]} = props;
     const {slideDuration = 1000} = props;
     const {slideSizeAfterEnd = 0.5} = props;
-    // Example: "ease"
+    // Usage: INTERPOLATION_TIMING_MAP key
     const {slideInterpolationAlgorithm = "ease"} = props;
 
-    // Example: "trigger999"
     const {triggerOutSlideEnded = "trigger999"} = props;
 
     /////////////////////

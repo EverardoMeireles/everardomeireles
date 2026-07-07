@@ -23,14 +23,13 @@ import * as THREE from "three";
  * @param {boolean} [enableRandomColorOrder] - If true, shuffle the colors order on each cycle.
  */
 export const CurveLightAnimation = React.memo((props) => {
-  // Example: new THREE.CatmullRomCurve3([new THREE.Vector3(1, 1, 1), new THREE.Vector3(0, 0, 0)])
   const {curve = new THREE.CatmullRomCurve3([
     new THREE.Vector3(1, 1, 1),
     new THREE.Vector3(0, 0, 0),
     new THREE.Vector3(-1, -1, -1),
   ])} = props;
 
-  // Example: "right"
+  // Usage: "left" or "right"
   const {startingSide = "right"} = props;
   const {debugMode = true} = props;
 
@@ -41,17 +40,13 @@ export const CurveLightAnimation = React.memo((props) => {
   const {currentAnimationTime = 0} = props;
   const {totalAnimationDuration = 0} = props;
 
-  // Example: [0xffffff, 0xff8c00]
   const {colors = [0xffffff]} = props;
 
-  // Example: [60, 45]
   const {colorFrameIntervals = [60]} = props;
 
   const {enableRandomColorFrameIntervals = true} = props;
-  // Example: [100, 101]
   const {randomColorFrameIntervalsMargin = [100, 101]} = props;
 
-  // Example: [0.05, 0.1]
   const {randomIntensitiyMargin = [0.05, 0.1]} = props;
 
   const {enableRandomColorOrder = true} = props;
@@ -100,7 +95,6 @@ export const CurveLightAnimation = React.memo((props) => {
    * @param {*} curve - Curve.
    */
   const Tube = (props) => {
-    // Example: new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1)])
     const {curve} = props;
 
     const tubeGeometry = useMemo(() => {

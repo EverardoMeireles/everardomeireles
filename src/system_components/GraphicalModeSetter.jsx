@@ -39,19 +39,17 @@ export const GraphicalModeSetter = React.memo((props) => {
   const {continous = true} = props;
   const {showFps = false} = props;
 
-  // Example: "on_mount"
+  // Usage: "on_mount", "after_delay", or "on_trigger"
   const {startMode = "on_mount"} = props;
   const {waitSeconds = 0} = props;
   const {start = false} = props;
-  // Example: "fallbackTriggered"
   const {triggerOutFallbackTriggered = ""} = props;
   const {fpsToFallBackHigh = 5} = props;
   const {fpsToFallBackNormal = 10} = props;
   const {fpsToFallBackPotato = 15} = props;
-  // Example: "disable_canvas"
+  // Usage: "disable_canvas" or "redirect"
   const {fallbackMode = "disable_canvas"} = props;
 
-  // Example: "/401"
   const {fallbackRedirectPath = "/"} = props;
 
 

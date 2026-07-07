@@ -24,10 +24,8 @@ export const AlertText3D = React.memo((props) => {
     const {textColor = 'blue'} = props;
     const {textSize = 23} = props;
 
-    // Example: "-10"
     const {positionX = '-10'} = props;
 
-    // Example: "-50"
     const {positionY = '-50'} = props;
     const {width = 1000} = props;
     const {durationMiliseconds = 6000} = props;

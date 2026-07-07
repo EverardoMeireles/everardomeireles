@@ -48,29 +48,22 @@ export const ExplodingModelLoader = React.memo((props) => {
 
   const {animationIsPlaying = false} = props;
 
-  // Example: [0, 0, 0]
   const {position = [0, 0, 0]} = props;
 
-  // Example: "Roomba.glb"
   const {modelName = "base_cube_DO_NOT_REMOVE.glb"} = props;
 
-  // Example: "Roomba.json"
   const {configFile = "base_cube_DO_NOT_REMOVE.json"} = props;
 
-  // Example: "high_4096_PBR.glb"
   const {materialName = ""} = props;
 
-  // Example: [0, 0, 0]
   const {customOrigin = []} = props;
   const {animationStartOnLoad = false} = props;
   const {enableRockingAnimation = true} = props;
   const {enableExplodeAnimation = true} = props;
   const {setCameraTargetOnMount = true} = props;
 
-  // Example: "trigger4"
   const {setCameraTargetTrigger = "trigger4"} = props;
 
-  // Example: [0, 0, 0]
   const {returnCameraPosition = [0, 0, 0]} = props;
 
   const {rockingMaxAngle = Math.PI / 16} = props;
@@ -82,26 +75,22 @@ export const ExplodingModelLoader = React.memo((props) => {
   const {focusedObjectCloneEnable = true} = props;
   const {focusedObjectCloneScale = 1} = props;
 
-  // Example: [0, 1, 0]
   const {focusedObjectCloneAxisOfRotation = [0, 1, 0]} = props;
   const {focusedObjectCloneSpeedOfRotation = 1.2} = props;
 
-  // Example: { left: -0.5, right: 0.5, top: 0.25, bottom: -0.25 }
   const {focusedObjectCloneForcePositionOffset = {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}} = props;
 
   const {enableMainObjectRotationAnimation = true} = props;
   const {mainObjectRotationAnimationRotationSpeed = 0.5} = props;
 
-  // Example: "onScreenMouseHover"
+  // Usage: "onScreenMouseHover", "onMouseDown", or "never"
   const {mainObjectRotationAnimationWhenToStop = "onScreenMouseHover"} = props;
   const {mainObjectRotationAnimationResetInitialRotation = true} = props;
   const {mainObjectRotationAnimationResetInitialRotationAnimationSpeed = 8} = props;
   const {mainObjectRotationAnimationRestartAnimationAfterStop = true} = props;
 
-  // Example: "trigger5"
   const {stopMainObjectRotationAnimation = undefined} = props;
 
-  // Example: "trigger5"
   const {mainObjectRotationAnimationIsPlayingTrigger = undefined} = props;
 
   const {tubeCurveDebugMode = false} = props;
@@ -1062,7 +1051,6 @@ export const ExplodingModelLoader = React.memo((props) => {
    * @param {boolean} [closed] - Closed.
    */
   function TubeCurve(props) {
-    // Example: new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1)])
     const {curve} = props;
     const {tubularSegments = 64} = props;
     const {radius = 0.1} = props;

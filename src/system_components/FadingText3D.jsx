@@ -26,25 +26,19 @@ import SystemStore from "../SystemStore";
 export function FadingText3D(props) {
     const {textToFade = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer facilisis semper libero, id aliquam justo suscipit eget."} = props;
 
-    // Example: "MainMenu"
     const {textModelMenu = "MainMenu"} = props;
     const {textColor = "#000000"} = props;
     const {transitionDuration = 1000} = props;
 
-    // Example: [0, 0, 0]
     const {initialPosition = [0,0,0]} = props;
 
-    // Example: [7, 6.7]
     const {planeSize = [7, 6.7]} = props;
 
-    // Example: "/roboto.json"
     const {fontFileName = "/roboto.json"} = props;
     const {lettersPerUnit = 8} = props;
-    // Example: Math.PI / 2
     const {rotation = Math.PI/2} = props;
     const {visible = true} = props;
     const {scale = 1.5} = props;
-    // Example: [0, -0.5, 0.2]
     const {textPositionOffset = [0, -0.5, 0.2]} = props;
 
     const {isCameraMoving, transitionDestination} = SystemStore();

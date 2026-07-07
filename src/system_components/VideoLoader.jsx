@@ -19,25 +19,20 @@ import config from '../config';
  * @param {*} trigger - trigger to play video, either a string equal to the video name or a boolean state.
  */
 export function VideoLoader (props) {
-    // Example: [0, 0, 0]
     const {position = [0, 0, 0]} = props;
 
-    // Example: [0, Math.PI / 2, 0]
     const {rotation = [0, 0, 0]} = props;
 
-    // Example: [16, 9]
     const {planeDimensions = [0, 0]} = props;
 
-    // Example: "Javascript"
     const {defaultVideo = "Javascript"} = props;
     const {loop = true} = props;
     const {muted = true} = props;
     const {delay = 10000} = props;
     const {triggerMode = true} = props;
-    // Example: "valueString"
+    // Usage: "valueString" or "triggerTrue"
     const {triggerType = "valueString"} = props;
 
-    // Example: "Javascript"
     const {trigger} = props;
     
     // initialize video state

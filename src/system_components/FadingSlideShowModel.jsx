@@ -20,13 +20,10 @@ export function FadingSlideShowModel(props) {
     const {textModelMenu = "MainMenu"} = props;
     const {transitionDuration = 1000} = props;
 
-    // Example: [0, 0, 0]
     const {initialPosition = [0,0,0]} = props;
 
-    // Example: [10, 10]
     const {PlaneSize = [10, 10]} = props;
 
-    // Example: "placeHolderImage.png"
     const {imageTexture = 'placeHolderImage.png'} = props;
 
     const {isCameraMoving, transitionDestination} = SystemStore();

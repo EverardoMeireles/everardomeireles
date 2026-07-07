@@ -29,44 +29,43 @@ import SystemStore from "../SystemStore.js";
  * @param {number} [idleCameraAnimationSpeed] - Idle curve progress speed.
  */
 export const CurveScrollNavigationCamera = React.memo((props) => {
-    // Example: new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -10)])
     const { curve = new THREE.CatmullRomCurve3([
         new THREE.Vector3(0, 0, 0),
         new THREE.Vector3(0, 0, -10)
     ]) } = props;
 
-    // Example: 0 or [0, 0, 0]
     const { initialPositionPoint = 0 } = props;
+
     const { navigationCurveIncrement = 0.001 } = props;
+
+    // Usage: "vertical" or "horizontal"
     const { navigationInputAxis = "horizontal" } = props;
+
     const { navigationInputInverted = true } = props;
+
     const { loop = false } = props;
 
-    // Example: "curveScrollNavigationProgress"
     const { triggerOutProgress = "curveScrollNavigationProgress" } = props;
+
     const { blockScroll = false } = props;
+
     const { blockTouchNavigation = false } = props;
 
-    // Example: [0, 0, 0]
     const { cameraLookatPoint = undefined } = props;
 
-    // Example: [0, 10, 0]
     const { cameraFocusDestination = undefined } = props;
+
     const { cameraFocusSpeed = 1.8 } = props;
 
-    // Example: "up"
+    // Usage: "up", "down", "left", "right", "forward", "backward"
     const { cameraFocusCurveDirection = "up" } = props;
 
-    // Example: true
     const { idleCameraAnimationEnable = false } = props;
 
-    // Example: 3000
     const { idleCameraAnimationDelay = 3000 } = props;
 
-    // Example: 5
     const { idleCameraAnimationSphericalAreaDiameter = 5 } = props;
 
-    // Example: 0.08
     const { idleCameraAnimationSpeed = 0.08 } = props;
 
     const { gl } = useThree();

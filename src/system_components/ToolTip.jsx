@@ -20,11 +20,9 @@ export const ToolTip = (props) => {
   const {active = false} = props;
   const {text = ""} = props;
 
-  // Example: "textures/4x3.png"
   const {image = ""} = props;
   const {selectedCirclePositionX = undefined} = props;
 
-  // Example: { left: 0, top: 0, width: 800, height: 600 }
   const {viewerBounds = { left: 0, top: 0, width: 0, height: 0 }} = props;
   const {imagePercentHeight = 40} = props;
   const {textPercentHeight = 60} = props;

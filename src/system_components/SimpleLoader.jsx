@@ -26,37 +26,28 @@ import { applyMaterialsToScene } from "../Helper.js";
  * @param {*} [customObjectsUvs] - Custom UV index map by object name.
  */
 export const SimpleLoader = React.memo(forwardRef((props, ref) => {
-    // Example: [0, 0, 0]
     const {position = [0, 0, 0]} = props;
 
-    // Example: loaded GLTF returned by useLoader(GLTFLoader, modelPath)
     const {scene = undefined} = props;
 
-    // Example: [{ animation_name: "idle", loop_mode: "Loop", play_direction: 1, autoplay: true, play_trigger: "trigger1" }]
     const {animationPlayTrigger = []} = props;
 
-    // Example: ["LeftDoor", "RightDoor", "MainBody"]
     const {objectScaleUpTriggers = []} = props;
     const {scaleAmount = 1.3} = props;
 
-    // Example: { CharacterAction: { time: 0.5, trigger: "trigger2" } }
     const {animationTriggerTimes = {}} = props;
 
-    // Example: { Cube0001: "trigger1" }
     const {objectsHideRevealTriggers = {"Cube0001":"trigger1"}} = props;
     const {objectHideRevealScaleUpSpeed = 0.05} = props;
 
     const {useAo = true} = props;
     const {ambientOcclusionIntensity = 1} = props;
 
-    // Example: { Wood: "oak_material.glb", Metal: "brushed_steel.glb" }
     const { materialNames = {} } = props;
 
-    // Example: [1, 0]
     const {uvOffSet = [0, 0]} = props;
     const {uvOffsetAmount = 0.05} = props;
 
-    // Example: { Cube0001: 1 }
     const { customObjectsUvs = {} } = props;
 
     //////////////////////////////////////////////////////////

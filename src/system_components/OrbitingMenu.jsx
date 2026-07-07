@@ -18,15 +18,12 @@ import SystemStore from "../SystemStore";
  * @param {number} [fadeInDuration] - Timing value for fade in duration.
  */
 export const OrbitingMenu = React.memo((props) => {
-    // Example: [15.5, 1.1, 0]
     const {orbitCenterPosition = [15.5, 1.1, 0]} = props;
 
-    // Example: [5, 5]
     const {planeSize = [5, 5]} = props;
     const {orbitDistance = 1.5} = props;
     const {visible = true} = props;
     const {enable = false} = props;
-    // Example: "Education"
     const {transitionDestinationToRestrictKeyboardControl = "MainMenu"} = props;
 
     const {fadeInDuration = 300} = props;

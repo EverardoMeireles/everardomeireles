@@ -25,14 +25,11 @@ export const FadingTitle = React.memo((props) => {
     const {textColor = "#000000"} = props;
     const {fadeDuration = 1000} = props;
 
-    // Example: [0, 0, 0]
     const {initialPosition = [0,0,0]} = props;
 
-    // Example: Math.PI / 2
     const {rotation = Math.PI/3 + Math.PI/6} = props;
     const {scale = 10} = props;
     const {delay = 0} = props;
-    // Example: config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"
     const {font = config.resource_path + "KFOmCnqEu92Fr1Mu4mxM.woff"} = props;
 
     const [startFade, setStartFade] = useState(false);
