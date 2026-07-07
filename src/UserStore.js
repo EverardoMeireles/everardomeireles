@@ -7,7 +7,7 @@ const UserStore = create((set) => ({
   animationTriggerState: false,
   setAnimationTriggerState: (playing) => set(() => ({ animationTriggerState: playing })),
 
-  siteMode: "store", //Remove on SceneViewer, keep on SceneContainer
+  siteMode: "resume", //Remove on SceneViewer, keep on SceneContainer
   setSiteMode: (mode) => set(() => ({ siteMode: mode })),
 }));
 

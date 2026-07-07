@@ -9,10 +9,12 @@ import SystemStore from "../SystemStore.js";
  * Purpose: Default scroll and drag camera that moves along a curve and can focus on temporary destinations.
  * Relationships: Mounted by SceneContainer and publishes progress to SystemStore triggers for ProgressBar.
  * Example:
- * <CurveScrollNavigationCamera curve={new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -10)])} initialPositionPoint={0} navigationCurveIncrement={0.001} loop={false} triggerOutProgress="curveScrollNavigationProgress" blockScroll={false} blockTouchNavigation={false} cameraLookatPoint={[0, 0, 0]} cameraFocusDestination={[1, 1, 1]} cameraFocusSpeed={1.8} cameraFocusCurveDirection="up" idleCameraAnimationEnable={true} idleCameraAnimationDelay={3000} idleCameraAnimationSphericalAreaDiameter={5} idleCameraAnimationSpeed={0.08} />
+ * <CurveScrollNavigationCamera curve={new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -10)])} initialPositionPoint={0} navigationCurveIncrement={0.001} navigationInputAxis="vertical" navigationInputInverted={false} loop={false} triggerOutProgress="curveScrollNavigationProgress" blockScroll={false} blockTouchNavigation={false} cameraLookatPoint={[0, 0, 0]} cameraFocusDestination={[1, 1, 1]} cameraFocusSpeed={1.8} cameraFocusCurveDirection="up" idleCameraAnimationEnable={true} idleCameraAnimationDelay={3000} idleCameraAnimationSphericalAreaDiameter={5} idleCameraAnimationSpeed={0.08} />
  * @param {*} [curve] - Curve used by the camera.
  * @param {number | Array<any> | THREE.Vector3} [initialPositionPoint] - Initial curve point.
  * @param {number} [navigationCurveIncrement] - Progress change per input unit.
+ * @param {"vertical" | "horizontal"} [navigationInputAxis] - Axis used for wheel and drag navigation.
+ * @param {boolean} [navigationInputInverted] - Inverts progress direction from navigation input.
  * @param {boolean} [loop] - Loops progress past either curve end.
  * @param {string} [triggerOutProgress] - SystemStore trigger key that receives progress.
  * @param {boolean} [blockScroll] - Blocks wheel navigation.
@@ -36,6 +38,8 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
     // Example: 0 or [0, 0, 0]
     const { initialPositionPoint = 0 } = props;
     const { navigationCurveIncrement = 0.001 } = props;
+    const { navigationInputAxis = "horizontal" } = props;
+    const { navigationInputInverted = true } = props;
     const { loop = false } = props;
 
     // Example: "curveScrollNavigationProgress"
@@ -89,9 +93,13 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
     const mainCurveBlendStartPositionRef = useRef();
     const mainCurveBlendProgressRef = useRef(1);
     const activePointerIdRef = useRef(undefined);
-    const previousPointerYRef = useRef(0);
+    const previousPointerPositionRef = useRef(0);
     const navigationLerpSpeed = 7;
     const mainCurveBlendSpeed = 3;
+
+    // Choose wheel and drag navigation behavior.
+    const navigationUsesHorizontalInput = navigationInputAxis === "horizontal";
+    const navigationInputDirection = navigationInputInverted ? -1 : 1;
 
     // Keep focus speed valid.
     const safeCameraFocusSpeed = Number.isFinite(cameraFocusSpeed)
@@ -444,7 +452,8 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
             }
 
             event.preventDefault();
-            applyNavigationInput(event.deltaY);
+            const inputAmount = navigationUsesHorizontalInput ? event.deltaX : event.deltaY;
+            applyNavigationInput(inputAmount * navigationInputDirection);
         };
 
         domElement.addEventListener("wheel", handleWheel, { passive: false });
@@ -452,7 +461,13 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
         return () => {
             domElement.removeEventListener("wheel", handleWheel);
         };
-    }, [applyNavigationInput, gl, blockScroll]);
+    }, [
+        applyNavigationInput,
+        gl,
+        blockScroll,
+        navigationUsesHorizontalInput,
+        navigationInputDirection
+    ]);
 
     //////////////////////////////////////////////////////////
     ////////////////// Pointer drag input ////////////////////
@@ -470,7 +485,9 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
             }
 
             activePointerIdRef.current = event.pointerId;
-            previousPointerYRef.current = event.clientY;
+            previousPointerPositionRef.current = navigationUsesHorizontalInput
+                ? event.clientX
+                : event.clientY;
             domElement.setPointerCapture?.(event.pointerId);
         };
 
@@ -482,8 +499,12 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
                 return;
             }
 
-            const inputAmount = previousPointerYRef.current - event.clientY;
-            previousPointerYRef.current = event.clientY;
+            const pointerPosition = navigationUsesHorizontalInput
+                ? event.clientX
+                : event.clientY;
+            const inputAmount = (previousPointerPositionRef.current - pointerPosition)
+                * navigationInputDirection;
+            previousPointerPositionRef.current = pointerPosition;
 
             if (Math.abs(inputAmount) < 1) {
                 return;
@@ -511,7 +532,13 @@ export const CurveScrollNavigationCamera = React.memo((props) => {
             domElement.removeEventListener("pointerup", handlePointerEnd);
             domElement.removeEventListener("pointercancel", handlePointerEnd);
         };
-    }, [applyNavigationInput, gl, blockTouchNavigation]);
+    }, [
+        applyNavigationInput,
+        gl,
+        blockTouchNavigation,
+        navigationUsesHorizontalInput,
+        navigationInputDirection
+    ]);
 
     //////////////////////////////////////////////////////////
     ////////////////////// Frame updates /////////////////////
