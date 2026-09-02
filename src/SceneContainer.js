@@ -22,6 +22,8 @@ import { pollForFilesInTHREECache } from "./Helper.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Camera } from "./system_components/Camera.jsx";
 import { Raycaster } from "./system_components/Raycaster.jsx";
+import { FirstPersonController } from "./system_components/FirstPersonController.jsx";
+import { Environment } from "@react-three/drei";
 
 import * as THREE from 'three';
 
@@ -55,7 +57,7 @@ export const SceneContainer = React.memo((props) => {
     const siteMode = UserStore((state) => state.siteMode);
 
     const sceneName = useMemo(
-        () => siteMode === "resume" ? "planet.glb" : "base_cube_DO_NOT_REMOVE.glb",
+        () => siteMode === "resume" ? "housemaker_export.glb" : "base_cube_DO_NOT_REMOVE.glb",
         [siteMode]
     );
     const scene = useLoader(GLTFLoader, `${config.resource_path}/models/${sceneName}`);
@@ -65,7 +67,6 @@ export const SceneContainer = React.memo((props) => {
     }, [scene, setMainScene]);
 
     let mixer;
-
     const animTimeRef = useRef(0);
 
     const [forceLowresMaterial, setForceLowresMaterial] = useState(false);
@@ -383,7 +384,41 @@ export const SceneContainer = React.memo((props) => {
     <>
         {(siteMode === "resume") && 
         <>
-            <CurveScrollNavigationCamera
+            {/* <Raycaster frameInterval={1} /> */}
+            {/* <PreloadAssets delay={4000} texturesToLoad={texturesToLoad} scenesToLoad={scenesToLoad}></PreloadAssets> */}
+            <FpsBenchmarkProbe benchmarkScene={"benchmark_scene.glb"}></FpsBenchmarkProbe>
+        </>
+        }
+            {/* <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
+            forceLowResTrigger={forceLowresMaterial} forceMidResTrigger={forceMidresMaterial} forceHighResTrigger={forceHighResMaterial}>
+                {stableSimpleLoader}
+            </DynamicMaterialLoader> */}
+
+            <ObjectLink position={objectLinkPosition1} scale={objectLinkScale} scene={mainScene} linkedObjectName = {"Lamp"} >
+                {stableOrbitingPointLightParticleEmitterAndPointLightAnimation}
+            </ObjectLink>
+            
+            <InstanceLoader instancedObject={"Book.glb"} initialPosition = {initialPosition} directionX = {0} directionY = {0} 
+                directionZ = {-1} customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} 
+                distanceBetweenInstances={3} />
+
+            <FirstPersonController position={[2.83, 0, 3]} eyeHeight = {1.5}/>
+            {/* <ambientLight intensity = {1.0}></ambientLight> */}
+            <Environment files={`${config.resource_path}/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr`} background={false} />
+            
+            {stableSimpleLoader}
+
+
+
+
+
+
+
+
+
+
+
+            {/* <CurveScrollNavigationCamera
                 curve={curveScrollNavigationCurve}
                 initialPositionPoint={0}
                 navigationCurveIncrement={0.0004}
@@ -396,63 +431,24 @@ export const SceneContainer = React.memo((props) => {
                 idleCameraAnimationSphericalAreaDiameter={8}
                 idleCameraAnimationSpeed={0.04}
             // cameraFocusDestination={[0,0,0]}
-            />
-            <Raycaster frameInterval={1} />
-            {/* /////////////////////
-                //System system_components//
-                ///////////////////// */}
-
-            <PreloadAssets delay={4000} texturesToLoad={texturesToLoad} scenesToLoad={scenesToLoad}></PreloadAssets>
-            <FpsBenchmarkProbe benchmarkScene={"benchmark_scene.glb"}></FpsBenchmarkProbe>
-
-            {/* /////////////////////
-                //Content system_components//
-                ///////////////////// */}
-            {(transitionDestination === "Education") 
-            && (
-            <OrbitingMenu transitionDestinationToRestrictKeyboardControl = {"Education"} visible={isOrbitingMenuVisible.current} orbitDistance={7.5} orbitCenterPosition={orbitCenterPosition} />
-                        )}
-            <FadingTitle initialPosition = {layout.fadingTitlePosition0} scale = {layout.fadingTitleScale0} 
-                text = {TranslationTable[currentLanguage]["Fading_Title_1"]} textColor = {"#FFFFFF"} delay = {2000} transitionDuration = {1500} />
-            <FadingTitle initialPosition = {layout.fadingTitlePosition1} scale = {layout.fadingTitleScale1} 
-                text = {TranslationTable[currentLanguage]["Fading_Title_2"]} textColor = {"#FFFFFF"} delay = {2600} transitionDuration = {1500} />
-            <>
-                <FadingText textToFade = {TranslationTable0} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects0" lettersPerUnit = {5}  scale = {layout.fadingTextScale0} initialPosition = {layout.fadingTextPosition0} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText textToFade = {TranslationTable1} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects1"                       scale = {layout.fadingTextScale1} initialPosition = {layout.fadingTextPosition1} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText textToFade = {TranslationTable2} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects2"                       scale = {layout.fadingTextScale2} initialPosition = {layout.fadingTextPosition2} rotation = {Math.PI}       textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText textToFade = {TranslationTable3} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects3" lettersPerUnit = {10} scale = {layout.fadingTextScale3} initialPosition = {layout.fadingTextPosition3} rotation = {3*(Math.PI/2)} textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText textToFade = {TranslationTable4} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects4" lettersPerUnit = {9}  scale = {layout.fadingTextScale4} initialPosition = {layout.fadingTextPosition4} rotation = {2 * Math.PI}   textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-                <FadingText textToFade = {TranslationTable5} textIsVisibleByTransitionDestination = {true} textIsVisibleByTransitionDestinationWaitForTransitionEnd = {true} transitionDestinationToShowText = "ProfessionalExpProjects5" lettersPerUnit = {7}  scale = {layout.fadingTextScale5} initialPosition = {layout.fadingTextPosition5} rotation = {Math.PI/2}     textColor = {"#FFFFFF"} manualLineBreaks = {true} />
-            </>
+            /> */}
 
             {(currentGraphicalMode === "potato")
             && 
             <ambientLight intensity = {0.5}></ambientLight>
             }
 
-            {(currentGraphicalMode !== "potato")
+            {(currentGraphicalMode === "premium")
             && 
             <ambientLight intensity = {0.1}></ambientLight>
             }
 
-            <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
-            forceLowResTrigger={forceLowresMaterial} forceMidResTrigger={forceMidresMaterial} forceHighResTrigger={forceHighResMaterial}>
-                {stableSimpleLoader}
-            </DynamicMaterialLoader>
-            {(currentGraphicalMode !== "potato")
+            {(currentGraphicalMode === "high")
             &&
             <>
-                <ObjectLink position={objectLinkPosition1} scale={objectLinkScale} scene={mainScene} linkedObjectName = {"Lamp"} >
-                    {stableOrbitingPointLightParticleEmitterAndPointLightAnimation}
-                </ObjectLink>
-                
-                <InstanceLoader instancedObject={"Book.glb"} initialPosition = {initialPosition} directionX = {0} directionY = {0} 
-                    directionZ = {-1} customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} 
-                    distanceBetweenInstances={3} />
+            <ambientLight intensity = {0.1}></ambientLight>
             </>
             }
-        </>
-        }
 
         {(siteMode === "store") && 
         <>

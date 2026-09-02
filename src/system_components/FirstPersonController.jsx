@@ -28,7 +28,7 @@ export const FirstPersonController = React.memo((props) => {
     const { position = [0, 0, 0] } = props;
 
     const { rotation = [0, 0, 0] } = props;
-    const { eyeHeight = 4 } = props;
+    const { eyeHeight = 1.7 } = props;
     const { isMainCamera = true } = props;
     // Usage: true, false, or "auto"
     const { azertyMode = "auto" } = props;
@@ -69,7 +69,7 @@ export const FirstPersonController = React.memo((props) => {
 
     const capsuleRadius = 0.35;
     const capsuleHeight = Math.max(eyeHeight + 0.35, (capsuleRadius * 2) + 0.4);
-    const moveSpeed = 8;
+    const moveSpeed = 1.5;
     const gravityStrength = 30;
     const terminalVelocity = 60;
     const lookSensitivity = 0.002;
