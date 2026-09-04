@@ -59,6 +59,7 @@
   "devDependencies": {
     "@theatre/studio": "^0.7.0",
     "gh-pages": "^5.0.0",
-    "patch-package": "^6.5.1"
+    "patch-package": "^6.5.1",
+    "r3f-perf": "6.7.0"
   }
 }

@@ -39,6 +39,10 @@ const SystemStore = create((set) => ({
   canvasEnabled: true,
   setCanvasEnabled: (enabled) => set(() => ({ canvasEnabled: enabled })),
 
+  // Controls the r3f-perf overlay.
+  r3fPerfEnabled: true,
+  setR3fPerfEnabled: (enabled) => set(() => ({ r3fPerfEnabled: enabled })),
+
   currentCameraMovements: { zoom: true, pan: true, rotate: true },
   setcurrentCameraMovements: (cameraMovements) => set(() => ({ currentCameraMovements: cameraMovements })),
 

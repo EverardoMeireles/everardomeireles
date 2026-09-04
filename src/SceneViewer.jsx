@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { Canvas } from "@react-three/fiber";
+import { Perf } from "r3f-perf";
 import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./user_components/HudMenu";
 import { Alert } from "./system_components/Alert";
@@ -54,6 +55,7 @@ function SceneViewer() {
   const productInformationFromMessage = SystemStore((state) => state.productInformationFromMessage);
   const setViewerModelSelection = SystemStore((state) => state.setViewerModelSelection);
   const canvasEnabled = SystemStore((state) => state.canvasEnabled);
+  const r3fPerfEnabled = SystemStore((state) => state.r3fPerfEnabled);
 
   const siteMode = UserStore((state) => state.siteMode);
 
@@ -530,6 +532,7 @@ function SceneViewer() {
                     dpr={1}
                     gl={{ powerPreference: "high-performance" }}
                   >
+                    {r3fPerfEnabled && <Perf />}
                     <SceneContainer />
                     {/* <FPSLogger /> */}
                   </Canvas>

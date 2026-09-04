@@ -61,7 +61,7 @@ export const SceneContainer = React.memo((props) => {
         [siteMode]
     );
     const scene = useLoader(GLTFLoader, `${config.resource_path}/models/${sceneName}`);
-
+console.log(scene)
     useEffect(() => {
         setMainScene(scene);
     }, [scene, setMainScene]);
