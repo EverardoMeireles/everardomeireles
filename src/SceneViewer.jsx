@@ -480,7 +480,7 @@ function SceneViewer() {
                 />
               ))}
               <TutorialOverlay enable = {enableTutorial}/>
-              <HudMenu enabled={siteMode === "resume"} />
+              {/* <HudMenu enabled={siteMode === "resume"} /> */}
               {(siteMode === "resume") &&
                 <ProgressBar
                   progressBarPosition="bottom"

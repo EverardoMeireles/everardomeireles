@@ -23,6 +23,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Camera } from "./system_components/Camera.jsx";
 import { Raycaster } from "./system_components/Raycaster.jsx";
 import { FirstPersonController } from "./system_components/FirstPersonController.jsx";
+import { HalfMeshMirroring } from "./system_components/HalfMeshMirroring.jsx";
 import { Environment } from "@react-three/drei";
 
 import * as THREE from 'three';
@@ -62,6 +63,27 @@ export const SceneContainer = React.memo((props) => {
     );
     const scene = useLoader(GLTFLoader, `${config.resource_path}/models/${sceneName}`);
 console.log(scene)
+
+    const halfMeshData = useMemo(() => {
+        const nodes = {};
+        let material;
+
+        // Extract metadata-marked meshes and the shared atlas material.
+        scene.scene.traverse((node) => {
+            if (!node.isMesh) return;
+
+            if (node.userData?.halfMesh) {
+                nodes[node.name] = node;
+            }
+
+            if (!material && node.material?.name?.startsWith("[HALF]")) {
+                material = node.material;
+            }
+        });
+
+        return { nodes, material };
+    }, [scene]);
+
     useEffect(() => {
         setMainScene(scene);
     }, [scene, setMainScene]);
@@ -407,6 +429,7 @@ console.log(scene)
             <Environment files={`${config.resource_path}/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr`} background={false} />
             
             {stableSimpleLoader}
+            <HalfMeshMirroring nodes={halfMeshData.nodes} material={halfMeshData.material} />
 
 
 
