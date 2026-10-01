@@ -307,6 +307,27 @@ export const FirstPersonController = React.memo((props) => {
             }
             const meshes = [];
             const octree = new Octree();
+            // Reuse matrices while expanding instanced collision geometry.
+            const instanceMatrix = new THREE.Matrix4();
+            const instanceWorldMatrix = new THREE.Matrix4();
+
+            // Add one geometry copy using its world transform.
+            const addGeometryTriangles = (positionAttribute, worldMatrix) => {
+                for (let index = 0; index <= positionAttribute.count - 3; index += 3) {
+                    const a = new THREE.Vector3()
+                        .fromBufferAttribute(positionAttribute, index)
+                        .applyMatrix4(worldMatrix);
+                    const b = new THREE.Vector3()
+                        .fromBufferAttribute(positionAttribute, index + 1)
+                        .applyMatrix4(worldMatrix);
+                    const c = new THREE.Vector3()
+                        .fromBufferAttribute(positionAttribute, index + 2)
+                        .applyMatrix4(worldMatrix);
+
+                    octree.addTriangle(new THREE.Triangle(a, b, c));
+                }
+            };
+
             scene.updateMatrixWorld(true);
 
             scene.traverse((object) => {
@@ -338,18 +359,15 @@ export const FirstPersonController = React.memo((props) => {
                     return;
                 }
 
-                for (let index = 0; index <= positionAttribute.count - 3; index += 3) {
-                    const a = new THREE.Vector3()
-                        .fromBufferAttribute(positionAttribute, index)
-                        .applyMatrix4(object.matrixWorld);
-                    const b = new THREE.Vector3()
-                        .fromBufferAttribute(positionAttribute, index + 1)
-                        .applyMatrix4(object.matrixWorld);
-                    const c = new THREE.Vector3()
-                        .fromBufferAttribute(positionAttribute, index + 2)
-                        .applyMatrix4(object.matrixWorld);
-
-                    octree.addTriangle(new THREE.Triangle(a, b, c));
+                if (object.isInstancedMesh) {
+                    // Expand each instance only inside the collision octree.
+                    for (let instanceIndex = 0; instanceIndex < object.count; instanceIndex += 1) {
+                        object.getMatrixAt(instanceIndex, instanceMatrix);
+                        instanceWorldMatrix.multiplyMatrices(object.matrixWorld, instanceMatrix);
+                        addGeometryTriangles(positionAttribute, instanceWorldMatrix);
+                    }
+                } else {
+                    addGeometryTriangles(positionAttribute, object.matrixWorld);
                 }
 
                 if (tempGeometry) {
