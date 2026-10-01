@@ -25,6 +25,9 @@ import { Raycaster } from "./system_components/Raycaster.jsx";
 import { FirstPersonController } from "./system_components/FirstPersonController.jsx";
 import { HalfMeshMirroring } from "./system_components/HalfMeshMirroring.jsx";
 import { Environment } from "@react-three/drei";
+import { EffectComposer, SSAO } from "@react-three/postprocessing";
+import { ThreeDom } from "@react-three-dom/core";
+import { JsonInstancing } from "./user_components/JsonInstancing.jsx";
 
 import * as THREE from 'three';
 
@@ -56,6 +59,8 @@ export const SceneContainer = React.memo((props) => {
 
     const animationTriggerState = UserStore((state) => state.animationTriggerState);
     const siteMode = UserStore((state) => state.siteMode);
+
+    const [ssaoEnabled, setSsaoEnabled] = useState(true);
 
     const sceneName = useMemo(
         () => siteMode === "resume" ? "housemaker_export.glb" : "base_cube_DO_NOT_REMOVE.glb",
@@ -109,6 +114,18 @@ console.log(scene)
     ////////////////////////////////////////////////////
     ///////////////// One-time effects /////////////////
     ////////////////////////////////////////////////////
+
+    // Toggle SSAO with the A key.
+    useEffect(() => {
+        const handleSsaoToggle = (event) => {
+            if (event.repeat || event.key.toLowerCase() !== "a") return;
+            setSsaoEnabled((enabled) => !enabled);
+        };
+
+        window.addEventListener("keydown", handleSsaoToggle);
+
+        return () => window.removeEventListener("keydown", handleSsaoToggle);
+    }, []);
 
     // Block forcing the scene's materials to change until the materials are properly loaded
     useEffect(() => {
@@ -404,11 +421,16 @@ console.log(scene)
 
     return(
     <>
+        {/* Mirror the scene for React Three DOM DevTools. */}
+        <ThreeDom />
+
         {(siteMode === "resume") && 
         <>
             {/* <Raycaster frameInterval={1} /> */}
             {/* <PreloadAssets delay={4000} texturesToLoad={texturesToLoad} scenesToLoad={scenesToLoad}></PreloadAssets> */}
             <FpsBenchmarkProbe benchmarkScene={"benchmark_scene.glb"}></FpsBenchmarkProbe>
+            {/* Render instances exported by Housemaker. */}
+            <JsonInstancing />
         </>
         }
             {/* <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
@@ -424,12 +446,26 @@ console.log(scene)
                 directionZ = {-1} customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} 
                 distanceBetweenInstances={3} />
 
-            <FirstPersonController position={[2.83, 0, 3]} eyeHeight = {1.5}/>
+            <FirstPersonController position={[2.83, 0.1, 3]} eyeHeight = {1.5}/>
             {/* <ambientLight intensity = {1.0}></ambientLight> */}
             <Environment files={`${config.resource_path}/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr`} background={false} />
             
             {stableSimpleLoader}
             <HalfMeshMirroring nodes={halfMeshData.nodes} material={halfMeshData.material} />
+
+            {/* Add screen-space ambient contact shadows. */}
+            {ssaoEnabled &&
+                <EffectComposer multisampling={0} resolutionScale={0.5}>
+                    <SSAO
+                        samples={17}
+                        rings={7}
+                        radius={0.15}
+                        intensity={1.25}
+                        luminanceInfluence={0.7}
+                        bias={0.025}
+                    />
+                </EffectComposer>
+            }
 
 
 

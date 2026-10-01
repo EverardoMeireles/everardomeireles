@@ -1,0 +1,31 @@
+{
+    "ModelProperties": {
+      "rockingTransitionDuration": 2000,
+      "explodingTransitionDuration": 300,
+      "childTransitionDuration": 150,
+      "customOrigin": [180, 140, 51]
+    },
+
+    "ObjectProperties": [
+      {
+        "circleName": "Motor_gearbox_1TT1",
+        "text": "Right text",
+        "image": "/textures/4x3.png",
+        "circleSize": 30,
+        
+        "focusedObjectCloneAxisOfRotation": [0, 1, 0],
+        "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}, "focusedObjectCloneForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom).",
+        "playPulseAnimation": true
+      },
+      {
+        "circleName": "Wheel_1_1BB1",
+        "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
+        "image": "AfficheDUT-French.png",
+        "circleSize": 30,
+        "playPulseAnimation": false,
+        "focusedObjectCloneAxisOfRotation": [0, 0, 1],
+        "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}, "focusedObjectCloneForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)."
+      }
+    ]
+  }
+  
