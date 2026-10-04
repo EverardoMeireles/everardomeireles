@@ -66,8 +66,8 @@ function SceneViewer() {
   const [enableTutorial, setEnableTutorial] = useState(false);
   const [tooltipProps, setTooltipProps] = useState({
     active: false,
-    text: "",
-    image: ""
+    html: undefined,
+    style: undefined
   });
   const setViewerBounds = SystemStore((state) => state.setViewerBounds);
   const viewerBounds = SystemStore((state) => state.viewerBounds);
@@ -162,8 +162,8 @@ function SceneViewer() {
 
     if (selectedCircleData.textShowMode === "Page") {
       setMessage('3D_TOOLTIP_HOVER', {
-        text: selectedCircleData.text,
-        image: selectedCircleData.image
+        html: selectedCircleData.html,
+        style: selectedCircleData.style
       });
       setTooltipProps((previousTooltipProps) => (
         previousTooltipProps.active
@@ -173,15 +173,17 @@ function SceneViewer() {
       return;
     }
 
-    setTooltipProps({active: true,
-      text: selectedCircleData.text ?? "",
-      image: selectedCircleData.image ?? ""});
+    setTooltipProps({
+      active: true,
+      html: selectedCircleData.html,
+      style: selectedCircleData.style
+    });
   }, [
     circleProperties.active,
     selectedCircleData?.circleName,
     selectedCircleData?.textShowMode,
-    selectedCircleData?.text,
-    selectedCircleData?.image,
+    selectedCircleData?.html,
+    selectedCircleData?.style,
     setMessage
   ]);
 
@@ -462,8 +464,8 @@ function SceneViewer() {
               <Alert />
               <ToolTip
                 active={tooltipProps.active}
-                text={tooltipProps.text}
-                image={tooltipProps.image}
+                html={tooltipProps.html}
+                style={tooltipProps.style}
                 selectedCirclePositionX={selectedCirclePositionX}
                 viewerBounds={viewerBounds}
                 transitionDuration={0.5}

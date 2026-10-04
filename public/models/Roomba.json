@@ -147,8 +147,8 @@
   "ObjectProperties": [
     {
       "circleName": "Motor_gearbox_1TT1",
-      "text": "Right text",
-      "image": "back_arrow.png",
+      "html": "<p>Right text</p><img src=\"/textures/back_arrow.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
       "circleSize": 30,
       "playPulseAnimation": true,
       "position": [
@@ -195,8 +195,8 @@
     },
     {
       "circleName": "Wheel_1_1BB1",
-      "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
-      "image": "AfficheDUT-French.png",
+      "html": "<p>DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd dddddddddddddddddddd ddtextddddddddddddddd ddddddddd</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
       "circleSize": 30,
       "playPulseAnimation": false,
       "position": [
@@ -242,8 +242,8 @@
     },
     {
       "circleName": "Gearbox_body_0BB1",
-      "text": "G0",
-      "image": "AfficheMicrolins1-French.jpg",
+      "html": "<p>G0</p><img src=\"/textures/AfficheMicrolins1-French.jpg\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
       "position": [
         0,
         0
@@ -289,8 +289,8 @@
     },
     {
       "circleName": "LUL_0BB1",
-      "text": "G0",
-      "image": "AfficheDUT-French.png",
+      "html": "<p>G0</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
       "position": [
         0,
         0
@@ -336,8 +336,8 @@
     },
     {
       "circleName": "Gear_1_0TL1",
-      "text": "G1",
-      "image": "AfficheDUT-French.png",
+      "html": "<p>G1</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
       "circleSize": 30,
       "playPulseAnimation": false,
       "position": [
@@ -383,8 +383,8 @@
     },
     {
       "circleName": "Gear_2_1TT1",
-      "text": "G2",
-      "image": "AfficheDUT-French.png",
+      "html": "<p>G2</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
       "circleSize": 30,
       "playPulseAnimation": false,
       "position": [
@@ -430,8 +430,8 @@
     },
     {
       "circleName": "Gear_3_2TR1",
-      "text": "G3",
-      "image": "AfficheDUT-French.png",
+      "html": "<p>G3</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
       "circleSize": 30,
       "playPulseAnimation": false,
       "position": [

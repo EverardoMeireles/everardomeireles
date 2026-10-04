@@ -88,8 +88,8 @@
     {
       "circleName": "Elevator",
       "textShowMode": "Canvas",
-      "text": "Right text",
-      "image": "/textures/4x3.png",
+      "html": "<p>Right text</p><img src=\"/textures/4x3.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
       "circleSize": 30,
       "playPulseAnimation": true,
       "position": [

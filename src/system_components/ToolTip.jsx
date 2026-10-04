@@ -1,110 +1,66 @@
 import React, { useRef } from 'react';
-import config from '../config';
 
 /**
- * Purpose: Displays the active tooltip panel next to the selected circle.
+ * Purpose: Displays custom HTML next to the selected circle.
  * Relationships: Mounted by SceneViewer, which derives its props from circlesData and currentCircleNameSelected.
  * Example:
- * <ToolTip active={true} text="Sample text" image="textures/4x3.png" selectedCirclePositionX={25} viewerBounds={{left: 0, top: 0, width: 800, height: 600}} imagePercentHeight={40} textPercentHeight={60} fontSize={18} transitionDuration={0.5} />
+ * <ToolTip active={true} html="<h2>Tooltip</h2><p>Tooltip content</p>" style={{width: '320px', padding: '24px', backgroundColor: 'rgba(0, 0, 0, 0.75)', color: '#fff', borderRadius: '16px'}} selectedCirclePositionX={25} viewerBounds={{left: 0, top: 0, width: 800, height: 600}} transitionDuration={0.5} />
  * @param {boolean} [active] - Whether the tooltip is visible.
- * @param {string} [text] - Text content to display.
- * @param {string} [image] - Image file name or path.
+ * @param {string} [html] - Trusted HTML markup to display.
+ * @param {object} [style] - React styles for the tooltip div.
  * @param {number} [selectedCirclePositionX] - Selected circle X position in percent.
  * @param {*} [viewerBounds] - Viewer bounds used to position the tooltip.
- * @param {number} [imagePercentHeight] - Image percent height.
- * @param {number} [textPercentHeight] - Text percent height.
- * @param {number} [fontSize] - Font size.
- * @param {number} [transitionDuration] - fade time in seconds.
+ * @param {number} [transitionDuration] - Fade time in seconds.
  */
 export const ToolTip = (props) => {
   const {active = false} = props;
-  const {text = ""} = props;
-
-  const {image = ""} = props;
+  const {html = "<h2>Tooltip</h2><p>Tooltip content</p>"} = props;
+  const {style = {
+    width: '320px',
+    padding: '24px',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    color: '#fff',
+    borderRadius: '16px',
+  }} = props;
   const {selectedCirclePositionX = undefined} = props;
-
   const {viewerBounds = { left: 0, top: 0, width: 0, height: 0 }} = props;
-  const {imagePercentHeight = 40} = props;
-  const {textPercentHeight = 60} = props;
-  const {fontSize = 18} = props;
   const {transitionDuration = 0.5} = props;
 
   const lastSelectedCirclePositionX = useRef(50);
-
-  const isVisible = Boolean(active);
-  const boxWidth = viewerBounds.width * 0.4;
-  const verticalMargin = viewerBounds.height * 0.05;
-  const horizontalMargin = verticalMargin;
 
   // Keep the side stable while fading out.
   if (selectedCirclePositionX !== undefined) {
     lastSelectedCirclePositionX.current = selectedCirclePositionX;
   }
 
+  const isVisible = Boolean(active);
+  const verticalMargin = viewerBounds.height * 0.05;
+  const horizontalMargin = verticalMargin;
   const tooltipPositionX = selectedCirclePositionX ?? lastSelectedCirclePositionX.current;
   const isSelectedCircleOnLeft = tooltipPositionX < 50;
+  const viewerRight = viewerBounds.left + viewerBounds.width;
 
-  const boxStyle = {
+  // Combine supplied presentation with required tooltip behavior.
+  const tooltipStyle = {
+    ...style,
     position: 'fixed',
-    width: `${boxWidth}px`,
-    height: `${viewerBounds.height * 0.9}px`,
-    borderRadius: '50px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    transition: `opacity ${transitionDuration}s ease-in-out`,
-    zIndex:  isVisible ? 1000 : 1,
-    opacity:  isVisible ?   1  : 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    color: '#FFF',
     top: `${viewerBounds.top + verticalMargin}px`,
+    right: isSelectedCircleOnLeft
+      ? `calc(100vw - ${viewerRight - horizontalMargin}px)`
+      : 'auto',
     left: isSelectedCircleOnLeft
-      ? `${viewerBounds.left + viewerBounds.width - boxWidth - horizontalMargin}px`
+      ? 'auto'
       : `${viewerBounds.left + horizontalMargin}px`,
+    transition: `opacity ${transitionDuration}s ease-in-out`,
+    zIndex: isVisible ? 1000 : 1,
+    opacity: isVisible ? 1 : 0,
     pointerEvents: 'none',
   };
 
-  const textStyle = {
-    padding: '10px',
-    textAlign: 'center',
-    color: '#FFF',
-    flex:    `${textPercentHeight} 1 0`,
-    fontSize: `${fontSize}px`,
-  };
-
-  const imgContainer = {
-    width:         '100%',
-    position:      'relative',
-    flex:          `${imagePercentHeight} 1 0`,
-    display:       'flex',
-    justifyContent:'center',
-    alignItems:    'center',
-    marginBottom:  '2vh',
-    overflow:      'hidden',
-    borderRadius:  '20px',
-  };
-
-  const imgStyle = {
-    position: 'absolute',
-    top:      0,
-    left:     0,
-    width:   '100%',
-    height:  '100%',
-    objectFit:'contain',
-  };
-
   return (
-    <div style={boxStyle}>
-      <div style={textStyle}>
-        {text}
-      </div>
-      <div style={imgContainer}>
-        <img
-          style={imgStyle}
-          src={`${config.resource_path}/textures/${image}`}
-          alt="Tooltip"
-        />
-      </div>
-    </div>
+    <div
+      style={tooltipStyle}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 };
