@@ -1,9 +1,8 @@
-import React, { Suspense, useState, useEffect, useRef, useMemo  } from "react";
+import React, { useState, useEffect, useRef, useMemo  } from "react";
 import { SimpleLoader } from "./system_components/SimpleLoader.jsx";
 import { OrbitingPointLight } from './system_components/OrbitingPointLights.jsx';
 import { OrbitingMenu } from "./system_components/OrbitingMenu.jsx";
 import { FadingText } from "./system_components/FadingText.jsx";
-import { useLoader, useFrame } from "@react-three/fiber";
 import { FadingTitle } from "./system_components/FadingTitle.jsx";
 import { InstanceLoader } from "./system_components/InstanceLoader.jsx";
 import { PreloadAssets } from "./system_components/PreloadAssets.jsx";
@@ -13,17 +12,14 @@ import { ObjectLink } from "./system_components/ObjectLink.jsx";
 import { ParticleEmitter } from "./system_components/ParticleEmitter.jsx";
 import { DynamicMaterialLoader } from "./system_components/DynamicMaterialLoader.jsx";
 import { CurveScrollNavigationCamera } from "./system_components/CurveScrollNavigationCamera.jsx";
-import { AnimationMixer } from 'three';
 import { customInstanceRotation, customInstanceColor } from "./PathPoints.jsx";
 import { TranslationTable } from "./TranslationTable.jsx";
 import { useResponsive } from "./Styles.jsx";
 import { FpsBenchmarkProbe } from "./system_components/FpsBenchmarkProbe.jsx";
 import { pollForFilesInTHREECache } from "./Helper.js";
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Camera } from "./system_components/Camera.jsx";
 import { Raycaster } from "./system_components/Raycaster.jsx";
 import { FirstPersonController } from "./system_components/FirstPersonController.jsx";
-import { HalfMeshMirroring } from "./system_components/HalfMeshMirroring.jsx";
 import { Environment } from "@react-three/drei";
 import { EffectComposer, SSAO } from "@react-three/postprocessing";
 import { ThreeDom } from "@react-three-dom/core";
@@ -50,8 +46,6 @@ export const SceneContainer = React.memo((props) => {
     const mouseClicked = SystemStore((state) => state.mouseClicked);
     const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
     const setForcedCameraMovePathCurve = SystemStore((state) => state.setForcedCameraMovePathCurve);
-    const setMainScene = SystemStore((state) => state.setMainScene);
-    const mainScene = SystemStore((state) => state.mainScene);
     const currentObjectHovered = SystemStore((state) => state.currentObjectHovered);
     const viewerModelName = SystemStore((state) => state.viewerModelName);
     const viewerConfigFile = SystemStore((state) => state.viewerConfigFile);
@@ -61,40 +55,6 @@ export const SceneContainer = React.memo((props) => {
     const siteMode = UserStore((state) => state.siteMode);
 
     const [ssaoEnabled, setSsaoEnabled] = useState(true);
-
-    const sceneName = useMemo(
-        () => siteMode === "resume" ? "housemaker_export.glb" : "base_cube_DO_NOT_REMOVE.glb",
-        [siteMode]
-    );
-    const scene = useLoader(GLTFLoader, `${config.resource_path}/models/${sceneName}`);
-console.log(scene)
-
-    const halfMeshData = useMemo(() => {
-        const nodes = {};
-        let material;
-
-        // Extract metadata-marked meshes and the shared atlas material.
-        scene.scene.traverse((node) => {
-            if (!node.isMesh) return;
-
-            if (node.userData?.halfMesh) {
-                nodes[node.name] = node;
-            }
-
-            if (!material && node.material?.name?.startsWith("[HALF]")) {
-                material = node.material;
-            }
-        });
-
-        return { nodes, material };
-    }, [scene]);
-
-    useEffect(() => {
-        setMainScene(scene);
-    }, [scene, setMainScene]);
-
-    let mixer;
-    const animTimeRef = useRef(0);
 
     const [forceLowresMaterial, setForceLowresMaterial] = useState(false);
     const [forceMidresMaterial, setForceMidresMaterial] = useState(false);
@@ -166,30 +126,6 @@ console.log(scene)
         }
         
     },[currentGraphicalMode])
-
-    useEffect(() => {
-        if (!mainScene || !mainScene.animations?.length) return; // Ensure there are animations in the GLTF
-        
-        mixer = new AnimationMixer(mainScene.scene); // Create an AnimationMixer
-
-        const action = mixer.clipAction(mainScene.animations[0]); // Get the first animation clip (index 0)
-
-        action.play(); // Play the animation
-
-        // Update the mixer in your render loop
-        const clock = new THREE.Clock();
-        const tick = () => {
-        const delta = clock.getDelta(); // Time since last frame
-        mixer.update(delta); // Update mixer with delta time
-        requestAnimationFrame(tick); // Continue the loop
-        animTimeRef.current = action.time.toFixed(2)
-        };
-
-        tick(); // Start the loop
-
-        // Cleanup function to stop the mixer when the component unmounts
-        return () => mixer.stopAllAction();
-    }, [mainScene]);
 
     ////////////////////////////////////////////////////
     //////////////// Functional effects ////////////////
@@ -300,7 +236,7 @@ console.log(scene)
 
     const initialPosition = useMemo(() => [-2, 75, 32], []);
 
-    const objectsRevealTriggers = useMemo(() => ({"Wardrobe001":"trigger3"}), []);
+    const objectsHideRevealTriggers = useMemo(() => ({"Wardrobe001":"trigger3"}), []);
 
     // Configure trigger ranges within animation playback.
     const animationTriggerTimes = useMemo(() => ({
@@ -384,27 +320,6 @@ console.log(scene)
             orbitDistance = {50} orbitCenterPosition = {[0,20,0]} lightIntensivity = {1} />
     ], []);
 
-    const stableSimpleLoader = useMemo(() => {
-        if (!mainScene) return null;
-        return (
-            <SimpleLoader
-                position={[0, 0, 0]}
-                scene={mainScene}
-                objectsRevealTriggers={objectsRevealTriggers}
-                animationPlayTrigger={animationPlayTrigger}
-                animationTriggerTimes={animationTriggerTimes}
-                objectScaleUpTriggers={objectScaleUpTriggers}
-                scaleAmount={1.3}
-            />
-        );
-    }, [
-        mainScene,
-        objectsRevealTriggers,
-        animationPlayTrigger,
-        animationTriggerTimes,
-        objectScaleUpTriggers
-    ]);
-
     const isOrbitingMenuVisible = useRef(false)
 
     useEffect(() => {
@@ -414,10 +329,6 @@ console.log(scene)
             isOrbitingMenuVisible.current = false;
         }
     }, [transitionDestination, isCameraMoving]);
-
-    if (!mainScene) {
-        return null;
-    }
 
     return(
     <>
@@ -435,10 +346,10 @@ console.log(scene)
         }
             {/* <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
             forceLowResTrigger={forceLowresMaterial} forceMidResTrigger={forceMidresMaterial} forceHighResTrigger={forceHighResMaterial}>
-                {stableSimpleLoader}
+                <SimpleLoader modelName="housemaker_export.glb" />
             </DynamicMaterialLoader> */}
 
-            <ObjectLink position={objectLinkPosition1} scale={objectLinkScale} scene={mainScene} linkedObjectName = {"Lamp"} >
+            <ObjectLink position={objectLinkPosition1} scale={objectLinkScale} linkedObjectName = {"Lamp"} >
                 {stableOrbitingPointLightParticleEmitterAndPointLightAnimation}
             </ObjectLink>
             
@@ -450,8 +361,15 @@ console.log(scene)
             {/* <ambientLight intensity = {1.0}></ambientLight> */}
             <Environment files={`${config.resource_path}/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr`} background={false} />
             
-            {stableSimpleLoader}
-            <HalfMeshMirroring nodes={halfMeshData.nodes} material={halfMeshData.material} />
+            <SimpleLoader
+                modelName="housemaker_export.glb"
+                position={[0, 0, 0]}
+                objectsHideRevealTriggers={objectsHideRevealTriggers}
+                animationPlayTrigger={animationPlayTrigger}
+                animationTriggerTimes={animationTriggerTimes}
+                objectScaleUpTriggers={objectScaleUpTriggers}
+                scaleAmount={1.3}
+            />
 
             {/* Add screen-space ambient contact shadows. */}
             {ssaoEnabled &&

@@ -3,9 +3,6 @@ import * as THREE from 'three';
 import config from './config.js';
 
 const SystemStore = create((set) => ({
-  mainScene: undefined,
-  setMainScene: (loaded) => set(() => ({ mainScene: loaded })),
-
   forceDisableRender: false, // will disable the app's render
   setForceDisableRender: (DisableRender) => set(() => ({ forceDisableRender: DisableRender })),
 

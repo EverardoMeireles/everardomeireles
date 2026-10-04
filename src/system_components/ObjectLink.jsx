@@ -1,15 +1,14 @@
 import React, { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 /**
  * Purpose: Attaches child content to a named object's world position and rotation.
- * Relationships: Used by SceneContainer to bind effects and lights to GLTF scene objects.
+ * Relationships: Used by SceneContainer to bind effects and lights to named R3F scene objects.
  * Example:
- * <ObjectLink position={[0, 0, 0]} scale={[1, 1, 1]} scene={scene} linkedObjectName="Lamp"><pointLight /></ObjectLink>
+ * <ObjectLink position={[0, 0, 0]} scale={[1, 1, 1]} linkedObjectName="Lamp"><pointLight /></ObjectLink>
  * @param {Array<any>} [position] - Position in the scene.
  * @param {Array<any>} [scale] - Scale value.
- * @param {*} scene - Scene object used by this component.
  * @param {string} [linkedObjectName] - Linked object name.
  * @param {*} children - Children rendered inside this component.
  */
@@ -18,33 +17,30 @@ export const ObjectLink = React.memo((props) => {
 
   const {scale = [1, 1, 1]} = props;
 
-  const {scene} = props;
-
   const {linkedObjectName = "Lamp"} = props;
   const {children} = props;
 
+  const scene = useThree((state) => state.scene);
   const containerRef = useRef();
-  const childRef = useRef();
+  const worldPosition = useRef(new THREE.Vector3());
+  const worldQuaternion = useRef(new THREE.Quaternion());
 
   useFrame(() => {
-    if (containerRef.current && scene?.nodes?.[linkedObjectName]) {
-      const object = scene.nodes[linkedObjectName];
+    const object = scene.getObjectByName(linkedObjectName);
+    if (containerRef.current && object) {
       object.updateMatrixWorld();
 
-      const worldPos = new THREE.Vector3();
-      const worldQuat = new THREE.Quaternion();
+      object.getWorldPosition(worldPosition.current);
+      object.getWorldQuaternion(worldQuaternion.current);
 
-      object.getWorldPosition(worldPos);
-      object.getWorldQuaternion(worldQuat);
-
-      containerRef.current.position.copy(worldPos);
-      containerRef.current.quaternion.copy(worldQuat);
+      containerRef.current.position.copy(worldPosition.current);
+      containerRef.current.quaternion.copy(worldQuaternion.current);
     }
   });
 
   return (
     <group ref={containerRef}>
-      <group ref={childRef} position={position} scale={scale}>
+      <group position={position} scale={scale}>
         {children}
       </group>
     </group>

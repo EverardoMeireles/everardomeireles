@@ -9,7 +9,7 @@ import SystemStore from "../SystemStore.js";
 
 /**
  * Purpose: First-person camera rig with keyboard/mouse movement, gravity, stairs, and optional collisions.
- * Relationships: Alternative camera for SceneContainer that reads mainScene and publishes cameraState through SystemStore.
+ * Relationships: Alternative camera for SceneContainer that builds collisions from the R3F scene and publishes cameraState through SystemStore.
  * Example:
  * <FirstPersonController position={[0, 0, 0]} rotation={[0, 0, 0]} eyeHeight={4} isMainCamera={true} azertyMode="auto" collisionsEnabled={true} maxStepHeight={5.65} minStepHeight={0.1} climbHeightOffset={0} slowDownWhileFalling={true} slowDownWhileFallingSpeedMultiplier={0.5} />
  * @param {Array<any>} [position] - Controller initial position.
@@ -39,7 +39,6 @@ export const FirstPersonController = React.memo((props) => {
     const { slowDownWhileFalling = true } = props;
     const { slowDownWhileFallingSpeedMultiplier = 0.5 } = props;
 
-    const mainScene = SystemStore((state) => state.mainScene);
     const setCameraState = SystemStore((state) => state.setCameraState);
     const cameraStateTracking = SystemStore((state) => state.cameraStateTracking);
 
@@ -381,13 +380,23 @@ export const FirstPersonController = React.memo((props) => {
             collisionOctreeRef.current = octree.triangles.length > 0 ? octree.build() : undefined;
         };
 
-        frameId = requestAnimationFrame(buildCollisionWorld);
+        // Rebuild when root scene content changes.
+        const scheduleCollisionBuild = () => {
+            cancelAnimationFrame(frameId);
+            frameId = requestAnimationFrame(buildCollisionWorld);
+        };
+
+        scene.addEventListener("childadded", scheduleCollisionBuild);
+        scene.addEventListener("childremoved", scheduleCollisionBuild);
+        scheduleCollisionBuild();
 
         return () => {
             cancelled = true;
             cancelAnimationFrame(frameId);
+            scene.removeEventListener("childadded", scheduleCollisionBuild);
+            scene.removeEventListener("childremoved", scheduleCollisionBuild);
         };
-    }, [scene, mainScene, collisionsEnabled]);
+    }, [scene, collisionsEnabled]);
 
     //////////////////////////////////////////////////////////
     ///////////////////// Pointer lock ///////////////////////

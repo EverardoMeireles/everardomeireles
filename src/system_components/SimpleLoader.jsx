@@ -1,17 +1,20 @@
-import { useFrame } from '@react-three/fiber'
-import { Suspense, useEffect, useState, useRef, forwardRef } from "react";
+import { useFrame, useLoader } from '@react-three/fiber'
+import { useEffect, useState, useRef, forwardRef, useMemo } from "react";
 import * as THREE from "three";
 import React from "react";
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import SystemStore from "../SystemStore";
 import { applyMaterialsToScene } from "../Helper.js";
+import config from "../config.js";
+import { HalfMeshMirroring } from "./HalfMeshMirroring.jsx";
 
 /**
- * Purpose: Renders a loaded GLTF scene with animation, object scale, material, UV, and hide/reveal behavior.
+ * Purpose: Loads and renders a GLTF model with animation, material, UV, and visibility behavior.
  * Relationships: Used by SceneContainer, often wrapped by DynamicMaterialLoader, and writes animation triggers through SystemStore.
  * Example:
- * <SimpleLoader position={[0, 0, 0]} scene={scene} animationPlayTrigger={[{animation_name: "idleAnimation", loop_mode: "noLoop", play_direction: 1, autoplay: true, play_trigger: "trigger5"}]} objectScaleUpTriggers={[]} scaleAmount={1.3} animationTriggerTimes={{idleAnimation: {time: 0.5, trigger: "trigger2"}}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
+ * <SimpleLoader modelName="housemaker_export.glb" position={[0, 0, 0]} animationPlayTrigger={[{animation_name: "idleAnimation", loop_mode: "noLoop", play_direction: 1, autoplay: true, play_trigger: "trigger5"}]} objectScaleUpTriggers={[]} scaleAmount={1.3} animationTriggerTimes={{idleAnimation: {time: 0.5, trigger: "trigger2"}}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
+ * @param {string} [modelName] - Model filename inside the models directory.
  * @param {Array<any>} [position] - Position of the model in the scene.
- * @param {*} [scene] - Loaded scene object used by this component.
  * @param {Array<any>} [animationPlayTrigger] - Animation play records.
  * @param {Array<any>} [objectScaleUpTriggers] - Object names currently scaling up.
  * @param {number} [scaleAmount] - Scale multiplier for triggered objects.
@@ -26,9 +29,8 @@ import { applyMaterialsToScene } from "../Helper.js";
  * @param {*} [customObjectsUvs] - Custom UV index map by object name.
  */
 export const SimpleLoader = React.memo(forwardRef((props, ref) => {
+    const {modelName = "base_cube_DO_NOT_REMOVE.glb"} = props;
     const {position = [0, 0, 0]} = props;
-
-    const {scene = undefined} = props;
 
     const {animationPlayTrigger = []} = props;
 
@@ -50,6 +52,9 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
 
     const { customObjectsUvs = {} } = props;
 
+    // Load the model owned by this component.
+    const gltf = useLoader(GLTFLoader, config.models_path + modelName);
+
     //////////////////////////////////////////////////////////
     ///////////// Variables, states and refs /////////////////
     //////////////////////////////////////////////////////////
@@ -66,8 +71,39 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const setTrigger = SystemStore((state) => state.setTrigger);
     const triggers = SystemStore((state) => state.triggers);
 
-    // initialize the animation mixer
-    const mixer = useRef(new THREE.AnimationMixer(scene.scene));
+    const mixer = useRef();
+
+    // Collect metadata used by half-mesh mirroring.
+    const halfMeshData = useMemo(() => {
+        const nodes = {};
+        let material;
+
+        gltf.scene.traverse((node) => {
+            if (!node.isMesh) return;
+
+            if (node.userData?.halfMesh) {
+                nodes[node.name] = node;
+            }
+
+            if (!material && node.material?.name?.startsWith("[HALF]")) {
+                material = node.material;
+            }
+        });
+
+        return { nodes, material };
+    }, [gltf]);
+
+    // Bind animation playback to the loaded model.
+    useEffect(() => {
+        const currentMixer = new THREE.AnimationMixer(gltf.scene);
+        mixer.current = currentMixer;
+
+        return () => {
+            currentMixer.stopAllAction();
+            currentMixer.uncacheRoot(gltf.scene);
+            if (mixer.current === currentMixer) mixer.current = undefined;
+        };
+    }, [gltf]);
 
     // ref and state of the HideReveal feature
     const fadeInObjectsKeysRef = useRef([]);
@@ -87,7 +123,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     // Known issue: uv of index '0' doesn't cause a visual update
     useEffect(() => {
         if (Object.keys(customObjectsUvs).length !== 0) {
-          scene.scene.traverse((child) => {
+          gltf.scene.traverse((child) => {
             if (child.isMesh && customObjectsUvs.hasOwnProperty(child.name)) {
               const uvIndex = customObjectsUvs[child.name];
               const uvAttributeName = uvIndex === 0 ? 'uv' : `uv${uvIndex}`; // Determine the correct UV attribute name
@@ -102,7 +138,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
             }
           });
         }
-      }, [scene, customObjectsUvs]);
+      }, [gltf, customObjectsUvs]);
 
 
     //////////////////////////////////////////////////////////
@@ -114,7 +150,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
         // check if both of the offset's values are not 0
         if(uvOffSet[0] + uvOffSet[1] != 0){
             // Traverse the entire scene to apply the UV updates
-            scene.scene.traverse((child) => {
+            gltf.scene.traverse((child) => {
                 if (child.material) {
                     const materials = Array.isArray(child.material) ? child.material : [child.material];
                     materials.forEach((material) => {
@@ -127,7 +163,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
                 }
             });
         }
-      }, [scene, uvOffsetAmount, uvOffSet]);
+      }, [gltf, uvOffsetAmount, uvOffSet]);
 
 
     //////////////////////////////////////////////////////////
@@ -145,14 +181,14 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
         const swapId = ++materialSwapId.current;
 
         (async () => {
-            await applyMaterialsToScene(scene, materialNames);
+            await applyMaterialsToScene(gltf, materialNames);
             if (!isActive || swapId !== materialSwapId.current) return;
         })();
 
         return () => {
             isActive = false;
         };
-    }, [scene, materialNames]);
+    }, [gltf, materialNames]);
 
     
     //////////////////////////////////////////////////////////
@@ -186,13 +222,15 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
 
     // Play one configured animation record.
     function playAnimation(animationPlayRecord){
+        if (!mixer.current) return;
+
         const animationName = animationPlayRecord?.animation_name;
         if (!animationName) return;
 
         const recordLoopMode = animationPlayRecord.loop_mode ?? "noLoop";
         const recordPlayDirection = animationPlayRecord.play_direction ?? 1;
 
-        scene.animations.forEach(clip => {
+        gltf.animations.forEach(clip => {
             if(clip.name == animationName){
                 const action = mixer.current.clipAction(clip);
                 setupLoopMode(action, recordLoopMode)
@@ -204,19 +242,19 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
 
     // Start configured autoplay animations when the scene loads.
     useEffect(() => {
-        if (!scene.animations.length) return;
+        if (!gltf.animations.length) return;
 
         animationPlayTrigger.forEach((animationPlayRecord) => {
             if (animationPlayRecord?.autoplay) {
                 playAnimation(animationPlayRecord);
             }
         });
-    }, [scene, animationPlayTrigger]);
+    }, [gltf, animationPlayTrigger]);
 
     // Reset tracked trigger values when the scene changes.
     useEffect(() => {
         animationTriggerValuesRef.current = {};
-    }, [scene]);
+    }, [gltf]);
 
     // Play configured animations when their named trigger turns on.
     useEffect(() => {
@@ -235,7 +273,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
 
             animationTriggerValuesRef.current[triggerKey] = triggerValue;
         });
-    }, [scene, triggers, animationPlayTrigger]);
+    }, [gltf, triggers, animationPlayTrigger]);
 
     // Forget removed animation trigger records.
     useEffect(() => {
@@ -273,7 +311,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     useEffect(() => {
         if (!Array.isArray(objectScaleUpTriggers) || objectScaleUpTriggers.length === 0) return;
 
-        scene.scene.traverse((child) => {
+        gltf.scene.traverse((child) => {
             if (!child?.scale || !objectScaleUpTriggers.includes(child.name)) return;
 
             if (!scaledObjectsRef.current[child.name]) {
@@ -285,7 +323,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
                 scaledObjectsRef.current[child.name].object = child;
             }
         });
-    }, [scene.scene, objectScaleUpTriggers]);
+    }, [gltf.scene, objectScaleUpTriggers]);
 
     // Animate triggered objects up and removed objects back down.
     useFrame(() => {
@@ -328,7 +366,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
 
     // Update animations and their timed triggers.
     useFrame((state, delta) => {
-        if (!scene.animations.length) return;
+        if (!gltf.animations.length) return;
 
         mixer.current?.update(delta);
         updateAnimationTimeTriggers();
@@ -337,7 +375,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     // Set each trigger from its animation progress.
     function updateAnimationTimeTriggers(){
         Object.entries(animationTriggerTimes).forEach(([animationName, triggerSettings]) => {
-            const clip = THREE.AnimationClip.findByName(scene.animations, animationName);
+            const clip = THREE.AnimationClip.findByName(gltf.animations, animationName);
             const action = clip ? mixer.current.existingAction(clip) : null;
             const triggerName = triggerSettings?.trigger;
             const triggerTime = triggerSettings?.time;
@@ -364,20 +402,20 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     // Hide marked objects at the start
     useEffect(() => {
         Object.entries(objectsHideRevealTriggers).forEach(([key, value]) => {
-            scene.scene.traverse((child) => {
+            gltf.scene.traverse((child) => {
                 if (child.isMesh && child.name === key) {
                     // console.log(child.name)
                 child.scale.set(0, 0, 0);
                 }
             });
         });
-    }, [scene]);
+    }, [gltf]);
 
       // set scale factors of marked objects
     useEffect(() => {
-        // console.log(scene)
+        // console.log(gltf)
         Object.entries(objectsHideRevealTriggers).forEach(([key, value]) => {
-            scene.scene.traverse((child) => {
+            gltf.scene.traverse((child) => {
                 if (child.isMesh && child.name === key) {
                     if(child.scale["x"] <= 0){
                         objectHideRevealDirections[key] = 1;
@@ -389,7 +427,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
                 }
             });
         });
-    }, [scene, objectHideRevealDirections]);
+    }, [gltf, objectHideRevealDirections]);
 
     // trigger the fade in scale animation(trigger is set to true)
     useEffect(() => {
@@ -407,7 +445,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     useFrame(() => {
         if (fade) {
             fadeInObjectsKeysRef.current.forEach((key)=>{
-                scene.scene.traverse((child) => {
+                gltf.scene.traverse((child) => {
                     // Don't fade in or out if already done and not set to be reversible
                     if (child.isMesh && child.name === key) {
                         if((child.scale["x"] >= 1 && objectHideRevealDirections[key] == 1) || (child.scale["x"] <= 0 && objectHideRevealDirections[key] == -1)){
@@ -444,17 +482,18 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
 
     // initiate ambient occlusion if useAo is set to true
     if(useAo) {
-        for( let node in scene.nodes) {
-            if('material' in scene.nodes[node]) {
-                scene.nodes[node].material.aoMapIntensity = ambientOcclusionIntensity;
+        for( let node in gltf.nodes) {
+            if('material' in gltf.nodes[node]) {
+                gltf.nodes[node].material.aoMapIntensity = ambientOcclusionIntensity;
             }
         }
     }
 
     return (
-    <Suspense fallback={null}>
-        <primitive ref={ref} position={position} object={scene.scene} />
-    </Suspense>
+        <>
+            <primitive ref={ref} position={position} object={gltf.scene} />
+            <HalfMeshMirroring nodes={halfMeshData.nodes} material={halfMeshData.material} />
+        </>
     )
 }));
 
