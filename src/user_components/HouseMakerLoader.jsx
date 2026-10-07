@@ -9,6 +9,503 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import config from "../config.js";
 import { HouseMakerTourPlayer } from "./HouseMakerTourPlayer.jsx";
 
+// ### Door reconstruction helpers ###
+
+// Check exported identifiers before exact matching.
+function isNonEmptyString(value) {
+    return typeof value === "string" && value.trim().length > 0;
+}
+
+// Check exported points and normals before matrix math.
+function isFiniteVector3(value) {
+    return Array.isArray(value)
+        && value.length === 3
+        && value.every(Number.isFinite);
+}
+
+// Normalize safely without overflowing squared vector lengths.
+function normalizeFiniteVector3(value) {
+    if (!isFiniteVector3(value)) return undefined;
+
+    const length = Math.hypot(...value);
+    if (!Number.isFinite(length) || length === 0) return undefined;
+
+    const normalized = value.map((component) => component / length);
+    return normalized.every(Number.isFinite) ? normalized : undefined;
+}
+
+// Visit authored nodes without entering generated mirror trees.
+function traverseAuthoredNodes(node, visit) {
+    if (!node || node.userData?.housemakerRuntimeMirror) return;
+
+    visit(node);
+    node.children.forEach((child) => traverseAuthoredNodes(child, visit));
+}
+
+// Collect each outermost tagged half-mesh source once.
+function collectHalfMeshSources(node, sources) {
+    if (!node || node.userData?.housemakerRuntimeMirror) return;
+
+    if (node.userData?.halfMesh) {
+        sources.push(node);
+        return;
+    }
+
+    node.children.forEach((child) => collectHalfMeshSources(child, sources));
+}
+
+// Keep components out until explicitly requested for mirroring.
+function removeDoorComponentDescendants(node) {
+    [...node.children].forEach((child) => {
+        if (child.userData?.housemakerDoorComponent) {
+            node.remove(child);
+            return;
+        }
+
+        removeDoorComponentDescendants(child);
+    });
+}
+
+// Validate one exported door reconstruction entry.
+export function validateDoorBodyReconstruction(entry, entryIndex = 0, warning = console.warn) {
+    const warningPrefix = `HouseMaker door reconstruction ${entryIndex}`;
+
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        warning(`${warningPrefix} must be an object.`);
+        return undefined;
+    }
+
+    if (!isNonEmptyString(entry.placementObjectId)) {
+        warning(`${warningPrefix} has an invalid placementObjectId.`);
+        return undefined;
+    }
+
+    if (!isNonEmptyString(entry.bodyObjectId)) {
+        warning(`${warningPrefix} has an invalid bodyObjectId.`);
+        return undefined;
+    }
+
+    const sideDuplication = entry.sideDuplication;
+    if (!sideDuplication || typeof sideDuplication !== "object" || Array.isArray(sideDuplication)) {
+        warning(`${warningPrefix} is missing sideDuplication metadata.`);
+        return undefined;
+    }
+
+    if (sideDuplication.keptSide !== "front" && sideDuplication.keptSide !== "back") {
+        warning(`${warningPrefix} has an invalid sideDuplication.keptSide.`);
+        return undefined;
+    }
+
+    if (sideDuplication.applyAfter !== "halfMesh") {
+        warning(`${warningPrefix} has an unsupported sideDuplication.applyAfter value.`);
+        return undefined;
+    }
+
+    if (sideDuplication.uvMode !== "reuse") {
+        warning(`${warningPrefix} has an unsupported sideDuplication.uvMode value.`);
+        return undefined;
+    }
+
+    const mirrorPlane = sideDuplication.mirrorPlane;
+    if (!mirrorPlane || !isFiniteVector3(mirrorPlane.point)) {
+        warning(`${warningPrefix} has an invalid sideDuplication mirror point.`);
+        return undefined;
+    }
+
+    if (!isFiniteVector3(mirrorPlane.normal)) {
+        warning(`${warningPrefix} has an invalid sideDuplication mirror normal.`);
+        return undefined;
+    }
+
+    const normalizedNormal = normalizeFiniteVector3(mirrorPlane.normal);
+    if (!normalizedNormal) {
+        warning(`${warningPrefix} has a zero-length or non-finite sideDuplication mirror normal.`);
+        return undefined;
+    }
+
+    const componentIds = sideDuplication.mirroredComponentObjectIds;
+    if (componentIds !== undefined && (
+        !Array.isArray(componentIds)
+        || componentIds.some((componentId) => !isNonEmptyString(componentId))
+    )) {
+        warning(`${warningPrefix} has invalid mirroredComponentObjectIds.`);
+        return undefined;
+    }
+
+    return {
+        placementObjectId: entry.placementObjectId,
+        bodyObjectId: entry.bodyObjectId,
+        sideDuplication: {
+            keptSide: sideDuplication.keptSide,
+            applyAfter: sideDuplication.applyAfter,
+            uvMode: sideDuplication.uvMode,
+            mirrorPlane: {
+                point: [...mirrorPlane.point],
+                normal: normalizedNormal
+            },
+            mirroredComponentObjectIds: [...new Set(componentIds ?? [])]
+        }
+    };
+}
+
+// Validate entries independently so one cannot block loading.
+export function validateDoorBodyReconstructions(entries, warning = console.warn) {
+    if (entries === undefined) return [];
+
+    if (!Array.isArray(entries)) {
+        warning("HouseMaker doorBodyReconstructions must be an array.");
+        return [];
+    }
+
+    const validEntries = [];
+    const seenDoors = new Set();
+
+    entries.forEach((entry, entryIndex) => {
+        const validEntry = validateDoorBodyReconstruction(entry, entryIndex, warning);
+        if (!validEntry) return;
+
+        const doorKey = `${validEntry.placementObjectId}\u0000${validEntry.bodyObjectId}`;
+        if (seenDoors.has(doorKey)) {
+            warning(`HouseMaker door reconstruction ${entryIndex} duplicates ${validEntry.placementObjectId}/${validEntry.bodyObjectId}.`);
+            return;
+        }
+
+        seenDoors.add(doorKey);
+        validEntries.push(validEntry);
+    });
+
+    return validEntries;
+}
+
+// Build the exact world-space plane reflection matrix.
+export function buildPlaneReflectionMatrix(mirrorPlane) {
+    if (!mirrorPlane
+        || !isFiniteVector3(mirrorPlane.point)
+        || !isFiniteVector3(mirrorPlane.normal)) {
+        return undefined;
+    }
+
+    const normalizedNormal = normalizeFiniteVector3(mirrorPlane.normal);
+    if (!normalizedNormal) return undefined;
+
+    const point = new THREE.Vector3(...mirrorPlane.point);
+    const normal = new THREE.Vector3(...normalizedNormal);
+    const planeDistance = normal.dot(point);
+    if (!Number.isFinite(planeDistance)) return undefined;
+
+    return new THREE.Matrix4().set(
+        1 - 2 * normal.x * normal.x, -2 * normal.x * normal.y, -2 * normal.x * normal.z, 2 * planeDistance * normal.x,
+        -2 * normal.y * normal.x, 1 - 2 * normal.y * normal.y, -2 * normal.y * normal.z, 2 * planeDistance * normal.y,
+        -2 * normal.z * normal.x, -2 * normal.z * normal.y, 1 - 2 * normal.z * normal.z, 2 * planeDistance * normal.z,
+        0, 0, 0, 1
+    );
+}
+
+// Read and validate regular half-mesh reflection metadata.
+function getHalfMeshReflectionMatrix(sourceObject, context, warning = console.warn) {
+    const halfMesh = sourceObject.userData?.halfMesh;
+
+    if (halfMesh?.uvMode !== undefined && halfMesh.uvMode !== "reuse") {
+        warning(`[HALF] ${context} "${sourceObject.name}" has an unsupported UV mode.`);
+        return undefined;
+    }
+
+    const reflectionMatrix = buildPlaneReflectionMatrix(halfMesh?.mirrorPlane);
+    if (!reflectionMatrix) {
+        warning(`[HALF] ${context} "${sourceObject.name}" has invalid mirror plane metadata.`);
+        return undefined;
+    }
+
+    return reflectionMatrix;
+}
+
+// Locate one body using both stable exported identifiers.
+export function findDoorBodyNode(root, placementObjectId, bodyObjectId) {
+    let matchingNode;
+
+    traverseAuthoredNodes(root, (node) => {
+        if (matchingNode) return;
+
+        const doorBody = node.userData?.housemakerDoorBody;
+        if (doorBody?.placementObjectId === placementObjectId
+            && doorBody?.bodyObjectId === bodyObjectId) {
+            matchingNode = node;
+        }
+    });
+
+    return matchingNode;
+}
+
+// Locate components using placement and component identifiers.
+export function findDoorComponentNodes(root, placementObjectId, componentObjectId) {
+    const matchingNodes = [];
+
+    traverseAuthoredNodes(root, (node) => {
+        const doorComponent = node.userData?.housemakerDoorComponent;
+        if (doorComponent?.placementObjectId === placementObjectId
+            && doorComponent?.componentObjectId === componentObjectId) {
+            matchingNodes.push(node);
+        }
+    });
+
+    return matchingNodes;
+}
+
+// Reflect a complete object while sharing rendering resources.
+export function createMirroredObject(
+    sourceObject,
+    parent,
+    reflectionMatrix,
+    runtimeMetadata,
+    recursive = true
+) {
+    if (!sourceObject?.isObject3D || !parent?.isObject3D || !reflectionMatrix?.isMatrix4) {
+        return undefined;
+    }
+
+    sourceObject.updateWorldMatrix(true, true);
+    parent.updateWorldMatrix(true, false);
+
+    const parentDeterminant = parent.matrixWorld.determinant();
+    if (!Number.isFinite(parentDeterminant) || parentDeterminant === 0) return undefined;
+
+    const mirroredWorldMatrix = reflectionMatrix.clone().multiply(sourceObject.matrixWorld);
+    const mirroredLocalMatrix = parent.matrixWorld
+        .clone()
+        .invert()
+        .multiply(mirroredWorldMatrix);
+    const mirroredObject = sourceObject.clone(recursive);
+
+    mirroredObject.name = `[MIRRORED] ${sourceObject.name}`;
+    mirroredObject.matrixAutoUpdate = false;
+    // Keep reflection determinant for Three's front-face correction.
+    mirroredObject.matrix.copy(mirroredLocalMatrix);
+    mirroredObject.matrixWorldNeedsUpdate = true;
+    mirroredObject.userData = {
+        ...mirroredObject.userData,
+        housemakerRuntimeMirror: runtimeMetadata
+    };
+    delete mirroredObject.userData.housemakerRuntimeDoorMirror;
+
+    if (runtimeMetadata?.placementObjectId) {
+        mirroredObject.userData.housemakerRuntimeDoorMirror = {
+            placementObjectId: runtimeMetadata.placementObjectId,
+            sourceObjectId: runtimeMetadata.sourceObjectId,
+            mirrorType: runtimeMetadata.mirrorType,
+            sourceNodeUuid: runtimeMetadata.sourceNodeUuid
+        };
+    }
+
+    parent.add(mirroredObject);
+    mirroredObject.updateWorldMatrix(false, true);
+
+    return mirroredObject;
+}
+
+// Remove generated mirrors without disposing shared resources.
+export function removeHouseMakerRuntimeMirrors(root) {
+    const runtimeMirrors = [];
+
+    root?.traverse((node) => {
+        if (node !== root && node.userData?.housemakerRuntimeMirror) {
+            runtimeMirrors.push(node);
+        }
+    });
+
+    runtimeMirrors.forEach((runtimeMirror) => runtimeMirror.parent?.remove(runtimeMirror));
+    return runtimeMirrors;
+}
+
+// Create the loader's regular half-mesh copies first.
+export function reconstructHalfMeshes(scene, mirrorGroup, warning = console.warn) {
+    const sourceObjects = [];
+    const mirrorBySource = new Map();
+    const mirrors = [];
+    const oldHalfMirrors = [];
+
+    mirrorGroup.traverse((node) => {
+        if (node.userData?.housemakerRuntimeMirror?.mirrorType === "halfMesh") {
+            oldHalfMirrors.push(node);
+        }
+    });
+    oldHalfMirrors.forEach((mirror) => mirror.parent?.remove(mirror));
+
+    scene.updateWorldMatrix(true, true);
+    collectHalfMeshSources(scene, sourceObjects);
+
+    sourceObjects.forEach((sourceObject) => {
+        const reflectionMatrix = getHalfMeshReflectionMatrix(sourceObject, "model", warning);
+        if (!reflectionMatrix) return;
+
+        const doorBody = sourceObject.userData?.housemakerDoorBody;
+        const runtimeMetadata = {
+            sourceObjectId: doorBody?.bodyObjectId ?? sourceObject.uuid,
+            placementObjectId: doorBody?.placementObjectId,
+            mirrorType: "halfMesh",
+            sourceNodeUuid: sourceObject.uuid
+        };
+        const mirroredObject = createMirroredObject(
+            sourceObject,
+            mirrorGroup,
+            reflectionMatrix,
+            runtimeMetadata,
+            Boolean(doorBody) || !sourceObject.isMesh
+        );
+
+        if (!mirroredObject) {
+            warning(`[HALF] Could not mirror model "${sourceObject.name}".`);
+            return;
+        }
+
+        if (doorBody) removeDoorComponentDescendants(mirroredObject);
+        mirrors.push(mirroredObject);
+        mirrorBySource.set(sourceObject, mirroredObject);
+    });
+
+    return { mirrors, mirrorBySource };
+}
+
+// Reconstruct one validated door in the required order.
+export function reconstructDoorBody(
+    scene,
+    mirrorGroup,
+    reconstruction,
+    halfMirrorBySource,
+    warning = console.warn
+) {
+    const createdMirrors = [];
+    const bodyNode = findDoorBodyNode(
+        scene,
+        reconstruction.placementObjectId,
+        reconstruction.bodyObjectId
+    );
+
+    if (!bodyNode) {
+        warning(`HouseMaker door body not found: ${reconstruction.placementObjectId}/${reconstruction.bodyObjectId}.`);
+        return createdMirrors;
+    }
+
+    const reflectionMatrix = buildPlaneReflectionMatrix(
+        reconstruction.sideDuplication.mirrorPlane
+    );
+    const bodySources = [{ object: bodyNode, mirrorType: "sideDuplication:authored" }];
+    const halfMirror = halfMirrorBySource?.get(bodyNode);
+
+    if (reconstruction.sideDuplication.applyAfter === "halfMesh" && halfMirror) {
+        bodySources.push({
+            object: halfMirror,
+            mirrorType: "sideDuplication:halfMesh"
+        });
+    }
+
+    bodySources.forEach((bodySource) => {
+        const mirroredBody = createMirroredObject(
+            bodySource.object,
+            mirrorGroup,
+            reflectionMatrix,
+            {
+                placementObjectId: reconstruction.placementObjectId,
+                sourceObjectId: reconstruction.bodyObjectId,
+                mirrorType: bodySource.mirrorType,
+                sourceNodeUuid: bodySource.object.uuid
+            },
+            true
+        );
+
+        if (mirroredBody) {
+            removeDoorComponentDescendants(mirroredBody);
+            createdMirrors.push(mirroredBody);
+        } else {
+            warning(`Could not mirror HouseMaker door body: ${reconstruction.placementObjectId}/${reconstruction.bodyObjectId}.`);
+        }
+    });
+
+    reconstruction.sideDuplication.mirroredComponentObjectIds.forEach((componentObjectId) => {
+        const componentNodes = findDoorComponentNodes(
+            scene,
+            reconstruction.placementObjectId,
+            componentObjectId
+        );
+
+        if (componentNodes.length === 0) {
+            warning(`HouseMaker door component not found: ${reconstruction.placementObjectId}/${componentObjectId}.`);
+            return;
+        }
+
+        componentNodes.forEach((componentNode) => {
+            const mirroredComponent = createMirroredObject(
+                componentNode,
+                mirrorGroup,
+                reflectionMatrix,
+                {
+                    placementObjectId: reconstruction.placementObjectId,
+                    sourceObjectId: componentObjectId,
+                    mirrorType: "sideDuplication:component",
+                    sourceNodeUuid: componentNode.uuid
+                },
+                true
+            );
+
+            if (mirroredComponent) {
+                createdMirrors.push(mirroredComponent);
+            } else {
+                warning(`Could not mirror HouseMaker door component: ${reconstruction.placementObjectId}/${componentObjectId}.`);
+            }
+        });
+    });
+
+    return createdMirrors;
+}
+
+// Rebuild side mirrors deterministically from validated metadata.
+export function reconstructDoorBodies(
+    scene,
+    mirrorGroup,
+    entries,
+    halfMirrorBySource,
+    warning = console.warn
+) {
+    const oldSideMirrors = [];
+
+    mirrorGroup.traverse((node) => {
+        const mirrorType = node.userData?.housemakerRuntimeDoorMirror?.mirrorType;
+        if (mirrorType?.startsWith("sideDuplication:")) oldSideMirrors.push(node);
+    });
+    oldSideMirrors.forEach((mirror) => mirror.parent?.remove(mirror));
+
+    const validEntries = validateDoorBodyReconstructions(entries, warning);
+    return validEntries.flatMap((entry) => reconstructDoorBody(
+        scene,
+        mirrorGroup,
+        entry,
+        halfMirrorBySource,
+        warning
+    ));
+}
+
+// Clone cached content and prepare all model mirrors.
+export function prepareHouseMakerModelScene(sourceScene, entries, warning = console.warn) {
+    const modelScene = sourceScene.clone(true);
+    const mirroredModels = new THREE.Group();
+    mirroredModels.name = "HouseMaker mirrored models";
+
+    removeHouseMakerRuntimeMirrors(modelScene);
+    const halfMeshResult = reconstructHalfMeshes(modelScene, mirroredModels, warning);
+    const doorMirrors = reconstructDoorBodies(
+        modelScene,
+        mirroredModels,
+        entries,
+        halfMeshResult.mirrorBySource,
+        warning
+    );
+
+    return {
+        modelScene,
+        mirroredModels,
+        runtimeMirrors: [...halfMeshResult.mirrors, ...doorMirrors]
+    };
+}
+
 // ### Component ###
 
 /**
@@ -56,67 +553,13 @@ export function HouseMakerLoader(props) {
 
     // Build mirrored models and reusable instance geometry.
     const renderData = useMemo(() => {
-        const mirroredModels = new THREE.Group();
+        const preparedModel = prepareHouseMakerModelScene(
+            gltf.scene,
+            sceneData.doorBodyReconstructions
+        );
+        const { modelScene, mirroredModels, runtimeMirrors } = preparedModel;
         const instanceParts = [];
         const sourceNodes = {};
-        mirroredModels.name = "HouseMaker mirrored models";
-
-        // Build a reflection from exported mirror metadata.
-        const createReflectionMatrix = (mesh, context) => {
-            const mirrorPlane = mesh.userData?.halfMesh?.mirrorPlane;
-            const planePoint = mirrorPlane?.point;
-            const planeNormal = mirrorPlane?.normal;
-            const hasValidPlane = Array.isArray(planePoint)
-                && planePoint.length === 3
-                && planePoint.every(Number.isFinite)
-                && Array.isArray(planeNormal)
-                && planeNormal.length === 3
-                && planeNormal.every(Number.isFinite);
-
-            if (!hasValidPlane) {
-                console.warn(`[HALF] ${context} "${mesh.name}" is missing mirror plane metadata.`);
-                return undefined;
-            }
-
-            const point = new THREE.Vector3(...planePoint);
-            const normal = new THREE.Vector3(...planeNormal);
-
-            if (normal.lengthSq() === 0) {
-                console.warn(`[HALF] ${context} "${mesh.name}" has an invalid mirror plane normal.`);
-                return undefined;
-            }
-
-            normal.normalize();
-            const planeDistance = normal.dot(point);
-
-            return new THREE.Matrix4().set(
-                1 - 2 * normal.x * normal.x, -2 * normal.x * normal.y, -2 * normal.x * normal.z, 2 * planeDistance * normal.x,
-                -2 * normal.y * normal.x, 1 - 2 * normal.y * normal.y, -2 * normal.y * normal.z, 2 * planeDistance * normal.y,
-                -2 * normal.z * normal.x, -2 * normal.z * normal.y, 1 - 2 * normal.z * normal.z, 2 * planeDistance * normal.z,
-                0, 0, 0, 1
-            );
-        };
-
-        // Mirror regular meshes from the rendered GLTF scene.
-        gltf.scene.updateWorldMatrix(true, true);
-        gltf.scene.traverse((node) => {
-            if (!node.isMesh || !node.userData?.halfMesh) return;
-
-            const reflectionMatrix = createReflectionMatrix(node, "model");
-            if (!reflectionMatrix) return;
-
-            const mirroredMesh = new THREE.Mesh(node.geometry, node.material);
-            mirroredMesh.name = `[MIRRORED] ${node.name}`;
-            mirroredMesh.castShadow = node.castShadow;
-            mirroredMesh.receiveShadow = node.receiveShadow;
-            mirroredMesh.renderOrder = node.renderOrder;
-            mirroredMesh.visible = node.visible;
-            mirroredMesh.frustumCulled = node.frustumCulled;
-            mirroredMesh.matrixAutoUpdate = false;
-            mirroredMesh.matrix.multiplyMatrices(reflectionMatrix, node.matrixWorld);
-            mirroredMesh.matrixWorldNeedsUpdate = true;
-            mirroredModels.add(mirroredMesh);
-        });
 
         // Index instance sources across every exported scene.
         gltf.scenes.forEach((scene) => {
@@ -187,7 +630,10 @@ export function HouseMakerLoader(props) {
                     let ownsGeometry = false;
 
                     if (instanceGroup.halfMesh) {
-                        const reflectionMatrix = createReflectionMatrix(sourceMesh, "instance source");
+                        const reflectionMatrix = getHalfMeshReflectionMatrix(
+                            sourceMesh,
+                            "instance source"
+                        );
 
                         if (reflectionMatrix) {
                             // Convert the source reflection into mesh-local space.
@@ -260,21 +706,30 @@ export function HouseMakerLoader(props) {
             });
         });
 
-        return { mirroredModels, instanceParts };
+        return { modelScene, mirroredModels, runtimeMirrors, instanceParts };
     }, [gltf, sceneData]);
 
-    // Dispose only merged geometry owned by this loader.
-    useEffect(() => () => {
-        renderData.instanceParts.forEach((instancePart) => {
-            if (instancePart.ownsGeometry) instancePart.geometry.dispose();
+    // Restore Strict Mode mirrors and clean owned resources.
+    useEffect(() => {
+        renderData.runtimeMirrors.forEach((runtimeMirror) => {
+            if (!runtimeMirror.parent) renderData.mirroredModels.add(runtimeMirror);
         });
+
+        return () => {
+            renderData.runtimeMirrors.forEach((runtimeMirror) => {
+                runtimeMirror.parent?.remove(runtimeMirror);
+            });
+            renderData.instanceParts.forEach((instancePart) => {
+                if (instancePart.ownsGeometry) instancePart.geometry.dispose();
+            });
+        };
     }, [renderData]);
 
     return (
         <>
             {/* Keep all exported transforms under one parent. */}
             <group ref={rootRef} position={position}>
-                <primitive object={gltf.scene} dispose={null} />
+                <primitive object={renderData.modelScene} dispose={null} />
                 <primitive object={renderData.mirroredModels} dispose={null} />
 
                 {instancesEnabled && renderData.instanceParts.map((instancePart) => (

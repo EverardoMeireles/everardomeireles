@@ -1,13 +1,39 @@
 {
   "format": "housemaker-r3f-scene",
-  "version": 7,
+  "version": 8,
   "coordinateSystem": "gltf-y-up",
   "matrixLayout": "column-major",
   "asset": {
     "glb": "housemaker_export.glb",
-    "sha256": "382c76f9cfb4ba84a886f5a2780e1495c19931f37fc69c11f931927f0d0c6163"
+    "sha256": "b8bdaf4403f594b6154183de16c1555dd6438c121fee6f87452facf24f4ca9bb"
   },
   "instanceGroups": [],
+  "doorBodyReconstructions": [
+    {
+      "placementObjectId": "door-placement:48a1c9f50ff649f19dceb9fb676198e5",
+      "bodyObjectId": "door:117d816f697a42eda36fb5181b59773c:slot:body",
+      "sideDuplication": {
+        "keptSide": "front",
+        "mirrorPlane": {
+          "point": [
+            -8.891120303401603,
+            0.3,
+            3.4699999999999998
+          ],
+          "normal": [
+            1.0,
+            0.0,
+            0.0
+          ]
+        },
+        "uvMode": "reuse",
+        "applyAfter": "halfMesh",
+        "mirroredComponentObjectIds": [
+          "door:117d816f697a42eda36fb5181b59773c:slot:door_knob"
+        ]
+      }
+    }
+  ],
   "tours": [
     {
       "id": "587a25affedc4e8ca58d58dfaf1ffd5d",
@@ -95,13 +121,13 @@
       "triggerPoint": [
         5.794321044429747,
         0.3000000000000007,
-        -2.926118890745684
+        -2.7032518614155485
       ],
       "triggerArea": {
         "center": [
           5.794321044429747,
           0.3000000000000007,
-          -2.926118890745684
+          -2.7032518614155485
         ],
         "sizeMeters": [
           1.5,
@@ -147,55 +173,55 @@
           "id": "0354a994e92a4022b16607b585de1b67",
           "progress": 0.0,
           "cameraTarget": [
-            8.69805807698953,
-            2.096094794023424,
-            -0.602935504132736
+            8.954761102068877,
+            1.8999999999999984,
+            -1.425995406963656
           ],
           "actions": []
         },
         {
-          "id": "0e7b8908dcb14a7f89c302fabdffcfdb",
-          "progress": 0.385309,
+          "id": "0bf6d54e827f4a328314b28b8751be6f",
+          "progress": 0.454897,
           "cameraTarget": [
-            15.007320273423636,
-            1.9328204271188139,
-            -3.7824779518786737
+            10.488072681311538,
+            1.899999999999997,
+            2.4351595896020033
           ],
           "actions": [
             {
-              "id": "4d0b7de6419a4d24a9cb805e08ff56f4",
-              "type": "floatingTooltip",
-              "anchorPoint": [
-                11.027807036611003,
-                1.939861794273569,
-                -0.2766495039852579
-              ],
-              "tooltipPosition": "right",
-              "htmlBody": "<p>Tooltip</p>",
-              "style": ""
-            },
-            {
-              "id": "079e2489b83a47db820e840cee72b72c",
+              "id": "33b76061b80f4be3b4d72e530d1d5ac6",
               "type": "text3d",
               "text": "Lorem ipsum",
               "position": [
-                13.455301065861521,
-                1.939861794273569,
-                -1.154157703060644
+                9.282264187607769,
+                1.900129865725966,
+                4.656642230473687
               ],
               "sizePoints": 12.0,
               "color": "#ffffff",
               "fadeDelayMs": 0.0,
               "fadeDurationMs": 2000.0,
               "rotationDegrees": [
-                -6.449620907793815,
-                -63.97094056658845,
-                37.220011292217464
+                0.0,
+                0.0,
+                0.0
               ],
               "rotationOrder": "XYZ"
             },
             {
-              "id": "ab87071da327452d9971b33025c33193",
+              "id": "e55edbb604694401b348e345fdc839d0",
+              "type": "floatingTooltip",
+              "anchorPoint": [
+                10.886023807739093,
+                1.900129865725966,
+                3.4880791574054926
+              ],
+              "tooltipPosition": "opposite",
+              "htmlBody": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut</p>",
+              "style": "box-sizing: border-box;\nmax-width: 360px;\npadding: 14px 16px;\ncolor: #f5f7fb;\nbackground: rgba(24, 27, 34, 0.94);\nborder: 1px solid rgba(255, 255, 255, 0.24);\nborder-radius: 8px;\nfont-family: sans-serif;\nfont-size: 14px;\nline-height: 1.5;"
+            },
+            {
+              "id": "715421afed11424db04f9caac48a1b4f",
               "type": "waitForKeyPress",
               "input": "any",
               "easing": "smoothstep"
