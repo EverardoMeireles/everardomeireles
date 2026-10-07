@@ -1,18 +1,17 @@
 import { useFrame, useLoader } from '@react-three/fiber'
-import { useEffect, useState, useRef, forwardRef, useMemo } from "react";
+import { useEffect, useState, useRef, forwardRef } from "react";
 import * as THREE from "three";
 import React from "react";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import SystemStore from "../SystemStore";
 import { applyMaterialsToScene } from "../Helper.js";
 import config from "../config.js";
-import { HalfMeshMirroring } from "./HalfMeshMirroring.jsx";
 
 /**
  * Purpose: Loads and renders a GLTF model with animation, material, UV, and visibility behavior.
  * Relationships: Used by SceneContainer, often wrapped by DynamicMaterialLoader, and writes animation triggers through SystemStore.
  * Example:
- * <SimpleLoader modelName="housemaker_export.glb" position={[0, 0, 0]} animationPlayTrigger={[{animation_name: "idleAnimation", loop_mode: "noLoop", play_direction: 1, autoplay: true, play_trigger: "trigger5"}]} objectScaleUpTriggers={[]} scaleAmount={1.3} animationTriggerTimes={{idleAnimation: {time: 0.5, trigger: "trigger2"}}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
+ * <SimpleLoader modelName="ScrollTest.glb" position={[0, 0, 0]} animationPlayTrigger={[{animation_name: "idleAnimation", loop_mode: "noLoop", play_direction: 1, autoplay: true, play_trigger: "trigger5"}]} objectScaleUpTriggers={[]} scaleAmount={1.3} animationTriggerTimes={{idleAnimation: {time: 0.5, trigger: "trigger2"}}} objectsHideRevealTriggers={{Cube0001: "trigger1"}} objectHideRevealScaleUpSpeed={0.05} useAo={true} ambientOcclusionIntensity={1} materialNames={{}} uvOffSet={[0, 0]} uvOffsetAmount={0.05} customObjectsUvs={{}} />
  * @param {string} [modelName] - Model filename inside the models directory.
  * @param {Array<any>} [position] - Position of the model in the scene.
  * @param {Array<any>} [animationPlayTrigger] - Animation play records.
@@ -72,26 +71,6 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     const triggers = SystemStore((state) => state.triggers);
 
     const mixer = useRef();
-
-    // Collect metadata used by half-mesh mirroring.
-    const halfMeshData = useMemo(() => {
-        const nodes = {};
-        let material;
-
-        gltf.scene.traverse((node) => {
-            if (!node.isMesh) return;
-
-            if (node.userData?.halfMesh) {
-                nodes[node.name] = node;
-            }
-
-            if (!material && node.material?.name?.startsWith("[HALF]")) {
-                material = node.material;
-            }
-        });
-
-        return { nodes, material };
-    }, [gltf]);
 
     // Bind animation playback to the loaded model.
     useEffect(() => {
@@ -490,10 +469,7 @@ export const SimpleLoader = React.memo(forwardRef((props, ref) => {
     }
 
     return (
-        <>
-            <primitive ref={ref} position={position} object={gltf.scene} />
-            <HalfMeshMirroring nodes={halfMeshData.nodes} material={halfMeshData.material} />
-        </>
+        <primitive ref={ref} position={position} object={gltf.scene} />
     )
 }));
 

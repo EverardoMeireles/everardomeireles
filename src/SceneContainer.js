@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo  } from "react";
-import { SimpleLoader } from "./system_components/SimpleLoader.jsx";
 import { OrbitingPointLight } from './system_components/OrbitingPointLights.jsx';
 import { OrbitingMenu } from "./system_components/OrbitingMenu.jsx";
 import { FadingText } from "./system_components/FadingText.jsx";
@@ -21,9 +20,8 @@ import { Camera } from "./system_components/Camera.jsx";
 import { Raycaster } from "./system_components/Raycaster.jsx";
 import { FirstPersonController } from "./system_components/FirstPersonController.jsx";
 import { Environment } from "@react-three/drei";
-import { EffectComposer, SSAO } from "@react-three/postprocessing";
 import { ThreeDom } from "@react-three-dom/core";
-import { JsonInstancing } from "./user_components/JsonInstancing.jsx";
+import { HouseMakerLoader } from "./user_components/HouseMakerLoader.jsx";
 
 import * as THREE from 'three';
 
@@ -38,6 +36,8 @@ import UserStore from "./UserStore.js";
  * <SceneContainer />
  */
 export const SceneContainer = React.memo((props) => {
+    // ### Store state ###
+
     const transitionDestination = SystemStore((state) => state.transitionDestination);
     const isCameraMoving = SystemStore((state) => state.isCameraMoving);
     const currentLanguage = SystemStore((state) => state.currentLanguage);
@@ -46,7 +46,6 @@ export const SceneContainer = React.memo((props) => {
     const mouseClicked = SystemStore((state) => state.mouseClicked);
     const setForcedCameraTarget = SystemStore((state) => state.setForcedCameraTarget);
     const setForcedCameraMovePathCurve = SystemStore((state) => state.setForcedCameraMovePathCurve);
-    const currentObjectHovered = SystemStore((state) => state.currentObjectHovered);
     const viewerModelName = SystemStore((state) => state.viewerModelName);
     const viewerConfigFile = SystemStore((state) => state.viewerConfigFile);
     const viewerMaterialName = SystemStore((state) => state.viewerMaterialName);
@@ -54,13 +53,17 @@ export const SceneContainer = React.memo((props) => {
     const animationTriggerState = UserStore((state) => state.animationTriggerState);
     const siteMode = UserStore((state) => state.siteMode);
 
-    const [ssaoEnabled, setSsaoEnabled] = useState(true);
+    // ### Local state ###
 
     const [forceLowresMaterial, setForceLowresMaterial] = useState(false);
     const [forceMidresMaterial, setForceMidresMaterial] = useState(false);
     const [forceHighResMaterial, setForceHighResMaterial] = useState(false);
 
     const [enableMaterialSwap, setEnableMaterialSwap] = useState(false);
+
+    // ### Tour navigation ###
+
+    const houseMakerNavigationRef = useRef(null);
 
     const filesToLoadBeforeEnablingMaterialSwap = ["/materials/low_512.glb", "/materials/high_4096_NOPBR.glb", "/materials/high_4096_PBR.glb"]; 
 
@@ -71,21 +74,7 @@ export const SceneContainer = React.memo((props) => {
         Widescreen: [0, 500, 0],
     }[sceneLayoutKey] ?? [0, 0, 0];
 
-    ////////////////////////////////////////////////////
-    ///////////////// One-time effects /////////////////
-    ////////////////////////////////////////////////////
-
-    // Toggle SSAO with the A key.
-    useEffect(() => {
-        const handleSsaoToggle = (event) => {
-            if (event.repeat || event.key.toLowerCase() !== "a") return;
-            setSsaoEnabled((enabled) => !enabled);
-        };
-
-        window.addEventListener("keydown", handleSsaoToggle);
-
-        return () => window.removeEventListener("keydown", handleSsaoToggle);
-    }, []);
+    // ### Asset effects ###
 
     // Block forcing the scene's materials to change until the materials are properly loaded
     useEffect(() => {
@@ -127,9 +116,7 @@ export const SceneContainer = React.memo((props) => {
         
     },[currentGraphicalMode])
 
-    ////////////////////////////////////////////////////
-    //////////////// Functional effects ////////////////
-    ////////////////////////////////////////////////////
+    // ### Interaction effects ###
 
     // Place transition code
     useEffect(() => {
@@ -153,9 +140,7 @@ export const SceneContainer = React.memo((props) => {
         // Clicked 3D objects END
     }, [mouseClicked]);
     
-    ////////////////////////////////////////////////////
-    /////////////////////// Debug //////////////////////
-    ////////////////////////////////////////////////////
+    // ### Debug helpers ###
 
     //3D info
     // useEffect(() => {
@@ -173,17 +158,13 @@ export const SceneContainer = React.memo((props) => {
     //         };
     // },[])
 
-    ///////////////////////////
-    // E-comerce integration //
-    ///////////////////////////
+    // ### E-commerce integration ###
 
     const explodingModelPath = viewerModelName || "base_cube_DO_NOT_REMOVE.glb";
     const explodingConfigFile = viewerConfigFile || "base_cube_DO_NOT_REMOVE.json";
     const explodingMaterialPath = viewerMaterialName || "";
 
-    //////////////////////////////////
-    // Temporary initial transition //
-    //////////////////////////////////
+    // ### Initial camera transition ###
     
     // Temporary useEffect to initialize the position and camera target of both scenes
     useEffect(() => {
@@ -202,9 +183,7 @@ export const SceneContainer = React.memo((props) => {
         }
     }, []);
 
-    //////////////////////////
-    // Memoization of props //
-    //////////////////////////
+    // ### Stable scene values ###
 
     const texturesToLoad = useMemo(() => [
         "AfficheDUT-French.jpg",
@@ -235,52 +214,6 @@ export const SceneContainer = React.memo((props) => {
     const TranslationTable5 = useMemo(() => TranslationTable[currentLanguage]["efn2_presentation"], []);
 
     const initialPosition = useMemo(() => [-2, 75, 32], []);
-
-    const objectsHideRevealTriggers = useMemo(() => ({"Wardrobe001":"trigger3"}), []);
-
-    // Configure trigger ranges within animation playback.
-    const animationTriggerTimes = useMemo(() => ({
-        "CharacterAction": {
-            time: 0.50,
-            trigger: "trigger2"
-        }
-    }), []);
-
-    // Configure model animations and their play triggers.
-    const animationPlayTrigger = useMemo(() => [
-        {
-            animation_name: "LampAction.001",
-            loop_mode: "Loop",
-            play_direction: 1,
-            autoplay: true,
-            play_trigger: "trigger1"
-        },
-        {
-            animation_name: "RopeAction",
-            loop_mode: "Loop",
-            play_direction: 1,
-            autoplay: true,
-            play_trigger: "trigger1"
-        },
-        {
-            animation_name: "CharacterAction",
-            loop_mode: "noLoop",
-            play_direction: 1,
-            autoplay: true
-        }
-    ], []);
-
-    // Objects that scale as one group.
-    const objectScaleUpGroup = useMemo(() => ["LeftDoor","RightDoor", "MainBody"], []);
-
-    // Trigger scaling for the selected group.
-    const objectScaleUpTriggers = useMemo(() => {
-        if (objectScaleUpGroup.includes(currentObjectHovered)) {
-            return objectScaleUpGroup;
-        }
-
-        return [];
-    }, [currentObjectHovered, objectScaleUpGroup]);
 
     const objectLinkPosition1 = useMemo(() => [48, 89, -49], []);
     const objectLinkScale = useMemo(() => [1, 1, 1], []);
@@ -330,6 +263,8 @@ export const SceneContainer = React.memo((props) => {
         }
     }, [transitionDestination, isCameraMoving]);
 
+    // ### Render ###
+
     return(
     <>
         {/* Mirror the scene for React Three DOM DevTools. */}
@@ -340,14 +275,8 @@ export const SceneContainer = React.memo((props) => {
             {/* <Raycaster frameInterval={1} /> */}
             {/* <PreloadAssets delay={4000} texturesToLoad={texturesToLoad} scenesToLoad={scenesToLoad}></PreloadAssets> */}
             <FpsBenchmarkProbe benchmarkScene={"benchmark_scene.glb"}></FpsBenchmarkProbe>
-            {/* Render instances exported by Housemaker. */}
-            <JsonInstancing />
         </>
         }
-            {/* <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb"
-            forceLowResTrigger={forceLowresMaterial} forceMidResTrigger={forceMidresMaterial} forceHighResTrigger={forceHighResMaterial}>
-                <SimpleLoader modelName="housemaker_export.glb" />
-            </DynamicMaterialLoader> */}
 
             <ObjectLink position={objectLinkPosition1} scale={objectLinkScale} linkedObjectName = {"Lamp"} >
                 {stableOrbitingPointLightParticleEmitterAndPointLightAnimation}
@@ -357,33 +286,21 @@ export const SceneContainer = React.memo((props) => {
                 directionZ = {-1} customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} 
                 distanceBetweenInstances={3} />
 
-            <FirstPersonController position={[2.83, 0.1, 3]} eyeHeight = {1.5}/>
+            <FirstPersonController
+                position={[2.83, 0.1, 3]}
+                eyeHeight={1.5}
+                navigationRef={houseMakerNavigationRef}
+            />
             {/* <ambientLight intensity = {1.0}></ambientLight> */}
             <Environment files={`${config.resource_path}/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr`} background={false} />
             
-            <SimpleLoader
-                modelName="housemaker_export.glb"
+            <HouseMakerLoader
+                jsonFile="housemaker_export.json"
                 position={[0, 0, 0]}
-                objectsHideRevealTriggers={objectsHideRevealTriggers}
-                animationPlayTrigger={animationPlayTrigger}
-                animationTriggerTimes={animationTriggerTimes}
-                objectScaleUpTriggers={objectScaleUpTriggers}
-                scaleAmount={1.3}
+                instancesEnabled={siteMode === "resume"}
+                navigationRef={houseMakerNavigationRef}
+                toursEnabled={siteMode === "resume"}
             />
-
-            {/* Add screen-space ambient contact shadows. */}
-            {ssaoEnabled &&
-                <EffectComposer multisampling={0} resolutionScale={0.5}>
-                    <SSAO
-                        samples={17}
-                        rings={7}
-                        radius={0.15}
-                        intensity={1.25}
-                        luminanceInfluence={0.7}
-                        bias={0.025}
-                    />
-                </EffectComposer>
-            }
 
 
 

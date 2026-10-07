@@ -11,7 +11,7 @@ const materialCache = new Map();
  * Purpose: Progressively swaps low, mid, and high quality materials onto child scene meshes.
  * Relationships: Wraps loaded scene content such as SimpleLoader and reads named triggers from SystemStore.
  * Example:
- * <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb" forceLowResTrigger={false} forceMidResTrigger={false} forceHighResTrigger={false}><SimpleLoader modelName="housemaker_export.glb" /></DynamicMaterialLoader>
+ * <DynamicMaterialLoader lowResFile="low_512.glb" midResFile="high_4096_NOPBR.glb" highResFile="high_4096_PBR.glb" forceLowResTrigger={false} forceMidResTrigger={false} forceHighResTrigger={false}><SimpleLoader modelName="ScrollTest.glb" /></DynamicMaterialLoader>
  * @param {boolean} [lowResFile] - Low res file.
  * @param {boolean} [midResFile] - Mid res file.
  * @param {boolean} [highResFile] - High res file.

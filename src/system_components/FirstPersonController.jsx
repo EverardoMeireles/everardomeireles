@@ -23,8 +23,12 @@ import SystemStore from "../SystemStore.js";
  * @param {number} [climbHeightOffset] - Extra height added to the final climb target.
  * @param {boolean} [slowDownWhileFalling] - Enables slower horizontal movement while descending.
  * @param {number} [slowDownWhileFallingSpeedMultiplier] - Horizontal speed multiplier while descending.
+ * @param {React.MutableRefObject} [navigationRef] - HouseMaker tour navigation API ref.
+ * @param {boolean} [enabled] - Whether first-person input and movement are enabled.
  */
 export const FirstPersonController = React.memo((props) => {
+    // ### Props ###
+
     const { position = [0, 0, 0] } = props;
 
     const { rotation = [0, 0, 0] } = props;
@@ -38,15 +42,24 @@ export const FirstPersonController = React.memo((props) => {
     const { climbHeightOffset = 0 } = props;
     const { slowDownWhileFalling = true } = props;
     const { slowDownWhileFallingSpeedMultiplier = 0.5 } = props;
+    const { navigationRef = undefined } = props;
+    const { enabled = true } = props;
+
+    // Track pose values instead of unstable array identities.
+    const initialPositionX = position[0] ?? 0;
+    const initialPositionY = position[1] ?? 0;
+    const initialPositionZ = position[2] ?? 0;
+    const initialPitch = rotation[0] ?? 0;
+    const initialYaw = rotation[1] ?? 0;
+
+    // ### Store and scene access ###
 
     const setCameraState = SystemStore((state) => state.setCameraState);
     const cameraStateTracking = SystemStore((state) => state.cameraStateTracking);
 
     const { scene, gl } = useThree();
 
-    //////////////////////////////////////////////////////////
-    ///////////// Variables, states and refs /////////////////
-    //////////////////////////////////////////////////////////
+    // ### State and reusable objects ###
 
     const controllerRef = useRef();
     const yawGroupRef = useRef();
@@ -65,6 +78,7 @@ export const FirstPersonController = React.memo((props) => {
     const previousCameraPositionRef = useRef(new THREE.Vector3());
     const previousCameraRotationRef = useRef(new THREE.Euler());
     const cameraStateInitializedRef = useRef(false);
+    const suspendedRef = useRef(false);
 
     const capsuleRadius = 0.35;
     const capsuleHeight = Math.max(eyeHeight + 0.35, (capsuleRadius * 2) + 0.4);
@@ -86,9 +100,7 @@ export const FirstPersonController = React.memo((props) => {
     const forwardRaycaster = new THREE.Raycaster();
     const downwardRaycaster = new THREE.Raycaster();
 
-    //////////////////////////////////////////////////////////
-    ///////////////// Local helper functions /////////////////
-    //////////////////////////////////////////////////////////
+    // ### Controller helpers ###
 
     // Track controller capsule around the player body.
     function syncCapsuleToController() {
@@ -242,9 +254,188 @@ export const FirstPersonController = React.memo((props) => {
         }
     }
 
-    //////////////////////////////////////////////////////////
-    ////////////// Controller initialization /////////////////
-    //////////////////////////////////////////////////////////
+    // ### Tour navigation API ###
+
+    // Convert supported tour positions to vectors.
+    function readTourVector(value) {
+        if (value?.isVector3 && value.toArray().every(Number.isFinite)) {
+            return value.clone();
+        }
+
+        if (
+            Array.isArray(value) &&
+            value.length >= 3 &&
+            value.slice(0, 3).every(Number.isFinite)
+        ) {
+            return new THREE.Vector3(value[0], value[1], value[2]);
+        }
+
+        return undefined;
+    }
+
+    // Clear movement that could leak into tour playback.
+    function clearNavigationMotion() {
+        keysRef.current = { forward: false, backward: false, left: false, right: false };
+        velocityRef.current.set(0, 0, 0);
+        climbTargetRef.current = null;
+        stepProbeHeightRef.current = maxStepHeight;
+    }
+
+    // Read the exact player body position.
+    function getPlayerPosition(output = new THREE.Vector3()) {
+        if (!controllerRef.current || !output?.isVector3) {
+            return undefined;
+        }
+
+        controllerRef.current.updateWorldMatrix(true, false);
+        return controllerRef.current.getWorldPosition(output);
+    }
+
+    // Save the rig and pause first-person control.
+    function suspendNavigation() {
+        const controller = controllerRef.current;
+        const camera = cameraRef.current;
+        const pointerWasLocked = (
+            typeof document !== "undefined" &&
+            document.pointerLockElement === gl.domElement
+        );
+        const snapshot = {
+            wasSuspended: suspendedRef.current,
+            controllerPosition: controller?.position.clone(),
+            controllerQuaternion: controller?.quaternion.clone(),
+            controllerScale: controller?.scale.clone(),
+            cameraPosition: camera?.position.clone(),
+            cameraQuaternion: camera?.quaternion.clone(),
+            cameraUp: camera?.up.clone(),
+            yaw: yawRef.current,
+            pitch: pitchRef.current,
+            velocity: velocityRef.current.clone(),
+            climbTarget: climbTargetRef.current,
+            stepProbeHeight: stepProbeHeightRef.current,
+            onFloor: onFloorRef.current,
+        };
+
+        suspendedRef.current = true;
+        clearNavigationMotion();
+
+        if (pointerWasLocked) {
+            // A later click is required before browsers allow re-locking.
+            document.exitPointerLock?.();
+        }
+
+        return snapshot;
+    }
+
+    // Restore the exact pre-tour first-person rig.
+    function restoreNavigation(snapshot) {
+        const controller = controllerRef.current;
+        const camera = cameraRef.current;
+
+        if (!snapshot || !controller || !camera || !yawGroupRef.current || !pitchGroupRef.current) {
+            suspendedRef.current = snapshot?.wasSuspended ?? false;
+            return false;
+        }
+
+        if (snapshot.controllerPosition) controller.position.copy(snapshot.controllerPosition);
+        if (snapshot.controllerQuaternion) controller.quaternion.copy(snapshot.controllerQuaternion);
+        if (snapshot.controllerScale) controller.scale.copy(snapshot.controllerScale);
+        if (snapshot.cameraPosition) camera.position.copy(snapshot.cameraPosition);
+        if (snapshot.cameraQuaternion) camera.quaternion.copy(snapshot.cameraQuaternion);
+        if (snapshot.cameraUp) camera.up.copy(snapshot.cameraUp);
+
+        yawRef.current = Number.isFinite(snapshot.yaw) ? snapshot.yaw : yawRef.current;
+        pitchRef.current = Number.isFinite(snapshot.pitch) ? snapshot.pitch : pitchRef.current;
+        yawGroupRef.current.rotation.set(0, yawRef.current, 0);
+        pitchGroupRef.current.position.set(0, eyeHeight, 0);
+        pitchGroupRef.current.rotation.set(pitchRef.current, 0, 0);
+
+        velocityRef.current.copy(snapshot.velocity ?? new THREE.Vector3());
+        climbTargetRef.current = Number.isFinite(snapshot.climbTarget)
+            ? snapshot.climbTarget
+            : null;
+        stepProbeHeightRef.current = Number.isFinite(snapshot.stepProbeHeight)
+            ? snapshot.stepProbeHeight
+            : maxStepHeight;
+        onFloorRef.current = Boolean(snapshot.onFloor);
+        keysRef.current = { forward: false, backward: false, left: false, right: false };
+
+        syncCapsuleToController();
+        controller.updateWorldMatrix(true, true);
+        suspendedRef.current = snapshot.wasSuspended ?? false;
+        return true;
+    }
+
+    // Adopt the completed tour pose without a camera jump.
+    function completeNavigation(worldPosition, worldTarget, snapshot) {
+        const finalPosition = readTourVector(worldPosition);
+        const finalTarget = readTourVector(worldTarget);
+        const controller = controllerRef.current;
+        const camera = cameraRef.current;
+
+        if (
+            !finalPosition ||
+            !finalTarget ||
+            !controller ||
+            !camera ||
+            !yawGroupRef.current ||
+            !pitchGroupRef.current
+        ) {
+            restoreNavigation(snapshot);
+            return false;
+        }
+
+        // Place the controller below the final eye position.
+        const controllerWorldPosition = finalPosition.clone().addScaledVector(upAxis, -eyeHeight);
+        if (controller.parent) {
+            controller.parent.updateWorldMatrix(true, false);
+            controller.position.copy(controller.parent.worldToLocal(controllerWorldPosition));
+        } else {
+            controller.position.copy(controllerWorldPosition);
+        }
+        controller.quaternion.identity();
+
+        // Convert the final look direction into rig angles.
+        const lookDirection = finalTarget.clone().sub(finalPosition);
+        if (lookDirection.lengthSq() > 0) {
+            lookDirection.normalize();
+
+            if (controller.parent) {
+                const parentQuaternion = controller.parent.getWorldQuaternion(new THREE.Quaternion());
+                lookDirection.applyQuaternion(parentQuaternion.invert()).normalize();
+            }
+
+            yawRef.current = Math.atan2(-lookDirection.x, -lookDirection.z);
+            pitchRef.current = Math.asin(THREE.MathUtils.clamp(lookDirection.y, -1, 1));
+            pitchRef.current = THREE.MathUtils.clamp(pitchRef.current, -maxPitch, maxPitch);
+        }
+
+        yawGroupRef.current.position.set(0, 0, 0);
+        yawGroupRef.current.rotation.set(0, yawRef.current, 0);
+        pitchGroupRef.current.position.set(0, eyeHeight, 0);
+        pitchGroupRef.current.rotation.set(pitchRef.current, 0, 0);
+        camera.position.set(0, 0, 0);
+        camera.quaternion.identity();
+        camera.up.copy(upAxis);
+
+        clearNavigationMotion();
+        onFloorRef.current = false;
+        syncCapsuleToController();
+        controller.updateWorldMatrix(true, true);
+        cameraStateInitializedRef.current = false;
+        suspendedRef.current = snapshot?.wasSuspended ?? false;
+        return true;
+    }
+
+    // Expose tour control without per-frame React state.
+    React.useImperativeHandle(navigationRef, () => ({
+        getPlayerPosition,
+        suspend: suspendNavigation,
+        restore: restoreNavigation,
+        complete: completeNavigation,
+        isSuspended: () => suspendedRef.current,
+    }));
+
+    // ### Controller initialization ###
 
     useEffect(() => {
         if (!controllerRef.current || !cameraRef.current || !yawGroupRef.current || !pitchGroupRef.current) {
@@ -252,17 +443,17 @@ export const FirstPersonController = React.memo((props) => {
         }
 
         // Reset controller pose and movement state.
-        yawRef.current = rotation[1] ?? 0;
-        pitchRef.current = THREE.MathUtils.clamp(rotation[0] ?? 0, -maxPitch, maxPitch);
+        yawRef.current = initialYaw;
+        pitchRef.current = THREE.MathUtils.clamp(initialPitch, -maxPitch, maxPitch);
         climbTargetRef.current = null;
         stepProbeHeightRef.current = maxStepHeight;
         velocityRef.current.set(0, 0, 0);
         onFloorRef.current = false;
 
         controllerRef.current.position.set(
-            position[0] ?? 0,
-            position[1] ?? 0,
-            position[2] ?? 0
+            initialPositionX,
+            initialPositionY,
+            initialPositionZ
         );
         controllerRef.current.rotation.set(0, 0, 0);
         cameraRef.current.up.set(0, 1, 0);
@@ -283,11 +474,19 @@ export const FirstPersonController = React.memo((props) => {
             controllerRef.current.position.z
         );
         capsuleRef.current.radius = capsuleRadius;
-    }, [position, rotation, eyeHeight, maxPitch, maxStepHeight, capsuleHeight]);
+    }, [
+        initialPositionX,
+        initialPositionY,
+        initialPositionZ,
+        initialPitch,
+        initialYaw,
+        eyeHeight,
+        maxPitch,
+        maxStepHeight,
+        capsuleHeight
+    ]);
 
-    //////////////////////////////////////////////
-    ////////////////// Collision /////////////////
-    //////////////////////////////////////////////
+    // ### Collision world ###
 
     useEffect(() => {
         if (!collisionsEnabled) {
@@ -398,9 +597,7 @@ export const FirstPersonController = React.memo((props) => {
         };
     }, [scene, collisionsEnabled]);
 
-    //////////////////////////////////////////////////////////
-    ///////////////////// Pointer lock ///////////////////////
-    //////////////////////////////////////////////////////////
+    // ### Pointer lock ###
 
     useEffect(() => {
         const domElement = gl.domElement;
@@ -409,6 +606,10 @@ export const FirstPersonController = React.memo((props) => {
         }
 
         const handlePointerDown = () => {
+            if (!enabled || suspendedRef.current) {
+                return;
+            }
+
             if (document.pointerLockElement !== domElement) {
                 domElement.requestPointerLock?.();
             }
@@ -417,6 +618,8 @@ export const FirstPersonController = React.memo((props) => {
         // Lock pointer on click and update view angles.
         const handleMouseMove = (event) => {
             if (
+                !enabled ||
+                suspendedRef.current ||
                 document.pointerLockElement !== domElement ||
                 !controllerRef.current ||
                 !cameraRef.current
@@ -443,11 +646,9 @@ export const FirstPersonController = React.memo((props) => {
                 document.exitPointerLock?.();
             }
         };
-    }, [gl, maxPitch]);
+    }, [enabled, gl, maxPitch]);
 
-    //////////////////////////////////////////////////////////
-    ////////////////// Keyboard input ////////////////////////
-    //////////////////////////////////////////////////////////
+    // ### Keyboard input ###
 
     useEffect(() => {
         let resolvedAzertyMode = azertyMode === "auto" ? true : azertyMode === true;
@@ -537,6 +738,10 @@ export const FirstPersonController = React.memo((props) => {
 
         // Map keyboard events to movement flags.
         const handleKeyDown = (event) => {
+            if (!enabled || suspendedRef.current) {
+                return;
+            }
+
             if (isEditableTarget()) {
                 return;
             }
@@ -561,6 +766,11 @@ export const FirstPersonController = React.memo((props) => {
         };
 
         const handleKeyUp = (event) => {
+            if (!enabled || suspendedRef.current) {
+                updateKeyState(event.key, false);
+                return;
+            }
+
             if (updateKeyState(event.key, false)) {
                 event.preventDefault();
             }
@@ -583,14 +793,17 @@ export const FirstPersonController = React.memo((props) => {
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
         };
-    }, [azertyMode]);
+    }, [azertyMode, enabled]);
 
-    //////////////////////////////////////////////////////////
-    ////////////////////// Main update ///////////////////////
-    //////////////////////////////////////////////////////////
+    // ### Frame update ###
 
     useFrame((_, delta) => {
-        if (!controllerRef.current || !cameraRef.current) {
+        if (
+            !enabled ||
+            suspendedRef.current ||
+            !controllerRef.current ||
+            !cameraRef.current
+        ) {
             return;
         }
 
@@ -753,9 +966,7 @@ export const FirstPersonController = React.memo((props) => {
         }
     });
 
-    //////////////////////////////////////////////////////////
-    ///////////////////////// Render /////////////////////////
-    //////////////////////////////////////////////////////////
+    // ### Render ###
 
     return (
         <group ref={controllerRef}>
