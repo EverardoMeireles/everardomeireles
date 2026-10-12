@@ -35,10 +35,23 @@ jest.mock("@react-three/drei", () => {
 let frameCallbacks;
 let r3fState;
 
+// Register frame callbacks with React lifecycle cleanup.
+function useFrameMock(callback) {
+    const callbackRef = React.useRef(callback);
+    callbackRef.current = callback;
+
+    React.useEffect(() => {
+        frameCallbacks.add(callbackRef);
+        return () => frameCallbacks.delete(callbackRef);
+    }, [callbackRef]);
+}
+
 beforeEach(() => {
-    frameCallbacks = [];
+    frameCallbacks = new Set();
     r3fState = undefined;
-    useFrame.mockImplementation((callback) => frameCallbacks.push(callback));
+    useFrame.mockReset();
+    useThree.mockReset();
+    useFrame.mockImplementation(useFrameMock);
     useThree.mockImplementation((selector) => selector(r3fState));
 });
 
@@ -141,7 +154,10 @@ function renderTourPlayer(options = {}) {
         controls,
         navigation,
         runFrame(delta) {
-            act(() => frameCallbacks.at(-1)({}, delta));
+            const activeCallbacks = Array.from(frameCallbacks);
+            act(() => activeCallbacks.forEach((callbackRef) => {
+                callbackRef.current(r3fState, delta);
+            }));
         }
     };
 }
@@ -442,14 +458,16 @@ test("idle wait motion returns immediately to the authored pose", () => {
     );
 });
 
-test("tooltip interaction does not satisfy any, but explicit mouse waits can", () => {
-    const marker = document.createElement("button");
-    marker.dataset.housemakerTooltipInteraction = "true";
+test("tour-circle input blocks any but permits matching mouse waits", () => {
+    const marker = document.createElement("div");
+    const circle = document.createElement("button");
+    marker.dataset.housemakerTourInteraction = "true";
+    marker.appendChild(circle);
     document.body.appendChild(marker);
 
     let view = renderTourPlayer({ manifest: createManifest("any") });
     view.runFrame(0.016);
-    fireEvent(marker, new MouseEvent("pointerdown", { bubbles: true, button: 0 }));
+    fireEvent(circle, new MouseEvent("pointerdown", { bubbles: true, button: 0 }));
     view.runFrame(2);
     expect(view.navigation.complete).not.toHaveBeenCalled();
 
@@ -465,7 +483,7 @@ test("tooltip interaction does not satisfy any, but explicit mouse waits can", (
         manifest: createManifest("mouse:left")
     });
     view.runFrame(0.016);
-    fireEvent(marker, new MouseEvent("pointerdown", { bubbles: true, button: 0 }));
+    fireEvent(circle, new MouseEvent("pointerdown", { bubbles: true, button: 0 }));
     view.runFrame(2);
     expect(view.navigation.complete).toHaveBeenCalledTimes(1);
 

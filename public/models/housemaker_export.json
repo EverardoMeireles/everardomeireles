@@ -1,11 +1,11 @@
 {
   "format": "housemaker-r3f-scene",
-  "version": 8,
+  "version": 9,
   "coordinateSystem": "gltf-y-up",
   "matrixLayout": "column-major",
   "asset": {
     "glb": "housemaker_export.glb",
-    "sha256": "b8bdaf4403f594b6154183de16c1555dd6438c121fee6f87452facf24f4ca9bb"
+    "sha256": "ef1254c8e04756670c725fcc291aeda27253fbf2f495eec7b06d1ed9cd74d820"
   },
   "instanceGroups": [],
   "doorBodyReconstructions": [
@@ -36,98 +36,20 @@
   ],
   "tours": [
     {
-      "id": "587a25affedc4e8ca58d58dfaf1ffd5d",
+      "id": "7a0514e17b154056b14a8e88c6681061",
       "name": "Tour 1",
       "durationSeconds": 10.0,
       "progressSpeed": 1.0,
       "triggerPoint": [
-        1.846292734297272,
-        0.29999999999999716,
-        -6.423393170656745
-      ],
-      "triggerArea": {
-        "center": [
-          1.846292734297272,
-          0.29999999999999716,
-          -6.423393170656745
-        ],
-        "sizeMeters": [
-          1.5,
-          1.5
-        ],
-        "horizontalAxes": "xz"
-      },
-      "curve": {
-        "type": "catmullRom",
-        "curveType": "catmullrom",
-        "closed": false,
-        "tension": 0.5,
-        "points": [
-          [
-            1.212166670351266,
-            1.9000000000000008,
-            -6.948561195594181
-          ],
-          [
-            4.147932773530961,
-            4.840606380211172,
-            -6.940000000000005
-          ],
-          [
-            3.005494168965946,
-            1.9000000000000008,
-            -12.075377606550731
-          ],
-          [
-            6.2666368850567125,
-            1.9000000000000044,
-            -8.487744219568754
-          ],
-          [
-            8.770436349177185,
-            1.9000000000000044,
-            -4.297871135191869
-          ]
-        ]
-      },
-      "steps": [
-        {
-          "id": "f4ea4168b2064234892941fecfda235b",
-          "progress": 0.0,
-          "cameraTarget": [
-            1.91444054846232,
-            2.6114675486829615,
-            -6.923554650572545
-          ],
-          "actions": []
-        },
-        {
-          "id": "1d56c67e634e4e0aa1be9e4b090b5712",
-          "progress": 1.0,
-          "cameraTarget": [
-            9.280165776157942,
-            1.9000000000000044,
-            -3.4375363682145785
-          ],
-          "actions": []
-        }
-      ]
-    },
-    {
-      "id": "20bb7c541eaa49b193af34c6d2edb6d8",
-      "name": "Tour 2",
-      "durationSeconds": 10.0,
-      "progressSpeed": 1.0,
-      "triggerPoint": [
-        5.794321044429747,
+        1.8257231136923622,
         0.3000000000000007,
-        -2.7032518614155485
+        -6.527958553833059
       ],
       "triggerArea": {
         "center": [
-          5.794321044429747,
+          1.8257231136923622,
           0.3000000000000007,
-          -2.7032518614155485
+          -6.527958553833059
         ],
         "sizeMeters": [
           1.5,
@@ -142,103 +64,176 @@
         "tension": 0.5,
         "points": [
           [
-            7.968878118636798,
+            1.67600167666901,
+            1.9000000000000044,
+            -7.457450632934847
+          ],
+          [
+            -2.6409845513946677,
+            2.6971300957111244,
+            -16.110456770102097
+          ],
+          [
+            2.198476010094142,
             1.9000000000000008,
-            -1.258559619334303
+            -13.966035216882222
           ],
           [
-            10.103888677580825,
-            1.8999999999999972,
-            -1.5548795779621187
+            8.772604169033178,
+            2.7411421911853746,
+            -14.583801142345907
           ],
           [
-            10.500624802053544,
-            1.8999999999999972,
-            1.895891816894757
-          ],
-          [
-            8.265388931141697,
+            10.558793643821259,
             1.9000000000000008,
-            1.7244834407858107
+            -7.324704351801405
           ],
           [
-            10.807168054763714,
-            4.743882372376165,
-            5.800000000000001
+            7.71965515684569,
+            1.9000000000000044,
+            -2.379138694476321
+          ],
+          [
+            2.045922149555519,
+            1.9000000000000008,
+            -3.6412838005148487
+          ],
+          [
+            0.48771140969123117,
+            1.9000000000000008,
+            -4.476095606092128
           ]
         ]
       },
       "steps": [
         {
-          "id": "0354a994e92a4022b16607b585de1b67",
+          "id": "2692eb6192e940b882c65a2c40a1a8a4",
           "progress": 0.0,
           "cameraTarget": [
-            8.954761102068877,
-            1.8999999999999984,
-            -1.425995406963656
+            -0.09248434549170392,
+            2.4669713751268563,
+            -10.85281713618203
           ],
           "actions": []
         },
         {
-          "id": "0bf6d54e827f4a328314b28b8751be6f",
-          "progress": 0.454897,
+          "id": "52e433e56c55417ba073348331436142",
+          "progress": 0.153351,
           "cameraTarget": [
-            10.488072681311538,
-            1.899999999999997,
-            2.4351595896020033
+            -1.1110114095570802,
+            1.809006202725806,
+            -13.278650777287782
           ],
           "actions": [
             {
-              "id": "33b76061b80f4be3b4d72e530d1d5ac6",
+              "id": "946b4b0d41464a86af44406628cc5cfb",
               "type": "text3d",
-              "text": "Lorem ipsum",
+              "text": "Aperte qualquer tecla para continuar",
               "position": [
-                9.282264187607769,
-                1.900129865725966,
-                4.656642230473687
+                -0.020558515993333693,
+                2.2386929215032896,
+                -12.803
               ],
               "sizePoints": 12.0,
               "color": "#ffffff",
               "fadeDelayMs": 0.0,
               "fadeDurationMs": 2000.0,
               "rotationDegrees": [
-                0.0,
-                0.0,
-                0.0
+                1.4374481023012606,
+                -28.541187234163317,
+                -6.50825355274884
               ],
               "rotationOrder": "XYZ"
             },
             {
-              "id": "e55edbb604694401b348e345fdc839d0",
-              "type": "floatingTooltip",
-              "anchorPoint": [
-                10.886023807739093,
-                1.900129865725966,
-                3.4880791574054926
-              ],
-              "tooltipPosition": "opposite",
-              "htmlBody": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut</p>",
-              "style": "box-sizing: border-box;\nmax-width: 360px;\npadding: 14px 16px;\ncolor: #f5f7fb;\nbackground: rgba(24, 27, 34, 0.94);\nborder: 1px solid rgba(255, 255, 255, 0.24);\nborder-radius: 8px;\nfont-family: sans-serif;\nfont-size: 14px;\nline-height: 1.5;"
-            },
-            {
-              "id": "715421afed11424db04f9caac48a1b4f",
+              "id": "d7f607bd7d0140d9a53e225794e7f001",
               "type": "waitForKeyPress",
               "input": "any",
               "easing": "smoothstep"
+            },
+            {
+              "id": "b1c4e946e23f42b8a2c878bc25f6098a",
+              "type": "idleCameraAnimation",
+              "pivotPoint": [
+                -1.111,
+                1.809,
+                -13.279
+              ],
+              "radiusMeters": 0.08,
+              "cycleDurationSeconds": 12.0
             }
           ]
         },
         {
-          "id": "5d9632c33b5f4d1eab31986863c894e3",
+          "id": "c43b7f58a6c2455a8bb7e2a6ed3aa7f4",
+          "progress": 0.421392,
+          "cameraTarget": [
+            5.944589758410304,
+            1.17824475678905,
+            -10.121731475904017
+          ],
+          "actions": [
+            {
+              "id": "0732359eac3c457e8ac7429f4e59c8f8",
+              "type": "waitForKeyPress",
+              "input": "any",
+              "easing": "smoothstep"
+            },
+            {
+              "id": "9ef995da27084d2d885421acc51dc077",
+              "type": "floatingTooltip",
+              "anchorPoint": [
+                4.009909302124195,
+                2.481639798445313,
+                -11.839896652028056
+              ],
+              "tooltipPosition": "opposite",
+              "htmlBody": "<p>Lustre éléctrico\nqdqsdq</p>\n\n<p>Muito commun em casas construidas nos anos 1970.</p>",
+              "style": "box-sizing: border-box;\nwidth: 25vw;\nheight: 80vh;\npadding: 14px 16px;\ncolor: #f5f7fb;\nbackground: rgba(24, 27, 34, 0.94);\nborder: 1px solid rgba(255, 255, 255, 0.24);\nborder-radius: 8px;\nfont-family: sans-serif;\nfont-size: 14px;\nline-height: 1.5;"
+            },
+            {
+              "id": "ade73980ec58429a950807ffdc55e9c4",
+              "type": "idleCameraAnimation",
+              "pivotPoint": [
+                5.945,
+                1.178,
+                -10.122
+              ],
+              "radiusMeters": 0.08,
+              "cycleDurationSeconds": 12.0
+            }
+          ]
+        },
+        {
+          "id": "4aa274b0faeb4c8e8569f4ceeec854aa",
           "progress": 1.0,
           "cameraTarget": [
-            11.268280251220327,
-            5.251392475179995,
-            6.527879823755958
+            1.8098640595144329,
+            1.9000000000000008,
+            -6.054656739360209
           ],
           "actions": []
         }
       ]
+    }
+  ],
+  "directionalLights": [
+    {
+      "id": "directional-light-1",
+      "name": "Directional light 1",
+      "position": [
+        -7.460657902806551,
+        2.8046900571838957,
+        -11.658182225709048
+      ],
+      "target": [
+        -6.465279311805873,
+        2.7086616208876317,
+        -11.658182225709048
+      ],
+      "color": "#ffffff",
+      "intensity": 1.0,
+      "castShadow": false
     }
   ]
 }

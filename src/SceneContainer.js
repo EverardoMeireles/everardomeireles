@@ -20,6 +20,7 @@ import { Camera } from "./system_components/Camera.jsx";
 import { Raycaster } from "./system_components/Raycaster.jsx";
 import { FirstPersonController } from "./system_components/FirstPersonController.jsx";
 import { Environment } from "@react-three/drei";
+import { EffectComposer, FXAA, SSAO } from "@react-three/postprocessing";
 import { ThreeDom } from "@react-three-dom/core";
 import { HouseMakerLoader } from "./user_components/HouseMakerLoader.jsx";
 
@@ -60,6 +61,7 @@ export const SceneContainer = React.memo((props) => {
     const [forceHighResMaterial, setForceHighResMaterial] = useState(false);
 
     const [enableMaterialSwap, setEnableMaterialSwap] = useState(false);
+    const [ssaoEnabled, setSsaoEnabled] = useState(true);
 
     // ### Tour navigation ###
 
@@ -94,6 +96,18 @@ export const SceneContainer = React.memo((props) => {
         clearInterval(intervalId);
         };
     }, [setEnableMaterialSwap]);
+
+    // Toggle ambient occlusion while keeping FXAA active.
+    useEffect(() => {
+        const handleSsaoToggle = (event) => {
+            if (event.repeat || event.key?.toLowerCase() !== "a") return;
+            setSsaoEnabled((enabled) => !enabled);
+        };
+
+        window.addEventListener("keydown", handleSsaoToggle);
+
+        return () => window.removeEventListener("keydown", handleSsaoToggle);
+    }, []);
 
     // Force swap the scene's materials if graphical mode changes
     useEffect(() => {
@@ -278,9 +292,9 @@ export const SceneContainer = React.memo((props) => {
         </>
         }
 
-            <ObjectLink position={objectLinkPosition1} scale={objectLinkScale} linkedObjectName = {"Lamp"} >
+            {/* <ObjectLink position={objectLinkPosition1} scale={objectLinkScale} linkedObjectName = {"Lamp"} >
                 {stableOrbitingPointLightParticleEmitterAndPointLightAnimation}
-            </ObjectLink>
+            </ObjectLink> */}
             
             <InstanceLoader instancedObject={"Book.glb"} initialPosition = {initialPosition} directionX = {0} directionY = {0} 
                 directionZ = {-1} customRotation = {customInstanceRotation} customColors = {customInstanceColor} NumberOfInstances={35} 
@@ -292,7 +306,7 @@ export const SceneContainer = React.memo((props) => {
                 navigationRef={houseMakerNavigationRef}
             />
             {/* <ambientLight intensity = {1.0}></ambientLight> */}
-            <Environment files={`${config.resource_path}/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr`} background={false} />
+            <Environment files={`${config.resource_path}/textures/kloofendal_48d_partly_cloudy_puresky_1k.hdr`} environmentIntensity={0.2} background={true} />
             
             <HouseMakerLoader
                 jsonFile="housemaker_export.json"
@@ -301,6 +315,25 @@ export const SceneContainer = React.memo((props) => {
                 navigationRef={houseMakerNavigationRef}
                 toursEnabled={siteMode === "resume"}
             />
+
+            {/* Apply SSAO before final edge anti-aliasing. */}
+            <EffectComposer
+                enableNormalPass={ssaoEnabled}
+                multisampling={0}
+                resolutionScale={0.5}
+            >
+                {ssaoEnabled &&
+                    <SSAO
+                        samples={17}
+                        rings={7}
+                        radius={0.15}
+                        intensity={1.25}
+                        luminanceInfluence={0.7}
+                        bias={0.025}
+                    />
+                }
+                <FXAA />
+            </EffectComposer>
 
 
 

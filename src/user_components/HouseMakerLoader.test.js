@@ -1,12 +1,14 @@
 // ### Imports ###
 
-/* eslint-disable testing-library/no-node-access */
+/* eslint-disable testing-library/no-container, testing-library/no-node-access */
+/* eslint-disable testing-library/render-result-naming-convention */
 
 import React, { StrictMode } from "react";
 import { render } from "@testing-library/react";
 import { useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import {
+    HouseMakerDirectionalLight,
     HouseMakerLoader,
     buildPlaneReflectionMatrix,
     createMirroredObject,
@@ -16,6 +18,7 @@ import {
     reconstructDoorBodies,
     reconstructHalfMeshes,
     removeHouseMakerRuntimeMirrors,
+    validateDirectionalLights,
     validateDoorBodyReconstruction,
     validateDoorBodyReconstructions
 } from "./HouseMakerLoader.jsx";
@@ -25,11 +28,6 @@ import {
 // Keep pure helper tests independent from React Three rendering.
 jest.mock("@react-three/fiber", () => ({
     useLoader: jest.fn()
-}));
-
-jest.mock("@react-three/postprocessing", () => ({
-    EffectComposer: () => null,
-    SSAO: () => null
 }));
 
 jest.mock("three/examples/jsm/loaders/GLTFLoader.js", () => ({
@@ -180,6 +178,50 @@ function expectMatrixClose(actual, expected, precision = 9) {
     actual.elements.forEach((element, index) => {
         expect(element).toBeCloseTo(expected.elements[index], precision);
     });
+}
+
+// Build one valid exported directional-light record.
+function makeDirectionalLight(options = {}) {
+    return {
+        id: options.id ?? "directional-light-1",
+        name: options.name ?? "Directional light 1",
+        position: options.position ?? [1, 3, -2],
+        target: options.target ?? [4, 6, -5],
+        color: options.color ?? "#ffffff",
+        intensity: options.intensity ?? 1,
+        castShadow: options.castShadow ?? false
+    };
+}
+
+// Read JSX props retained on React DOM test hosts.
+function getRenderedProps(element) {
+    const propsKey = Object.keys(element).find((key) => (
+        key.startsWith("__reactProps$")
+    ));
+
+    if (!propsKey) throw new Error("Rendered React props were not found.");
+    return element[propsKey];
+}
+
+// Build the minimum loader fixtures around one manifest.
+function makeLoaderFixtures(manifestOverrides = {}) {
+    const sourceScene = new THREE.Scene();
+    const manifest = {
+        format: "housemaker-r3f-scene",
+        version: 9,
+        coordinateSystem: "gltf-y-up",
+        asset: { glb: "house.glb" },
+        instanceGroups: [],
+        doorBodyReconstructions: [],
+        ...manifestOverrides
+    };
+    const gltf = {
+        scene: sourceScene,
+        scenes: [sourceScene],
+        parser: { associations: new Map() }
+    };
+
+    return { manifest, gltf, sourceScene };
 }
 
 // ### Metadata validation ###
@@ -1070,5 +1112,393 @@ describe("HouseMaker reconstruction ownership", () => {
         expect(authoredLookalike.parent).toBe(scene);
         expect(disposeGeometry).not.toHaveBeenCalled();
         expect(disposeMaterial).not.toHaveBeenCalled();
+    });
+});
+
+// ### Directional-light validation ###
+
+describe("HouseMaker directional-light validation", () => {
+    test.each([
+        { label: "missing", records: undefined },
+        { label: "empty", records: [] }
+    ])("treats $label directional-light metadata as empty", ({ records }) => {
+        const warning = jest.fn();
+
+        expect(validateDirectionalLights(records, warning)).toEqual([]);
+        expect(warning).not.toHaveBeenCalled();
+    });
+
+    test("treats non-array directional-light metadata as empty", () => {
+        expect(validateDirectionalLights({ id: "not-an-array" }, jest.fn()))
+            .toEqual([]);
+    });
+
+    test("fills omitted presentation defaults without changing coordinates", () => {
+        const warning = jest.fn();
+        const records = validateDirectionalLights([{
+            id: "minimal-light",
+            position: [1, 3, -2],
+            target: [4, 6, -5]
+        }], warning);
+
+        expect(records).toEqual([{
+            id: "minimal-light",
+            name: "minimal-light",
+            position: [1, 3, -2],
+            target: [4, 6, -5],
+            color: "#ffffff",
+            intensity: 1,
+            castShadow: false
+        }]);
+        expect(warning).not.toHaveBeenCalled();
+    });
+
+    test("preserves multiple complete directional-light records", () => {
+        const warning = jest.fn();
+        const records = [
+            makeDirectionalLight({
+                id: "sun-a",
+                name: "Warm sun",
+                position: [-4.25, 8, 2.5],
+                target: [3, 0.5, -7],
+                color: "#F0a040",
+                intensity: 2.75,
+                castShadow: true
+            }),
+            makeDirectionalLight({
+                id: "sun-b",
+                name: "Fill",
+                position: [10, 11, 12],
+                target: [-1, -2, -3],
+                color: "#123456",
+                intensity: 0,
+                castShadow: false
+            })
+        ];
+
+        expect(validateDirectionalLights(records, warning)).toEqual(records);
+        expect(warning).not.toHaveBeenCalled();
+    });
+
+    test("skips malformed records without blocking valid lights", () => {
+        const warning = jest.fn();
+        const validA = makeDirectionalLight({ id: "valid-a" });
+        const validB = makeDirectionalLight({
+            id: "valid-b",
+            position: [-2, 5, 8],
+            target: [0, 1, 0]
+        });
+        const invalidRecords = [
+            null,
+            { ...makeDirectionalLight(), id: " " },
+            { ...makeDirectionalLight(), id: "short-position", position: [1, 2] },
+            { ...makeDirectionalLight(), id: "nonfinite-position", position: [1, NaN, 3] },
+            { ...makeDirectionalLight(), id: "short-target", target: [1, 2] },
+            { ...makeDirectionalLight(), id: "nonfinite-target", target: [1, Infinity, 3] },
+            {
+                ...makeDirectionalLight(),
+                id: "same-points",
+                position: [2, 4, 6],
+                target: [2, 4, 6]
+            },
+            { ...makeDirectionalLight(), id: "short-color", color: "#fff" },
+            { ...makeDirectionalLight(), id: "invalid-color", color: "#gg0000" },
+            { ...makeDirectionalLight(), id: "negative-intensity", intensity: -0.01 },
+            { ...makeDirectionalLight(), id: "nonfinite-intensity", intensity: Infinity },
+            { ...makeDirectionalLight(), id: "string-intensity", intensity: "1" },
+            { ...makeDirectionalLight(), id: "invalid-shadow", castShadow: "true" }
+        ];
+
+        const validated = validateDirectionalLights([
+            validA,
+            ...invalidRecords,
+            validB
+        ], warning);
+
+        expect(validated.map((record) => record.id)).toEqual(["valid-a", "valid-b"]);
+        expect(warning).toHaveBeenCalledTimes(invalidRecords.length);
+    });
+
+    test("keeps the first record for each duplicate ID", () => {
+        const warning = jest.fn();
+        const first = makeDirectionalLight({
+            id: "shared-light",
+            position: [1, 2, 3],
+            target: [4, 5, 6]
+        });
+        const duplicate = makeDirectionalLight({
+            id: "shared-light",
+            position: [11, 12, 13],
+            target: [14, 15, 16]
+        });
+        const independent = makeDirectionalLight({ id: "independent-light" });
+
+        const validated = validateDirectionalLights([
+            first,
+            duplicate,
+            independent
+        ], warning);
+
+        expect(validated).toEqual([first, independent]);
+        expect(warning).toHaveBeenCalledTimes(1);
+        expect(warning).toHaveBeenCalledWith(expect.stringContaining("shared-light"));
+    });
+});
+
+// ### Directional-light rendering ###
+
+describe("HouseMaker directional-light rendering", () => {
+    let consoleError;
+    let consoleWarning;
+
+    beforeEach(() => {
+        consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+        consoleWarning = jest.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        useLoader.mockReset();
+        consoleError.mockRestore();
+        consoleWarning.mockRestore();
+    });
+
+    test("applies exact exported properties and assigns a mounted target", () => {
+        const light = makeDirectionalLight({
+            id: "exact-light",
+            name: "Exact exported light",
+            position: [1.25, 3.5, -2.75],
+            target: [4.5, 6.25, -5.125],
+            color: "#12AbEF",
+            intensity: 3.25,
+            castShadow: true
+        });
+        const view = render(<HouseMakerDirectionalLight light={light} />);
+        const renderedLight = view.container.querySelector("directionallight");
+        const lightProps = getRenderedProps(renderedLight);
+        const target = renderedLight.target;
+        const targetPrimitive = [...view.container.querySelectorAll("primitive")]
+            .find((element) => getRenderedProps(element).object === target);
+
+        expect(lightProps.position).toEqual([1.25, 3.5, -2.75]);
+        expect(lightProps.name).toBe("Exact exported light");
+        expect(lightProps.color).toBe("#12AbEF");
+        expect(lightProps.intensity).toBe(3.25);
+        expect(lightProps.castShadow).toBe(true);
+        expect(lightProps.userData).toEqual({
+            houseMakerDirectionalLightId: "exact-light"
+        });
+        expect(target).toBeInstanceOf(THREE.Object3D);
+        expect(target.position.toArray()).toEqual([4.5, 6.25, -5.125]);
+        expect(target.matrix.elements.slice(12, 15)).toEqual([4.5, 6.25, -5.125]);
+        expect(targetPrimitive).toBeDefined();
+        expect(targetPrimitive.parentElement).toBe(renderedLight.parentElement);
+        expect(renderedLight.contains(targetPrimitive)).toBe(false);
+
+        view.rerender(<HouseMakerDirectionalLight light={{
+            ...light,
+            position: [-7, 8, 9],
+            target: [10, -11, 12],
+            intensity: 0.5,
+            castShadow: false
+        }} />);
+        const updatedLight = view.container.querySelector("directionallight");
+        const updatedProps = getRenderedProps(updatedLight);
+
+        expect(updatedLight).toBe(renderedLight);
+        expect(updatedLight.target).toBe(target);
+        expect(updatedProps.position).toEqual([-7, 8, 9]);
+        expect(updatedProps.intensity).toBe(0.5);
+        expect(updatedProps.castShadow).toBe(false);
+        expect(target.position.toArray()).toEqual([10, -11, 12]);
+        expect(target.matrix.elements.slice(12, 15)).toEqual([10, -11, 12]);
+    });
+
+    test("renders validator defaults as native light props", () => {
+        const [light] = validateDirectionalLights([{
+            id: "default-light",
+            position: [0, 2, 0],
+            target: [0, 0, 0]
+        }]);
+        const view = render(<HouseMakerDirectionalLight light={light} />);
+        const renderedLight = view.container.querySelector("directionallight");
+        const lightProps = getRenderedProps(renderedLight);
+
+        expect(lightProps.name).toBe("default-light");
+        expect(lightProps.color).toBe("#ffffff");
+        expect(lightProps.intensity).toBe(1);
+        expect(lightProps.castShadow).toBe(false);
+    });
+
+    test.each([
+        ["missing", undefined],
+        ["empty", []],
+        ["non-array", { id: "not-an-array" }]
+    ])("renders no lights for %s manifest metadata", (label, directionalLights) => {
+        const { manifest, gltf } = makeLoaderFixtures({ directionalLights });
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? manifest : gltf
+        ));
+
+        const view = render(
+            <HouseMakerLoader jsonFile={`${label}.json`} toursEnabled={false} />
+        );
+
+        expect(view.container.querySelectorAll("directionallight")).toHaveLength(0);
+        expect(view.container.querySelectorAll("primitive")).toHaveLength(2);
+    });
+
+    test.each([8, 9])("keeps manifest version %i compatible", (version) => {
+        const directionalLights = version === 9
+            ? [makeDirectionalLight({ id: "version-nine-light" })]
+            : undefined;
+        const { manifest, gltf } = makeLoaderFixtures({
+            version,
+            directionalLights
+        });
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? manifest : gltf
+        ));
+
+        const view = render(
+            <HouseMakerLoader jsonFile={`version-${version}.json`} toursEnabled={false} />
+        );
+
+        expect(view.container.querySelectorAll("directionallight"))
+            .toHaveLength(version === 9 ? 1 : 0);
+    });
+
+    test("renders every valid light while skipping malformed and duplicate records", () => {
+        const lightA = makeDirectionalLight({ id: "light-a", name: "Light A" });
+        const lightB = makeDirectionalLight({
+            id: "light-b",
+            name: "Light B",
+            position: [-8, 7, 6],
+            target: [5, -4, 3],
+            castShadow: true
+        });
+        const duplicateA = makeDirectionalLight({
+            id: "light-a",
+            name: "Duplicate A",
+            position: [20, 20, 20],
+            target: [0, 0, 0]
+        });
+        const malformed = {
+            ...makeDirectionalLight({ id: "bad-light" }),
+            target: [0, NaN, 0]
+        };
+        const { manifest, gltf } = makeLoaderFixtures({
+            directionalLights: [lightA, malformed, duplicateA, lightB]
+        });
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? manifest : gltf
+        ));
+
+        const view = render(
+            <HouseMakerLoader jsonFile="multiple-lights.json" toursEnabled={false} />
+        );
+        const renderedLights = [...view.container.querySelectorAll("directionallight")];
+        const renderedNames = renderedLights.map((element) => (
+            getRenderedProps(element).name
+        ));
+        const mountedObjects = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object);
+
+        expect(renderedNames).toEqual(["Light A", "Light B"]);
+        expect(renderedLights.every((element) => (
+            mountedObjects.includes(element.target)
+        ))).toBe(true);
+        expect(consoleWarning).toHaveBeenCalledTimes(2);
+    });
+
+    test("reconciles manifest and GLB updates without stale or duplicate objects", () => {
+        const lightA = makeDirectionalLight({ id: "light-a", name: "Light A" });
+        const lightB = makeDirectionalLight({ id: "light-b", name: "Light B" });
+        const lightC = makeDirectionalLight({ id: "light-c", name: "Light C" });
+        let fixtures = makeLoaderFixtures({ directionalLights: [lightA, lightB] });
+        let currentManifest = fixtures.manifest;
+        let currentGltf = fixtures.gltf;
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? currentManifest : currentGltf
+        ));
+        const view = render(
+            <HouseMakerLoader jsonFile="lights.json" toursEnabled={false} />
+        );
+        const firstLights = [...view.container.querySelectorAll("directionallight")];
+        const firstLightB = firstLights.find((element) => (
+            getRenderedProps(element).name === "Light B"
+        ));
+        const staleTargetA = firstLights.find((element) => (
+            getRenderedProps(element).name === "Light A"
+        )).target;
+        const stableTargetB = firstLightB.target;
+
+        expect(firstLights).toHaveLength(2);
+        expect(useLoader.mock.calls.filter(([Loader]) => (
+            Loader === THREE.FileLoader
+        ))).toHaveLength(1);
+
+        fixtures = makeLoaderFixtures({ directionalLights: [lightB, lightC] });
+        currentManifest = fixtures.manifest;
+        currentGltf = fixtures.gltf;
+        view.rerender(
+            <HouseMakerLoader jsonFile="lights.json" toursEnabled={false} />
+        );
+
+        let updatedLights = [...view.container.querySelectorAll("directionallight")];
+        let updatedObjects = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object);
+        const updatedLightB = updatedLights.find((element) => (
+            getRenderedProps(element).name === "Light B"
+        ));
+
+        expect(updatedLights.map((element) => getRenderedProps(element).name))
+            .toEqual(["Light B", "Light C"]);
+        expect(updatedLightB).toBe(firstLightB);
+        expect(updatedLightB.target).toBe(stableTargetB);
+        expect(updatedObjects).not.toContain(staleTargetA);
+
+        currentGltf = makeLoaderFixtures().gltf;
+        view.rerender(
+            <HouseMakerLoader jsonFile="reloaded-lights.json" toursEnabled={false} />
+        );
+        updatedLights = [...view.container.querySelectorAll("directionallight")];
+        updatedObjects = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object);
+
+        expect(updatedLights).toHaveLength(2);
+        expect(new Set(updatedLights)).toHaveProperty("size", 2);
+        expect(updatedObjects.filter((object) => object === stableTargetB)).toHaveLength(1);
+
+        view.unmount();
+
+        expect(view.container.querySelectorAll("directionallight")).toHaveLength(0);
+        expect(view.container.querySelectorAll("primitive")).toHaveLength(0);
+    });
+
+    test("keeps existing door reconstruction active beside lights", () => {
+        const fixtures = makeLoaderFixtures({
+            directionalLights: [makeDirectionalLight()],
+            doorBodyReconstructions: [makeReconstruction()]
+        });
+        fixtures.sourceScene.add(makeBody({
+            halfPlane: { point: [0, 0, 0], normal: [1, 0, 0] }
+        }).body);
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+
+        const view = render(
+            <HouseMakerLoader jsonFile="doors-and-lights.json" toursEnabled={false} />
+        );
+        const mountedObjects = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object);
+        const mirrorGroup = mountedObjects.find((object) => (
+            object?.name === "HouseMaker mirrored models"
+        ));
+
+        expect(view.container.querySelectorAll("directionallight")).toHaveLength(1);
+        expect(mirrorGroup.children).toHaveLength(3);
+        expect(fixtures.sourceScene.children).toHaveLength(1);
+        expect(getRuntimeMirrors(fixtures.sourceScene)).toEqual([]);
     });
 });

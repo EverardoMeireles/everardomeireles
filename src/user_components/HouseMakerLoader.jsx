@@ -1,8 +1,7 @@
 // ### Imports ###
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useLoader } from "@react-three/fiber";
-import { EffectComposer, SSAO } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -21,6 +20,89 @@ function isFiniteVector3(value) {
     return Array.isArray(value)
         && value.length === 3
         && value.every(Number.isFinite);
+}
+
+// Validate exported lights without blocking other runtime features.
+export function validateDirectionalLights(entries, warning = console.warn) {
+    if (!Array.isArray(entries)) {
+        if (entries !== undefined) {
+            warning("HouseMaker directionalLights must be an array; ignoring directional lights.");
+        }
+        return [];
+    }
+
+    const validLights = [];
+    const seenIds = new Set();
+
+    entries.forEach((entry, entryIndex) => {
+        const warningPrefix = `HouseMaker directional light ${entryIndex}`;
+
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+            warning(`${warningPrefix} must be an object.`);
+            return;
+        }
+
+        if (!isNonEmptyString(entry.id)) {
+            warning(`${warningPrefix} has an invalid id.`);
+            return;
+        }
+
+        if (seenIds.has(entry.id)) {
+            warning(`${warningPrefix} duplicates id "${entry.id}"; keeping the first light.`);
+            return;
+        }
+
+        if (!isFiniteVector3(entry.position)) {
+            warning(`${warningPrefix} has an invalid position.`);
+            return;
+        }
+
+        if (!isFiniteVector3(entry.target)) {
+            warning(`${warningPrefix} has an invalid target.`);
+            return;
+        }
+
+        if (entry.position.every((component, index) => component === entry.target[index])) {
+            warning(`${warningPrefix} position and target must be different.`);
+            return;
+        }
+
+        if (entry.name !== undefined && typeof entry.name !== "string") {
+            warning(`${warningPrefix} has an invalid name.`);
+            return;
+        }
+
+        const color = entry.color === undefined ? "#ffffff" : entry.color;
+        if (typeof color !== "string" || !/^#[0-9a-fA-F]{6}$/.test(color)) {
+            warning(`${warningPrefix} has an invalid color.`);
+            return;
+        }
+
+        const intensity = entry.intensity === undefined ? 1 : entry.intensity;
+        if (!Number.isFinite(intensity) || intensity < 0) {
+            warning(`${warningPrefix} has an invalid intensity.`);
+            return;
+        }
+
+        const castShadow = entry.castShadow === undefined ? false : entry.castShadow;
+        if (typeof castShadow !== "boolean") {
+            warning(`${warningPrefix} has an invalid castShadow value.`);
+            return;
+        }
+
+        seenIds.add(entry.id);
+        validLights.push({
+            id: entry.id,
+            name: entry.name === undefined ? entry.id : entry.name,
+            position: [...entry.position],
+            target: [...entry.target],
+            color,
+            intensity,
+            castShadow
+        });
+    });
+
+    return validLights;
 }
 
 // Normalize safely without overflowing squared vector lengths.
@@ -506,10 +588,60 @@ export function prepareHouseMakerModelScene(sourceScene, entries, warning = cons
     };
 }
 
+// ### Exported lighting ###
+
+/**
+ * Purpose: Mounts one exported directional light and its scene target.
+ * Relationships: HouseMakerLoader places both objects under its transform root.
+ * Example: <HouseMakerDirectionalLight light={directionalLight} />
+ * @param {object} props.light - Validated exported light data.
+ */
+export function HouseMakerDirectionalLight(props) {
+    const {light} = props;
+    const directionalLightRef = useRef();
+    const targetObject = useMemo(() => {
+        const target = new THREE.Object3D();
+        target.visible = false;
+        return target;
+    }, []);
+
+    // Apply the absolute target after both siblings mount.
+    useLayoutEffect(() => {
+        targetObject.position.fromArray(light.target);
+        targetObject.updateMatrix();
+        targetObject.updateWorldMatrix(true, false);
+
+        const directionalLight = directionalLightRef.current;
+        if (!directionalLight) return;
+
+        directionalLight.target = targetObject;
+        directionalLight.userData = {
+            ...(directionalLight.userData ?? {}),
+            houseMakerDirectionalLightId: light.id
+        };
+        directionalLight.updateMatrix?.();
+    }, [light, targetObject]);
+
+    return (
+        <>
+            <directionalLight
+                ref={directionalLightRef}
+                name={light.name}
+                position={light.position}
+                color={light.color}
+                intensity={light.intensity}
+                castShadow={light.castShadow}
+                userData={{houseMakerDirectionalLightId: light.id}}
+            />
+            <primitive object={targetObject} />
+        </>
+    );
+}
+
 // ### Component ###
 
 /**
- * Purpose: Loads a HouseMaker export with mirrored models, instances, and SSAO.
+ * Purpose: Loads a HouseMaker export with mirrored models and instances.
  * Relationships: Replaces SimpleLoader and JsonInstancing for HouseMaker exports in SceneContainer.
  * Example:
  * <HouseMakerLoader jsonFile="housemaker_export.json" position={[0, 0, 0]} instancesEnabled={true} />
@@ -537,19 +669,13 @@ export function HouseMakerLoader(props) {
     const modelFile = sceneData.asset?.glb ?? "housemaker_export.glb";
     const gltf = useLoader(GLTFLoader, config.models_path + modelFile);
 
-    const [ssaoEnabled, setSsaoEnabled] = useState(true);
-
-    // Toggle the loader-owned SSAO effect.
-    useEffect(() => {
-        const handleSsaoToggle = (event) => {
-            if (event.repeat || event.key?.toLowerCase() !== "a") return;
-            setSsaoEnabled((enabled) => !enabled);
-        };
-
-        window.addEventListener("keydown", handleSsaoToggle);
-
-        return () => window.removeEventListener("keydown", handleSsaoToggle);
-    }, []);
+    // Validate optional runtime lights from the loaded manifest.
+    const directionalLights = useMemo(() => validateDirectionalLights(
+        sceneData.directionalLights,
+        process.env.NODE_ENV === "production"
+            ? () => {}
+            : (message) => console.warn(message)
+    ), [sceneData.directionalLights]);
 
     // Build mirrored models and reusable instance geometry.
     const renderData = useMemo(() => {
@@ -729,6 +855,13 @@ export function HouseMakerLoader(props) {
         <>
             {/* Keep all exported transforms under one parent. */}
             <group ref={rootRef} position={position}>
+                {directionalLights.map((directionalLight) => (
+                    <HouseMakerDirectionalLight
+                        key={directionalLight.id}
+                        light={directionalLight}
+                    />
+                ))}
+
                 <primitive object={renderData.modelScene} dispose={null} />
                 <primitive object={renderData.mirroredModels} dispose={null} />
 
@@ -772,19 +905,6 @@ export function HouseMakerLoader(props) {
                 />
             </group>
 
-            {/* Apply ambient contact shadows to the active scene. */}
-            {ssaoEnabled &&
-                <EffectComposer enableNormalPass multisampling={0} resolutionScale={0.5}>
-                    <SSAO
-                        samples={17}
-                        rings={7}
-                        radius={0.15}
-                        intensity={1.25}
-                        luminanceInfluence={0.7}
-                        bias={0.025}
-                    />
-                </EffectComposer>
-            }
         </>
     );
 }

@@ -510,8 +510,8 @@ export function HouseMakerTourPlayer(props) {
             <TourTooltipActions
                 actions={actions.tooltips}
                 manifestUrl={manifestUrl}
-                activeWaitInput={waitInput}
                 camera={camera}
+                rootRef={rootRef}
             />
         </>
     );

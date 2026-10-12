@@ -1,7 +1,5 @@
 # AGENTS.md
 
-- Do not modify `src/system_components`, `src/SystemStore.js`, 'src/SceneViewer.jsx', 'Helper.js' or 'index.js' without asking first.
-
 ## Simplicity And Readability (Highest Priority) 
 
 - Helper.js contains useful functions, use them when possible instead of creating a new one in a component

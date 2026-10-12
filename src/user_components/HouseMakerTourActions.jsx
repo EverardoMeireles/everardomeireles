@@ -1,18 +1,17 @@
 // ### Imports ###
 
-import { Suspense, useId, useLayoutEffect, useRef, useState } from "react";
-import { Center, Html, Text3D } from "@react-three/drei";
+import { Suspense, useEffect, useId, useRef } from "react";
+import { Center, Text3D } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import helvetikerFont from "three/examples/fonts/helvetiker_regular.typeface.json";
+import SystemStore from "../SystemStore";
 
 // ### Constants ###
 
-// Keep tooltip defaults readable on small viewports.
-const TOOLTIP_MARGIN = 16;
-const TOOLTIP_WIDTH = 320;
-const TOOLTIP_HEIGHT_FALLBACK = 120;
 const TEXT_HEIGHT_PER_POINT = 0.025;
+const TOUR_CIRCLE_PREFIX = "housemaker-tour-circle:";
+const POSITION_CHANGE_THRESHOLD = 0.02;
 
 // Allow presentation-focused HTML without executable elements.
 const ALLOWED_HTML_TAGS = new Set([
@@ -73,66 +72,8 @@ const ALLOWED_GLOBAL_ATTRIBUTES = new Set([
     "title"
 ]);
 
-// Scope defaults and authored rules inside the shadow root.
-const BASE_TOOLTIP_STYLES = `
-    :host {
-        display: block;
-        color: #ffffff;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    .tooltip-body {
-        box-sizing: border-box;
-        width: 100%;
-        max-height: var(--housemaker-tooltip-max-height, calc(100vh - 32px));
-        overflow: auto;
-        padding: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
-        background: rgba(0, 0, 0, 0.82);
-        color: #ffffff;
-        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-        overflow-wrap: anywhere;
-    }
-
-    .tooltip-body > :first-child {
-        margin-top: 0;
-    }
-
-    .tooltip-body > :last-child {
-        margin-bottom: 0;
-    }
-
-    .tooltip-body img {
-        display: block;
-        max-width: 100%;
-        height: auto;
-    }
-
-    .tooltip-body a {
-        color: inherit;
-    }
-`;
-
 // Block CSS capable of loading external resources.
 const DANGEROUS_CSS_VALUE = /(?:url\s*\(|expression\s*\(|javascript\s*:|vbscript\s*:|-moz-binding|behavior\s*:|position\s*:\s*(?:fixed|sticky))/i;
-const DANGEROUS_STYLESHEET = /(?:\\|@import|@font-face|@namespace|@property|url\s*\(|expression\s*\(|javascript\s*:|vbscript\s*:|-moz-binding|behavior\s*:|position\s*:\s*(?:fixed|sticky)|:host|!important)/i;
-
-// Reuse simple DOM styles for every hotspot.
-const HOTSPOT_STYLE = {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    width: "24px",
-    height: "24px",
-    padding: 0,
-    transform: "translate(-50%, -50%)",
-    border: 0,
-    borderRadius: "50%",
-    background: "transparent",
-    cursor: "pointer",
-    pointerEvents: "auto"
-};
 
 // ### Sanitization helpers ###
 
@@ -284,55 +225,6 @@ export function sanitizeTooltipDeclarations(styleText, ownerDocument = document)
 }
 
 /**
- * Purpose: Rejects unsafe authored shadow-root stylesheets.
- * @param {string} styleText - Authored scoped stylesheet.
- * @returns {string} Safe stylesheet or an empty string.
- */
-export function sanitizeTooltipStylesheet(styleText) {
-    const stylesheet = String(styleText ?? "");
-    if (!stylesheet.includes("{") || DANGEROUS_STYLESHEET.test(stylesheet)) return "";
-
-    return stylesheet;
-}
-
-// ### Placement helpers ###
-
-/**
- * Purpose: Places a tooltip on a clamped viewport side.
- * @param {object} options - Tooltip and viewport dimensions.
- * @returns {object} Pixel placement, side, and size limits.
- */
-export function getTooltipPlacement(options = {}) {
-    const viewportWidth = Math.max(0, Number(options.viewportWidth) || 0);
-    const viewportHeight = Math.max(0, Number(options.viewportHeight) || 0);
-    const margin = Math.max(0, Number(options.margin) || 0);
-    const usableMarginX = Math.min(margin, viewportWidth / 2);
-    const usableMarginY = Math.min(margin, viewportHeight / 2);
-    const maxWidth = Math.max(0, viewportWidth - (usableMarginX * 2));
-    const maxHeight = Math.max(0, viewportHeight - (usableMarginY * 2));
-    const tooltipWidth = Math.min(Math.max(0, Number(options.tooltipWidth) || 0), maxWidth);
-    const tooltipHeight = Math.min(Math.max(0, Number(options.tooltipHeight) || 0), maxHeight);
-    const anchorX = Number(options.anchorX) || 0;
-    const anchorY = Number(options.anchorY) || 0;
-    const requestedSide = options.tooltipPosition;
-
-    // Resolve opposite placement from the projected hotspot half.
-    const side = requestedSide === "left" || requestedSide === "right"
-        ? requestedSide
-        : anchorX < viewportWidth / 2 ? "right" : "left";
-    const left = side === "left"
-        ? usableMarginX
-        : Math.max(usableMarginX, viewportWidth - usableMarginX - tooltipWidth);
-    const maximumTop = Math.max(usableMarginY, viewportHeight - usableMarginY - tooltipHeight);
-    const top = Math.min(
-        maximumTop,
-        Math.max(usableMarginY, anchorY - (tooltipHeight / 2))
-    );
-
-    return { left, top, side, maxWidth, maxHeight };
-}
-
-/**
  * Purpose: Calculates one ref-driven text fade sample.
  * @param {object} options - Fade timing and endpoints.
  * @returns {number} Clamped material opacity.
@@ -352,56 +244,218 @@ export function getTextFadeOpacity(options = {}) {
     return THREE.MathUtils.lerp(fromOpacity, toOpacity, progress);
 }
 
+// Convert safe CSS property names for React inline styles.
+function toReactStyleProperty(propertyName) {
+    if (propertyName.startsWith("--")) return propertyName;
+
+    return propertyName
+        .replace(/^-ms-/, "ms-")
+        .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
 /**
- * Purpose: Allows only explicitly matching tooltip wait input.
- * @param {Event|object} event - Native or React input event.
- * @param {string} activeWaitInput - Active wait action token.
- * @returns {boolean} Whether this event may reach the wait listener.
+ * Purpose: Serializes sanitized tooltip markup for ToolTip.jsx.
+ * @param {string} htmlBody - Authored tooltip markup.
+ * @param {string} manifestUrl - Companion JSON URL.
+ * @param {Document} ownerDocument - Document creating the safe markup.
+ * @returns {string} Sanitized serialized HTML.
  */
-export function tooltipEventMatchesWaitInput(event, activeWaitInput) {
-    const input = String(activeWaitInput ?? "").toLowerCase();
-    const nativeEvent = event?.nativeEvent ?? event;
-    if (!input || input === "any" || !nativeEvent || nativeEvent.repeat) return false;
-    const eventType = String(nativeEvent.type ?? "").toLowerCase();
+export function getTourTooltipHtml(htmlBody, manifestUrl, ownerDocument = document) {
+    const container = ownerDocument.createElement("div");
+    container.appendChild(sanitizeTooltipHtml(htmlBody, manifestUrl, ownerDocument));
+    return container.innerHTML;
+}
 
-    // Match authored mouse buttons exactly.
-    const mouseButtons = {
-        "mouse:left": 0,
-        "mouse:middle": 1,
-        "mouse:right": 2
-    };
+/**
+ * Purpose: Converts authored CSS declarations into React styles.
+ * @param {string} styleText - Authored CSS declaration list.
+ * @param {Document} ownerDocument - Document providing CSS parsing.
+ * @returns {object|undefined} Safe React inline styles.
+ */
+export function getTourTooltipStyle(styleText, ownerDocument = document) {
+    const safeDeclarations = sanitizeTooltipDeclarations(styleText, ownerDocument);
+    if (!safeDeclarations) return undefined;
 
-    if (Object.prototype.hasOwnProperty.call(mouseButtons, input)) {
-        return eventType === "pointerdown"
-            && (!nativeEvent.pointerType || nativeEvent.pointerType === "mouse")
-            && Number(nativeEvent.button) === mouseButtons[input];
+    const parsedStyle = ownerDocument.createElement("div").style;
+    const reactStyle = {};
+    parsedStyle.cssText = safeDeclarations;
+
+    Array.from(parsedStyle).forEach((propertyName) => {
+        reactStyle[toReactStyleProperty(propertyName)] = parsedStyle
+            .getPropertyValue(propertyName)
+            .trim();
+    });
+
+    return Object.keys(reactStyle).length > 0 ? reactStyle : undefined;
+}
+
+/**
+ * Purpose: Projects one tour anchor into circle percentage coordinates.
+ * @param {THREE.Vector3|Array<number>} anchorPoint - Loader-local hotspot anchor.
+ * @param {THREE.Object3D} root - Loader transform root.
+ * @param {THREE.Camera} camera - Active R3F camera.
+ * @param {object} scratch - Optional reusable vectors.
+ * @returns {object} Screen percentage position and visibility.
+ */
+export function projectTourCircle(anchorPoint, root, camera, scratch = {}) {
+    const output = scratch.output ?? { position: [0, 0], circleIsVisible: false };
+    const worldPosition = scratch.worldPosition ?? new THREE.Vector3();
+    const cameraPosition = scratch.cameraPosition ?? new THREE.Vector3();
+    const cameraDirection = scratch.cameraDirection ?? new THREE.Vector3();
+    const directionToAnchor = scratch.directionToAnchor ?? new THREE.Vector3();
+    const projectedPosition = scratch.projectedPosition ?? new THREE.Vector3();
+    const validAnchor = anchorPoint?.isVector3
+        || (Array.isArray(anchorPoint) && anchorPoint.length === 3);
+
+    if (!validAnchor || !root?.isObject3D || !camera?.isCamera) {
+        output.circleIsVisible = false;
+        return output;
     }
 
-    if (input.startsWith("key_code:")) {
-        const expectedKeyCode = Number(input.slice("key_code:".length));
-        return eventType === "keydown"
-            && Number.isFinite(expectedKeyCode)
-            && Number(nativeEvent.keyCode ?? nativeEvent.which) === expectedKeyCode;
-    }
+    root.updateWorldMatrix(true, false);
+    camera.updateWorldMatrix(true, false);
+    worldPosition.copy(anchorPoint.isVector3
+        ? anchorPoint
+        : new THREE.Vector3(...anchorPoint));
+    worldPosition.applyMatrix4(root.matrixWorld);
+    camera.getWorldPosition(cameraPosition);
+    camera.getWorldDirection(cameraDirection);
+    directionToAnchor.copy(worldPosition).sub(cameraPosition);
+    projectedPosition.copy(worldPosition).project(camera);
 
-    if (!input.startsWith("key:") || eventType !== "keydown") return false;
+    const inFront = cameraDirection.dot(directionToAnchor) > 0;
+    const insideClipSpace = projectedPosition.x >= -1 && projectedPosition.x <= 1
+        && projectedPosition.y >= -1 && projectedPosition.y <= 1
+        && projectedPosition.z >= -1 && projectedPosition.z <= 1;
 
-    // Normalize named browser keys and printable characters.
-    const keyNames = {
-        space: " ",
-        enter: "enter",
-        escape: "escape",
-        tab: "tab",
-        up: "arrowup",
-        down: "arrowdown",
-        left: "arrowleft",
-        right: "arrowright"
+    output.position[0] = (projectedPosition.x * 0.5 + 0.5) * 100;
+    output.position[1] = (-projectedPosition.y * 0.5 + 0.5) * 100;
+    output.circleIsVisible = inFront && insideClipSpace;
+    return output;
+}
+
+/**
+ * Purpose: Maps one tour tooltip action into circlesData.
+ * @param {object} action - Parsed floatingTooltip action.
+ * @param {string} circleName - Stable namespaced circle identity.
+ * @param {string} ownerId - Tour publisher identity.
+ * @param {string} manifestUrl - Companion JSON URL.
+ * @returns {object} Legacy circle and tooltip data.
+ */
+export function createTourCircleRecord(action, circleName, ownerId, manifestUrl) {
+    return {
+        circleName,
+        circleSize: 30,
+        playPulseAnimation: true,
+        position: [0, 0],
+        circleIsVisible: false,
+        html: getTourTooltipHtml(action.htmlBody, manifestUrl),
+        style: getTourTooltipStyle(action.style),
+        textShowMode: "Canvas",
+        tooltipPosition: action.tooltipPosition,
+        ariaLabel: "Show tour tooltip",
+        housemakerTourCircle: true,
+        housemakerTourCircleOwner: ownerId
     };
-    const expectedKey = input.slice("key:".length);
-    const normalizedExpectedKey = keyNames[expectedKey] ?? expectedKey;
-    const normalizedEventKey = String(nativeEvent.key ?? "").toLowerCase();
+}
 
-    return normalizedEventKey === normalizedExpectedKey;
+// Compare published records without frame-rate store churn.
+function tourCircleMatches(currentCircle, nextCircle) {
+    return currentCircle.circleName === nextCircle.circleName
+        && currentCircle.circleIsVisible === nextCircle.circleIsVisible
+        && Math.abs(currentCircle.position[0] - nextCircle.position[0])
+            <= POSITION_CHANGE_THRESHOLD
+        && Math.abs(currentCircle.position[1] - nextCircle.position[1])
+            <= POSITION_CHANGE_THRESHOLD
+        && currentCircle.html === nextCircle.html
+        && currentCircle.style === nextCircle.style
+        && currentCircle.tooltipPosition === nextCircle.tooltipPosition
+        && currentCircle.circleSize === nextCircle.circleSize
+        && currentCircle.playPulseAnimation === nextCircle.playPulseAnimation
+        && currentCircle.ariaLabel === nextCircle.ariaLabel;
+}
+
+/**
+ * Purpose: Reconciles one publisher's circles without touching others.
+ * @param {string} ownerId - Tour publisher identity.
+ * @param {Array<object>} desiredCircles - Complete owned circle records.
+ */
+export function reconcileTourCircles(ownerId, desiredCircles) {
+    const circleNamePrefix = `${TOUR_CIRCLE_PREFIX}${ownerId}:`;
+
+    SystemStore.setState((state) => {
+        const currentOwned = state.circlesData.filter((circle) => (
+            circle.housemakerTourCircleOwner === ownerId
+        ));
+        const currentByName = new Map(currentOwned.map((circle) => [
+            circle.circleName,
+            circle
+        ]));
+        let circlesChanged = currentOwned.length !== desiredCircles.length;
+
+        const nextOwned = desiredCircles.map((desiredCircle, index) => {
+            const currentCircle = currentByName.get(desiredCircle.circleName);
+            const unchanged = currentCircle
+                && currentOwned[index] === currentCircle
+                && tourCircleMatches(currentCircle, desiredCircle);
+
+            if (unchanged) return currentCircle;
+            circlesChanged = true;
+            return desiredCircle;
+        });
+        let nextOwnedIndex = 0;
+        const nextCircles = state.circlesData.flatMap((circle) => {
+            if (circle.housemakerTourCircleOwner !== ownerId) return [circle];
+
+            const replacement = nextOwned[nextOwnedIndex];
+            nextOwnedIndex += 1;
+            return replacement ? [replacement] : [];
+        });
+
+        if (nextOwnedIndex < nextOwned.length) {
+            nextCircles.push(...nextOwned.slice(nextOwnedIndex));
+        }
+
+        const selectedName = state.currentCircleNameSelected;
+        const selectedDesired = desiredCircles.find((circle) => (
+            circle.circleName === selectedName
+        ));
+        const selectedBelongsToOwner = typeof selectedName === "string"
+            && selectedName.startsWith(circleNamePrefix);
+        const clearSelection = selectedBelongsToOwner
+            && (!selectedDesired || !selectedDesired.circleIsVisible);
+        const pinnedName = state.circleProperties.pinnedCircleName;
+        const pinnedDesired = desiredCircles.find((circle) => (
+            circle.circleName === pinnedName
+        ));
+        const pinnedBelongsToOwner = typeof pinnedName === "string"
+            && pinnedName.startsWith(circleNamePrefix);
+        const clearPin = pinnedBelongsToOwner
+            && (!pinnedDesired || !pinnedDesired.circleIsVisible);
+        const visiblePinnedCircle = clearPin
+            ? undefined
+            : nextCircles.find((circle) => (
+                circle.circleName === pinnedName && circle.circleIsVisible
+            ));
+
+        if (!circlesChanged && !clearSelection && !clearPin) return state;
+
+        return {
+            circlesData: circlesChanged
+                ? nextCircles
+                : state.circlesData,
+            ...(clearSelection ? {
+                currentCircleNameSelected: visiblePinnedCircle?.circleName
+            } : {}),
+            ...((clearSelection || clearPin) ? {
+                circleProperties: {
+                    ...state.circleProperties,
+                    ...(clearSelection ? { active: Boolean(visiblePinnedCircle) } : {}),
+                    ...(clearPin ? { pinnedCircleName: undefined } : {})
+                }
+            } : {})
+        };
+    });
 }
 
 // ### Text components ###
@@ -524,290 +578,100 @@ export function TourTextActions(props) {
     );
 }
 
-// ### Tooltip components ###
+// ### Tooltip circle publisher ###
 
 /**
- * Purpose: Renders accessible tooltip DOM and isolated authored content.
- * @param {object} props - Tooltip action, wait token, and shared refs.
+ * Purpose: Publishes active tour tooltips through circlesData.
+ * Relationships: SceneViewer renders the records with Circle and ToolTip.
+ * Example: <TourTooltipActions actions={actions} rootRef={rootRef} />
+ * @param {Array<object>} props.actions - Active floating-tooltip actions.
+ * @param {string} props.manifestUrl - Companion JSON URL.
+ * @param {THREE.Camera} props.camera - Optional camera override.
+ * @param {React.MutableRefObject<THREE.Object3D>} props.rootRef - Loader root.
  */
-export function TourTooltipInteraction(props) {
-    const { action, manifestUrl, activeWaitInput, tooltipHostRef, interactionRef } = props;
-    const localTooltipHostRef = useRef();
-    const localInteractionRef = useRef();
-    const resolvedTooltipHostRef = tooltipHostRef ?? localTooltipHostRef;
-    const resolvedInteractionRef = interactionRef ?? localInteractionRef;
-    const tooltipId = useId();
-    const [hovered, setHovered] = useState(false);
-    const [focused, setFocused] = useState(false);
-    const [clickedOpen, setClickedOpen] = useState(false);
-    const visible = hovered || focused || clickedOpen;
-
-    // Build isolated sanitized content after mounting.
-    useLayoutEffect(() => {
-        const host = resolvedTooltipHostRef.current;
-        if (!host) return undefined;
-
-        const shadowRoot = host.shadowRoot ?? host.attachShadow({ mode: "open" });
-        const ownerDocument = host.ownerDocument;
-        const stylesheet = ownerDocument.createElement("style");
-        const tooltipBody = ownerDocument.createElement("div");
-        const authoredStyle = String(action.style ?? "");
-        const authoredStylesheet = authoredStyle.includes("{")
-            ? sanitizeTooltipStylesheet(authoredStyle)
-            : "";
-
-        shadowRoot.replaceChildren();
-        stylesheet.textContent = `${BASE_TOOLTIP_STYLES}\n${authoredStylesheet}`;
-        tooltipBody.className = "tooltip-body";
-
-        if (authoredStyle && !authoredStyle.includes("{")) {
-            tooltipBody.style.cssText = sanitizeTooltipDeclarations(authoredStyle, ownerDocument);
-        }
-
-        tooltipBody.appendChild(sanitizeTooltipHtml(
-            action.htmlBody ?? "<p>Tooltip</p>",
-            manifestUrl,
-            ownerDocument
-        ));
-        shadowRoot.append(stylesheet, tooltipBody);
-
-        // Clear detached content during remounts and unmounts.
-        return () => {
-            if (host.shadowRoot === shadowRoot) shadowRoot.replaceChildren();
-        };
-    }, [action.htmlBody, action.style, manifestUrl, resolvedTooltipHostRef]);
-
-    // Stop tooltip input unless the active wait explicitly matches.
-    const guardTooltipEvent = (event) => {
-        if (!tooltipEventMatchesWaitInput(event, activeWaitInput)) {
-            event.stopPropagation();
-        }
-    };
-
-    // Toggle persistent visibility for click and touch users.
-    const handleHotspotClick = (event) => {
-        guardTooltipEvent(event);
-        setClickedOpen((isOpen) => !isOpen);
-    };
-
-    // Keep focus visibility while moving inside tooltip content.
-    const handleBlur = (event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-            setFocused(false);
-        }
-    };
-
-    return (
-        <div
-            ref={resolvedInteractionRef}
-            data-housemaker-tooltip-interaction="true"
-            style={{ position: "relative", width: 0, height: 0 }}
-            onPointerEnter={() => setHovered(true)}
-            onPointerLeave={() => setHovered(false)}
-            onFocusCapture={() => setFocused(true)}
-            onBlurCapture={handleBlur}
-            onPointerDown={guardTooltipEvent}
-            onMouseDown={guardTooltipEvent}
-            onTouchStart={guardTooltipEvent}
-            onContextMenu={guardTooltipEvent}
-            onWheel={guardTooltipEvent}
-            onKeyDown={guardTooltipEvent}
-            onClick={guardTooltipEvent}
-        >
-            <button
-                type="button"
-                aria-label="Show tour tooltip"
-                aria-expanded={visible}
-                aria-describedby={visible ? tooltipId : undefined}
-                data-housemaker-tooltip-hotspot="true"
-                style={HOTSPOT_STYLE}
-                onClick={handleHotspotClick}
-            />
-            <div
-                ref={resolvedTooltipHostRef}
-                id={tooltipId}
-                role="tooltip"
-                aria-hidden={!visible}
-                data-housemaker-tooltip-content="true"
-                style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    width: `${TOOLTIP_WIDTH}px`,
-                    maxWidth: `calc(100vw - ${TOOLTIP_MARGIN * 2}px)`,
-                    maxHeight: `calc(100vh - ${TOOLTIP_MARGIN * 2}px)`,
-                    overflow: "auto",
-                    boxSizing: "border-box",
-                    visibility: visible ? "visible" : "hidden",
-                    opacity: visible ? 1 : 0,
-                    pointerEvents: visible ? "auto" : "none",
-                    transition: "opacity 150ms ease-out",
-                    zIndex: 1000
-                }}
-            />
-        </div>
-    );
-}
-
-/**
- * Purpose: Anchors one accessible tooltip inside the 3D scene.
- * @param {object} props - Tooltip action and runtime context.
- */
-function TourTooltipAction(props) {
-    const { action, manifestUrl, activeWaitInput, camera: cameraOverride } = props;
+export function TourTooltipActions(props) {
+    const { actions = [], manifestUrl = "", camera: cameraOverride, rootRef } = props;
     const defaultCamera = useThree((state) => state.camera);
-    const viewportSize = useThree((state) => state.size);
     const camera = cameraOverride ?? defaultCamera;
-    const anchorGroupRef = useRef();
-    const tooltipHostRef = useRef();
-    const interactionRef = useRef();
-    const temporaryValues = useRef();
+    const reactOwnerId = useId();
+    const ownerId = useRef();
+    const recordsRef = useRef([]);
+    const projectionScratch = useRef();
 
-    // Allocate projection vectors once per hotspot.
-    if (!temporaryValues.current) {
-        temporaryValues.current = {
+    // Keep one stable owner across ordinary rerenders.
+    if (!ownerId.current) ownerId.current = `tour-${reactOwnerId}`;
+
+    // Allocate projection values once for every active action.
+    if (!projectionScratch.current) {
+        projectionScratch.current = {
+            output: { position: [0, 0], circleIsVisible: false },
             worldPosition: new THREE.Vector3(),
             cameraPosition: new THREE.Vector3(),
             cameraDirection: new THREE.Vector3(),
             directionToAnchor: new THREE.Vector3(),
-            projectedPosition: new THREE.Vector3(),
-            tooltipWidth: 0,
-            tooltipHeight: 0,
-            viewportWidth: -1,
-            viewportHeight: -1,
-            markerVisible: undefined
+            projectedPosition: new THREE.Vector3()
         };
     }
 
-    // Cache content dimensions instead of forcing layout every frame.
-    useLayoutEffect(() => {
-        const tooltipHost = tooltipHostRef.current;
-        if (!tooltipHost || typeof ResizeObserver === "undefined") return undefined;
+    // Rebuild static records only when authored actions change.
+    useEffect(() => {
+        const currentCircles = new Map(SystemStore.getState().circlesData
+            .filter((circle) => circle.housemakerTourCircleOwner === ownerId.current)
+            .map((circle) => [circle.circleName, circle]));
 
-        const observer = new ResizeObserver((entries) => {
-            const bounds = entries[0]?.contentRect;
-            if (!bounds) return;
-            temporaryValues.current.tooltipWidth = bounds.width;
-            temporaryValues.current.tooltipHeight = bounds.height;
-        });
-        observer.observe(tooltipHost);
-        return () => observer.disconnect();
-    }, [action.htmlBody, action.style]);
-
-    // Project and place DOM without frame-rate React updates.
-    useFrame(() => {
-        const anchorGroup = anchorGroupRef.current;
-        const tooltipHost = tooltipHostRef.current;
-        const interaction = interactionRef.current;
-        if (!anchorGroup || !tooltipHost || !interaction || !camera) return;
-
-        const values = temporaryValues.current;
-        anchorGroup.getWorldPosition(values.worldPosition);
-        camera.getWorldPosition(values.cameraPosition);
-        camera.getWorldDirection(values.cameraDirection);
-        values.directionToAnchor.copy(values.worldPosition).sub(values.cameraPosition);
-        values.projectedPosition.copy(values.worldPosition).project(camera);
-
-        const inFront = values.cameraDirection.dot(values.directionToAnchor) > 0;
-        const projected = values.projectedPosition;
-        const insideClipSpace = projected.x >= -1 && projected.x <= 1
-            && projected.y >= -1 && projected.y <= 1
-            && projected.z >= -1 && projected.z <= 1;
-        const markerVisible = inFront && insideClipSpace;
-        if (values.markerVisible !== markerVisible) {
-            interaction.style.visibility = markerVisible ? "visible" : "hidden";
-            values.markerVisible = markerVisible;
-        }
-
-        const anchorX = (projected.x * 0.5 + 0.5) * viewportSize.width;
-        const anchorY = (-projected.y * 0.5 + 0.5) * viewportSize.height;
-        const availableWidth = Math.max(0, viewportSize.width - (TOOLTIP_MARGIN * 2));
-        const availableHeight = Math.max(0, viewportSize.height - (TOOLTIP_MARGIN * 2));
-        if (
-            values.viewportWidth !== viewportSize.width
-            || values.viewportHeight !== viewportSize.height
-        ) {
-            tooltipHost.style.width = `${Math.min(TOOLTIP_WIDTH, availableWidth)}px`;
-            tooltipHost.style.maxHeight = `${availableHeight}px`;
-            tooltipHost.style.setProperty(
-                "--housemaker-tooltip-max-height",
-                `${availableHeight}px`
+        recordsRef.current = actions.filter(Boolean).map((action, index) => {
+            const actionKey = action.renderKey ?? action.id ?? "tooltip";
+            const circleName = `${TOUR_CIRCLE_PREFIX}${ownerId.current}:${actionKey}:${index}`;
+            const currentCircle = currentCircles.get(circleName);
+            const circle = createTourCircleRecord(
+                action,
+                circleName,
+                ownerId.current,
+                manifestUrl
             );
-            values.viewportWidth = viewportSize.width;
-            values.viewportHeight = viewportSize.height;
-            values.tooltipWidth = 0;
-            values.tooltipHeight = 0;
-        }
 
-        if (values.tooltipWidth <= 0 || values.tooltipHeight <= 0) {
-            const tooltipBounds = tooltipHost.getBoundingClientRect();
-            values.tooltipWidth = tooltipBounds.width
-                || Math.min(TOOLTIP_WIDTH, availableWidth);
-            values.tooltipHeight = tooltipBounds.height
-                || Math.min(TOOLTIP_HEIGHT_FALLBACK, availableHeight);
-        }
-        const placement = getTooltipPlacement({
-            anchorX,
-            anchorY,
-            tooltipWidth: values.tooltipWidth,
-            tooltipHeight: values.tooltipHeight,
-            viewportWidth: viewportSize.width,
-            viewportHeight: viewportSize.height,
-            tooltipPosition: action.tooltipPosition,
-            margin: TOOLTIP_MARGIN
+            return {
+                action,
+                circle: currentCircle ? {
+                    ...circle,
+                    position: currentCircle.position,
+                    circleIsVisible: currentCircle.circleIsVisible
+                } : circle
+            };
         });
 
-        tooltipHost.style.left = `${placement.left - anchorX}px`;
-        tooltipHost.style.top = `${placement.top - anchorY}px`;
-        tooltipHost.dataset.side = placement.side;
+        reconcileTourCircles(
+            ownerId.current,
+            recordsRef.current.map((record) => record.circle)
+        );
+    }, [actions, manifestUrl]);
+
+    // Remove only this publisher's records during unmounts.
+    useEffect(() => () => {
+        recordsRef.current = [];
+        reconcileTourCircles(ownerId.current, []);
+    }, []);
+
+    // Update projected percentages in one atomic store write.
+    useFrame(() => {
+        const root = rootRef?.current;
+        const desiredCircles = recordsRef.current.map((record) => {
+            const projection = projectTourCircle(
+                record.action.anchorPoint,
+                root,
+                camera,
+                projectionScratch.current
+            );
+
+            return {
+                ...record.circle,
+                position: [...projection.position],
+                circleIsVisible: projection.circleIsVisible
+            };
+        });
+
+        reconcileTourCircles(ownerId.current, desiredCircles);
     });
 
-    return (
-        <group ref={anchorGroupRef} position={action.position ?? action.anchorPoint ?? [0, 0, 0]}>
-            {/* Keep the visible marker sized in model space. */}
-            <mesh>
-                <sphereGeometry args={[0.055, 16, 12]} />
-                <meshBasicMaterial
-                    color="#ffffff"
-                    transparent
-                    opacity={0.9}
-                    toneMapped={false}
-                />
-            </mesh>
-            <Html zIndexRange={[1000, 900]} pointerEvents="auto">
-                <TourTooltipInteraction
-                    action={action}
-                    manifestUrl={manifestUrl}
-                    activeWaitInput={activeWaitInput}
-                    tooltipHostRef={tooltipHostRef}
-                    interactionRef={interactionRef}
-                />
-            </Html>
-        </group>
-    );
-}
-
-/**
- * Purpose: Renders active HouseMaker floating-tooltip actions.
- * Relationships: Receives only the active step's tooltip actions.
- * Example: <TourTooltipActions actions={actions} manifestUrl="/models/scene.json" />
- * @param {Array<object>} props.actions - Active floating-tooltip actions.
- * @param {string} props.manifestUrl - Companion JSON URL.
- * @param {string} props.activeWaitInput - Current wait token, when present.
- * @param {THREE.Camera} props.camera - Optional camera override.
- */
-export function TourTooltipActions(props) {
-    const { actions = [], manifestUrl = "", activeWaitInput, camera } = props;
-
-    return actions.map((action, index) => (
-        action ? (
-            <TourTooltipAction
-                key={action.renderKey ?? `${action.id ?? "tooltip"}-${index}`}
-                action={action}
-                manifestUrl={manifestUrl}
-                activeWaitInput={activeWaitInput}
-                camera={camera}
-            />
-        ) : null
-    ));
+    return null;
 }

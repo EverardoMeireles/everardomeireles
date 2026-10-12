@@ -67,7 +67,10 @@ function SceneViewer() {
   const [tooltipProps, setTooltipProps] = useState({
     active: false,
     html: undefined,
-    style: undefined
+    style: undefined,
+    tooltipPosition: "opposite",
+    housemakerTourCircle: false,
+    pinned: false
   });
   const setViewerBounds = SystemStore((state) => state.setViewerBounds);
   const viewerBounds = SystemStore((state) => state.viewerBounds);
@@ -176,14 +179,20 @@ function SceneViewer() {
     setTooltipProps({
       active: true,
       html: selectedCircleData.html,
-      style: selectedCircleData.style
+      style: selectedCircleData.style,
+      tooltipPosition: selectedCircleData.tooltipPosition,
+      housemakerTourCircle: Boolean(selectedCircleData.housemakerTourCircle),
+      pinned: circleProperties.pinnedCircleName === selectedCircleData.circleName
     });
   }, [
     circleProperties.active,
+    circleProperties.pinnedCircleName,
     selectedCircleData?.circleName,
     selectedCircleData?.textShowMode,
     selectedCircleData?.html,
     selectedCircleData?.style,
+    selectedCircleData?.tooltipPosition,
+    selectedCircleData?.housemakerTourCircle,
     setMessage
   ]);
 
@@ -469,6 +478,9 @@ function SceneViewer() {
                 selectedCirclePositionX={selectedCirclePositionX}
                 viewerBounds={viewerBounds}
                 transitionDuration={0.5}
+                tooltipPosition={tooltipProps.tooltipPosition}
+                housemakerTourCircle={tooltipProps.housemakerTourCircle}
+                pinned={tooltipProps.pinned}
               />
               {/* Create info circles on the screen */}
               {circlesData?.length > 0 && circlesData?.map((props, index) => (
@@ -479,6 +491,8 @@ function SceneViewer() {
                   playPulseAnimation={props.playPulseAnimation}
                   position={props.position || [0, 0]}
                   circleIsVisible = {props.circleIsVisible}
+                  housemakerTourCircle={props.housemakerTourCircle}
+                  ariaLabel={props.ariaLabel}
                 />
               ))}
               <TutorialOverlay enable = {enableTutorial}/>
@@ -531,6 +545,7 @@ function SceneViewer() {
                     onPointerUp={handleCanvasPointerUp}
                     onPointerEnter={handleCanvasPointerEnter}
                     onPointerLeave={handleCanvasPointerLeave}
+                    shadows
                     dpr={1}
                     gl={{ powerPreference: "high-performance" }}
                   >
