@@ -8,7 +8,7 @@ import { hasSignificantChange, roundToDecimalPlace } from "../Helper.js";
 import SystemStore from "../SystemStore.js";
 
 /**
- * Purpose: First-person camera rig with keyboard/mouse movement, gravity, stairs, and optional collisions.
+ * Purpose: First-person camera rig with keyboard, mouse, touch joysticks, and collisions.
  * Relationships: Alternative camera for SceneContainer that builds collisions from the R3F scene and publishes cameraState through SystemStore.
  * Example:
  * <FirstPersonController position={[0, 0, 0]} rotation={[0, 0, 0]} eyeHeight={4} isMainCamera={true} azertyMode="auto" collisionsEnabled={true} maxStepHeight={5.65} minStepHeight={0.1} climbHeightOffset={0} slowDownWhileFalling={true} slowDownWhileFallingSpeedMultiplier={0.5} />
@@ -66,6 +66,10 @@ export const FirstPersonController = React.memo((props) => {
     const pitchGroupRef = useRef();
     const cameraRef = useRef();
     const keysRef = useRef({ forward: false, backward: false, left: false, right: false });
+    const touchControlsRef = useRef({
+        move: { pointerId: null, originX: 0, originY: 0, radius: 1, x: 0, y: 0 },
+        look: { pointerId: null, originX: 0, originY: 0, radius: 1, x: 0, y: 0 }
+    });
     const collisionGroupsRef = useRef([]);
     const capsuleRef = useRef(new Capsule());
     const velocityRef = useRef(new THREE.Vector3());
@@ -85,6 +89,7 @@ export const FirstPersonController = React.memo((props) => {
     const gravityStrength = 30;
     const terminalVelocity = 60;
     const lookSensitivity = 0.002;
+    const touchLookSpeed = 1.8;
     const maxPitch = Math.PI / 2 - 0.05;
     const upAxis = new THREE.Vector3(0, 1, 0);
     const downAxis = new THREE.Vector3(0, -1, 0);
@@ -278,8 +283,24 @@ export const FirstPersonController = React.memo((props) => {
         return undefined;
     }
 
+    // Release one joystick or clear both interrupted gestures.
+    function resetTouchControls(pointerId) {
+        const { move, look } = touchControlsRef.current;
+        for (const joystick of [move, look]) {
+            if (pointerId !== undefined && joystick.pointerId !== pointerId) continue;
+            const capturedId = joystick.pointerId;
+            joystick.pointerId = null;
+            joystick.x = 0;
+            joystick.y = 0;
+            if (capturedId !== null && gl.domElement.hasPointerCapture?.(capturedId)) {
+                gl.domElement.releasePointerCapture(capturedId);
+            }
+        }
+    }
+
     // Clear movement that could leak into tour playback.
     function clearNavigationMotion() {
+        resetTouchControls();
         keysRef.current = { forward: false, backward: false, left: false, right: false };
         velocityRef.current.set(0, 0, 0);
         climbTargetRef.current = null;
@@ -333,6 +354,7 @@ export const FirstPersonController = React.memo((props) => {
 
     // Restore the exact pre-tour first-person rig.
     function restoreNavigation(snapshot) {
+        resetTouchControls();
         const controller = controllerRef.current;
         const camera = cameraRef.current;
 
@@ -625,22 +647,78 @@ export const FirstPersonController = React.memo((props) => {
         };
     }, [scene, collisionsEnabled]);
 
-    // ### Pointer lock ###
+    // ### Mouse and invisible touch joysticks ###
 
     useEffect(() => {
         const domElement = gl.domElement;
         if (!domElement) {
             return;
         }
+        if (!enabled) {
+            clearNavigationMotion();
+            return;
+        }
 
-        const handlePointerDown = () => {
+        const previousTouchAction = domElement.style.touchAction;
+        domElement.style.touchAction = "none";
+
+        // Assign each finger to its original canvas half.
+        const handlePointerDown = (event) => {
             if (!enabled || suspendedRef.current) {
                 return;
             }
 
+            if (event.pointerType === "touch") {
+                const bounds = domElement.getBoundingClientRect();
+                if (bounds.width <= 0 || bounds.height <= 0) return;
+                const side = event.clientX - bounds.left < bounds.width / 2 ? "move" : "look";
+                const joystick = touchControlsRef.current[side];
+                if (joystick.pointerId !== null) return;
+
+                event.preventDefault();
+                joystick.pointerId = event.pointerId;
+                joystick.originX = event.clientX;
+                joystick.originY = event.clientY;
+                joystick.radius = Math.min(bounds.width, bounds.height) * 0.15;
+                joystick.x = 0;
+                joystick.y = 0;
+                domElement.setPointerCapture?.(event.pointerId);
+                return;
+            }
+
+            if (event.button !== 0) return;
             if (document.pointerLockElement !== domElement) {
                 domElement.requestPointerLock?.();
             }
+        };
+
+        // Clamp analog deflection outside a small radial deadzone.
+        const handleTouchMove = (event) => {
+            if (suspendedRef.current) return;
+            const { move, look } = touchControlsRef.current;
+            const joystick = move.pointerId === event.pointerId ? move
+                : look.pointerId === event.pointerId ? look : undefined;
+            if (!joystick) return;
+
+            event.preventDefault();
+            const x = (event.clientX - joystick.originX) / joystick.radius;
+            const y = (event.clientY - joystick.originY) / joystick.radius;
+            const distance = Math.hypot(x, y);
+            const strength = distance <= 0.12 ? 0
+                : (Math.min(distance, 1) - 0.12) / (0.88 * distance);
+            joystick.x = x * strength;
+            joystick.y = y * strength;
+        };
+
+        // Release only the finger that ended its gesture.
+        const handleTouchEnd = (event) => {
+            resetTouchControls(event.pointerId);
+        };
+
+        // Stop gestures when focus or viewport geometry changes.
+        const handleInputReset = () => clearNavigationMotion();
+        const handleVisibilityChange = () => {
+            if (document.hidden) handleInputReset();
         };
 
         // Lock pointer on click and update view angles.
@@ -663,18 +741,40 @@ export const FirstPersonController = React.memo((props) => {
             );
         };
 
-        domElement.addEventListener("pointerdown", handlePointerDown);
+        domElement.addEventListener("pointerdown", handlePointerDown, { passive: false });
+        domElement.addEventListener("lostpointercapture", handleTouchEnd);
+        window.addEventListener("pointermove", handleTouchMove, { passive: false });
+        window.addEventListener("pointerup", handleTouchEnd);
+        window.addEventListener("pointercancel", handleTouchEnd);
+        window.addEventListener("blur", handleInputReset);
+        window.addEventListener("resize", handleInputReset);
+        window.addEventListener("orientationchange", handleInputReset);
+        window.screen?.orientation?.addEventListener("change", handleInputReset);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
         document.addEventListener("mousemove", handleMouseMove);
 
         return () => {
             domElement.removeEventListener("pointerdown", handlePointerDown);
+            domElement.removeEventListener("lostpointercapture", handleTouchEnd);
+            window.removeEventListener("pointermove", handleTouchMove);
+            window.removeEventListener("pointerup", handleTouchEnd);
+            window.removeEventListener("pointercancel", handleTouchEnd);
+            window.removeEventListener("blur", handleInputReset);
+            window.removeEventListener("resize", handleInputReset);
+            window.removeEventListener("orientationchange", handleInputReset);
+            window.screen?.orientation?.removeEventListener("change", handleInputReset);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
             document.removeEventListener("mousemove", handleMouseMove);
+            clearNavigationMotion();
+            domElement.style.touchAction = previousTouchAction;
 
             if (document.pointerLockElement === domElement) {
                 document.exitPointerLock?.();
             }
         };
-    }, [enabled, gl, maxPitch]);
+        // Helpers read refs; bind listeners to controller configuration.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [enabled, gl, maxPitch, maxStepHeight]);
 
     // ### Keyboard input ###
 
@@ -836,6 +936,13 @@ export const FirstPersonController = React.memo((props) => {
         }
 
         const frameDelta = Math.min(delta, 0.05);
+        const touch = touchControlsRef.current;
+        yawRef.current -= touch.look.x * touchLookSpeed * frameDelta;
+        pitchRef.current = THREE.MathUtils.clamp(
+            pitchRef.current - touch.look.y * touchLookSpeed * frameDelta,
+            -maxPitch,
+            maxPitch
+        );
 
         // Cancel climbing when its supporting objects become hidden.
         for (const group of collisionGroupsRef.current) {
@@ -861,7 +968,7 @@ export const FirstPersonController = React.memo((props) => {
         rightDirection.y = 0;
         rightDirection.normalize();
 
-        // Resolve input into a normalized movement vector.
+        // Preserve analog speed while normalizing collision probe directions.
         moveDirection.set(0, 0, 0);
         if (keysRef.current.forward) {
             moveDirection.add(forwardDirection);
@@ -875,7 +982,10 @@ export const FirstPersonController = React.memo((props) => {
         if (keysRef.current.right) {
             moveDirection.add(rightDirection);
         }
-        if (moveDirection.lengthSq() > 0) {
+        moveDirection.addScaledVector(rightDirection, touch.move.x);
+        moveDirection.addScaledVector(forwardDirection, -touch.move.y);
+        const movementStrength = Math.min(moveDirection.length(), 1);
+        if (movementStrength > 0) {
             moveDirection.normalize();
         }
 
@@ -903,8 +1013,8 @@ export const FirstPersonController = React.memo((props) => {
             ? moveSpeed * Math.max(slowDownWhileFallingSpeedMultiplier, 0)
             : moveSpeed;
 
-        velocityRef.current.x = moveDirection.x * currentMoveSpeed;
-        velocityRef.current.z = moveDirection.z * currentMoveSpeed;
+        velocityRef.current.x = moveDirection.x * currentMoveSpeed * movementStrength;
+        velocityRef.current.z = moveDirection.z * currentMoveSpeed * movementStrength;
 
         // Apply horizontal movement and vertical climbing/gravity.
         if (climbTargetRef.current !== null) {

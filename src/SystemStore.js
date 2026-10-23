@@ -111,7 +111,7 @@ const SystemStore = create((set) => ({
   toggleMouseClicked: () => set((state) => ({ mouseClicked: !state.mouseClicked })),
 
   isMouseDown: false,
-  setIsMouseDown: () => set((state) => ({ isMouseDown: !state.isMouseDown })),
+  setIsMouseDown: (pressed) => set(() => ({ isMouseDown: pressed })),
 
   isDragging: false,
   setIsDragging: (dragging) => set(() => ({ isDragging: dragging })),

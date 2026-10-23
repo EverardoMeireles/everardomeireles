@@ -42,7 +42,6 @@ function SceneViewer() {
   const setIsDragging = SystemStore((state) => state.setIsDragging);
   const isDragging = SystemStore((state) => state.isDragging);
   const setIsMouseDown = SystemStore((state) => state.setIsMouseDown);
-  const isMouseDown = SystemStore((state) => state.isMouseDown);
   const setIsReturnButtonPressed = SystemStore((state) => state.setIsReturnButtonPressed);
   const returnButtonPosition = SystemStore((state) => state.returnButtonPosition);
   const showReturnButton = SystemStore((state) => state.showReturnButton);
@@ -377,35 +376,69 @@ function SceneViewer() {
   ////////// Pointer tracking //////////
   //////////////////////////////////////
 
-  const mouseDownPosition = useRef({ x: 0, y: 0 });
+  const activeCanvasPointers = useRef(new Map());
 
-  // Track drag state after pointer down.
+  // Track concurrent pointers without interrupting the remaining finger.
   useEffect(() => {
     // Mark pointer as dragging after a movement threshold.
     const handlePointerMove = (e) => {
-      if (!isMouseDown) return;
+      const origin = activeCanvasPointers.current.get(e.pointerId);
+      if (!origin) return;
 
-      const dx = e.clientX - mouseDownPosition.current.x;
-      const dy = e.clientY - mouseDownPosition.current.y;
+      const dx = e.clientX - origin.x;
+      const dy = e.clientY - origin.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       if (distance > 5) {
         setIsDragging(true);
       }
     };
 
-    // Clear dragging when the pointer is released.
-    const handlePointerUp = () => {
+    // Clear input after the final tracked pointer ends.
+    const handlePointerEnd = (event) => {
+      if (!activeCanvasPointers.current.delete(event.pointerId)) return;
+      if (activeCanvasPointers.current.size > 0) return;
+      setIsMouseDown(false);
       setIsDragging(false);
     };
 
+    // Reset interrupted gestures before accepting another interaction.
+    const resetPointers = () => {
+      activeCanvasPointers.current.clear();
+      setIsMouseDown(false);
+      setIsDragging(false);
+    };
+
+    // Ignore visibility changes while the page remains visible.
+    const handleVisibilityChange = () => {
+      if (document.hidden) resetPointers();
+    };
+
+    if (!canvasEnabled || forceDisableRender) {
+      resetPointers();
+      return undefined;
+    }
+
     window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointerup", handlePointerEnd);
+    window.addEventListener("pointercancel", handlePointerEnd);
+    window.addEventListener("lostpointercapture", handlePointerEnd);
+    window.addEventListener("blur", resetPointers);
+    window.addEventListener("resize", resetPointers);
+    window.addEventListener("orientationchange", resetPointers);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointerup", handlePointerEnd);
+      window.removeEventListener("pointercancel", handlePointerEnd);
+      window.removeEventListener("lostpointercapture", handlePointerEnd);
+      window.removeEventListener("blur", resetPointers);
+      window.removeEventListener("resize", resetPointers);
+      window.removeEventListener("orientationchange", resetPointers);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      resetPointers();
     };
-  }, [isMouseDown]);
+  }, [canvasEnabled, forceDisableRender, setIsMouseDown, setIsDragging]);
 
   // Mark the return button as pressed.
   const handleReturnButtonMouseDown = () => {
@@ -417,16 +450,13 @@ function SceneViewer() {
     setIsReturnButtonPressed(false);
   };
 
-  // Start mouse tracking for Canvas interactions.
+  // Track each drag origin without resetting another finger.
   const handleCanvasPointerDown = (e) => {
+    if (activeCanvasPointers.current.size === 0) {
+      setIsDragging(false);
+    }
+    activeCanvasPointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     setIsMouseDown(true);
-    mouseDownPosition.current = { x: e.clientX, y: e.clientY };
-    setIsDragging(false);
-  };
-
-  // Clear mouse-down state after Canvas pointer release.
-  const handleCanvasPointerUp = () => {
-    setIsMouseDown(false);
   };
 
   // Mark the Canvas as hovered.
@@ -542,7 +572,6 @@ function SceneViewer() {
                 <Suspense>
                     <Canvas
                     onPointerDown={handleCanvasPointerDown}
-                    onPointerUp={handleCanvasPointerUp}
                     onPointerEnter={handleCanvasPointerEnter}
                     onPointerLeave={handleCanvasPointerLeave}
                     shadows

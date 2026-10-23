@@ -109,9 +109,42 @@ function flushCollisionBuilds() {
     act(() => callbacks.forEach((callback) => callback()));
 }
 
+// Dispatch touch pointers without jsdom PointerEvent support.
+function dispatchPointer(
+    type, pointerId, clientX, clientY,
+    target = type === "pointerdown" || type === "lostpointercapture" ? mockGl.domElement : window,
+    pointerType = "touch"
+) {
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    Object.defineProperties(event, {
+        pointerId: { value: pointerId },
+        pointerType: { value: pointerType },
+        clientX: { value: clientX },
+        clientY: { value: clientY },
+        button: { value: 0 },
+    });
+    fireEvent(target, event);
+    return event;
+}
+
+// Read the real camera's yaw and pitch.
+function readLookAngles() {
+    const camera = mockController.getObjectByProperty("isCamera", true);
+    return new THREE.Euler().setFromQuaternion(
+        camera.getWorldQuaternion(new THREE.Quaternion()), "YXZ"
+    );
+}
+
 beforeEach(() => {
     mockScene = new THREE.Scene();
     mockGl = { domElement: document.createElement("canvas") };
+    mockGl.domElement.getBoundingClientRect = jest.fn(() => ({
+        left: 100, top: 50, width: 400, height: 800,
+    }));
+    mockGl.domElement.requestPointerLock = jest.fn();
+    mockGl.domElement.setPointerCapture = jest.fn();
+    mockGl.domElement.releasePointerCapture = jest.fn();
+    mockGl.domElement.hasPointerCapture = jest.fn(() => true);
     mockOctrees = [];
     mockAnimationFrames = new Map();
     let nextFrame = 0;
@@ -224,4 +257,219 @@ test("A is reserved while Q and ArrowLeft still strafe", () => {
     fireEvent.keyDown(window, { key: "ArrowLeft" });
     act(() => mockFrame({}, 0.016));
     expect(mockController.position.x).toBeLessThan(previousX);
+});
+
+test.each([[400, 800], [800, 400]])(
+    "touch joysticks support simultaneous movement and looking at %s x %s",
+    (width, height) => {
+        mockGl.domElement.getBoundingClientRect.mockReturnValue({ left: 100, top: 50, width, height });
+        render(<ControllerHarness collisionsEnabled={false} slowDownWhileFalling={false} />);
+        const movementX = 100 + width * 0.25;
+        const lookX = 100 + width * 0.75;
+        const anchorY = 50 + height * 0.5;
+        const radius = Math.min(width, height) * 0.15;
+
+        dispatchPointer("pointerdown", 1, movementX, anchorY);
+        dispatchPointer("pointerdown", 2, lookX, anchorY);
+        dispatchPointer("pointermove", 1, movementX, anchorY - radius);
+        dispatchPointer("pointermove", 2, lookX + radius, anchorY);
+        act(() => mockFrame({}, 0.02));
+
+        expect(mockController.position.z).toBeLessThan(0);
+        expect(mockController.position.x).toBeGreaterThan(0);
+        expect(readLookAngles().y).toBeLessThan(0);
+        expect(mockGl.domElement.setPointerCapture).toHaveBeenCalledWith(1);
+        expect(mockGl.domElement.setPointerCapture).toHaveBeenCalledWith(2);
+        expect(mockGl.domElement.requestPointerLock).not.toHaveBeenCalled();
+
+        dispatchPointer("pointerup", 1, movementX, anchorY - radius);
+        const stoppedPosition = mockController.position.clone();
+        const previousYaw = readLookAngles().y;
+        act(() => mockFrame({}, 0.02));
+        expect(mockController.position.x).toBe(stoppedPosition.x);
+        expect(mockController.position.z).toBe(stoppedPosition.z);
+        expect(readLookAngles().y).toBeLessThan(previousYaw);
+
+        dispatchPointer("pointerup", 2, lookX + radius, anchorY);
+        const stoppedYaw = readLookAngles().y;
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(stoppedYaw);
+        expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(1);
+        expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(2);
+    }
+);
+
+test("movement has a deadzone, analog speed, and bounded diagonal speed", () => {
+    render(<ControllerHarness collisionsEnabled={false} slowDownWhileFalling={false} />);
+    dispatchPointer("pointerdown", 1, 200, 500);
+    dispatchPointer("pointermove", 1, 203, 497);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.x).toBe(0);
+    expect(mockController.position.z).toBe(0);
+
+    dispatchPointer("pointermove", 1, 200, 470);
+    act(() => mockFrame({}, 0.02));
+    const partialDistance = -mockController.position.z;
+    expect(partialDistance).toBeGreaterThan(0);
+    expect(partialDistance).toBeLessThan(1.5 * 0.02);
+
+    const previousPosition = mockController.position.clone();
+    dispatchPointer("pointermove", 1, 400, 300);
+    act(() => mockFrame({}, 0.02));
+    const horizontalDistance = Math.hypot(
+        mockController.position.x - previousPosition.x,
+        mockController.position.z - previousPosition.z
+    );
+    expect(horizontalDistance).toBeCloseTo(1.5 * 0.02);
+    expect(mockController.position.x).toBeGreaterThan(0);
+    expect(mockController.position.z).toBeLessThan(previousPosition.z);
+});
+
+test("each finger keeps its side and additional fingers cannot steal ownership", () => {
+    render(<ControllerHarness collisionsEnabled={false} slowDownWhileFalling={false} />);
+    dispatchPointer("pointerdown", 1, 220, 500);
+    dispatchPointer("pointerdown", 3, 240, 500);
+    dispatchPointer("pointermove", 3, 240, 350);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.z).toBe(0);
+
+    dispatchPointer("pointermove", 1, 400, 500);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.x).toBeGreaterThan(0);
+    expect(readLookAngles().y).toBe(0);
+
+    dispatchPointer("pointerdown", 2, 420, 500);
+    dispatchPointer("pointermove", 2, 180, 500);
+    act(() => mockFrame({}, 0.02));
+    expect(readLookAngles().y).toBeGreaterThan(0);
+    expect(mockGl.domElement.setPointerCapture).not.toHaveBeenCalledWith(3);
+});
+
+test.each([30, 60])("held look deflection is frame-rate independent at %s FPS", (framesPerSecond) => {
+    render(<ControllerHarness collisionsEnabled={false} />);
+    dispatchPointer("pointerdown", 1, 420, 500);
+    dispatchPointer("pointermove", 1, 480, 500);
+    act(() => {
+        for (let index = 0; index < framesPerSecond; index += 1) {
+            mockFrame({}, 1 / framesPerSecond);
+        }
+    });
+    expect(readLookAngles().y).toBeCloseTo(-1.8);
+
+    dispatchPointer("pointermove", 1, 420, 440);
+    act(() => mockFrame({}, 0.02));
+    expect(readLookAngles().x).toBeGreaterThan(0);
+});
+
+test.each(["pointercancel", "lostpointercapture"])("%s stops only its matching joystick", (eventType) => {
+    render(<ControllerHarness collisionsEnabled={false} slowDownWhileFalling={false} />);
+    dispatchPointer("pointerdown", 1, 200, 500);
+    dispatchPointer("pointerdown", 2, 420, 500);
+    dispatchPointer("pointermove", 1, 200, 440);
+    dispatchPointer("pointermove", 2, 480, 500);
+    dispatchPointer(eventType, 1, 200, 440);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.x).toBe(0);
+    expect(mockController.position.z).toBe(0);
+    expect(readLookAngles().y).toBeLessThan(0);
+});
+
+test.each(["blur", "resize", "orientationchange", "visibilitychange"])(
+    "%s clears held touch controls",
+    (eventType) => {
+        render(<ControllerHarness collisionsEnabled={false} />);
+        dispatchPointer("pointerdown", 1, 200, 500);
+        dispatchPointer("pointerdown", 2, 420, 500);
+        dispatchPointer("pointermove", 1, 200, 440);
+        dispatchPointer("pointermove", 2, 480, 500);
+        if (eventType === "visibilitychange") {
+            jest.spyOn(document, "hidden", "get").mockReturnValue(true);
+            jest.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+        }
+        fireEvent(eventType === "visibilitychange" ? document : window, new Event(eventType));
+        act(() => mockFrame({}, 0.02));
+        expect(mockController.position.x).toBe(0);
+        expect(mockController.position.z).toBe(0);
+        expect(readLookAngles().y).toBe(0);
+        expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(1);
+        expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(2);
+    }
+);
+
+test("tours release touches and do not resume stale joystick input", () => {
+    const navigationRef = React.createRef();
+    render(<ControllerHarness navigationRef={navigationRef} collisionsEnabled={false} />);
+    dispatchPointer("pointerdown", 1, 200, 500);
+    dispatchPointer("pointermove", 1, 200, 440);
+    let snapshot;
+    act(() => { snapshot = navigationRef.current.suspend(); });
+    dispatchPointer("pointerdown", 2, 420, 500);
+    dispatchPointer("pointermove", 2, 480, 500);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.z).toBe(0);
+    expect(mockGl.domElement.setPointerCapture).not.toHaveBeenCalledWith(2);
+
+    act(() => navigationRef.current.restore(snapshot));
+    dispatchPointer("pointermove", 1, 200, 440);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.z).toBe(0);
+    expect(readLookAngles().y).toBe(0);
+
+    dispatchPointer("pointerdown", 3, 420, 500);
+    dispatchPointer("pointermove", 3, 480, 500);
+    act(() => navigationRef.current.complete([0, 1.7, 0], [0, 1.7, -1], snapshot));
+    act(() => mockFrame({}, 0.02));
+    expect(readLookAngles().y).toBe(0);
+    expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(1);
+    expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(3);
+});
+
+test("disabled controls and unmount release captures and restore canvas styles", () => {
+    mockGl.domElement.style.touchAction = "pan-y";
+    const view = render(<ControllerHarness collisionsEnabled={false} />);
+    expect(mockGl.domElement.style.touchAction).toBe("none");
+    dispatchPointer("pointerdown", 1, 200, 500);
+    dispatchPointer("pointermove", 1, 200, 440);
+    view.rerender(<ControllerHarness collisionsEnabled={false} enabled={false} />);
+    expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(1);
+    dispatchPointer("pointerdown", 2, 200, 500);
+    expect(mockGl.domElement.setPointerCapture).not.toHaveBeenCalledWith(2);
+
+    view.rerender(<ControllerHarness collisionsEnabled={false} />);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.z).toBe(0);
+    dispatchPointer("pointerdown", 3, 200, 500);
+    view.unmount();
+    expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(3);
+    expect(mockGl.domElement.style.touchAction).toBe("pan-y");
+    dispatchPointer("pointerdown", 4, 200, 500);
+    expect(mockGl.domElement.setPointerCapture).not.toHaveBeenCalledWith(4);
+});
+
+test("UI touches stay independent while mouse still requests pointer lock", () => {
+    render(<ControllerHarness collisionsEnabled={false} />);
+    const button = document.createElement("button");
+    dispatchPointer("pointerdown", 1, 200, 500, button);
+    dispatchPointer("pointermove", 1, 200, 440, button);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.z).toBe(0);
+    expect(mockGl.domElement.setPointerCapture).not.toHaveBeenCalled();
+    expect(mockGl.domElement.requestPointerLock).not.toHaveBeenCalled();
+
+    dispatchPointer("pointerdown", 2, 200, 500, mockGl.domElement, "mouse");
+    expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+    expect(mockGl.domElement.setPointerCapture).not.toHaveBeenCalled();
+});
+
+test("Strict Mode does not duplicate touch input listeners", () => {
+    render(
+        <React.StrictMode>
+            <ControllerHarness collisionsEnabled={false} />
+        </React.StrictMode>
+    );
+    dispatchPointer("pointerdown", 1, 420, 500);
+    dispatchPointer("pointermove", 1, 480, 500);
+    act(() => mockFrame({}, 0.02));
+    expect(readLookAngles().y).toBeCloseTo(-1.8 * 0.02);
+    expect(mockGl.domElement.setPointerCapture).toHaveBeenCalledTimes(1);
 });
