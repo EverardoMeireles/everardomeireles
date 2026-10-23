@@ -1,0 +1,317 @@
+{
+  "format": "housemaker-r3f-scene",
+  "version": 10,
+  "coordinateSystem": "gltf-y-up",
+  "matrixLayout": "column-major",
+  "asset": {
+    "glb": "housemaker_export.glb",
+    "sha256": "19fde8dc1f72e2497ad014ba2401aa12fd06173a795cfbbe2c352cb5b89567e7"
+  },
+  "instanceGroups": [
+    {
+      "sourceNodeName": "Meshy textured object",
+      "instances": [
+        {
+          "id": "instance-1ca56019a8144428b5504160223ffa38",
+          "worldMatrix": [
+            1.3523666416228397,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.5074995978319286,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.4274981217129974,
+            0.0,
+            10.765740046591139,
+            2.1094441872462157,
+            -3.5138665620855423,
+            1.0
+          ]
+        },
+        {
+          "id": "instance-73a5ab5738634f4daeecb2b941701b73",
+          "worldMatrix": [
+            1.3523666416228397,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.5074995978319286,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.4274981217129974,
+            0.0,
+            9.981152386383803,
+            2.1094441872462157,
+            -1.741660901849365,
+            1.0
+          ]
+        },
+        {
+          "id": "instance-c0eb228efae54324b8ba871f83da57f6",
+          "worldMatrix": [
+            1.3523666416228397,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.5074995978319286,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.4274981217129974,
+            0.0,
+            9.175329664779513,
+            2.1094441872462157,
+            -2.548035919461722,
+            1.0
+          ]
+        }
+      ],
+      "halfMesh": true
+    }
+  ],
+  "doorBodyReconstructions": [],
+  "tours": [
+    {
+      "id": "7a0514e17b154056b14a8e88c6681061",
+      "name": "Tour 1",
+      "durationSeconds": 10.0,
+      "progressSpeed": 1.0,
+      "triggerPoint": [
+        3.286301604646252,
+        0.7235153161814868,
+        -12.403121252282812
+      ],
+      "triggerArea": {
+        "center": [
+          3.286301604646252,
+          0.7235153161814868,
+          -12.403121252282812
+        ],
+        "sizeMeters": [
+          2.7,
+          2.8499999999999996
+        ],
+        "horizontalAxes": "xz"
+      },
+      "curve": {
+        "type": "catmullRom",
+        "curveType": "catmullrom",
+        "closed": false,
+        "tension": 0.5,
+        "points": [
+          [
+            3.016803018004218,
+            3.8123157329571735,
+            -14.16915620257621
+          ],
+          [
+            -4.753772192510402,
+            5.411742893532518,
+            -30.609867863193983
+          ],
+          [
+            3.9572568181694554,
+            3.8123157329571664,
+            -26.53546691207622
+          ],
+          [
+            15.79068750425972,
+            5.500052369330884,
+            -27.70922217045722
+          ],
+          [
+            19.005828558878267,
+            3.8123157329571664,
+            -13.916938268422667
+          ],
+          [
+            13.895379282322242,
+            3.8123157329571735,
+            -4.52036351950501
+          ],
+          [
+            3.6826598691999344,
+            3.8123157329571664,
+            -6.918439220978212
+          ],
+          [
+            0.8778805374442161,
+            3.8123157329571664,
+            -8.504581651575043
+          ]
+        ]
+      },
+      "steps": [
+        {
+          "id": "2692eb6192e940b882c65a2c40a1a8a4",
+          "progress": 0.0,
+          "cameraTarget": [
+            -0.16647182188506707,
+            4.949933571658466,
+            -20.620352558745854
+          ],
+          "actions": []
+        },
+        {
+          "id": "52e433e56c55417ba073348331436142",
+          "progress": 0.153351,
+          "cameraTarget": [
+            -1.9998205372027444,
+            3.6297383198256257,
+            -25.229436476846782
+          ],
+          "actions": [
+            {
+              "id": "946b4b0d41464a86af44406628cc5cfb",
+              "type": "text3d",
+              "text": "Aperte qualquer tecla para continuar",
+              "position": [
+                -0.3055230807318208,
+                1.6691951409494372,
+                -24.3257
+              ],
+              "sizePoints": 12.0,
+              "color": "#ffffff",
+              "fadeDelayMs": 0.0,
+              "fadeDurationMs": 2000.0,
+              "rotationDegrees": [
+                -1.7735429406105823,
+                -28.69680925094383,
+                0.18962630190532082
+              ],
+              "rotationOrder": "XYZ",
+              "worldMatrix": [
+                1.5789025827137144,
+                0.005824995836104365,
+                0.9123318335533993,
+                0.0,
+                0.020795288424251625,
+                2.0056084789986675,
+                -0.05158085407563663,
+                0.0,
+                -0.8640799675257574,
+                0.05891157030591187,
+                1.6658301356914877,
+                0.0,
+                -0.3055230807318208,
+                1.6691951409494372,
+                -24.3257,
+                1.0
+              ]
+            },
+            {
+              "id": "d7f607bd7d0140d9a53e225794e7f001",
+              "type": "waitForKeyPress",
+              "input": "any",
+              "easing": "smoothstep"
+            },
+            {
+              "id": "b1c4e946e23f42b8a2c878bc25f6098a",
+              "type": "idleCameraAnimation",
+              "pivotPoint": [
+                -1.9998,
+                3.6297258741681637,
+                -25.2301
+              ],
+              "radiusMeters": 0.08,
+              "cycleDurationSeconds": 12.0,
+              "offsetScale": [
+                1.8,
+                2.0064819647142973,
+                1.9
+              ]
+            }
+          ]
+        },
+        {
+          "id": "c43b7f58a6c2455a8bb7e2a6ed3aa7f4",
+          "progress": 0.421392,
+          "cameraTarget": [
+            10.700261565138547,
+            2.3641268545164125,
+            -19.23128980421763
+          ],
+          "actions": [
+            {
+              "id": "0732359eac3c457e8ac7429f4e59c8f8",
+              "type": "waitForKeyPress",
+              "input": "any",
+              "easing": "smoothstep"
+            },
+            {
+              "id": "9ef995da27084d2d885421acc51dc077",
+              "type": "floatingTooltip",
+              "anchorPoint": [
+                7.217836743823552,
+                4.979365498497744,
+                -22.495803638853307
+              ],
+              "tooltipPosition": "opposite",
+              "htmlBody": "<p>Lustre éléctrico\nqdqsdq</p>\n\n<p>Lustre éléctrico\nqdqsdq</p>",
+              "style": "box-sizing: border-box;\nwidth: 25vw;\nheight: 80vh;\npadding: 14px 16px;\ncolor: #f5f7fb;\nbackground: rgba(24, 27, 34, 0.94);\nborder: 1px solid rgba(255, 255, 255, 0.24);\nborder-radius: 8px;\nfont-family: sans-serif;\nfont-size: 14px;\nline-height: 1.5;"
+            },
+            {
+              "id": "ade73980ec58429a950807ffdc55e9c4",
+              "type": "idleCameraAnimation",
+              "pivotPoint": [
+                10.701,
+                2.363635754433442,
+                -19.2318
+              ],
+              "radiusMeters": 0.08,
+              "cycleDurationSeconds": 12.0,
+              "offsetScale": [
+                1.8,
+                2.0064819647142973,
+                1.9
+              ]
+            }
+          ]
+        },
+        {
+          "id": "4aa274b0faeb4c8e8569f4ceeec854aa",
+          "progress": 1.0,
+          "cameraTarget": [
+            3.2577553071259793,
+            3.8123157329571664,
+            -11.503847804784396
+          ],
+          "actions": []
+        }
+      ]
+    }
+  ],
+  "directionalLights": [],
+  "globalScale": {
+    "matrix": [
+      1.8,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      2.0064819647142973,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.9,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "coordinateSystem": "gltf-y-up",
+    "appliedToGlb": true,
+    "appliedToRuntimeData": true
+  }
+}

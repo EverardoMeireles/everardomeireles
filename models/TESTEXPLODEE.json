@@ -8,10 +8,9 @@
 
     "ObjectProperties": [
       {
-        "objectName": "Motor_gearbox_1TT1",
-        "pathToShow": "MainMenu",
-        "text": "Right text",
-        "image": "/textures/4x3.png",
+        "circleName": "Motor_gearbox_1TT1",
+        "html": "<p>Right text</p><img src=\"/textures/4x3.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+        "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
         "circleSize": 30,
         
         "focusedObjectCloneAxisOfRotation": [0, 1, 0],
@@ -19,14 +18,13 @@
         "playPulseAnimation": true
       },
       {
-        "objectName": "Wheel_1_1BB1",
-        "pathToShow": "MainMenu",
-        "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
-        "image": "AfficheDUT-French.png",
+        "circleName": "Wheel_1_1BB1",
+        "html": "<p>DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd dddddddddddddddddddd ddtextddddddddddddddd ddddddddd</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+        "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
         "circleSize": 30,
         "playPulseAnimation": false,
         "focusedObjectCloneAxisOfRotation": [0, 0, 1],
-        "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}, "focusedObjectCloneForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom).",
+        "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}, "focusedObjectCloneForcePositionOffset_comment":" Adjust the position of the rotating object on screen, values between -1 and 1 (left to right, top to bottom)."
       }
     ]
   }

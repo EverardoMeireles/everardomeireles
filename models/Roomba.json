@@ -2,73 +2,478 @@
   "ExternalProperties": {
     "variations": [
       {
-        "type":"model",
-        "message_payload_trigger":"roomba_model_2",
-        "file":"Roomba_alternate.glb"
+        "type": "model",
+        "message_payload_trigger": "roomba_model_2",
+        "file": "Roomba_alternate.glb"
       },
       {
-        "type":"material",
-        "message_payload_trigger":"color_red",
-        "file":"Roomba_material_1.glb"
+        "type": "material",
+        "message_payload_trigger": "color_red",
+        "file": "Roomba_material_1.glb"
       }
     ]
   },
-
+  "ExplodingAnimationObjectDirections": {
+    "Brush_0TT1": {
+      "x": 0,
+      "y": 1,
+      "z": -1,
+      "distance": 1
+    },
+    "Foot_1BB2": {
+      "x": 0,
+      "y": -1,
+      "z": 0,
+      "distance": 2
+    },
+    "Gearbox_body_0BB1": {
+      "x": 0,
+      "y": -1,
+      "z": -1,
+      "distance": 1
+    },
+    "Head_1TT3": {
+      "x": 0,
+      "y": 1,
+      "z": 0,
+      "distance": 3
+    },
+    "LUL_0BB1": {
+      "x": 0,
+      "y": -1,
+      "z": -1,
+      "distance": 1
+    },
+    "Motor_gearbox_1TT1": {
+      "x": 0,
+      "y": 1,
+      "z": 0,
+      "distance": 1
+    },
+    "Wheel_1_1BB1": {
+      "x": 0,
+      "y": -1,
+      "z": 0,
+      "distance": 1
+    },
+    "Wheel_2_1BB1": {
+      "x": 0,
+      "y": -1,
+      "z": 0,
+      "distance": 1
+    },
+    "motor_wheel1_1BB1": {
+      "x": 0,
+      "y": -1,
+      "z": 0,
+      "distance": 1
+    },
+    "motor_wheel2_1BB1": {
+      "x": 0,
+      "y": -1,
+      "z": 0,
+      "distance": 1
+    },
+    "Gear_1_0TL1": {
+      "x": -1,
+      "y": 1,
+      "z": -1,
+      "distance": 1
+    },
+    "Gear_2_1TT1": {
+      "x": 0,
+      "y": 1,
+      "z": 0,
+      "distance": 1
+    },
+    "Gear_3_2TR1": {
+      "x": 1,
+      "y": 1,
+      "z": 1,
+      "distance": 1
+    },
+    "Gearbox_lid_1TT1": {
+      "x": 0,
+      "y": 1,
+      "z": 0,
+      "distance": 1
+    },
+    "Cube0_1_0TL1": {
+      "x": -1,
+      "y": 1,
+      "z": -1,
+      "distance": 1
+    },
+    "Cube1_2_1TT1": {
+      "x": 0,
+      "y": 1,
+      "z": 0,
+      "distance": 1
+    },
+    "Cube2_3_2TR1": {
+      "x": 1,
+      "y": 1,
+      "z": 1,
+      "distance": 1
+    }
+  },
   "ModelProperties": {
-    "positionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn":[0, 0, 0],
-    "customOrigin": [180, 140, 51],
-
-    "animationStartOnLoad":false,
-    "enableRockingAnimation":true,
-    "enableExplodeAnimation":true,
-    
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "customOrigin": [
+      0,
+      0,
+      0
+    ],
+    "forcedCameraPosition": [41, 38, -16],
+    "animationStartOnLoad": true,
+    "enableRockingAnimation": true,
+    "enableExplodeAnimation": true,
     "rockingMaxAngleDegrees": 10,
     "rockingTransitionDuration": 2000,
     "explodingTransitionDuration": 2000,
     "childTransitionDuration": 1500,
-
-    "enableRotationAnimation": true,
-      "rotationAnimationSpeed": 0.5,
-      "rotationAnimationWhenToStop": "onScreenMouseHover",
-      "resetInitialRotation": true,
-      "resetInitialRotationAnimationSpeed": 8,
-      "restartAnimationAfterStop": true
+    "showCirclesAfterExplodingAnimation": false,
+    "enableRotationAnimation": false,
+    "rotationAnimationSpeed": 0.5,
+    "rotationAnimationWhenToStop": "onScreenMouseHover",
+    "resetInitialRotation": true,
+    "resetInitialRotationAnimationSpeed": 8,
+    "restartAnimationAfterStop": true
   },
-
   "ObjectProperties": [
     {
-      "objectName": "Motor_gearbox_1TT1",
-      "pathToShow": "MainMenu",
-      "text": "Right text",
-      "image": "/textures/4x3.png",
+      "circleName": "Motor_gearbox_1TT1",
+      "html": "<p>Right text</p><img src=\"/textures/back_arrow.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
       "circleSize": 30,
       "playPulseAnimation": true,
-      "position": [0, 0],
-      "focusedObjectFront": [0, 1, 0],
-      "focusedObjectFocusPoint": [171, 137, 55],
-      "focusedObjectFocusEndPointDistance": 8,
-      "AAAAAAAAAAAAAAAAAAAAAAAAfocusedObjectCameraTargetPoint": [200, 137, 54],
-      "focusedObjectArchWidth": 20,
+      "position": [
+        0,
+        0
+      ],
+      "focusedObjectFront": [
+        0,
+        1,
+        0
+      ],
+      "focusedObjectFocusPoint": [
+        -5,
+        5,
+        -5
+      ],
+      "focusedObjectArchWidth": 5,
       "focusedObjectArchCurveDirection": "left",
       "focusedObjectCloneEnable": true,
-      "focusedObjectCloneScale": 3,
-      "focusedObjectCloneAxisOfRotation": [0, 1, 0],
+      "focusedObjectCloneScale": 1,
+      "focusedObjectCloneAxisOfRotation": [
+        0,
+        1,
+        0
+      ],
       "focusedObjectCloneSpeedOfRotation": 2,
-      "focusedObjectCloneForcePositionOffset": {"left" : -0.5, "right" : 0.5, "top" : 0.25, "bottom" : -0.25}
-      
+      "focusedObjectCloneForcePositionOffset": {
+        "left": -0.5,
+        "right": 0.5,
+        "top": 0.25,
+        "bottom": -0.25
+      },
+      "focusGroup": "",
+      "focusTarget": "",
+      "focusedObjectCameraTargetPoint": [
+        -8,
+        3,
+        -2
+      ],
+      "textShowMode": "Canvas",
+      "waitForFocusBeforeExplodeAnimation": false,
+      "showCirclesAfterFocusAnimation": false,
+      "isFocusable": true
     },
     {
-      "objectName": "Wheel_1_1BB1",
-      "pathToShow": "MainMenu",
-      "text": "DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd\ndddddddddddddddddddd ddtextddddddddddddddd ddddddddd",
-      "image": "AfficheDUT-French.png",
+      "circleName": "Wheel_1_1BB1",
+      "html": "<p>DDDDLeft dqsdqs dqsqsdqsdddq sdqsdqsdqsds dddddddddddddddddddd ddddddddddd dddddddddddddddddddd ddtextddddddddddddddd ddddddddd</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
       "circleSize": 30,
       "playPulseAnimation": false,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "focusedObjectCloneEnable": true,
-      "focusedObjectCloneAxisOfRotation": [0, 0, 1]
-
+      "focusedObjectCloneScale": 0.5,
+      "focusedObjectCloneAxisOfRotation": [
+        0,
+        0,
+        1
+      ],
+      "focusTarget": "",
+      "showCirclesAfterFocusAnimation": false,
+      "textShowMode": "Canvas",
+      "focusedObjectArchWidth": 10,
+      "focusedObjectCloneSpeedOfRotation": 1.2,
+      "waitForFocusBeforeExplodeAnimation": false,
+      "focusedObjectFront": [
+        1,
+        0,
+        0
+      ],
+      "focusedObjectFocusPoint": [
+        10,
+        0,
+        0
+      ],
+      "focusedObjectCameraTargetPoint": [
+        0,
+        0,
+        0
+      ],
+      "focusedObjectCloneForcePositionOffset": {
+        "left": -0.5,
+        "right": 0.5,
+        "top": 0.25,
+        "bottom": -0.25
+      },
+      "isFocusable": false,
+      "focusGroup": ""
+    },
+    {
+      "circleName": "Gearbox_body_0BB1",
+      "html": "<p>G0</p><img src=\"/textures/AfficheMicrolins1-French.jpg\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
+      "position": [
+        0,
+        0
+      ],
+      "focusedObjectFocusPoint": [
+        5,
+        1,
+        -11
+      ],
+      "focusedObjectCloneScale": 0.2,
+      "isFocusable": true,
+      "focusTarget": "GearBox",
+      "focusGroup": "",
+      "waitForFocusBeforeExplodeAnimation": false,
+      "showCirclesAfterFocusAnimation": true,
+      "textShowMode": "Canvas",
+      "circleSize": 30,
+      "focusedObjectArchWidth": 10,
+      "focusedObjectCloneSpeedOfRotation": 1.2,
+      "playPulseAnimation": false,
+      "focusedObjectCloneEnable": true,
+      "focusedObjectFront": [
+        1,
+        0,
+        0
+      ],
+      "focusedObjectCameraTargetPoint": [
+        -3,
+        -2,
+        -9
+      ],
+      "focusedObjectCloneAxisOfRotation": [
+        0,
+        1,
+        0
+      ],
+      "focusedObjectCloneForcePositionOffset": {
+        "left": -0.5,
+        "right": 0.5,
+        "top": 0.25,
+        "bottom": -0.25
+      }
+    },
+    {
+      "circleName": "LUL_0BB1",
+      "html": "<p>G0</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
+      "position": [
+        0,
+        0
+      ],
+      "focusedObjectCloneScale": 0.5,
+      "isFocusable": true,
+      "focusTarget": "",
+      "focusGroup": "",
+      "waitForFocusBeforeExplodeAnimation": false,
+      "showCirclesAfterFocusAnimation": true,
+      "textShowMode": "Canvas",
+      "circleSize": 30,
+      "focusedObjectArchWidth": 10,
+      "focusedObjectCloneSpeedOfRotation": 1.2,
+      "playPulseAnimation": false,
+      "focusedObjectCloneEnable": false,
+      "focusedObjectFront": [
+        1,
+        0,
+        0
+      ],
+      "focusedObjectFocusPoint": [
+        6,
+        -1,
+        -1
+      ],
+      "focusedObjectCameraTargetPoint": [
+        -2,
+        -4,
+        -1
+      ],
+      "focusedObjectCloneAxisOfRotation": [
+        0,
+        1,
+        0
+      ],
+      "focusedObjectCloneForcePositionOffset": {
+        "left": -0.5,
+        "right": 0.5,
+        "top": 0.25,
+        "bottom": -0.25
+      }
+    },
+    {
+      "circleName": "Gear_1_0TL1",
+      "html": "<p>G1</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
+      "circleSize": 30,
+      "playPulseAnimation": false,
+      "position": [
+        0,
+        0
+      ],
+      "isFocusable": false,
+      "focusTarget": "",
+      "focusGroup": "GearBox",
+      "showCirclesAfterFocusAnimation": false,
+      "textShowMode": "Canvas",
+      "focusedObjectArchWidth": 10,
+      "focusedObjectCloneScale": 3,
+      "focusedObjectCloneSpeedOfRotation": 1.2,
+      "focusedObjectCloneEnable": false,
+      "waitForFocusBeforeExplodeAnimation": false,
+      "focusedObjectFront": [
+        1,
+        0,
+        0
+      ],
+      "focusedObjectFocusPoint": [
+        0,
+        0,
+        0
+      ],
+      "focusedObjectCameraTargetPoint": [
+        0,
+        0,
+        0
+      ],
+      "focusedObjectCloneAxisOfRotation": [
+        0,
+        1,
+        0
+      ],
+      "focusedObjectCloneForcePositionOffset": {
+        "left": -0.5,
+        "right": 0.5,
+        "top": 0.25,
+        "bottom": -0.25
+      }
+    },
+    {
+      "circleName": "Gear_2_1TT1",
+      "html": "<p>G2</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
+      "circleSize": 30,
+      "playPulseAnimation": false,
+      "position": [
+        0,
+        0
+      ],
+      "isFocusable": false,
+      "focusTarget": "",
+      "focusGroup": "GearBox",
+      "showCirclesAfterFocusAnimation": false,
+      "textShowMode": "Canvas",
+      "focusedObjectArchWidth": 10,
+      "focusedObjectCloneScale": 3,
+      "focusedObjectCloneSpeedOfRotation": 1.2,
+      "focusedObjectCloneEnable": false,
+      "waitForFocusBeforeExplodeAnimation": false,
+      "focusedObjectFront": [
+        1,
+        0,
+        0
+      ],
+      "focusedObjectFocusPoint": [
+        0,
+        0,
+        0
+      ],
+      "focusedObjectCameraTargetPoint": [
+        0,
+        0,
+        0
+      ],
+      "focusedObjectCloneAxisOfRotation": [
+        0,
+        1,
+        0
+      ],
+      "focusedObjectCloneForcePositionOffset": {
+        "left": -0.5,
+        "right": 0.5,
+        "top": 0.25,
+        "bottom": -0.25
+      }
+    },
+    {
+      "circleName": "Gear_3_2TR1",
+      "html": "<p>G3</p><img src=\"/textures/AfficheDUT-French.png\" alt=\"Tooltip\" style=\"display:block;width:100%;height:auto;margin-top:16px;object-fit:contain;\">",
+      "style": {"width":"320px", "padding":"24px", "backgroundColor":"rgba(0, 0, 0, 0.75)", "color":"#fff", "borderRadius":"16px"},
+      "circleSize": 30,
+      "playPulseAnimation": false,
+      "position": [
+        0,
+        0
+      ],
+      "isFocusable": false,
+      "focusTarget": "",
+      "focusGroup": "GearBox",
+      "showCirclesAfterFocusAnimation": false,
+      "textShowMode": "Canvas",
+      "focusedObjectArchWidth": 10,
+      "focusedObjectCloneScale": 3,
+      "focusedObjectCloneSpeedOfRotation": 1.2,
+      "focusedObjectCloneEnable": false,
+      "waitForFocusBeforeExplodeAnimation": false,
+      "focusedObjectFront": [
+        1,
+        0,
+        0
+      ],
+      "focusedObjectFocusPoint": [
+        0,
+        0,
+        0
+      ],
+      "focusedObjectCameraTargetPoint": [
+        0,
+        0,
+        0
+      ],
+      "focusedObjectCloneAxisOfRotation": [
+        0,
+        1,
+        0
+      ],
+      "focusedObjectCloneForcePositionOffset": {
+        "left": -0.5,
+        "right": 0.5,
+        "top": 0.25,
+        "bottom": -0.25
+      }
     }
   ]
 }
-  

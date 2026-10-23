@@ -4,6 +4,12 @@ Original MIT license applies: https://github.com/fredli74/Typr.ts/blob/master/LI
 */
 
 /*!
+Custom bundle of @unicode-font-resolver/client v1.0.2 (https://github.com/lojjic/unicode-font-resolver)
+for use in Troika text rendering. 
+Original MIT license applies
+*/
+
+/*!
 Custom bundle of woff2otf (https://github.com/arty-name/woff2otf) with fflate
 (https://github.com/101arrowz/fflate) for use in Troika text rendering. 
 Original licenses apply: 
@@ -11,13 +17,7 @@ Original licenses apply:
 - woff2otf.js: https://github.com/arty-name/woff2otf/blob/master/woff2otf.js (Apache2)
 */
 
-/*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */
-
-/**
- * @license
- * Copyright 2010-2022 Three.js Authors
- * SPDX-License-Identifier: MIT
- */
+/*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */
 
 /**
  * @license React
@@ -81,9 +81,9 @@ Original licenses apply:
 
 /**
  * @license React
- * use-sync-external-store-shim.production.min.js
+ * use-sync-external-store-shim.production.js
  *
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -91,10 +91,17 @@ Original licenses apply:
 
 /**
  * @license React
- * use-sync-external-store-shim/with-selector.production.min.js
+ * use-sync-external-store-shim/with-selector.production.js
  *
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ */
+
+/**
+ * postprocessing v6.39.5 build Wed Sep 09 2026
+ * https://github.com/pmndrs/postprocessing
+ * Copyright 2015-2026 Raoul van Rüschen
+ * @license Zlib
  */
