@@ -642,9 +642,10 @@ export function prepareHouseMakerModelScene(sourceScene, entries, warning = cons
  * Relationships: HouseMakerLoader places both objects under its transform root.
  * Example: <HouseMakerDirectionalLight light={directionalLight} />
  * @param {object} props.light - Validated exported light data.
+ * @param {object} [props.sunlightOrbit] - Validated sun-ray orbit metadata.
  */
 export function HouseMakerDirectionalLight(props) {
-    const {light} = props;
+    const {light, sunlightOrbit, shadowBounds, shadowMapSize = 1024} = props;
     const directionalLightRef = useRef();
     const targetObject = useMemo(() => {
         const target = new THREE.Object3D();
@@ -652,9 +653,34 @@ export function HouseMakerDirectionalLight(props) {
         return target;
     }, []);
 
+    // Preserve animation phase across equivalent prop objects and rerenders.
+    const [positionX, positionY, positionZ] = light.position;
+    const [targetX, targetY, targetZ] = light.target;
+    const [axisX, axisY, axisZ] = sunlightOrbit?.axis ?? [0, 0, 0];
+    const [directionX, directionY, directionZ] = sunlightOrbit?.initialDirection ?? [0, 0, 0];
+    const speed = sunlightOrbit?.enabled && sunlightOrbit.lightId === light.id
+        ? sunlightOrbit.speedDegreesPerSecond : 0;
+    const orbit = useMemo(() => {
+        if (!speed) return null;
+        return {
+            lightId: light.id,
+            phase: 0,
+            radiansPerSecond: THREE.MathUtils.degToRad(speed),
+            axis: new THREE.Vector3(axisX, axisY, axisZ).normalize(),
+            direction: new THREE.Vector3(directionX, directionY, directionZ).normalize(),
+            position: new THREE.Vector3(positionX, positionY, positionZ),
+            distance: Math.hypot(targetX - positionX, targetY - positionY, targetZ - positionZ)
+        };
+    }, [light.id, speed, axisX, axisY, axisZ, directionX, directionY, directionZ,
+        positionX, positionY, positionZ, targetX, targetY, targetZ]);
+
     // Apply the absolute target after both siblings mount.
     useLayoutEffect(() => {
         targetObject.position.fromArray(light.target);
+        if (orbit) {
+            targetObject.position.copy(orbit.direction).applyAxisAngle(orbit.axis, orbit.phase)
+                .multiplyScalar(orbit.distance).add(orbit.position);
+        }
         targetObject.updateMatrix();
         targetObject.updateWorldMatrix(true, false);
 
@@ -667,7 +693,41 @@ export function HouseMakerDirectionalLight(props) {
             houseMakerDirectionalLightId: light.id
         };
         directionalLight.updateMatrix?.();
-    }, [light, targetObject]);
+
+        // Fit generated sunlight to the exported house, not helpers.
+        if (!shadowBounds || !directionalLight.shadow) return;
+        if (directionalLight.shadow.map
+            && (directionalLight.shadow.map.width !== shadowMapSize
+                || directionalLight.shadow.map.height !== shadowMapSize)) {
+            directionalLight.shadow.map.dispose();
+            directionalLight.shadow.map = null;
+        }
+        directionalLight.updateWorldMatrix(true, false);
+        directionalLight.shadow.updateMatrices(directionalLight);
+        const shadowCamera = directionalLight.shadow.camera;
+        const bounds = shadowBounds.clone();
+        if (directionalLight.parent) bounds.applyMatrix4(directionalLight.parent.matrixWorld);
+        bounds.applyMatrix4(shadowCamera.matrixWorldInverse);
+        const padding = Math.max(0.5, shadowBounds.getSize(new THREE.Vector3()).length() * 0.025);
+        shadowCamera.left = bounds.min.x - padding;
+        shadowCamera.right = bounds.max.x + padding;
+        shadowCamera.bottom = bounds.min.y - padding;
+        shadowCamera.top = bounds.max.y + padding;
+        shadowCamera.near = Math.max(0.01, -bounds.max.z - padding);
+        shadowCamera.far = Math.max(shadowCamera.near + 1, -bounds.min.z + padding);
+        shadowCamera.updateProjectionMatrix();
+        directionalLight.shadow.updateMatrices(directionalLight);
+    }, [light, orbit, shadowBounds, shadowMapSize, targetObject]);
+
+    // Rotate exported ray direction; keep the authored light position fixed.
+    useFrame((_, delta) => {
+        if (!orbit || !Number.isFinite(delta) || delta <= 0) return;
+        orbit.phase = (orbit.phase + orbit.radiansPerSecond * delta) % (Math.PI * 2);
+        targetObject.position.copy(orbit.direction).applyAxisAngle(orbit.axis, orbit.phase)
+            .multiplyScalar(orbit.distance).add(orbit.position);
+        targetObject.updateMatrix();
+        targetObject.updateWorldMatrix(true, false);
+    });
 
     return (
         <>
@@ -678,6 +738,9 @@ export function HouseMakerDirectionalLight(props) {
                 color={light.color}
                 intensity={light.intensity}
                 castShadow={light.castShadow}
+                shadow-mapSize={shadowBounds ? [shadowMapSize, shadowMapSize] : undefined}
+                shadow-bias={shadowBounds ? -0.0001 : undefined}
+                shadow-normalBias={shadowBounds ? 0.03 : undefined}
                 userData={{houseMakerDirectionalLightId: light.id}}
             />
             <primitive object={targetObject} />
@@ -697,6 +760,10 @@ export function HouseMakerDirectionalLight(props) {
  * @param {boolean} [instancesEnabled] - Whether exported instances are rendered.
  * @param {boolean} [toursEnabled] - Whether exported runtime tours can activate.
  * @param {React.MutableRefObject<any>} [navigationRef] - Existing player navigation bridge.
+ * @param {boolean} [shadowsEnabled] - Enable shadows on runtime PBR meshes.
+ * @param {boolean} [fallbackSunEnabled] - Add sunlight when exported lights are absent.
+ * @param {number} [shadowMapSize] - Generated sunlight shadow-map resolution.
+ * @param {boolean} [showBakedPvs] - Show baked visibility cells for debugging.
  */
 export function HouseMakerLoader(props) {
     const {jsonFile = "housemaker_export.json"} = props;
@@ -704,10 +771,14 @@ export function HouseMakerLoader(props) {
     const {instancesEnabled = true} = props;
     const {toursEnabled = true} = props;
     const {navigationRef} = props;
+    const {shadowsEnabled = false, fallbackSunEnabled = false, shadowMapSize = 1024} = props;
+    const {showBakedPvs = false} = props;
     const rootRef = useRef();
     const visibilityRef = useRef({ housemakerObjectsHidden: false });
     const instanceMeshesRef = useRef(new Map());
     const objectFadeRef = useRef({ progress: 1, cursor: 0, remaining: 0, records: [] });
+    const pvsRef = useRef(null);
+    const pvsHashRef = useRef({ bytes: null, promise: null });
 
     // Load export metadata before its referenced model.
     const manifestUrl = config.models_path + jsonFile;
@@ -726,6 +797,39 @@ export function HouseMakerLoader(props) {
             ? () => {}
             : (message) => console.warn(message)
     ), [sceneData.directionalLights]);
+
+    // Invalid orbit metadata leaves otherwise valid lights static.
+    const sunlightOrbit = useMemo(() => {
+        const orbit = sceneData.sunlightOrbit;
+        if (orbit == null || orbit.enabled === false) return undefined;
+
+        const axis = normalizeFiniteVector3(orbit.axis);
+        const initialDirection = normalizeFiniteVector3(orbit.initialDirection);
+        const light = directionalLights.find((entry) => entry.id === orbit.lightId);
+        let invalidReason;
+        if (typeof orbit !== "object" || Array.isArray(orbit) || orbit.enabled !== true) {
+            invalidReason = "enabled must be a boolean";
+        } else if (!isNonEmptyString(orbit.lightId) || !light) {
+            invalidReason = "lightId must match an exported directional light";
+        } else if (!Number.isFinite(orbit.speedDegreesPerSecond)
+            || orbit.speedDegreesPerSecond < 0 || orbit.speedDegreesPerSecond > 360) {
+            invalidReason = "speedDegreesPerSecond must be between 0 and 360";
+        } else if (!axis || !initialDirection) {
+            invalidReason = "axis and initialDirection must be finite, nonzero three-number vectors";
+        } else if (!Number.isFinite(Math.hypot(
+            ...light.target.map((value, index) => value - light.position[index])
+        ))) {
+            invalidReason = "light endpoints must have a finite distance";
+        }
+
+        if (invalidReason) {
+            if (process.env.NODE_ENV !== "production") {
+                console.warn(`HouseMaker sunlightOrbit ignored: ${invalidReason}; keeping static lighting.`);
+            }
+            return undefined;
+        }
+        return { ...orbit, axis, initialDirection };
+    }, [sceneData.sunlightOrbit, directionalLights]);
 
     // Build mirrored models and reusable instance geometry.
     const renderData = useMemo(() => {
@@ -867,12 +971,24 @@ export function HouseMakerLoader(props) {
                         }
                     }
 
+                    // Bind placements directly, including after R3F mesh reconstruction.
+                    const instanceMatrices = new THREE.InstancedBufferAttribute(
+                        new Float32Array(instances.length * 16),
+                        16
+                    ).setUsage(THREE.StaticDrawUsage);
+                    const instanceMatrix = new THREE.Matrix4();
+                    instances.forEach((instance, instanceIndex) => {
+                        instanceMatrix.fromArray(instance.worldMatrix).multiply(sourceTransform);
+                        instanceMatrix.toArray(instanceMatrices.array, instanceIndex * 16);
+                    });
+
                     instanceParts.push({
                         key: `${groupIndex}-${sourceNodeName}-${sourceMeshIndex}`,
                         name: `HouseMaker instances ${sourceNodeName} part ${sourceMeshIndex + 1}`,
                         geometry,
                         material: sourceMesh.material,
                         instances,
+                        instanceMatrices,
                         sourceTransform,
                         castShadow: sourceMesh.castShadow,
                         receiveShadow: sourceMesh.receiveShadow,
@@ -883,8 +999,63 @@ export function HouseMakerLoader(props) {
             });
         });
 
-        return { modelScene, mirroredModels, runtimeMirrors, instanceParts };
+        const modelBounds = new THREE.Box3().setFromObject(modelScene).expandByObject(mirroredModels);
+        return { modelScene, mirroredModels, runtimeMirrors, instanceParts, modelBounds };
     }, [gltf, sceneData]);
+
+    // Add a sun only when the export supplies no lighting.
+    const runtimeLighting = useMemo(() => {
+        const bounds = renderData.modelBounds.clone();
+        if (instancesEnabled) {
+            renderData.instanceParts.forEach((part) => {
+                const geometryBounds = part.geometry.boundingBox?.clone()
+                    ?? new THREE.Box3().setFromBufferAttribute(part.geometry.getAttribute("position"));
+                part.instances.forEach((instance) => {
+                    const matrix = new THREE.Matrix4().fromArray(instance.worldMatrix).multiply(part.sourceTransform);
+                    bounds.union(geometryBounds.clone().applyMatrix4(matrix));
+                });
+            });
+        }
+        if (!fallbackSunEnabled || directionalLights.length > 0 || bounds.isEmpty()) {
+            return { lights: directionalLights, bounds };
+        }
+
+        const target = bounds.getCenter(new THREE.Vector3());
+        const distance = Math.max(10, bounds.getSize(new THREE.Vector3()).length() * 1.5);
+        const position = new THREE.Vector3(0.553, 0.743, 0.377).normalize()
+            .multiplyScalar(distance).add(target);
+        return {
+            bounds,
+            lights: [{
+                id: "housemaker-runtime-sun",
+                name: "HouseMaker sunlight",
+                position: position.toArray(),
+                target: target.toArray(),
+                color: "#fff4e5",
+                intensity: 3,
+                castShadow: shadowsEnabled
+            }]
+        };
+    }, [directionalLights, fallbackSunEnabled, instancesEnabled, renderData, shadowsEnabled]);
+
+    // Change only owned runtime mesh flags, never cached exports.
+    useLayoutEffect(() => {
+        if (!shadowsEnabled) return;
+        const records = [];
+        const roots = [renderData.modelScene, renderData.mirroredModels, ...instanceMeshesRef.current.values()];
+        roots.forEach((root) => root.traverse((mesh) => {
+            if (!mesh.isMesh) return;
+            const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            if (!materials.some((material) => material?.isMeshStandardMaterial)) return;
+            records.push({ mesh, castShadow: mesh.castShadow, receiveShadow: mesh.receiveShadow });
+            mesh.castShadow ||= materials.every((material) => !material.transparent || material.opacity >= 1);
+            mesh.receiveShadow = true;
+        }));
+        return () => records.forEach(({ mesh, castShadow, receiveShadow }) => {
+            mesh.castShadow = castShadow;
+            mesh.receiveShadow = receiveShadow;
+        });
+    }, [instancesEnabled, renderData, shadowsEnabled]);
 
     // Prepare owned fade materials before the first rendered frame.
     useLayoutEffect(() => {
@@ -934,9 +1105,46 @@ export function HouseMakerLoader(props) {
                 return materials.get(material);
             });
 
+            // Fade shadow coverage alongside each object's visible material.
+            const originalDepthMaterial = mesh.customDepthMaterial;
+            const originalBeforeShadow = mesh.onBeforeShadow;
+            let depthMaterial;
+            let shadowOpacity;
+            if (shadowsEnabled) {
+                depthMaterial = originalDepthMaterial?.clone()
+                    ?? new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
+                depthMaterial.map = fadeMaterials[0].material.map;
+                depthMaterial.alphaMap = fadeMaterials[0].material.alphaMap;
+                depthMaterial.alphaTest = fadeMaterials[0].material.alphaTest;
+                depthMaterial.side = fadeMaterials[0].material.side;
+                depthMaterial.alphaHash = fadeMaterials[0].material.alphaHash;
+                depthMaterial.opacity = fadeMaterials[0].material.opacity;
+                shadowOpacity = { value: depthMaterial.opacity };
+                depthMaterial.onBeforeCompile = (shader, renderer) => {
+                    originalDepthMaterial?.onBeforeCompile?.call(depthMaterial, shader, renderer);
+                    shader.uniforms.houseMakerFadeOpacity = shadowOpacity;
+                    shader.fragmentShader = "uniform float houseMakerFadeOpacity;\n" + shader.fragmentShader.replace(
+                        "vec4 diffuseColor = vec4( 1.0 );",
+                        "vec4 diffuseColor = vec4( 1.0, 1.0, 1.0, houseMakerFadeOpacity );"
+                    );
+                };
+                mesh.customDepthMaterial = depthMaterial;
+                mesh.onBeforeShadow = (...args) => {
+                    originalBeforeShadow?.apply(mesh, args);
+                    const group = args[6];
+                    const entry = fadeMaterials[group?.materialIndex ?? 0] ?? fadeMaterials[0];
+                    depthMaterial.opacity = entry.material.opacity;
+                    shadowOpacity.value = depthMaterial.opacity;
+                };
+            }
+
             records.push({
                 mesh,
                 originalMaterial,
+                originalDepthMaterial,
+                originalBeforeShadow,
+                depthMaterial,
+                shadowOpacity,
                 hideable: mesh.userData.housemakerHideable,
                 fadeMaterials
             });
@@ -953,13 +1161,23 @@ export function HouseMakerLoader(props) {
             entry.material.opacity = entry.opacity * opacity;
             entry.material.alphaTest = entry.alphaTest * Math.max(opacity, Number.EPSILON);
         });
+        records.forEach((record) => {
+            if (!record.depthMaterial) return;
+            record.depthMaterial.opacity = record.fadeMaterials[0].material.opacity;
+            record.shadowOpacity.value = record.depthMaterial.opacity;
+        });
         fade.records = records;
         fade.cursor = 0;
         fade.remaining = records.length;
 
         return () => {
-            records.forEach(({ mesh, originalMaterial, hideable }) => {
+            records.forEach(({ mesh, originalMaterial, originalDepthMaterial, originalBeforeShadow, depthMaterial, hideable }) => {
                 mesh.material = originalMaterial;
+                if (depthMaterial) {
+                    mesh.customDepthMaterial = originalDepthMaterial;
+                    mesh.onBeforeShadow = originalBeforeShadow;
+                    depthMaterial.dispose();
+                }
                 mesh.visible = true;
                 if (hideable === undefined) delete mesh.userData.housemakerHideable;
                 else mesh.userData.housemakerHideable = hideable;
@@ -967,7 +1185,237 @@ export function HouseMakerLoader(props) {
             materials.forEach((entry) => entry.material.dispose());
             fade.records = [];
         };
-    }, [renderData, instancesEnabled]);
+    }, [renderData, instancesEnabled, shadowsEnabled]);
+
+    // Verify baked visibility against already-cached GLB bytes.
+    useEffect(() => {
+        if (sceneData.visibility == null) return;
+
+        let cancelled = false;
+        const runtime = {
+            controller: null,
+            records: [],
+            pending: new Map(),
+            cameraPosition: new THREE.Vector3(),
+            lastPosition: new THREE.Vector3(NaN, NaN, NaN),
+            frame: -1,
+            camera: null
+        };
+        pvsRef.current = runtime;
+
+        const initializeVisibility = async () => {
+            try {
+                const modelUrl = config.models_path + modelFile;
+                const bytes = THREE.Cache.get(modelUrl);
+                if (!(bytes instanceof ArrayBuffer) || !window.crypto?.subtle) {
+                    throw new Error("Cached GLB bytes or Web Crypto unavailable; keeping frustum-only visibility.");
+                }
+
+                const hash = pvsHashRef.current;
+                if (hash.bytes !== bytes) {
+                    hash.bytes = bytes;
+                    hash.promise = window.crypto.subtle.digest("SHA-256", bytes).then((digest) => (
+                        Array.from(new Uint8Array(digest), (value) => value.toString(16).padStart(2, "0")).join("")
+                    ));
+                }
+
+                const moduleUrl = new URL(modelUrl, document.baseURI);
+                if (!/\.glb$/i.test(moduleUrl.pathname)) {
+                    throw new Error("Cannot resolve the baked visibility module; keeping frustum-only visibility.");
+                }
+                moduleUrl.pathname = moduleUrl.pathname.replace(/\.glb$/i, ".pvs.mjs");
+                const [glbSha256, visibilityModule] = await Promise.all([
+                    hash.promise,
+                    import(/* webpackIgnore: true */ moduleUrl.href)
+                ]);
+                if (cancelled) return;
+                if (typeof visibilityModule.createPvsController !== "function") {
+                    throw new Error("Baked visibility module has no createPvsController export.");
+                }
+
+                // Cull detached proxies, retaining real visibility and shadows.
+                const proxyScene = renderData.modelScene.clone(true);
+                proxyScene.traverse((node) => { node.visible = true; });
+                const controller = visibilityModule.createPvsController({
+                    scene: proxyScene,
+                    visibility: sceneData.visibility,
+                    expectedGlbSha256: glbSha256,
+                    cullShadowCasters: true
+                });
+                if (!controller.valid) {
+                    controller.dispose();
+                    throw new Error(controller.reason || "Invalid baked visibility data; keeping frustum-only visibility.");
+                }
+                runtime.controller = controller;
+
+                const listedNames = new Set(sceneData.visibility.clusters.flatMap((cluster) => cluster.nodeNames));
+                const proxies = new Map();
+                proxyScene.traverse((node) => {
+                    if (!listedNames.has(node.name)) return;
+                    const matches = proxies.get(node.name) ?? [];
+                    matches.push(node);
+                    proxies.set(node.name, matches);
+                });
+
+                renderData.modelScene.traverse((mesh) => {
+                    const matches = proxies.get(mesh.name);
+                    if (!mesh.isMesh || mesh.isInstancedMesh || matches?.length !== 1) return;
+                    const record = {
+                        mesh,
+                        proxy: matches[0],
+                        originalBefore: mesh.onBeforeRender,
+                        originalAfter: mesh.onAfterRender,
+                        start: 0,
+                        count: 0
+                    };
+
+                    // Preserve shadows and visibility while skipping camera draws.
+                    record.before = function(renderer, scene, camera, geometry, material, group) {
+                        record.originalBefore.call(this, renderer, scene, camera, geometry, material, group);
+                        const root = rootRef.current;
+                        const frame = renderer.info.render.frame;
+                        if (root && (runtime.frame !== frame || runtime.camera !== camera)) {
+                            runtime.frame = frame;
+                            runtime.camera = camera;
+                            camera.getWorldPosition(runtime.cameraPosition);
+                            root.worldToLocal(runtime.cameraPosition);
+                            if (!runtime.lastPosition.equals(runtime.cameraPosition)) {
+                                controller.update(runtime.cameraPosition);
+                                runtime.lastPosition.copy(runtime.cameraPosition);
+                            }
+                        }
+                        if (record.proxy.visible || !geometry) return;
+                        record.start = geometry.drawRange.start;
+                        record.count = geometry.drawRange.count;
+                        runtime.pending.set(geometry, record);
+                        // Past-buffer ranges skip submissions, including Three r168.
+                        const vertexCount = geometry.index?.count ?? geometry.attributes.position?.count ?? 0;
+                        geometry.setDrawRange(vertexCount + 1, 0);
+                    };
+                    record.after = function(renderer, scene, camera, geometry, material, group) {
+                        const pending = runtime.pending.get(geometry);
+                        if (pending) {
+                            geometry.setDrawRange(pending.start, pending.count);
+                            runtime.pending.delete(geometry);
+                        }
+                        record.originalAfter.call(this, renderer, scene, camera, geometry, material, group);
+                    };
+                    mesh.onBeforeRender = record.before;
+                    mesh.onAfterRender = record.after;
+                    runtime.records.push(record);
+                });
+            } catch (error) {
+                if (!cancelled && process.env.NODE_ENV !== "production") {
+                    console.warn("HouseMaker baked visibility disabled:", error.message);
+                }
+            }
+        };
+        initializeVisibility();
+
+        return () => {
+            cancelled = true;
+            runtime.pending.forEach((record, geometry) => geometry.setDrawRange(record.start, record.count));
+            runtime.pending.clear();
+            runtime.records.forEach((record) => {
+                if (record.mesh.onBeforeRender === record.before) record.mesh.onBeforeRender = record.originalBefore;
+                if (record.mesh.onAfterRender === record.after) record.mesh.onAfterRender = record.originalAfter;
+            });
+            runtime.controller?.dispose();
+            if (pvsRef.current === runtime) pvsRef.current = null;
+        };
+    }, [modelFile, renderData, sceneData.visibility]);
+
+    // Draw debug cells without changing visibility or collisions.
+    useEffect(() => {
+        const root = rootRef.current;
+        if (!showBakedPvs || !root || !Array.isArray(sceneData.visibility?.cells)) return;
+
+        const cells = sceneData.visibility.cells.filter((cell) => (
+            [cell?.min, cell?.max].every((bounds) => (
+                Array.isArray(bounds) && bounds.length === 3 && bounds.every(Number.isFinite)
+            )) && cell.min.every((value, axis) => value <= cell.max[axis])
+        ));
+        if (cells.length === 0) return;
+
+        const edges = [[0, 1], [1, 3], [3, 2], [2, 0], [4, 5], [5, 7], [7, 6], [6, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
+        const positions = new Float32Array(cells.length * 72);
+        const colors = new Float32Array(positions.length);
+        const inactiveColor = new THREE.Color("#38bdf8");
+        const activeColor = new THREE.Color("#4ade80");
+        const activeCells = cells.map(() => false);
+        cells.forEach((cell, cellIndex) => {
+            edges.flat().forEach((corner, vertex) => {
+                const offset = cellIndex * 72 + vertex * 3;
+                positions[offset] = (corner & 1 ? cell.max : cell.min)[0];
+                positions[offset + 1] = (corner & 2 ? cell.max : cell.min)[1];
+                positions[offset + 2] = (corner & 4 ? cell.max : cell.min)[2];
+                inactiveColor.toArray(colors, offset);
+            });
+        });
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        const colorAttribute = new THREE.BufferAttribute(colors, 3).setUsage(THREE.DynamicDrawUsage);
+        geometry.setAttribute("color", colorAttribute);
+        const material = new THREE.LineBasicMaterial({
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.65,
+            depthTest: false,
+            depthWrite: false,
+            toneMapped: false
+        });
+        const lines = new THREE.LineSegments(geometry, material);
+        lines.name = "HouseMaker baked PVS";
+        lines.userData.housemakerPvsDebug = true;
+        lines.renderOrder = 1000;
+        lines.frustumCulled = false;
+        lines.raycast = () => {};
+        const cameraPosition = new THREE.Vector3();
+        const lastPosition = new THREE.Vector3(NaN, NaN, NaN);
+
+        // Read final camera pose, including navigation and tours.
+        lines.onBeforeRender = (renderer, scene, camera) => {
+            const runtime = pvsRef.current;
+            if (runtime?.frame === renderer.info.render.frame && runtime.camera === camera) {
+                cameraPosition.copy(runtime.cameraPosition);
+            } else {
+                camera.getWorldPosition(cameraPosition);
+                root.worldToLocal(cameraPosition);
+            }
+            if (lastPosition.equals(cameraPosition)) return;
+            lastPosition.copy(cameraPosition);
+            let changed = false;
+            cells.forEach((cell, cellIndex) => {
+                const active = cameraPosition.x >= cell.min[0] && cameraPosition.x <= cell.max[0]
+                    && cameraPosition.y >= cell.min[1] && cameraPosition.y <= cell.max[1]
+                    && cameraPosition.z >= cell.min[2] && cameraPosition.z <= cell.max[2];
+                if (activeCells[cellIndex] === active) return;
+                activeCells[cellIndex] = active;
+                const color = active ? activeColor : inactiveColor;
+                for (let vertex = 0; vertex < 24; vertex += 1) {
+                    color.toArray(colors, cellIndex * 72 + vertex * 3);
+                }
+                changed = true;
+            });
+            if (changed) colorAttribute.needsUpdate = true;
+        };
+        root.add(lines);
+
+        return () => {
+            root.remove(lines);
+            geometry.dispose();
+            material.dispose();
+        };
+    }, [showBakedPvs, sceneData.visibility, renderData]);
+
+    // Restore interrupted draws before shadows or other frame work.
+    useFrame(() => {
+        const runtime = pvsRef.current;
+        if (!runtime) return;
+        runtime.pending.forEach((record, geometry) => geometry.setDrawRange(record.start, record.count));
+        runtime.pending.clear();
+    }, -1000);
 
     // Reserve A for object visibility outside editable controls.
     useEffect(() => {
@@ -1009,6 +1457,10 @@ export function HouseMakerLoader(props) {
                 // Scale cutout thresholds without switching compiled shader variants.
                 entry.material.alphaTest = entry.alphaTest * Math.max(opacity, Number.EPSILON);
             });
+            if (record.depthMaterial) {
+                record.depthMaterial.opacity = record.fadeMaterials[0].material.opacity;
+                record.shadowOpacity.value = record.depthMaterial.opacity;
+            }
             record.mesh.visible = fade.progress > 0;
             fade.cursor = (fade.cursor + 1) % fade.records.length;
             fade.remaining -= 1;
@@ -1035,10 +1487,14 @@ export function HouseMakerLoader(props) {
         <>
             {/* Keep all exported transforms under one parent. */}
             <group ref={rootRef} position={position} userData={visibilityRef.current}>
-                {directionalLights.map((directionalLight) => (
+                {runtimeLighting.lights.map((directionalLight) => (
                     <HouseMakerDirectionalLight
                         key={directionalLight.id}
                         light={directionalLight}
+                        sunlightOrbit={sunlightOrbit?.lightId === directionalLight.id ? sunlightOrbit : undefined}
+                        shadowBounds={directionalLight.id === "housemaker-runtime-sun" && directionalLights.length === 0
+                            ? runtimeLighting.bounds : undefined}
+                        shadowMapSize={shadowMapSize}
                     />
                 ))}
 
@@ -1057,6 +1513,8 @@ export function HouseMakerLoader(props) {
                         castShadow={instancePart.castShadow}
                         receiveShadow={instancePart.receiveShadow}
                         frustumCulled={false}
+                        instanceMatrix={instancePart.instanceMatrices}
+                        instanceMatrix-needsUpdate={true}
                         dispose={null}
                         userData={{ housemakerHideable: instancePart.hideable }}
                         ref={(instancedMesh) => {
@@ -1065,17 +1523,6 @@ export function HouseMakerLoader(props) {
                                 return;
                             }
                             instanceMeshesRef.current.set(instancePart.key, instancedMesh);
-
-                            // Apply exported transforms and source offsets.
-                            const instanceMatrix = new THREE.Matrix4();
-                            instancePart.instances.forEach((instance, instanceIndex) => {
-                                instanceMatrix
-                                    .fromArray(instance.worldMatrix)
-                                    .multiply(instancePart.sourceTransform);
-                                instancedMesh.setMatrixAt(instanceIndex, instanceMatrix);
-                            });
-                            instancedMesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
-                            instancedMesh.instanceMatrix.needsUpdate = true;
                         }}
                     />
                 ))}

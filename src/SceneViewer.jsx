@@ -55,6 +55,10 @@ function SceneViewer() {
   const setViewerModelSelection = SystemStore((state) => state.setViewerModelSelection);
   const canvasEnabled = SystemStore((state) => state.canvasEnabled);
   const r3fPerfEnabled = SystemStore((state) => state.r3fPerfEnabled);
+  const realTimeGiEnabled = SystemStore((state) => state.realTimeGiEnabled);
+  const setRealTimeGiEnabled = SystemStore((state) => state.setRealTimeGiEnabled);
+  const showBakedPvs = SystemStore((state) => state.showBakedPvs);
+  const setShowBakedPvs = SystemStore((state) => state.setShowBakedPvs);
 
   const siteMode = UserStore((state) => state.siteMode);
 
@@ -74,6 +78,12 @@ function SceneViewer() {
   const setViewerBounds = SystemStore((state) => state.setViewerBounds);
   const viewerBounds = SystemStore((state) => state.viewerBounds);
   const [canvasReady, setCanvasReady] = useState(false);
+  const [fullscreenAvailable, setFullscreenAvailable] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenPending, setFullscreenPending] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState("");
+  const [gyroscopeStatus, setGyroscopeStatus] = useState("inactive");
+  const firstPersonNavigationRef = useRef(null);
   const cameraMovedOnce = useRef(false);
   const previousCircleData = useRef();
 
@@ -84,6 +94,10 @@ function SceneViewer() {
   const selectedCircleData = circlesData.find((circle) => circle.circleName === currentCircleNameSelected);
   const selectedCirclePositionX = selectedCircleData?.position?.[0];
 
+  // Keep fullscreen entry available for touch devices in either orientation.
+  const isTouchDevice = navigator.maxTouchPoints > 0
+    || window.matchMedia?.("(pointer: coarse)")?.matches === true;
+
   //////////////////////////////////////
   ////////// Viewer setup //////////////
   //////////////////////////////////////
@@ -93,7 +107,7 @@ function SceneViewer() {
     setCanvasReady(true);
   }, []);
 
-  // Keep viewer bounds current for fixed-position overlays.
+  // Keep fullscreen controls and overlays aligned with the viewer.
   useLayoutEffect(() => {
     const viewerEl = document.getElementById("viewer-root");
     if (!viewerEl) return;
@@ -110,18 +124,62 @@ function SceneViewer() {
       });
     };
 
-    updateBounds();
+    // Follow browser fullscreen changes, including native exit gestures.
+    const updateFullscreen = () => {
+      setFullscreenAvailable(Boolean(
+        (viewerEl.requestFullscreen && document.fullscreenEnabled !== false)
+        || (viewerEl.webkitRequestFullscreen && document.webkitFullscreenEnabled !== false)
+      ));
+      setIsFullscreen(
+        (document.fullscreenElement || document.webkitFullscreenElement) === viewerEl
+      );
+      updateBounds();
+    };
+
+    updateFullscreen();
 
     window.addEventListener("resize", updateBounds);
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    document.addEventListener("webkitfullscreenchange", updateFullscreen);
     const resizeObserver = new ResizeObserver(updateBounds);
     resizeObserver.observe(viewerEl);
 
     // Remove bound listeners and observers.
     return () => {
       window.removeEventListener("resize", updateBounds);
+      document.removeEventListener("fullscreenchange", updateFullscreen);
+      document.removeEventListener("webkitfullscreenchange", updateFullscreen);
       resizeObserver.disconnect();
     };
   }, [setViewerBounds]);
+
+  // Request fullscreen directly from a deliberate user interaction.
+  const handleFullscreenToggle = async () => {
+    const viewerEl = document.getElementById("viewer-root");
+    if (!viewerEl || fullscreenPending) return;
+
+    const exiting = (document.fullscreenElement || document.webkitFullscreenElement) === viewerEl;
+    setFullscreenError("");
+    setFullscreenPending(true);
+
+    try {
+      if (exiting) {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else {
+          await document.webkitExitFullscreen();
+        }
+      } else if (viewerEl.requestFullscreen) {
+        await viewerEl.requestFullscreen({ navigationUI: "hide" });
+      } else {
+        await viewerEl.webkitRequestFullscreen();
+      }
+    } catch {
+      setFullscreenError(`Could not ${exiting ? "exit" : "enter"} fullscreen. Please try again.`);
+    } finally {
+      setFullscreenPending(false);
+    }
+  };
 
   //////////////////////////////////////
   ////////// Overlay state /////////////
@@ -500,6 +558,69 @@ function SceneViewer() {
             {!forceDisableRender && (
               <>
               {/* 2D HTML overlays belong above the Canvas. */}
+              <div className="viewer-fullscreen-controls" data-viewer-control="true">
+                {(isTouchDevice || isFullscreen) && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleFullscreenToggle}
+                      disabled={!fullscreenAvailable || fullscreenPending}
+                      aria-pressed={isFullscreen}
+                      title={fullscreenAvailable ? undefined : "Fullscreen is unavailable in this browser or embedded page."}
+                    >
+                      {fullscreenAvailable
+                        ? (isFullscreen ? "Exit fullscreen" : "Enter fullscreen")
+                        : "Fullscreen unavailable"}
+                    </button>
+                    {fullscreenError && <span role="status">{fullscreenError}</span>}
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setRealTimeGiEnabled(!realTimeGiEnabled)}
+                  aria-pressed={realTimeGiEnabled}
+                  title="Compare experimental screen-space bounce lighting. SSAO stays enabled."
+                >
+                  Real-time GI: {realTimeGiEnabled ? "On" : "Off"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowBakedPvs(!showBakedPvs)}
+                  aria-pressed={showBakedPvs}
+                  title="Cyan: baked visibility cells. Green: current camera cells. Culling remains enabled."
+                >
+                  {showBakedPvs ? "Hide baked pvs" : "Show baked pvs"}
+                </button>
+                {canvasReady && canvasEnabled && gyroscopeStatus !== "inactive" && (
+                  <>
+                    {gyroscopeStatus !== "unavailable" && (
+                      <button
+                        type="button"
+                        disabled={gyroscopeStatus === "waiting"}
+                        onClick={() => {
+                          if (gyroscopeStatus === "active") {
+                            firstPersonNavigationRef.current?.recenterGyroscope();
+                          } else {
+                            firstPersonNavigationRef.current?.enableGyroscope();
+                          }
+                        }}
+                      >
+                        {gyroscopeStatus === "active"
+                          ? "Recenter view"
+                          : gyroscopeStatus === "waiting"
+                            ? "Waiting for motion…"
+                            : "Enable gyroscope"}
+                      </button>
+                    )}
+                    {(gyroscopeStatus === "denied" || gyroscopeStatus === "unavailable") && (
+                      <span role="status">
+                        {gyroscopeStatus === "denied" ? "Motion access was denied." : "Motion controls are unavailable."}
+                        {" Use the left side to move and the right side to look."}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
               <Alert />
               <ToolTip
                 active={tooltipProps.active}
@@ -576,10 +697,13 @@ function SceneViewer() {
                     onPointerLeave={handleCanvasPointerLeave}
                     shadows
                     dpr={1}
-                    gl={{ powerPreference: "high-performance" }}
+                    gl={{ powerPreference: "high-performance", toneMappingExposure: 1 }}
                   >
                     {r3fPerfEnabled && <Perf />}
-                    <SceneContainer />
+                    <SceneContainer
+                      navigationRef={firstPersonNavigationRef}
+                      onGyroscopeStatusChange={setGyroscopeStatus}
+                    />
                     {/* <FPSLogger /> */}
                   </Canvas>
                 </Suspense>

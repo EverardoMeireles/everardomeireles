@@ -195,6 +195,18 @@ function makeDirectionalLight(options = {}) {
     };
 }
 
+// Build exported sunlight animation metadata.
+function makeSunlightOrbit(options = {}) {
+    return {
+        enabled: true,
+        speedDegreesPerSecond: 45,
+        axis: [0, 1, 0],
+        lightId: "directional-light-1",
+        initialDirection: [1, 0, 0],
+        ...options
+    };
+}
+
 // Read JSX props retained on React DOM test hosts.
 function getRenderedProps(element) {
     const propsKey = Object.keys(element).find((key) => (
@@ -301,6 +313,289 @@ describe("HouseMaker non-surface classification", () => {
         expect(isHouseMakerHideableObject(mesh, true)).toBe(false);
     });
 });
+
+// ### Native instance transforms ###
+
+/* eslint-disable testing-library/no-unnecessary-act -- Native R3F roots require act. */
+describe("HouseMaker native instance placement", () => {
+    const nativeFiber = jest.requireActual("@react-three/fiber");
+    let root;
+    let store;
+    let consoleError;
+
+    beforeEach(() => {
+        useFrame.mockClear();
+        consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+        nativeFiber.extend(THREE);
+        const canvas = document.createElement("canvas");
+        root = nativeFiber.createRoot(canvas);
+        root.configure({
+            gl: {
+                render: jest.fn(),
+                setPixelRatio: jest.fn(),
+                setSize: jest.fn(),
+                domElement: canvas,
+                shadowMap: {},
+            },
+            frameloop: "never",
+            size: { width: 800, height: 600, top: 0, left: 0 },
+        });
+    });
+
+    afterEach(async () => {
+        await nativeFiber.act(async () => root.unmount());
+        useLoader.mockReset();
+        consoleError.mockRestore();
+    });
+
+    test("preserves placements, fades, and shadows across native rerenders", async () => {
+        const matrices = [
+            new THREE.Matrix4().compose(new THREE.Vector3(1, 3, -5), new THREE.Quaternion(), new THREE.Vector3(2.3, 2, 2.4)),
+            new THREE.Matrix4().compose(new THREE.Vector3(6, 3, 2), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI / 2, 0)), new THREE.Vector3(2.3, 2, 2.4)),
+        ];
+        const fixtures = makeLoaderFixtures({ instanceGroups: [{
+            sourceNodeName: "Chair source",
+            instances: matrices.map((matrix, index) => ({ id: `chair-${index}`, worldMatrix: matrix.toArray() })),
+        }] });
+        const source = new THREE.Group();
+        source.name = "Chair source";
+        const sourceMesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
+        sourceMesh.position.set(0.1, 0.2, 0.3);
+        source.add(sourceMesh);
+        const sourceScene = new THREE.Scene();
+        sourceScene.add(source);
+        fixtures.gltf.scenes.push(sourceScene);
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        await nativeFiber.act(async () => {
+            store = root.render(<StrictMode><HouseMakerLoader toursEnabled={false} shadowsEnabled /></StrictMode>);
+        });
+        const mesh = store.getState().scene.children[0].children.find((object) => object.isInstancedMesh);
+        const fadeMaterial = mesh.material;
+        const instanceBuffer = mesh.instanceMatrix;
+        const sourceTransform = new THREE.Matrix4().makeTranslation(0.1, 0.2, 0.3);
+        const actualMatrix = new THREE.Matrix4();
+        matrices.forEach((matrix, index) => {
+            mesh.getMatrixAt(index, actualMatrix);
+            expectMatrixClose(actualMatrix, matrix.clone().multiply(sourceTransform), 6);
+        });
+        fireEvent.keyDown(window, { key: "a" });
+        useFrame.mock.calls[useFrame.mock.calls.length - 1][0]({}, 0.2);
+        expect(mesh.material.opacity).toBeLessThan(1);
+
+        await nativeFiber.act(async () => {
+            root.render(<StrictMode><HouseMakerLoader toursEnabled={false} shadowsEnabled position={[2, 0, 0]} /></StrictMode>);
+        });
+        expect(store.getState().scene.children[0].children.find((object) => object.isInstancedMesh)).toBe(mesh);
+        expect(mesh.material).toBe(fadeMaterial);
+        expect(mesh.instanceMatrix).toBe(instanceBuffer);
+        expect(mesh.instanceMatrix.usage).toBe(THREE.StaticDrawUsage);
+        expect(mesh.castShadow).toBe(true);
+        expect(mesh.receiveShadow).toBe(true);
+        matrices.forEach((matrix, index) => {
+            mesh.getMatrixAt(index, actualMatrix);
+            expectMatrixClose(actualMatrix, matrix.clone().multiply(sourceTransform), 6);
+        });
+
+        const updatedMatrices = matrices.map((matrix) => matrix.clone().setPosition(12, 4, -8));
+        updatedMatrices.push(new THREE.Matrix4().makeTranslation(18, 5, -2));
+        fixtures.manifest = {
+            ...fixtures.manifest,
+            instanceGroups: [{
+                sourceNodeName: source.name,
+                instances: updatedMatrices.map((matrix, index) => ({ id: `chair-${index}`, worldMatrix: matrix.toArray() })),
+            }],
+        };
+        await nativeFiber.act(async () => {
+            root.render(<StrictMode><HouseMakerLoader toursEnabled={false} shadowsEnabled /></StrictMode>);
+        });
+        const updatedMesh = store.getState().scene.children[0].children.find((object) => object.isInstancedMesh);
+        expect(updatedMesh.count).toBe(3);
+        updatedMatrices.forEach((matrix, index) => {
+            updatedMesh.getMatrixAt(index, actualMatrix);
+            expectMatrixClose(actualMatrix, matrix.clone().multiply(sourceTransform), 6);
+        });
+        expect(updatedMesh.instanceMatrix).not.toBe(instanceBuffer);
+        const uploadedVersion = updatedMesh.instanceMatrix.version;
+        fixtures.manifest = {
+            ...fixtures.manifest,
+            instanceGroups: [{
+                sourceNodeName: source.name,
+                instances: updatedMatrices.map((matrix, index) => ({
+                    id: `chair-${index}`,
+                    worldMatrix: matrix.clone().setPosition(3, 2, -1).toArray(),
+                })),
+            }],
+        };
+        await nativeFiber.act(async () => {
+            root.render(<StrictMode><HouseMakerLoader toursEnabled={false} shadowsEnabled /></StrictMode>);
+        });
+        expect(store.getState().scene.children[0].children.find((object) => object.isInstancedMesh)).toBe(updatedMesh);
+        expect(updatedMesh.instanceMatrix.version).toBeGreaterThan(uploadedVersion);
+        updatedMatrices.forEach((matrix, index) => {
+            updatedMesh.getMatrixAt(index, actualMatrix);
+            expectMatrixClose(actualMatrix, matrix.clone().setPosition(3, 2, -1).multiply(sourceTransform), 6);
+        });
+        expect(sourceMesh.material.opacity).toBe(1);
+        expect(sourceMesh.castShadow).toBe(false);
+        expect(sourceMesh.receiveShadow).toBe(false);
+    });
+
+    test("uses the exported sun and mounted target without fallback lighting", async () => {
+        const light = makeDirectionalLight({
+            name: "Sun light 1",
+            position: [-7.6720720588939795, 5.53789022261146, -8.092185522353622],
+            target: [-7.6720720588939795, 3.5314082578971626, -8.092185522353622],
+            intensity: 1,
+            castShadow: false,
+        });
+        const fixtures = makeLoaderFixtures({ version: 10, directionalLights: [light] });
+        fixtures.sourceScene.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial()));
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        await nativeFiber.act(async () => {
+            store = root.render(<StrictMode><HouseMakerLoader toursEnabled={false} fallbackSunEnabled shadowsEnabled /></StrictMode>);
+        });
+        const sceneRoot = store.getState().scene.children[0];
+        const lights = sceneRoot.children.filter((object) => object.isDirectionalLight);
+        expect(lights).toHaveLength(1);
+        expect(lights[0].name).toBe(light.name);
+        expect(lights[0].position.toArray()).toEqual(light.position);
+        expect(lights[0].target.position.toArray()).toEqual(light.target);
+        expect(lights[0].target.parent).toBe(sceneRoot);
+        expect(lights[0].intensity).toBe(1);
+        expect(lights[0].castShadow).toBe(false);
+        expect(lights[0].userData.houseMakerDirectionalLightId).toBe(light.id);
+        expect(lights[0].shadow.camera.left).toBe(-5);
+        expect(lights[0].shadow.camera.right).toBe(5);
+    });
+
+    test("orbits only the selected ID using exported axes and distance", async () => {
+        const light = makeDirectionalLight({ position: [1, 3, -2], target: [4, 3, -2] });
+        const otherLight = makeDirectionalLight({ id: "another-light", name: light.name });
+        const fixtures = makeLoaderFixtures({
+            directionalLights: [light, otherLight],
+            sunlightOrbit: makeSunlightOrbit({ axis: [0, 4, 0], initialDirection: [2, 0, 0] })
+        });
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        await nativeFiber.act(async () => {
+            store = root.render(<StrictMode><HouseMakerLoader toursEnabled={false} position={[12, 4, -9]} /></StrictMode>);
+        });
+        const sceneRoot = store.getState().scene.children[0];
+        const [sun, other] = sceneRoot.children.filter((object) => object.isDirectionalLight);
+        const target = sun.target;
+        expect(target.position.toArray()).toEqual(light.target);
+        useFrame.mock.calls.forEach(([frame]) => frame({}, 2));
+        expect(sun.position.toArray()).toEqual(light.position);
+        expect(target.position.x).toBeCloseTo(1);
+        expect(target.position.y).toBeCloseTo(3);
+        expect(target.position.z).toBeCloseTo(-5);
+        expect(target.position.distanceTo(sun.position)).toBeCloseTo(3);
+        target.matrix.elements.slice(12, 15).forEach((value, index) => {
+            expect(value).toBeCloseTo([1, 3, -5][index]);
+        });
+        expect(other.target.position.toArray()).toEqual(otherLight.target);
+        sceneRoot.updateWorldMatrix(true, true);
+        target.getWorldPosition(new THREE.Vector3()).toArray().forEach((value, index) => {
+            expect(value).toBeCloseTo([13, 7, -14][index]);
+        });
+        expect(target.parent).toBe(sceneRoot);
+        expect(target.parent).not.toBe(sun);
+    });
+
+    test.each([30, 60])("advances sunlight by elapsed time at %i Hz", async (frameRate) => {
+        const light = makeDirectionalLight({ position: [1, 3, -2], target: [4, 3, -2] });
+        await nativeFiber.act(async () => {
+            store = root.render(<HouseMakerDirectionalLight light={light} sunlightOrbit={makeSunlightOrbit()} />);
+        });
+        const sun = store.getState().scene.children.find((object) => object.isDirectionalLight);
+        const frame = useFrame.mock.calls[useFrame.mock.calls.length - 1][0];
+        for (let index = 0; index < frameRate * 2; index += 1) frame({}, 1 / frameRate);
+        expect(sun.target.position.x).toBeCloseTo(1, 9);
+        expect(sun.target.position.y).toBeCloseTo(3, 9);
+        expect(sun.target.position.z).toBeCloseTo(-5, 9);
+    });
+
+    test("uses the explicit initial direction instead of deriving it", async () => {
+        const light = makeDirectionalLight({ position: [1, 3, -2], target: [4, 3, -2] });
+        const fixtures = makeLoaderFixtures({
+            directionalLights: [light],
+            sunlightOrbit: makeSunlightOrbit({ axis: [0, 0, 4], initialDirection: [0, -3, 0] })
+        });
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        await nativeFiber.act(async () => {
+            store = root.render(<HouseMakerLoader toursEnabled={false} />);
+        });
+        const sun = store.getState().scene.children[0].children.find((object) => object.isDirectionalLight);
+        expect(sun.target.position.toArray()).toEqual([1, 0, -2]);
+        useFrame.mock.calls.forEach(([frame]) => frame({}, 2));
+        expect(sun.target.position.x).toBeCloseTo(4);
+        expect(sun.target.position.y).toBeCloseTo(3);
+        expect(sun.target.position.z).toBeCloseTo(-2);
+    });
+
+    test("preserves orbit phase across equivalent rerenders and resets changed metadata", async () => {
+        const light = makeDirectionalLight({ position: [1, 3, -2], target: [4, 3, -2] });
+        const sunlightOrbit = makeSunlightOrbit();
+        await nativeFiber.act(async () => {
+            store = root.render(<StrictMode><HouseMakerDirectionalLight light={light} sunlightOrbit={sunlightOrbit} /></StrictMode>);
+        });
+        const sun = store.getState().scene.children.find((object) => object.isDirectionalLight);
+        const target = sun.target;
+        useFrame.mock.calls[useFrame.mock.calls.length - 1][0]({}, 1);
+        const halfwayTarget = target.position.clone();
+        await nativeFiber.act(async () => {
+            root.render(<StrictMode><HouseMakerDirectionalLight
+                light={{ ...light, position: [...light.position], target: [...light.target] }}
+                sunlightOrbit={{ ...sunlightOrbit, axis: [...sunlightOrbit.axis], initialDirection: [...sunlightOrbit.initialDirection] }}
+                shadowMapSize={2048}
+            /></StrictMode>);
+        });
+        expect(sun.target).toBe(target);
+        expect(target.position.distanceTo(halfwayTarget)).toBeCloseTo(0);
+        useFrame.mock.calls[useFrame.mock.calls.length - 1][0]({}, 1);
+        expect(target.position.z).toBeCloseTo(-5);
+        await nativeFiber.act(async () => {
+            root.render(<StrictMode><HouseMakerDirectionalLight light={light}
+                sunlightOrbit={makeSunlightOrbit({ speedDegreesPerSecond: 90 })} /></StrictMode>);
+        });
+        expect(target.position.toArray()).toEqual(light.target);
+        useFrame.mock.calls[useFrame.mock.calls.length - 1][0]({}, 1);
+        expect(target.position.z).toBeCloseTo(-5);
+    });
+
+    test("toggles orbit and reloads without leaving stale lights or targets", async () => {
+        const light = makeDirectionalLight({ position: [1, 3, -2], target: [4, 3, -2] });
+        const fixtures = makeLoaderFixtures({ directionalLights: [light], sunlightOrbit: makeSunlightOrbit() });
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        await nativeFiber.act(async () => {
+            store = root.render(<HouseMakerLoader toursEnabled={false} />);
+        });
+        const sceneRoot = store.getState().scene.children[0];
+        const sun = sceneRoot.children.find((object) => object.isDirectionalLight);
+        const target = sun.target;
+        useFrame.mock.calls.forEach(([frame]) => frame({}, 1));
+        fixtures.manifest = { ...fixtures.manifest, sunlightOrbit: { ...fixtures.manifest.sunlightOrbit, enabled: false } };
+        await nativeFiber.act(async () => root.render(<HouseMakerLoader toursEnabled={false} />));
+        expect(sun.target).toBe(target);
+        expect(target.position.toArray()).toEqual(light.target);
+        useFrame.mock.calls.slice(-3).forEach(([frame]) => frame({}, 1));
+        expect(target.position.toArray()).toEqual(light.target);
+        fixtures.manifest = {
+            ...fixtures.manifest,
+            directionalLights: [makeDirectionalLight({ id: "replacement-sun" })],
+            sunlightOrbit: null
+        };
+        await nativeFiber.act(async () => root.render(<HouseMakerLoader toursEnabled={false} jsonFile="replacement.json" />));
+        expect(sun.parent).toBeNull();
+        expect(target.parent).toBeNull();
+        expect(sceneRoot.children.filter((object) => object.isDirectionalLight)).toHaveLength(1);
+        const replacement = sceneRoot.children.find((object) => object.isDirectionalLight);
+        const replacementTarget = replacement.target;
+        await nativeFiber.act(async () => root.render(null));
+        expect(replacement.parent).toBeNull();
+        expect(replacementTarget.parent).toBeNull();
+    });
+});
+/* eslint-enable testing-library/no-unnecessary-act */
 
 // ### Fading object visibility ###
 
@@ -1733,6 +2028,7 @@ describe("HouseMaker directional-light rendering", () => {
     let consoleWarning;
 
     beforeEach(() => {
+        useFrame.mockClear();
         consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
         consoleWarning = jest.spyOn(console, "warn").mockImplementation(() => {});
     });
@@ -1808,6 +2104,65 @@ describe("HouseMaker directional-light rendering", () => {
         expect(lightProps.color).toBe("#ffffff");
         expect(lightProps.intensity).toBe(1);
         expect(lightProps.castShadow).toBe(false);
+    });
+
+    test.each([
+        ["missing", undefined],
+        ["null", null],
+        ["disabled", { enabled: false }],
+        ["zero speed", makeSunlightOrbit({ speedDegreesPerSecond: 0, initialDirection: [0, 0, 1] })]
+    ])("keeps %s sunlight animation static without warning", (label, sunlightOrbit) => {
+        const light = makeDirectionalLight();
+        const fixtures = makeLoaderFixtures({ directionalLights: [light], sunlightOrbit });
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        const view = render(<HouseMakerLoader toursEnabled={false} />);
+        const target = view.container.querySelector("directionallight").target;
+        useFrame.mock.calls.forEach(([frame]) => frame({}, 10));
+        expect(target.position.toArray()).toEqual(light.target);
+        expect(consoleWarning).not.toHaveBeenCalled();
+    });
+
+    test.each([
+        ["non-object", "enabled"],
+        ["invalid enabled", makeSunlightOrbit({ enabled: "true" })],
+        ["missing speed", makeSunlightOrbit({ speedDegreesPerSecond: undefined })],
+        ["string speed", makeSunlightOrbit({ speedDegreesPerSecond: "0.5" })],
+        ["negative speed", makeSunlightOrbit({ speedDegreesPerSecond: -1 })],
+        ["excessive speed", makeSunlightOrbit({ speedDegreesPerSecond: 361 })],
+        ["nonfinite speed", makeSunlightOrbit({ speedDegreesPerSecond: Infinity })],
+        ["short axis", makeSunlightOrbit({ axis: [0, 1] })],
+        ["zero axis", makeSunlightOrbit({ axis: [0, 0, 0] })],
+        ["nonfinite axis", makeSunlightOrbit({ axis: [0, NaN, 1] })],
+        ["short direction", makeSunlightOrbit({ initialDirection: [1, 0] })],
+        ["zero direction", makeSunlightOrbit({ initialDirection: [0, 0, 0] })],
+        ["nonfinite direction", makeSunlightOrbit({ initialDirection: [Infinity, 0, 0] })],
+        ["empty ID", makeSunlightOrbit({ lightId: " " })],
+        ["unknown ID", makeSunlightOrbit({ lightId: "missing-sun" })],
+        ["display-name match", makeSunlightOrbit({ lightId: "Sun light 1" })]
+    ])("ignores %s sunlight metadata without removing the light", (label, sunlightOrbit) => {
+        const light = makeDirectionalLight({ name: "Sun light 1" });
+        const fixtures = makeLoaderFixtures({ directionalLights: [light], sunlightOrbit });
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        const view = render(<HouseMakerLoader toursEnabled={false} />);
+        const renderedLight = view.container.querySelector("directionallight");
+        useFrame.mock.calls.forEach(([frame]) => frame({}, 10));
+        expect(renderedLight.target.position.toArray()).toEqual(light.target);
+        expect(view.container.querySelectorAll("directionallight")).toHaveLength(1);
+        expect(consoleWarning).toHaveBeenCalledWith(expect.stringContaining("sunlightOrbit"));
+    });
+
+    test("does not warn about malformed sunlight metadata in production", () => {
+        const environment = process.env.NODE_ENV;
+        process.env.NODE_ENV = "production";
+        try {
+            const fixtures = makeLoaderFixtures({ directionalLights: [makeDirectionalLight()], sunlightOrbit: makeSunlightOrbit({ axis: [0, 0, 0] }) });
+            useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+            const view = render(<HouseMakerLoader toursEnabled={false} />);
+            expect(view.container.querySelectorAll("directionallight")).toHaveLength(1);
+            expect(consoleWarning).not.toHaveBeenCalled();
+        } finally {
+            process.env.NODE_ENV = environment;
+        }
     });
 
     test.each([
@@ -1981,5 +2336,294 @@ describe("HouseMaker directional-light rendering", () => {
         expect(mirrorGroup.children).toHaveLength(3);
         expect(fixtures.sourceScene.children).toHaveLength(1);
         expect(getRuntimeMirrors(fixtures.sourceScene)).toEqual([]);
+    });
+});
+
+// ### Optional runtime sunlight and shadows ###
+
+describe("HouseMaker runtime sunlight and shadows", () => {
+    let consoleError;
+
+    beforeEach(() => {
+        useFrame.mockClear();
+        consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        useLoader.mockReset();
+        consoleError.mockRestore();
+        jest.restoreAllMocks();
+    });
+
+    test("keeps sunlight and mesh shadows opt-in", () => {
+        const fixtures = makeLoaderFixtures();
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 6), new THREE.MeshStandardMaterial());
+        fixtures.sourceScene.add(mesh);
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        const view = render(<HouseMakerLoader toursEnabled={false} />);
+        const model = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object).find((object) => object.isScene);
+
+        expect(view.container.querySelectorAll("directionallight")).toHaveLength(0);
+        expect(model.children[0].castShadow).toBe(false);
+        expect(model.children[0].receiveShadow).toBe(false);
+        expect(model.children[0].customDepthMaterial).toBeUndefined();
+    });
+
+    test("adds one stable HDRI-aligned sun aimed at actual house bounds", () => {
+        const fixtures = makeLoaderFixtures();
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(4, 6, 8), new THREE.MeshStandardMaterial());
+        mesh.position.set(10, 3, -5);
+        fixtures.sourceScene.add(mesh);
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        const view = render(<StrictMode><HouseMakerLoader toursEnabled={false} fallbackSunEnabled shadowsEnabled shadowMapSize={2048} /></StrictMode>);
+        const renderedLight = view.container.querySelector("directionallight");
+        const light = getRenderedProps(renderedLight);
+        const target = renderedLight.target;
+
+        expect(view.container.querySelectorAll("directionallight")).toHaveLength(1);
+        expect(light.userData.houseMakerDirectionalLightId).toBe("housemaker-runtime-sun");
+        expect(light.target).toBeUndefined();
+        expect(target.position.toArray()).toEqual([10, 3, -5]);
+        expect(light.intensity).toBe(3);
+        expect(light.color).toBe("#fff4e5");
+        expect(light.castShadow).toBe(true);
+        expect(light["shadow-mapSize"]).toEqual([2048, 2048]);
+        expect(light["shadow-normalBias"]).toBe(0.03);
+        const direction = new THREE.Vector3().fromArray(light.position).sub(target.position).normalize();
+        expect(direction.distanceTo(new THREE.Vector3(0.553, 0.743, 0.377).normalize())).toBeLessThan(1e-10);
+
+        view.rerender(<StrictMode><HouseMakerLoader toursEnabled={false} fallbackSunEnabled shadowsEnabled shadowMapSize={2048} /></StrictMode>);
+        expect(view.container.querySelectorAll("directionallight")).toHaveLength(1);
+        expect(view.container.querySelector("directionallight")).toBe(renderedLight);
+        expect(renderedLight.target).toBe(target);
+        expect(mesh.castShadow).toBe(false);
+        expect(mesh.receiveShadow).toBe(false);
+        view.unmount();
+        expect(view.container.querySelectorAll("primitive")).toHaveLength(0);
+    });
+
+    test("preserves exported lights exactly instead of adding a sun", () => {
+        const light = makeDirectionalLight({ intensity: 0.25, castShadow: false });
+        const fixtures = makeLoaderFixtures({ directionalLights: [light] });
+        fixtures.sourceScene.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial()));
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        const view = render(<HouseMakerLoader toursEnabled={false} fallbackSunEnabled shadowsEnabled />);
+        const lights = [...view.container.querySelectorAll("directionallight")];
+        expect(lights).toHaveLength(1);
+        expect(getRenderedProps(lights[0])).toMatchObject({
+            name: light.name, position: light.position, color: light.color,
+            intensity: light.intensity, castShadow: light.castShadow,
+            userData: { houseMakerDirectionalLightId: light.id }
+        });
+        expect(lights[0].target.position.toArray()).toEqual(light.target);
+        expect(getRenderedProps(lights[0])["shadow-mapSize"]).toBeUndefined();
+    });
+
+    test("fits the generated sun's camera around every house corner", () => {
+        const light = makeDirectionalLight({ position: [20, 30, 25], target: [1, 1, 1], castShadow: true });
+        const nativeLight = new THREE.DirectionalLight();
+        nativeLight.position.fromArray(light.position);
+        nativeLight.updateMatrixWorld();
+        const createElement = document.createElement.bind(document);
+        jest.spyOn(document, "createElement").mockImplementation((tagName, options) => {
+            const element = createElement(tagName, options);
+            if (tagName === "directionalLight") {
+                element.shadow = nativeLight.shadow;
+                element.matrixWorld = nativeLight.matrixWorld;
+                element.updateWorldMatrix = jest.fn();
+            }
+            return element;
+        });
+        const bounds = new THREE.Box3(new THREE.Vector3(-12, 0, -13), new THREE.Vector3(13, 12, 14));
+        const view = render(<HouseMakerDirectionalLight light={light} shadowBounds={bounds} />);
+        const camera = nativeLight.shadow.camera;
+        const clipBounds = bounds.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+        expect(clipBounds.min.x).toBeGreaterThan(-1);
+        expect(clipBounds.min.y).toBeGreaterThan(-1);
+        expect(clipBounds.min.z).toBeGreaterThan(-1);
+        expect(clipBounds.max.x).toBeLessThan(1);
+        expect(clipBounds.max.y).toBeLessThan(1);
+        expect(clipBounds.max.z).toBeLessThan(1);
+        expect(camera.right - camera.left).toBeGreaterThan(25);
+        nativeLight.shadow.map = new THREE.WebGLRenderTarget(1024, 1024);
+        const disposeMap = jest.spyOn(nativeLight.shadow.map, "dispose");
+        view.rerender(<HouseMakerDirectionalLight light={light} shadowBounds={bounds} shadowMapSize={2048} />);
+        expect(disposeMap).toHaveBeenCalledTimes(1);
+        expect(nativeLight.shadow.map).toBeNull();
+    });
+
+    test("changes only runtime PBR meshes and restores flags when disabled", () => {
+        const fixtures = makeLoaderFixtures();
+        const body = makeBody({ halfPlane: { point: [0, 0, 0], normal: [1, 0, 0] } }).body;
+        body.castShadow = false;
+        body.receiveShadow = false;
+        const glass = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhysicalMaterial({ transparent: true, opacity: 0.3 }));
+        glass.name = "Glass";
+        const decoration = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+        decoration.name = "Unlit decoration";
+        fixtures.sourceScene.add(body, glass, decoration);
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        const view = render(<HouseMakerLoader toursEnabled={false} shadowsEnabled />);
+        const objects = [...view.container.querySelectorAll("primitive")].map((element) => getRenderedProps(element).object);
+        const model = objects.find((object) => object.isScene);
+        const mirrors = objects.find((object) => object.name === "HouseMaker mirrored models");
+        const loadedBody = model.getObjectByName(body.name);
+
+        expect(loadedBody.castShadow).toBe(true);
+        expect(loadedBody.receiveShadow).toBe(true);
+        expect(mirrors.children[0].castShadow).toBe(true);
+        expect(mirrors.children[0].receiveShadow).toBe(true);
+        expect(model.getObjectByName("Glass").castShadow).toBe(false);
+        expect(model.getObjectByName("Glass").receiveShadow).toBe(true);
+        expect(model.getObjectByName("Unlit decoration").castShadow).toBe(false);
+        expect(model.getObjectByName("Unlit decoration").receiveShadow).toBe(false);
+        expect(body.castShadow).toBe(false);
+        expect(body.receiveShadow).toBe(false);
+
+        view.rerender(<HouseMakerLoader toursEnabled={false} shadowsEnabled={false} />);
+        expect(loadedBody.castShadow).toBe(false);
+        expect(loadedBody.receiveShadow).toBe(false);
+        expect(mirrors.children[0].castShadow).toBe(false);
+        expect(mirrors.children[0].receiveShadow).toBe(false);
+        expect(loadedBody.customDepthMaterial).toBeUndefined();
+    });
+
+    test("fades owned shadow materials without changing shared source assets", () => {
+        const fixtures = makeLoaderFixtures();
+        const body = makeBody().body;
+        body.material.alphaTest = 0.4;
+        fixtures.sourceScene.add(body);
+        const disposeGeometry = jest.spyOn(body.geometry, "dispose");
+        const disposeMaterial = jest.spyOn(body.material, "dispose");
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        const view = render(<HouseMakerLoader toursEnabled={false} shadowsEnabled />);
+        const model = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object).find((object) => object.isScene);
+        const loadedBody = model.getObjectByName(body.name);
+        const depthMaterial = loadedBody.customDepthMaterial;
+        const disposeDepth = jest.spyOn(depthMaterial, "dispose");
+        const shader = { uniforms: {}, fragmentShader: "vec4 diffuseColor = vec4( 1.0 );" };
+        depthMaterial.onBeforeCompile(shader);
+        expect(depthMaterial.isMeshDepthMaterial).toBe(true);
+        expect(depthMaterial.alphaHash).toBe(true);
+        expect(depthMaterial.depthPacking).toBe(THREE.RGBADepthPacking);
+        expect(depthMaterial.map).toBe(body.material.map);
+        expect(depthMaterial.alphaTest).toBe(0.4);
+        expect(depthMaterial.side).toBe(body.material.side);
+        expect(shader.fragmentShader).toContain("houseMakerFadeOpacity");
+        const frame = useFrame.mock.calls[useFrame.mock.calls.length - 1][0];
+        fireEvent.keyDown(window, { key: "a" });
+        frame({}, 0.2);
+        expect(depthMaterial.opacity).toBe(loadedBody.material.opacity);
+        expect(depthMaterial.opacity).toBeGreaterThan(0);
+        expect(depthMaterial.opacity).toBeLessThan(1);
+        expect(shader.uniforms.houseMakerFadeOpacity.value).toBe(depthMaterial.opacity);
+        expect(body.material.opacity).toBe(1);
+        expect(body.customDepthMaterial).toBeUndefined();
+        frame({}, 1);
+        expect(loadedBody.visible).toBe(false);
+        expect(depthMaterial.opacity).toBe(0);
+        view.unmount();
+        expect(disposeDepth).toHaveBeenCalledTimes(1);
+        expect(disposeGeometry).not.toHaveBeenCalled();
+        expect(disposeMaterial).not.toHaveBeenCalled();
+        expect(loadedBody.customDepthMaterial).toBeUndefined();
+    });
+
+    test("includes half mirrors and instances in sunlight bounds and shadow flags", () => {
+        const instanceMatrix = new THREE.Matrix4().makeTranslation(20, 0, 0);
+        const fixtures = makeLoaderFixtures({ instanceGroups: [{
+            sourceNodeName: "Chair source",
+            instances: [{ worldMatrix: instanceMatrix.toArray() }]
+        }] });
+        const half = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshStandardMaterial());
+        half.position.x = 1;
+        half.userData.halfMesh = { uvMode: "reuse", mirrorPlane: { point: [0, 0, 0], normal: [1, 0, 0] } };
+        fixtures.sourceScene.add(half);
+        const source = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 4), new THREE.MeshStandardMaterial());
+        source.name = "Chair source";
+        const sourceScene = new THREE.Scene();
+        sourceScene.add(source);
+        fixtures.gltf.scenes.push(sourceScene);
+        const createElement = document.createElement.bind(document);
+        jest.spyOn(document, "createElement").mockImplementation((tagName, options) => {
+            const element = createElement(tagName, options);
+            if (tagName === "instancedMesh") {
+                const nativeMesh = new THREE.InstancedMesh(source.geometry, source.material, 1);
+                Object.assign(element, {
+                    isMesh: true, visible: true, geometry: source.geometry, material: source.material,
+                    userData: { housemakerHideable: true }, castShadow: false, receiveShadow: false,
+                    instanceMatrix: nativeMesh.instanceMatrix,
+                    setMatrixAt: nativeMesh.setMatrixAt.bind(nativeMesh),
+                    traverse: (visitor) => visitor(element)
+                });
+            }
+            return element;
+        });
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        const view = render(<HouseMakerLoader toursEnabled={false} shadowsEnabled fallbackSunEnabled />);
+        const light = view.container.querySelector("directionallight");
+        const instance = view.container.querySelector("instancedmesh");
+        expect(light.target.position.toArray()).toEqual([10, 0, 0]);
+        expect(instance.castShadow).toBe(true);
+        expect(instance.receiveShadow).toBe(true);
+        expect(instance.customDepthMaterial.isMeshDepthMaterial).toBe(true);
+        expect(source.castShadow).toBe(false);
+        expect(source.receiveShadow).toBe(false);
+        expect(source.customDepthMaterial).toBeUndefined();
+
+        view.rerender(<HouseMakerLoader toursEnabled={false} shadowsEnabled fallbackSunEnabled instancesEnabled={false} />);
+        expect(view.container.querySelector("instancedmesh")).toBeNull();
+        expect(light.target.position.toArray()).toEqual([0, 0, 0]);
+        expect(instance.castShadow).toBe(false);
+        expect(instance.receiveShadow).toBe(false);
+        expect(instance.customDepthMaterial).toBeUndefined();
+    });
+
+    test("Strict Mode restores authored depth materials and disposes only owned copies", () => {
+        const fixtures = makeLoaderFixtures();
+        const body = makeBody().body;
+        fixtures.sourceScene.add(body);
+        const authoredDepth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
+        const beforeShadow = jest.fn();
+        const disposeAuthored = jest.spyOn(authoredDepth, "dispose");
+        const disposeTexture = jest.spyOn(body.material.map, "dispose");
+        const ownedDepths = [];
+        const cloneDepth = authoredDepth.clone.bind(authoredDepth);
+        jest.spyOn(authoredDepth, "clone").mockImplementation(() => {
+            const copy = cloneDepth();
+            const dispose = jest.fn();
+            copy.addEventListener("dispose", dispose);
+            ownedDepths.push({ copy, dispose });
+            return copy;
+        });
+        const cloneScene = fixtures.sourceScene.clone.bind(fixtures.sourceScene);
+        jest.spyOn(fixtures.sourceScene, "clone").mockImplementation(() => {
+            const copy = cloneScene(true);
+            copy.children[0].customDepthMaterial = authoredDepth;
+            copy.children[0].onBeforeShadow = beforeShadow;
+            return copy;
+        });
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        const view = render(<StrictMode><HouseMakerLoader toursEnabled={false} shadowsEnabled /></StrictMode>);
+        const model = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object).find((object) => object.isScene);
+        const loadedBody = model.getObjectByName(body.name);
+        expect(ownedDepths).toHaveLength(2);
+        expect(ownedDepths[0].dispose).toHaveBeenCalledTimes(1);
+        expect(loadedBody.customDepthMaterial).toBe(ownedDepths[1].copy);
+        loadedBody.material.opacity = 0.25;
+        loadedBody.onBeforeShadow(null, loadedBody, null, null, loadedBody.geometry, loadedBody.customDepthMaterial, null);
+        expect(beforeShadow).toHaveBeenCalledTimes(1);
+        expect(loadedBody.customDepthMaterial.opacity).toBe(0.25);
+        view.rerender(<StrictMode><HouseMakerLoader toursEnabled={false} shadowsEnabled /></StrictMode>);
+        expect(ownedDepths).toHaveLength(2);
+        view.unmount();
+        expect(ownedDepths.every(({ dispose }) => dispose.mock.calls.length === 1)).toBe(true);
+        expect(loadedBody.customDepthMaterial).toBe(authoredDepth);
+        expect(loadedBody.onBeforeShadow).toBe(beforeShadow);
+        expect(disposeAuthored).not.toHaveBeenCalled();
+        expect(disposeTexture).not.toHaveBeenCalled();
     });
 });

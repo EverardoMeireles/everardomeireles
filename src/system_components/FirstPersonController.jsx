@@ -8,7 +8,7 @@ import { hasSignificantChange, roundToDecimalPlace } from "../Helper.js";
 import SystemStore from "../SystemStore.js";
 
 /**
- * Purpose: First-person camera rig with keyboard, mouse, touch joysticks, and collisions.
+ * Purpose: First-person camera rig with mouse, touch, gyroscope, and collisions.
  * Relationships: Alternative camera for SceneContainer that builds collisions from the R3F scene and publishes cameraState through SystemStore.
  * Example:
  * <FirstPersonController position={[0, 0, 0]} rotation={[0, 0, 0]} eyeHeight={4} isMainCamera={true} azertyMode="auto" collisionsEnabled={true} maxStepHeight={5.65} minStepHeight={0.1} climbHeightOffset={0} slowDownWhileFalling={true} slowDownWhileFallingSpeedMultiplier={0.5} />
@@ -25,6 +25,8 @@ import SystemStore from "../SystemStore.js";
  * @param {number} [slowDownWhileFallingSpeedMultiplier] - Horizontal speed multiplier while descending.
  * @param {React.MutableRefObject} [navigationRef] - HouseMaker tour navigation API ref.
  * @param {boolean} [enabled] - Whether first-person input and movement are enabled.
+ * @param {"dual_joystick" | "gyroscope"} [touchNavigationMode] - Mobile look controls; gyroscope uses full-screen movement when available.
+ * @param {function} [onGyroscopeStatusChange] - Reports motion availability and permission changes.
  */
 export const FirstPersonController = React.memo((props) => {
     // ### Props ###
@@ -44,6 +46,8 @@ export const FirstPersonController = React.memo((props) => {
     const { slowDownWhileFallingSpeedMultiplier = 0.5 } = props;
     const { navigationRef = undefined } = props;
     const { enabled = true } = props;
+    const { touchNavigationMode = "dual_joystick" } = props;
+    const { onGyroscopeStatusChange } = props;
 
     // Track pose values instead of unstable array identities.
     const initialPositionX = position[0] ?? 0;
@@ -70,6 +74,12 @@ export const FirstPersonController = React.memo((props) => {
         move: { pointerId: null, originX: 0, originY: 0, radius: 1, x: 0, y: 0 },
         look: { pointerId: null, originX: 0, originY: 0, radius: 1, x: 0, y: 0 }
     });
+    const gyroscopeRef = useRef({
+        active: false, status: "inactive", lastYaw: null, lastPitch: null,
+        requestPermission: null,
+    });
+    const gyroscopeStatusCallbackRef = useRef(onGyroscopeStatusChange);
+    gyroscopeStatusCallbackRef.current = onGyroscopeStatusChange;
     const collisionGroupsRef = useRef([]);
     const capsuleRef = useRef(new Capsule());
     const velocityRef = useRef(new THREE.Vector3());
@@ -298,9 +308,16 @@ export const FirstPersonController = React.memo((props) => {
         }
     }
 
+    // Reanchor motion controls without changing the current camera pose.
+    function resetGyroscopeCalibration() {
+        gyroscopeRef.current.lastYaw = null;
+        gyroscopeRef.current.lastPitch = null;
+    }
+
     // Clear movement that could leak into tour playback.
     function clearNavigationMotion() {
         resetTouchControls();
+        resetGyroscopeCalibration();
         keysRef.current = { forward: false, backward: false, left: false, right: false };
         velocityRef.current.set(0, 0, 0);
         climbTargetRef.current = null;
@@ -355,6 +372,7 @@ export const FirstPersonController = React.memo((props) => {
     // Restore the exact pre-tour first-person rig.
     function restoreNavigation(snapshot) {
         resetTouchControls();
+        resetGyroscopeCalibration();
         const controller = controllerRef.current;
         const camera = cameraRef.current;
 
@@ -460,6 +478,11 @@ export const FirstPersonController = React.memo((props) => {
         restore: restoreNavigation,
         complete: completeNavigation,
         isSuspended: () => suspendedRef.current,
+        enableGyroscope: () => gyroscopeRef.current.requestPermission?.(),
+        recenterGyroscope: () => {
+            resetGyroscopeCalibration();
+            pitchRef.current = 0;
+        },
     }));
 
     // ### Controller initialization ###
@@ -470,6 +493,7 @@ export const FirstPersonController = React.memo((props) => {
         }
 
         // Reset controller pose and movement state.
+        resetGyroscopeCalibration();
         yawRef.current = initialYaw;
         pitchRef.current = THREE.MathUtils.clamp(initialPitch, -maxPitch, maxPitch);
         climbTargetRef.current = null;
@@ -647,6 +671,137 @@ export const FirstPersonController = React.memo((props) => {
         };
     }, [scene, collisionsEnabled]);
 
+    // ### Gyroscope look and motion permission ###
+
+    useEffect(() => {
+        const gyroscope = gyroscopeRef.current;
+        let cancelled = false;
+        let listening = false;
+        let permissionPending = false;
+        let sensorTimeout;
+
+        // Publish capability changes, never individual sensor samples.
+        const publishStatus = (status) => {
+            if (gyroscope.status === status) return;
+            gyroscope.status = status;
+            gyroscopeStatusCallbackRef.current?.(status);
+        };
+
+        const touchDevice = navigator.maxTouchPoints > 0
+            || window.matchMedia?.("(pointer: coarse)")?.matches === true;
+        if (!enabled || touchNavigationMode !== "gyroscope" || !touchDevice) {
+            publishStatus("inactive");
+            return;
+        }
+        if (window.isSecureContext === false || !window.DeviceOrientationEvent) {
+            publishStatus("unavailable");
+            return;
+        }
+
+        const sensorEuler = new THREE.Euler();
+        const sensorQuaternion = new THREE.Quaternion();
+        const cameraCorrection = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+        const screenCorrection = new THREE.Quaternion();
+        const screenAxis = new THREE.Vector3(0, 0, 1);
+        const sensorForward = new THREE.Vector3();
+
+        // Convert device orientation into upright, calibrated camera angles.
+        const handleDeviceOrientation = (event) => {
+            if (cancelled || suspendedRef.current || document.hidden) return;
+            if (![event.alpha, event.beta, event.gamma].every(Number.isFinite)) return;
+
+            const screenAngle = window.screen?.orientation?.angle ?? window.orientation ?? 0;
+            if (!Number.isFinite(screenAngle)) return;
+            sensorEuler.set(
+                THREE.MathUtils.degToRad(event.beta),
+                THREE.MathUtils.degToRad(event.alpha),
+                -THREE.MathUtils.degToRad(event.gamma),
+                "YXZ"
+            );
+            sensorQuaternion.setFromEuler(sensorEuler).multiply(cameraCorrection);
+            screenCorrection.setFromAxisAngle(screenAxis, -THREE.MathUtils.degToRad(screenAngle));
+            sensorQuaternion.multiply(screenCorrection);
+            sensorForward.set(0, 0, -1).applyQuaternion(sensorQuaternion);
+
+            // Reanchor unstable headings near the vertical pitch limits.
+            const sensorYaw = Math.abs(sensorForward.y) < Math.sin(maxPitch)
+                ? Math.atan2(-sensorForward.x, -sensorForward.z) : null;
+            const sensorPitch = Math.asin(THREE.MathUtils.clamp(sensorForward.y, -1, 1));
+            if (gyroscope.lastPitch !== null) {
+                if (sensorYaw !== null && gyroscope.lastYaw !== null) {
+                    const yawDifference = sensorYaw - gyroscope.lastYaw;
+                    const yawDelta = Math.atan2(Math.sin(yawDifference), Math.cos(yawDifference));
+                    // Pole crossings can reverse heading between sensor samples.
+                    if (
+                        Math.abs(yawDelta) <= Math.PI / 2
+                        || Math.abs(sensorPitch) + Math.abs(gyroscope.lastPitch) <= Math.PI / 2
+                    ) {
+                        yawRef.current += yawDelta;
+                    }
+                }
+                pitchRef.current = THREE.MathUtils.clamp(
+                    pitchRef.current + sensorPitch - gyroscope.lastPitch, -maxPitch, maxPitch
+                );
+            }
+            gyroscope.lastYaw = sensorYaw;
+            gyroscope.lastPitch = sensorPitch;
+
+            if (!gyroscope.active) {
+                // Release old split-screen gestures before full-screen movement.
+                resetTouchControls();
+                gyroscope.active = true;
+                clearTimeout(sensorTimeout);
+                publishStatus("active");
+            }
+        };
+
+        // Start once after permission, or automatically where permitted.
+        const startListening = () => {
+            if (cancelled || listening) return;
+            listening = true;
+            resetGyroscopeCalibration();
+            window.addEventListener("deviceorientation", handleDeviceOrientation);
+            publishStatus("waiting");
+            sensorTimeout = setTimeout(() => {
+                if (!gyroscope.active && !cancelled) publishStatus("unavailable");
+            }, 4000);
+        };
+
+        // Permission requests must run directly from a button click.
+        gyroscope.requestPermission = async () => {
+            if (cancelled || permissionPending || listening) return;
+            permissionPending = true;
+            try {
+                const permission = await window.DeviceOrientationEvent.requestPermission();
+                if (cancelled) return;
+                if (permission === "granted") startListening();
+                else publishStatus("denied");
+            } catch {
+                if (!cancelled) publishStatus("denied");
+            } finally {
+                permissionPending = false;
+            }
+        };
+
+        if (typeof window.DeviceOrientationEvent.requestPermission === "function") {
+            publishStatus("permission_required");
+        } else {
+            startListening();
+        }
+
+        return () => {
+            cancelled = true;
+            clearTimeout(sensorTimeout);
+            window.removeEventListener("deviceorientation", handleDeviceOrientation);
+            gyroscope.active = false;
+            gyroscope.requestPermission = null;
+            resetGyroscopeCalibration();
+            publishStatus("inactive");
+        };
+        // Pose helpers read refs; permission belongs to this configuration.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [enabled, touchNavigationMode, maxPitch]);
+
     // ### Mouse and invisible touch joysticks ###
 
     useEffect(() => {
@@ -662,7 +817,7 @@ export const FirstPersonController = React.memo((props) => {
         const previousTouchAction = domElement.style.touchAction;
         domElement.style.touchAction = "none";
 
-        // Assign each finger to its original canvas half.
+        // Gyroscope look frees either canvas half for movement.
         const handlePointerDown = (event) => {
             if (!enabled || suspendedRef.current) {
                 return;
@@ -671,7 +826,9 @@ export const FirstPersonController = React.memo((props) => {
             if (event.pointerType === "touch") {
                 const bounds = domElement.getBoundingClientRect();
                 if (bounds.width <= 0 || bounds.height <= 0) return;
-                const side = event.clientX - bounds.left < bounds.width / 2 ? "move" : "look";
+                const fullScreenMovement = touchNavigationMode === "gyroscope" && gyroscopeRef.current.active;
+                const side = fullScreenMovement || event.clientX - bounds.left < bounds.width / 2
+                    ? "move" : "look";
                 const joystick = touchControlsRef.current[side];
                 if (joystick.pointerId !== null) return;
 
@@ -774,7 +931,7 @@ export const FirstPersonController = React.memo((props) => {
         };
         // Helpers read refs; bind listeners to controller configuration.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [enabled, gl, maxPitch, maxStepHeight]);
+    }, [enabled, gl, maxPitch, maxStepHeight, touchNavigationMode]);
 
     // ### Keyboard input ###
 

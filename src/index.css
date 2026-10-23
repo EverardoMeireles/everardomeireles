@@ -10,6 +10,60 @@ html, body, #root{
   box-sizing: border-box;
 }
 
+/* Fill the screen without changing the normal viewer split. */
+#viewer-root:fullscreen {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#viewer-root:-webkit-full-screen {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Keep fullscreen controls reachable around mobile screen cutouts. */
+.viewer-fullscreen-controls {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  z-index: 100001;
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+  color: #fff;
+  font-size: 14px;
+}
+
+.viewer-fullscreen-controls button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #999;
+  border-radius: 6px;
+  background: #222;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.viewer-fullscreen-controls button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.viewer-fullscreen-controls button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.viewer-fullscreen-controls [role="status"] {
+  max-width: 280px;
+  padding: 8px;
+  border-radius: 6px;
+  background: #222;
+}
+
 html,
 body,
 #root {

@@ -409,6 +409,12 @@ export function HouseMakerTourPlayer(props) {
         const handleWaitInput = (event) => {
             const activeTour = activeTourRef.current;
             if (!activeTour?.playback.waiting) return;
+
+            // Keep viewer controls independent from authored tour waits.
+            if (event.composedPath?.().some((node) => (
+                node?.dataset?.viewerControl === "true"
+            ))) return;
+
             if (
                 isTourInteraction(event)
                 && !isExplicitInteractionInput(waitInput, event)

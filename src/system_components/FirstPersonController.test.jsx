@@ -135,6 +135,17 @@ function readLookAngles() {
     );
 }
 
+// Dispatch sensor samples without browser hardware.
+function dispatchOrientation(alpha = 0, beta = 90, gamma = 0) {
+    const event = new Event("deviceorientation");
+    Object.defineProperties(event, {
+        alpha: { value: alpha },
+        beta: { value: beta },
+        gamma: { value: gamma },
+    });
+    fireEvent(window, event);
+}
+
 beforeEach(() => {
     mockScene = new THREE.Scene();
     mockGl = { domElement: document.createElement("canvas") };
@@ -472,4 +483,490 @@ test("Strict Mode does not duplicate touch input listeners", () => {
     act(() => mockFrame({}, 0.02));
     expect(readLookAngles().y).toBeCloseTo(-1.8 * 0.02);
     expect(mockGl.domElement.setPointerCapture).toHaveBeenCalledTimes(1);
+});
+
+describe("gyroscope navigation", () => {
+    let originalDeviceOrientation;
+    let originalTouchPoints;
+    let originalSecureContext;
+    let originalScreenOrientation;
+
+    beforeEach(() => {
+        originalDeviceOrientation = Object.getOwnPropertyDescriptor(window, "DeviceOrientationEvent");
+        originalTouchPoints = Object.getOwnPropertyDescriptor(navigator, "maxTouchPoints");
+        originalSecureContext = Object.getOwnPropertyDescriptor(window, "isSecureContext");
+        originalScreenOrientation = Object.getOwnPropertyDescriptor(window.screen, "orientation");
+        Object.defineProperty(window, "DeviceOrientationEvent", {
+            configurable: true, value: class DeviceOrientationEvent {},
+        });
+        Object.defineProperty(navigator, "maxTouchPoints", { configurable: true, value: 5 });
+        Object.defineProperty(window, "isSecureContext", { configurable: true, value: true });
+        const orientation = new EventTarget();
+        orientation.angle = 0;
+        Object.defineProperty(window.screen, "orientation", { configurable: true, value: orientation });
+    });
+
+    afterEach(() => {
+        for (const [object, key, descriptor] of [
+            [window, "DeviceOrientationEvent", originalDeviceOrientation],
+            [navigator, "maxTouchPoints", originalTouchPoints],
+            [window, "isSecureContext", originalSecureContext],
+            [window.screen, "orientation", originalScreenOrientation],
+        ]) {
+            if (descriptor) Object.defineProperty(object, key, descriptor);
+            else delete object[key];
+        }
+    });
+
+    test("first sensor sample preserves pose before physical yaw and pitch changes", () => {
+        const statusChanged = jest.fn();
+        render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            onGyroscopeStatusChange={statusChanged}
+            rotation={[0.2, 0.4, 0]}
+            collisionsEnabled={false}
+        />);
+        dispatchOrientation();
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(0.4);
+        expect(readLookAngles().x).toBeCloseTo(0.2);
+        expect(statusChanged).toHaveBeenLastCalledWith("active");
+
+        dispatchOrientation(90, 120, 0);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(0.4 + Math.PI / 2);
+        expect(readLookAngles().x).toBeCloseTo(0.2 + Math.PI / 6);
+        expect(readLookAngles().z).toBeCloseTo(0);
+    });
+
+    test.each([[90, 90, -90, -120], [270, 270, 90, 120]])(
+        "landscape %s degrees keeps upright yaw and physical pitch",
+        (angle, alpha, gamma, pitchedGamma) => {
+            window.screen.orientation.angle = angle;
+            render(<ControllerHarness touchNavigationMode="gyroscope" collisionsEnabled={false} />);
+            dispatchOrientation(alpha, 0, gamma);
+            act(() => mockFrame({}, 0.02));
+            expect(readLookAngles().x).toBeCloseTo(0);
+            expect(readLookAngles().y).toBeCloseTo(0);
+
+            dispatchOrientation(alpha, 0, pitchedGamma);
+            act(() => mockFrame({}, 0.02));
+            expect(readLookAngles().x).toBeCloseTo(Math.PI / 6);
+            expect(readLookAngles().y).toBeCloseTo(0);
+            expect(readLookAngles().z).toBeCloseTo(0);
+        }
+    );
+
+    test("heading wraps across north and pitch stays within controller limits", () => {
+        render(<ControllerHarness touchNavigationMode="gyroscope" collisionsEnabled={false} />);
+        dispatchOrientation(170);
+        dispatchOrientation(190);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(20 * Math.PI / 180);
+
+        dispatchOrientation(190, 179, 0);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().x).toBeCloseTo(Math.PI / 2 - 0.05);
+    });
+
+    test("crossing vertical keeps heading stable before normal turning resumes", () => {
+        render(<ControllerHarness touchNavigationMode="gyroscope" collisionsEnabled={false} />);
+        dispatchOrientation();
+        act(() => {
+            for (const beta of [175, 179, 181, 185, 170]) {
+                dispatchOrientation(0, beta, 0);
+                mockFrame({}, 0.02);
+                expect(readLookAngles().y).toBeCloseTo(0);
+                expect(Math.abs(readLookAngles().x)).toBeLessThanOrEqual(Math.PI / 2 - 0.05 + 1e-10);
+            }
+        });
+
+        dispatchOrientation(30, 170, 0);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+    });
+
+    test("active gyroscope makes either screen side one owned movement joystick", () => {
+        render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            collisionsEnabled={false}
+            slowDownWhileFalling={false}
+        />);
+        dispatchOrientation();
+        dispatchPointer("pointerdown", 1, 420, 500);
+        dispatchPointer("pointerdown", 2, 200, 500);
+        dispatchPointer("pointermove", 2, 200, 440);
+        act(() => mockFrame({}, 0.02));
+        expect(mockController.position.z).toBe(0);
+        expect(mockGl.domElement.setPointerCapture).not.toHaveBeenCalledWith(2);
+
+        dispatchPointer("pointermove", 1, 420, 440);
+        act(() => mockFrame({}, 0.02));
+        expect(mockController.position.z).toBeCloseTo(-1.5 * 0.02);
+        expect(readLookAngles().y).toBeCloseTo(0);
+        expect(readLookAngles().x).toBeCloseTo(0);
+        dispatchPointer("pointerup", 1, 420, 440);
+        const stoppedZ = mockController.position.z;
+        act(() => mockFrame({}, 0.02));
+        expect(mockController.position.z).toBe(stoppedZ);
+
+        dispatchPointer("pointerdown", 3, 200, 500);
+        dispatchPointer("pointermove", 3, 260, 500);
+        act(() => mockFrame({}, 0.02));
+        expect(mockController.position.x).toBeCloseTo(1.5 * 0.02);
+        expect(mockGl.domElement.requestPointerLock).not.toHaveBeenCalled();
+    });
+
+    test("first valid sample releases old look touches before switching navigation", () => {
+        render(<ControllerHarness touchNavigationMode="gyroscope" collisionsEnabled={false} />);
+        dispatchPointer("pointerdown", 1, 420, 500);
+        dispatchPointer("pointermove", 1, 480, 500);
+        act(() => mockFrame({}, 0.02));
+        const previousYaw = readLookAngles().y;
+        expect(previousYaw).toBeLessThan(0);
+
+        dispatchOrientation();
+        expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(1);
+        dispatchPointer("pointermove", 1, 480, 440);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(previousYaw);
+        expect(mockController.position.x).toBe(0);
+        expect(mockController.position.z).toBe(0);
+    });
+
+    test("invalid sensor samples neither activate nor change look", () => {
+        const statusChanged = jest.fn();
+        render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            onGyroscopeStatusChange={statusChanged}
+            collisionsEnabled={false}
+        />);
+        dispatchOrientation(null, 90, 0);
+        dispatchOrientation(0, NaN, 0);
+        dispatchOrientation(0, 90, Infinity);
+        expect(statusChanged).not.toHaveBeenCalledWith("active");
+        dispatchOrientation();
+        dispatchOrientation(30);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+        dispatchOrientation(undefined, null, NaN);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+    });
+
+    test("permission is requested only explicitly and switches after valid data", async () => {
+        const requestPermission = jest.fn().mockResolvedValue("granted");
+        window.DeviceOrientationEvent.requestPermission = requestPermission;
+        const navigationRef = React.createRef();
+        const statusChanged = jest.fn();
+        render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            navigationRef={navigationRef}
+            onGyroscopeStatusChange={statusChanged}
+            collisionsEnabled={false}
+        />);
+        expect(statusChanged).toHaveBeenLastCalledWith("permission_required");
+        dispatchPointer("pointerdown", 1, 420, 500);
+        dispatchPointer("pointerup", 1, 420, 500);
+        dispatchOrientation();
+        expect(requestPermission).not.toHaveBeenCalled();
+        expect(statusChanged).not.toHaveBeenCalledWith("active");
+
+        await act(async () => navigationRef.current.enableGyroscope());
+        expect(requestPermission).toHaveBeenCalledTimes(1);
+        dispatchOrientation();
+        expect(statusChanged).toHaveBeenLastCalledWith("active");
+    });
+
+    test.each(["denied", "error"])("%s permission keeps dual joystick fallback", async (result) => {
+        const requestPermission = result === "error"
+            ? jest.fn().mockRejectedValue(new Error("Permission blocked"))
+            : jest.fn().mockResolvedValue("denied");
+        window.DeviceOrientationEvent.requestPermission = requestPermission;
+        const navigationRef = React.createRef();
+        const statusChanged = jest.fn();
+        render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            navigationRef={navigationRef}
+            onGyroscopeStatusChange={statusChanged}
+            collisionsEnabled={false}
+        />);
+        await act(async () => navigationRef.current.enableGyroscope());
+        expect(statusChanged).toHaveBeenLastCalledWith("denied");
+        dispatchOrientation();
+        dispatchOrientation(90);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(0);
+        dispatchPointer("pointerdown", 1, 420, 500);
+        dispatchPointer("pointermove", 1, 480, 500);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeLessThan(0);
+        expect(mockController.position.x).toBe(0);
+        expect(mockController.position.z).toBe(0);
+    });
+
+    test.each(["missing API", "insecure context"])("%s reports unavailable with touch fallback", (reason) => {
+        if (reason === "missing API") {
+            Object.defineProperty(window, "DeviceOrientationEvent", { configurable: true, value: undefined });
+        } else {
+            Object.defineProperty(window, "isSecureContext", { configurable: true, value: false });
+        }
+        const statusChanged = jest.fn();
+        render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            onGyroscopeStatusChange={statusChanged}
+            collisionsEnabled={false}
+        />);
+        expect(statusChanged).toHaveBeenLastCalledWith("unavailable");
+        dispatchPointer("pointerdown", 1, 420, 500);
+        dispatchPointer("pointermove", 1, 480, 500);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeLessThan(0);
+    });
+
+    test("desktop remains keyboard and mouse controlled despite sensor APIs", () => {
+        Object.defineProperty(navigator, "maxTouchPoints", { configurable: true, value: 0 });
+        render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            collisionsEnabled={false}
+            slowDownWhileFalling={false}
+        />);
+        dispatchOrientation();
+        dispatchOrientation(90);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(0);
+        dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        fireEvent.keyDown(window, { key: "ArrowUp" });
+        act(() => mockFrame({}, 0.02));
+        expect(mockController.position.z).toBeLessThan(0);
+    });
+
+    test("blur, visibility and rotation reanchor without resuming stale gestures", () => {
+        render(<ControllerHarness touchNavigationMode="gyroscope" collisionsEnabled={false} />);
+        dispatchOrientation();
+        dispatchOrientation(30);
+        act(() => mockFrame({}, 0.02));
+        dispatchPointer("pointerdown", 1, 420, 500);
+        dispatchPointer("pointermove", 1, 420, 440);
+        fireEvent(window, new Event("blur"));
+        dispatchOrientation(90);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+        expect(mockController.position.z).toBe(0);
+        dispatchOrientation(100);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(40 * Math.PI / 180);
+
+        const hidden = jest.spyOn(document, "hidden", "get").mockReturnValue(true);
+        fireEvent(document, new Event("visibilitychange"));
+        dispatchOrientation(150);
+        hidden.mockReturnValue(false);
+        fireEvent(document, new Event("visibilitychange"));
+        dispatchOrientation(160);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(40 * Math.PI / 180);
+
+        window.screen.orientation.angle = 90;
+        fireEvent(window.screen.orientation, new Event("change"));
+        dispatchOrientation(90, 0, -90);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(40 * Math.PI / 180);
+        expect(readLookAngles().x).toBeCloseTo(0);
+    });
+
+    test("recenter and completed tours anchor the next sample to current pose", () => {
+        const navigationRef = React.createRef();
+        render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            navigationRef={navigationRef}
+            collisionsEnabled={false}
+        />);
+        dispatchOrientation();
+        dispatchOrientation(30);
+        act(() => mockFrame({}, 0.02));
+        act(() => navigationRef.current.recenterGyroscope());
+        dispatchOrientation(80);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+
+        let snapshot;
+        act(() => { snapshot = navigationRef.current.suspend(); });
+        dispatchOrientation(160);
+        act(() => navigationRef.current.restore(snapshot));
+        dispatchOrientation(170);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+
+        act(() => { snapshot = navigationRef.current.suspend(); });
+        act(() => navigationRef.current.complete([0, 1.7, 0], [1, 1.7, 0], snapshot));
+        dispatchOrientation(200);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(-Math.PI / 2);
+        dispatchOrientation(210);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(-Math.PI / 2 + Math.PI / 18);
+    });
+
+    test("explicit recenter levels pitch while preserving heading and physical control", () => {
+        const navigationRef = React.createRef();
+        render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            navigationRef={navigationRef}
+            collisionsEnabled={false}
+        />);
+        dispatchOrientation();
+        dispatchOrientation(30, 120, 0);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().x).toBeCloseTo(Math.PI / 6);
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+
+        act(() => navigationRef.current.recenterGyroscope());
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().x).toBeCloseTo(0);
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+        dispatchOrientation(80, 130, 0);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().x).toBeCloseTo(0);
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+
+        dispatchOrientation(90, 140, 0);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().x).toBeCloseTo(Math.PI / 18);
+        expect(readLookAngles().y).toBeCloseTo(40 * Math.PI / 180);
+    });
+
+    test("disable and mode changes remove sensors and reanchor when enabled", () => {
+        const view = render(<ControllerHarness touchNavigationMode="gyroscope" collisionsEnabled={false} />);
+        dispatchOrientation();
+        dispatchOrientation(30);
+        act(() => mockFrame({}, 0.02));
+        view.rerender(<ControllerHarness touchNavigationMode="gyroscope" collisionsEnabled={false} enabled={false} />);
+        dispatchOrientation(90);
+        view.rerender(<ControllerHarness touchNavigationMode="gyroscope" collisionsEnabled={false} />);
+        dispatchOrientation(160);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+
+        view.rerender(<ControllerHarness touchNavigationMode="dual_joystick" collisionsEnabled={false} />);
+        dispatchOrientation(220);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+        dispatchPointer("pointerdown", 1, 420, 500);
+        dispatchPointer("pointermove", 1, 480, 500);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeLessThan(Math.PI / 6);
+    });
+
+    test("permission resolving after unmount cannot attach listeners or activate", async () => {
+        let resolvePermission;
+        window.DeviceOrientationEvent.requestPermission = jest.fn(() => new Promise((resolve) => {
+            resolvePermission = resolve;
+        }));
+        const navigationRef = React.createRef();
+        const statusChanged = jest.fn();
+        const view = render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            navigationRef={navigationRef}
+            onGyroscopeStatusChange={statusChanged}
+            collisionsEnabled={false}
+        />);
+        let request;
+        act(() => { request = navigationRef.current.enableGyroscope(); });
+        view.unmount();
+        statusChanged.mockClear();
+        await act(async () => {
+            resolvePermission("granted");
+            await request;
+        });
+        dispatchOrientation();
+        expect(statusChanged).not.toHaveBeenCalled();
+    });
+
+    test("permission resolving after disabling cannot activate motion", async () => {
+        let resolvePermission;
+        window.DeviceOrientationEvent.requestPermission = jest.fn(() => new Promise((resolve) => {
+            resolvePermission = resolve;
+        }));
+        const navigationRef = React.createRef();
+        const statusChanged = jest.fn();
+        const view = render(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            navigationRef={navigationRef}
+            onGyroscopeStatusChange={statusChanged}
+            collisionsEnabled={false}
+        />);
+        let request;
+        act(() => { request = navigationRef.current.enableGyroscope(); });
+        view.rerender(<ControllerHarness
+            touchNavigationMode="gyroscope"
+            navigationRef={navigationRef}
+            onGyroscopeStatusChange={statusChanged}
+            collisionsEnabled={false}
+            enabled={false}
+        />);
+        statusChanged.mockClear();
+        await act(async () => {
+            resolvePermission("granted");
+            await request;
+        });
+        dispatchOrientation();
+        expect(statusChanged).not.toHaveBeenCalled();
+    });
+
+    test("sensor timeout keeps touch fallback and can recover on late data", () => {
+        jest.useFakeTimers();
+        try {
+            const statusChanged = jest.fn();
+            const view = render(<ControllerHarness
+                touchNavigationMode="gyroscope"
+                onGyroscopeStatusChange={statusChanged}
+                collisionsEnabled={false}
+            />);
+            expect(statusChanged).toHaveBeenLastCalledWith("waiting");
+            act(() => jest.advanceTimersByTime(4000));
+            expect(statusChanged).toHaveBeenLastCalledWith("unavailable");
+            dispatchPointer("pointerdown", 1, 420, 500);
+            dispatchPointer("pointermove", 1, 480, 500);
+            act(() => mockFrame({}, 0.02));
+            const previousYaw = readLookAngles().y;
+            expect(previousYaw).toBeLessThan(0);
+            dispatchOrientation();
+            act(() => mockFrame({}, 0.02));
+            expect(statusChanged).toHaveBeenLastCalledWith("active");
+            expect(readLookAngles().y).toBeCloseTo(previousYaw);
+            expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(1);
+            view.unmount();
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    test("Strict Mode and rerenders keep only one active sensor subscription", () => {
+        const statusChanged = jest.fn();
+        const addListener = jest.spyOn(window, "addEventListener");
+        const removeListener = jest.spyOn(window, "removeEventListener");
+        const view = render(<React.StrictMode><ControllerHarness
+            touchNavigationMode="gyroscope"
+            onGyroscopeStatusChange={statusChanged}
+            collisionsEnabled={false}
+        /></React.StrictMode>);
+        dispatchOrientation();
+        dispatchOrientation(30);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 6);
+        view.rerender(<React.StrictMode><ControllerHarness
+            touchNavigationMode="gyroscope"
+            onGyroscopeStatusChange={statusChanged}
+            collisionsEnabled={false}
+        /></React.StrictMode>);
+        dispatchOrientation(60);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(Math.PI / 3);
+        view.unmount();
+        const attached = addListener.mock.calls.filter(([eventName]) => eventName === "deviceorientation");
+        const detached = removeListener.mock.calls.filter(([eventName]) => eventName === "deviceorientation");
+        expect(attached.length).toBeGreaterThan(0);
+        expect(detached.map(([, handler]) => handler)).toEqual(attached.map(([, handler]) => handler));
+    });
 });

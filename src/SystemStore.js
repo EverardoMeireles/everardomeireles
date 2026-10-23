@@ -40,6 +40,14 @@ const SystemStore = create((set) => ({
   r3fPerfEnabled: true,
   setR3fPerfEnabled: (enabled) => set(() => ({ r3fPerfEnabled: enabled })),
 
+  // Compare live indirect lighting without disabling contact shading.
+  realTimeGiEnabled: true,
+  setRealTimeGiEnabled: (enabled) => set(() => ({ realTimeGiEnabled: enabled })),
+
+  // Visualize baked visibility cells without changing runtime culling.
+  showBakedPvs: false,
+  setShowBakedPvs: (visible) => set(() => ({ showBakedPvs: visible })),
+
   currentCameraMovements: { zoom: true, pan: true, rotate: true },
   setcurrentCameraMovements: (cameraMovements) => set(() => ({ currentCameraMovements: cameraMovements })),
 

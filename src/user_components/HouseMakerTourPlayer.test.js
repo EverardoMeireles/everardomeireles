@@ -1,7 +1,7 @@
 // ### Imports ###
 
 import React, { StrictMode } from "react";
-import { act, fireEvent, render } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import {
@@ -546,6 +546,33 @@ test("tour-circle input blocks any but permits matching mouse waits", () => {
     expect(view.navigation.complete).toHaveBeenCalledTimes(1);
 
     marker.remove();
+});
+
+test.each([
+    ["any", "pointerdown", { button: 0 }],
+    ["mouse:left", "pointerdown", { button: 0 }],
+    ["any", "keydown", { key: " ", code: "Space" }],
+    ["key:space", "keydown", { key: " ", code: "Space" }]
+])("%s wait ignores viewer-control %s but accepts canvas input", (input, type, init) => {
+    const view = renderTourPlayer({ manifest: createManifest(input) });
+    render(<>
+        <div data-viewer-control="true">
+            <button>Fullscreen</button>
+        </div>
+        <canvas aria-label="Scene" />
+    </>);
+    const fullscreenButton = screen.getByRole("button", { name: "Fullscreen" });
+    const canvas = screen.getByLabelText("Scene");
+    const InputEvent = type === "keydown" ? KeyboardEvent : MouseEvent;
+
+    view.runFrame(0.016);
+    fireEvent(fullscreenButton, new InputEvent(type, { bubbles: true, ...init }));
+    view.runFrame(2);
+    expect(view.navigation.complete).not.toHaveBeenCalled();
+
+    fireEvent(canvas, new InputEvent(type, { bubbles: true, ...init }));
+    view.runFrame(2);
+    expect(view.navigation.complete).toHaveBeenCalledTimes(1);
 });
 
 test("balances wait listeners through StrictMode and unmount", () => {
