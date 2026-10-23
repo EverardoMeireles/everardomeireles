@@ -4,8 +4,8 @@
 /* eslint-disable testing-library/render-result-naming-convention */
 
 import React, { StrictMode } from "react";
-import { render } from "@testing-library/react";
-import { useLoader } from "@react-three/fiber";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import {
     HouseMakerDirectionalLight,
@@ -14,6 +14,7 @@ import {
     createMirroredObject,
     findDoorBodyNode,
     findDoorComponentNodes,
+    isHouseMakerHideableObject,
     prepareHouseMakerModelScene,
     reconstructDoorBodies,
     reconstructHalfMeshes,
@@ -27,7 +28,8 @@ import {
 
 // Keep pure helper tests independent from React Three rendering.
 jest.mock("@react-three/fiber", () => ({
-    useLoader: jest.fn()
+    useLoader: jest.fn(),
+    useFrame: jest.fn()
 }));
 
 jest.mock("three/examples/jsm/loaders/GLTFLoader.js", () => ({
@@ -223,6 +225,374 @@ function makeLoaderFixtures(manifestOverrides = {}) {
 
     return { manifest, gltf, sourceScene };
 }
+
+// ### Object visibility classification ###
+
+describe("HouseMaker non-surface classification", () => {
+    test.each([
+        ["furniture", { housemaker_object_id: "chair-a" }, true],
+        ["explicit object atlas", { housemaker_atlas_type: "object" }, true],
+        ["explicit surface atlas", { housemaker_atlas_type: "surface" }, false],
+        ["explicit object atlas with older source labels", {
+            housemaker_atlas_type: "object",
+            housemaker_atlas_source_ids: ["surface-wall-texture:old-label"]
+        }, true],
+        ["explicit surface atlas with older object IDs", {
+            housemaker_atlas_type: "surface",
+            housemaker_object_id: "old-object-label",
+            housemaker_atlas_source_ids: ["old-object-label"]
+        }, false],
+        ["unknown atlas type with legacy IDs", {
+            housemaker_atlas_type: "unknown",
+            housemaker_atlas_source_ids: ["chair-a"]
+        }, true],
+        ["door body", {
+            housemakerDoorBody: { placementObjectId: "placement-a", bodyObjectId: "body-a" }
+        }, true],
+        ["door component", {
+            housemakerDoorComponent: {
+                placementObjectId: "placement-a",
+                componentObjectId: "knob-a"
+            }
+        }, true],
+        ["surface", { housemaker_surface_id: "level:2/wall:1:2" }, false],
+        ["surface with an object ID", {
+            housemaker_surface_id: "level:2/wall:1:2",
+            housemaker_object_id: "wall-object"
+        }, false],
+        ["furniture atlas", {
+            housemaker_atlas_source_ids: ["chair-a", "table-a"]
+        }, true],
+        ["surface atlas", {
+            housemaker_atlas_source_ids: ["surface-wall-texture:wall-a"]
+        }, false],
+        ["mixed atlas", {
+            housemaker_atlas_source_ids: ["chair-a", "surface-wall-texture:wall-a"]
+        }, false],
+        ["unclassified mesh", {}, false]
+    ])("classifies %s without display-name assumptions", (label, userData, expected) => {
+        const mesh = new THREE.Mesh();
+        mesh.name = "[HALF] arbitrary display name";
+        mesh.userData = userData;
+
+        expect(isHouseMakerHideableObject(mesh)).toBe(expected);
+    });
+
+    test("inherits tagged parents while preserving explicitly tagged surfaces", () => {
+        const furniture = new THREE.Group();
+        furniture.userData.housemaker_object_id = "cabinet-a";
+        const child = new THREE.Mesh();
+        const taggedSurface = new THREE.Mesh();
+        taggedSurface.userData.housemaker_surface_id = "level:0/floor";
+        furniture.add(child, taggedSurface);
+
+        expect(isHouseMakerHideableObject(child)).toBe(true);
+        expect(isHouseMakerHideableObject(taggedSurface)).toBe(false);
+    });
+
+    test("inherits explicit atlas categories from exported parent nodes", () => {
+        const parent = new THREE.Group();
+        const mesh = new THREE.Mesh();
+        parent.add(mesh);
+        parent.userData.housemaker_atlas_type = "object";
+        expect(isHouseMakerHideableObject(mesh)).toBe(true);
+
+        parent.userData.housemaker_atlas_type = "surface";
+        expect(isHouseMakerHideableObject(mesh, true)).toBe(false);
+    });
+});
+
+// ### Fading object visibility ###
+
+describe("HouseMaker fading object visibility", () => {
+    let consoleError;
+    let consoleWarning;
+
+    beforeEach(() => {
+        useFrame.mockClear();
+        consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+        consoleWarning = jest.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        useLoader.mockReset();
+        consoleError.mockRestore();
+        consoleWarning.mockRestore();
+    });
+
+    test("fades furniture and mirrors while preserving shared architectural materials", () => {
+        const fixtures = makeLoaderFixtures();
+        const resources = makeMeshAssets();
+        const furniture = new THREE.Mesh(resources.geometry, resources.material);
+        furniture.name = "Furniture";
+        furniture.userData = {
+            housemaker_object_id: "chair-a",
+            halfMesh: {
+                mirrorPlane: { point: [0, 0, 0], normal: [1, 0, 0] },
+                uvMode: "reuse"
+            }
+        };
+        const floor = new THREE.Mesh(resources.geometry, resources.material);
+        floor.name = "Floor";
+        floor.userData.housemaker_surface_id = "level:0/floor";
+        const mixedAtlas = new THREE.Mesh(resources.geometry, resources.material);
+        mixedAtlas.name = "Mixed atlas";
+        mixedAtlas.userData.housemaker_atlas_source_ids = [
+            "table-a", "surface-wall-texture:wall-a"
+        ];
+        fixtures.sourceScene.add(furniture, floor, mixedAtlas);
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+
+        const view = render(<HouseMakerLoader toursEnabled={false} />);
+        const objects = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object);
+        const model = objects.find((object) => object.isScene);
+        const mirrors = objects.find((object) => object.name === "HouseMaker mirrored models");
+        const loadedFurniture = model.getObjectByName("Furniture");
+        const mirroredFurniture = mirrors.children[0];
+        const frame = useFrame.mock.calls[useFrame.mock.calls.length - 1][0];
+        const frameState = { camera: new THREE.PerspectiveCamera() };
+        const rootData = getRenderedProps(view.container.querySelector("group")).userData;
+
+        expect(loadedFurniture.material).not.toBe(resources.material);
+        expect(loadedFurniture.material.map).toBe(resources.texture);
+        expect(mirroredFurniture.material.map).toBe(resources.texture);
+        expect(model.getObjectByName("Floor").material).toBe(resources.material);
+        expect(model.getObjectByName("Mixed atlas").material).toBe(resources.material);
+        expect(rootData.housemakerObjectsHidden).toBe(false);
+
+        fireEvent.keyDown(window, { key: "a" });
+        expect(rootData.housemakerObjectsHidden).toBe(true);
+        frame(frameState, 0.2);
+
+        expect(loadedFurniture.material.opacity).toBeGreaterThan(0);
+        expect(loadedFurniture.material.opacity).toBeLessThan(1);
+        expect(loadedFurniture.visible).toBe(true);
+        expect(mirroredFurniture.material.opacity).toBe(loadedFurniture.material.opacity);
+        expect(resources.material.opacity).toBe(1);
+
+        frame(frameState, 1);
+
+        expect(loadedFurniture.visible).toBe(false);
+        expect(mirroredFurniture.visible).toBe(false);
+        expect(model.getObjectByName("Floor").visible).toBe(true);
+        expect(model.getObjectByName("Mixed atlas").visible).toBe(true);
+        expect(furniture.visible).toBe(true);
+        expect(furniture.material).toBe(resources.material);
+        view.unmount();
+    });
+
+    test("reverses a partial fade without snapping or replacing geometry", () => {
+        const fixtures = makeLoaderFixtures();
+        const furniture = makeBody().body;
+        fixtures.sourceScene.add(furniture);
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+        const view = render(<HouseMakerLoader toursEnabled={false} />);
+        const model = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object)
+            .find((object) => object.isScene);
+        const loadedFurniture = model.children[0];
+        const frame = useFrame.mock.calls[useFrame.mock.calls.length - 1][0];
+        const frameState = { camera: new THREE.PerspectiveCamera() };
+
+        fireEvent.keyDown(window, { key: "a" });
+        frame(frameState, 0.2);
+        const partialOpacity = loadedFurniture.material.opacity;
+        expect(partialOpacity).toBeGreaterThan(0);
+        expect(partialOpacity).toBeLessThan(1);
+
+        fireEvent.keyDown(window, { key: "A" });
+        expect(loadedFurniture.material.opacity).toBe(partialOpacity);
+        frame(frameState, 0.1);
+
+        expect(loadedFurniture.material.opacity).toBeGreaterThan(partialOpacity);
+        frame(frameState, 1);
+
+        expect(loadedFurniture.material.opacity).toBe(1);
+        expect(loadedFurniture.visible).toBe(true);
+        expect(loadedFurniture.geometry).toBe(furniture.geometry);
+        view.unmount();
+    });
+
+    test("ignores held keys, modified shortcuts, and editable targets", () => {
+        const fixtures = makeLoaderFixtures();
+        fixtures.sourceScene.add(makeBody().body);
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+        const view = render(<>
+            <HouseMakerLoader toursEnabled={false} />
+            <input aria-label="Text input" />
+            <textarea aria-label="Text area" />
+            <div contentEditable suppressContentEditableWarning aria-label="Editable text" />
+        </>);
+        const model = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object)
+            .find((object) => object.isScene);
+        const loadedFurniture = model.children[0];
+        const frame = useFrame.mock.calls[useFrame.mock.calls.length - 1][0];
+        const frameState = { camera: new THREE.PerspectiveCamera() };
+
+        fireEvent.keyDown(window, { key: "a", repeat: true });
+        fireEvent.keyDown(window, { key: "a", ctrlKey: true });
+        fireEvent.keyDown(window, { key: "a", metaKey: true });
+        fireEvent.keyDown(window, { key: "a", altKey: true });
+        fireEvent.keyDown(window, { key: "t" });
+        fireEvent.keyDown(screen.getByLabelText("Text input"), { key: "a" });
+        fireEvent.keyDown(screen.getByLabelText("Text area"), { key: "a" });
+        fireEvent.keyDown(screen.getByLabelText("Editable text"), { key: "a" });
+        frame(frameState, 1);
+
+        expect(loadedFurniture.visible).toBe(true);
+        expect(loadedFurniture.material.opacity).toBe(1);
+
+        fireEvent.keyDown(window, { key: "a" });
+        frame(frameState, 1);
+
+        expect(loadedFurniture.visible).toBe(false);
+        view.unmount();
+    });
+
+    test("Strict Mode disposes owned fade materials without disposing shared assets", () => {
+        const fixtures = makeLoaderFixtures();
+        const resources = makeMeshAssets();
+        const furniture = makeBody({ resources }).body;
+        fixtures.sourceScene.add(furniture);
+        const disposeGeometry = jest.spyOn(resources.geometry, "dispose");
+        const disposeMaterial = jest.spyOn(resources.material, "dispose");
+        const disposeTexture = jest.spyOn(resources.texture, "dispose");
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+        const view = render(<StrictMode>
+            <HouseMakerLoader toursEnabled={false} />
+        </StrictMode>);
+        const model = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object)
+            .find((object) => object.isScene);
+        const ownedMaterial = model.children[0].material;
+        const disposeOwnedMaterial = jest.spyOn(ownedMaterial, "dispose");
+        const rootData = getRenderedProps(view.container.querySelector("group")).userData;
+
+        expect(ownedMaterial).not.toBe(resources.material);
+        expect(ownedMaterial.map).toBe(resources.texture);
+        view.unmount();
+
+        expect(disposeOwnedMaterial).toHaveBeenCalledTimes(1);
+        expect(disposeGeometry).not.toHaveBeenCalled();
+        expect(disposeMaterial).not.toHaveBeenCalled();
+        expect(disposeTexture).not.toHaveBeenCalled();
+        expect(furniture.material).toBe(resources.material);
+        expect(resources.material.alphaHash).toBe(false);
+
+        fireEvent.keyDown(window, { key: "a" });
+        expect(rootData.housemakerObjectsHidden).toBe(false);
+    });
+
+    test("prepares nested meshes on a hidden reload without revealing authored-hidden children", () => {
+        let fixtures = makeLoaderFixtures();
+        fixtures.sourceScene.add(makeBody().body);
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+        const view = render(<HouseMakerLoader toursEnabled={false} />);
+        const frameState = { camera: new THREE.PerspectiveCamera() };
+        let frame = useFrame.mock.calls[useFrame.mock.calls.length - 1][0];
+        fireEvent.keyDown(window, { key: "a" });
+        frame(frameState, 1);
+
+        fixtures = makeLoaderFixtures();
+        const resources = makeMeshAssets();
+        const parent = new THREE.Mesh(resources.geometry, resources.material);
+        parent.name = "Furniture parent";
+        parent.userData.housemaker_object_id = "cabinet-a";
+        const child = new THREE.Mesh(resources.geometry, resources.material);
+        child.name = "Furniture child";
+        const authoredHiddenChild = new THREE.Mesh(resources.geometry, resources.material);
+        authoredHiddenChild.name = "Authored hidden child";
+        authoredHiddenChild.visible = false;
+        parent.add(child, authoredHiddenChild);
+        fixtures.sourceScene.add(parent);
+
+        view.rerender(<HouseMakerLoader toursEnabled={false} />);
+        const model = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object)
+            .find((object) => object.isScene);
+        const loadedParent = model.getObjectByName("Furniture parent");
+        const loadedChild = model.getObjectByName("Furniture child");
+        const loadedHiddenChild = model.getObjectByName("Authored hidden child");
+        frame = useFrame.mock.calls[useFrame.mock.calls.length - 1][0];
+
+        expect(loadedParent.visible).toBe(false);
+        expect(loadedChild.visible).toBe(false);
+        expect(loadedChild.material).not.toBe(resources.material);
+        expect(loadedChild.material.opacity).toBe(0);
+        expect(loadedHiddenChild.material).toBe(resources.material);
+
+        fireEvent.keyDown(window, { key: "a" });
+        frame(frameState, 0.2);
+
+        expect(loadedParent.visible).toBe(true);
+        expect(loadedChild.visible).toBe(true);
+        expect(loadedChild.material.opacity).toBeGreaterThan(0);
+        expect(loadedChild.material.opacity).toBeLessThan(1);
+        expect(loadedHiddenChild.visible).toBe(false);
+        expect(resources.material.opacity).toBe(1);
+
+        frame(frameState, 1);
+        expect(loadedChild.material.opacity).toBe(1);
+        expect(loadedHiddenChild.visible).toBe(false);
+        view.unmount();
+    });
+
+    test("preserves cutout boundaries through fades without changing shader variants", () => {
+        const fixtures = makeLoaderFixtures();
+        const resources = makeMeshAssets();
+        resources.material.alphaTest = 0.5;
+        resources.material.opacity = 0.8;
+        fixtures.sourceScene.add(makeBody({ resources }).body);
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+        const view = render(<HouseMakerLoader toursEnabled={false} />);
+        const model = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object)
+            .find((object) => object.isScene);
+        const fadedMaterial = model.children[0].material;
+        const materialVersion = fadedMaterial.version;
+        const frame = useFrame.mock.calls[useFrame.mock.calls.length - 1][0];
+        const frameState = { camera: new THREE.PerspectiveCamera() };
+
+        fireEvent.keyDown(window, { key: "a" });
+        frame(frameState, 0.2);
+
+        expect(fadedMaterial.opacity).toBeGreaterThan(0);
+        expect(fadedMaterial.opacity).toBeLessThan(0.8);
+        expect(fadedMaterial.alphaTest / fadedMaterial.opacity).toBeCloseTo(0.5 / 0.8);
+        expect(fadedMaterial.version).toBe(materialVersion);
+
+        frame(frameState, 1);
+        expect(fadedMaterial.opacity).toBe(0);
+        expect(fadedMaterial.alphaTest).toBeGreaterThan(0);
+        expect(fadedMaterial.version).toBe(materialVersion);
+
+        fireEvent.keyDown(window, { key: "a" });
+        frame(frameState, 0.2);
+        expect(fadedMaterial.alphaTest / fadedMaterial.opacity).toBeCloseTo(0.5 / 0.8);
+        frame(frameState, 1);
+
+        expect(fadedMaterial.opacity).toBe(0.8);
+        expect(fadedMaterial.alphaTest).toBe(0.5);
+        expect(fadedMaterial.version).toBe(materialVersion);
+        expect(resources.material.opacity).toBe(0.8);
+        expect(resources.material.alphaTest).toBe(0.5);
+        view.unmount();
+    });
+});
 
 // ### Metadata validation ###
 
@@ -487,6 +857,117 @@ describe("HouseMaker plane reflection", () => {
 // ### Reconstruction variants ###
 
 describe("HouseMaker door reconstruction variants", () => {
+    test("keeps the half-mesh seam aligned under exported global scaling", () => {
+        const scene = new THREE.Scene();
+        const globalRoot = new THREE.Group();
+        globalRoot.userData.housemakerGlobalScale = true;
+        globalRoot.scale.set(1.8, 2.0064819647142973, 1.9);
+        const point = [-0.08104019064566431, 1.2994961023330696, -4.80722678053926];
+        const { body, geometry, material } = makeBody({
+            halfPlane: { point, normal: [1, 0, 0] }
+        });
+        body.position.fromArray(point);
+        globalRoot.add(body);
+        scene.add(globalRoot);
+
+        const prepared = prepareHouseMakerModelScene(scene, []);
+        const source = findDoorBodyNode(prepared.modelScene, "placement-a", "body-a");
+        const mirror = getMirrorByType(prepared.mirroredModels, "halfMesh");
+        source.updateWorldMatrix(true, true);
+        mirror.updateWorldMatrix(true, true);
+        const sourceSeam = new THREE.Vector3().applyMatrix4(source.matrixWorld);
+        const mirrorSeam = new THREE.Vector3().applyMatrix4(mirror.matrixWorld);
+
+        expect(sourceSeam.x).toBeCloseTo(point[0] * 1.8, 10);
+        expect(sourceSeam.distanceTo(mirrorSeam)).toBeCloseTo(0, 10);
+        expect(source.geometry).toBe(geometry);
+        expect(mirror.geometry).toBe(geometry);
+        expect(mirror.material).toBe(material);
+        expect(source.userData.halfMesh.mirrorPlane.point).toEqual(point);
+        expect(getRuntimeMirrors(scene)).toEqual([]);
+    });
+
+    test("preserves oblique reflections under nonuniform global transforms", () => {
+        const scene = new THREE.Scene();
+        const globalRoot = new THREE.Group();
+        globalRoot.userData.housemakerGlobalScale = true;
+        globalRoot.position.set(3, -2, 4);
+        globalRoot.rotation.set(0.2, -0.3, 0.15);
+        globalRoot.scale.set(1.8, 2.1, 0.7);
+        const plane = { point: [0.5, 0.8, -1.2], normal: [1, 1, -0.5] };
+        const body = makeBody({ halfPlane: plane }).body;
+        body.position.set(0.8, 1.5, -0.3);
+        body.rotation.set(-0.15, 0.35, -0.1);
+        body.scale.set(0.7, 1.2, 0.9);
+        globalRoot.add(body);
+        scene.add(globalRoot);
+        scene.updateMatrixWorld(true);
+        const expectedWorld = globalRoot.matrixWorld.clone()
+            .multiply(buildPlaneReflectionMatrix(plane))
+            .multiply(body.matrix);
+
+        const prepared = prepareHouseMakerModelScene(scene, []);
+        const mirror = getMirrorByType(prepared.mirroredModels, "halfMesh");
+
+        expectMatrixClose(mirror.matrixWorld, expectedWorld);
+        expect(mirror.matrixAutoUpdate).toBe(false);
+    });
+
+    test("uses scaled JSON side planes without scaling them again", () => {
+        const scene = new THREE.Scene();
+        const globalRoot = new THREE.Group();
+        globalRoot.userData.housemakerGlobalScale = true;
+        globalRoot.scale.set(1.8, 2, 1.9);
+        const halfPlane = { point: [0.4, 0, 0], normal: [1, 0, 0] };
+        const sidePlane = { point: [0, 0, 3.8], normal: [0, 0, 1] };
+        const body = makeBody({ halfPlane }).body;
+        body.position.set(0.7, 1, 2.4);
+        globalRoot.add(body);
+        scene.add(globalRoot);
+        scene.updateMatrixWorld(true);
+        const expectedHalf = globalRoot.matrixWorld.clone()
+            .multiply(buildPlaneReflectionMatrix(halfPlane))
+            .multiply(body.matrix);
+        const sideReflection = buildPlaneReflectionMatrix(sidePlane);
+
+        const prepared = prepareHouseMakerModelScene(scene, [
+            makeReconstruction({ mirrorPlane: sidePlane })
+        ]);
+        const source = findDoorBodyNode(prepared.modelScene, "placement-a", "body-a");
+        source.updateWorldMatrix(true, true);
+
+        expectMatrixClose(
+            getMirrorByType(prepared.mirroredModels, "halfMesh").matrixWorld,
+            expectedHalf
+        );
+        expectMatrixClose(
+            getMirrorByType(prepared.mirroredModels, "sideDuplication:authored").matrixWorld,
+            sideReflection.clone().multiply(source.matrixWorld)
+        );
+        expectMatrixClose(
+            getMirrorByType(prepared.mirroredModels, "sideDuplication:halfMesh").matrixWorld,
+            sideReflection.clone().multiply(expectedHalf)
+        );
+    });
+
+    test("skips invalid global scaling without invalidating the authored model", () => {
+        const scene = new THREE.Scene();
+        const globalRoot = new THREE.Group();
+        globalRoot.userData.housemakerGlobalScale = true;
+        globalRoot.scale.set(0, 2, 1);
+        globalRoot.add(makeBody({
+            halfPlane: { point: [0, 0, 0], normal: [1, 0, 0] }
+        }).body);
+        scene.add(globalRoot);
+        const warning = jest.fn();
+
+        const prepared = prepareHouseMakerModelScene(scene, [], warning);
+
+        expect(prepared.runtimeMirrors).toEqual([]);
+        expect(prepared.modelScene.children[0].children).toHaveLength(1);
+        expect(warning).toHaveBeenCalledWith(expect.stringContaining("invalid global scale"));
+    });
+
     test("leaves ordinary and named HALF doors unchanged", () => {
         const scene = new THREE.Scene();
         const ordinaryBody = makeBody().body;

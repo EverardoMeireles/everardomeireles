@@ -254,7 +254,8 @@ test("keeps preceding text fading through completion and appends tied steps", ()
         outgoingText: [],
         tooltips: []
     };
-    const firstAction = { id: "same", fadeDurationMs: 1000 };
+    const worldMatrix = new THREE.Matrix4().makeShear(0.2, 0, 0, 0.3, 0, 0);
+    const firstAction = { id: "same", fadeDurationMs: 1000, worldMatrix };
     const tiedAction = { id: "same", fadeDurationMs: 2000 };
     const makeGroup = (stepId, progress, textActions = [], tooltipActions = []) => ({
         progress,
@@ -273,13 +274,16 @@ test("keeps preceding text fading through completion and appends tied steps", ()
     );
     expect(actions.currentText).toHaveLength(2);
     expect(new Set(actions.currentText.map((record) => record.key)).size).toBe(2);
+    expect(actions.currentText[0].worldMatrix).toBe(worldMatrix);
 
     actions = transitionTourActions(actions, makeGroup("final", 1));
     expect(actions.currentText).toEqual([]);
     expect(actions.outgoingText).toHaveLength(2);
+    expect(actions.outgoingText[0].worldMatrix).toBe(worldMatrix);
 
     const completed = completeTourActions(actions);
     expect(completed.outgoingText).toHaveLength(2);
+    expect(completed.outgoingText[0].worldMatrix).toBe(worldMatrix);
     expect(completed.tooltips).toEqual([]);
 
     const firstTooltipState = transitionTourActions(
@@ -455,6 +459,60 @@ test("idle wait motion returns immediately to the authored pose", () => {
     expectVectorClose(
         view.camera.getWorldPosition(new THREE.Vector3()),
         new THREE.Vector3(0, 1, 0)
+    );
+});
+
+test("scales idle offsets without rescaling exported camera coordinates", () => {
+    const manifest = createManifest("key:space");
+    const tour = manifest.tours[0];
+    tour.triggerArea.center = [2, 0, 4];
+    tour.curve.points = [[2, 1, 4], [2, 1, 2]];
+    tour.steps[0].cameraTarget = [2, 1, 1];
+    tour.steps[0].actions.push({
+        id: "scaled-idle",
+        type: "idleCameraAnimation",
+        pivotPoint: [2, 1, 1],
+        radiusMeters: 0.2,
+        cycleDurationSeconds: 4,
+        offsetScale: [3, 2, 4]
+    });
+    manifest.globalScale = {
+        matrix: new THREE.Matrix4().makeScale(3, 2, 4).toArray(),
+        appliedToGlb: true,
+        appliedToRuntimeData: true
+    };
+    let loaderRoot;
+    const navigation = {
+        getPlayerPosition: (output) => loaderRoot.localToWorld(output.set(2, 0, 4)),
+        suspend: jest.fn(),
+        restore: jest.fn(() => true)
+    };
+    const view = renderTourPlayer({
+        manifest,
+        navigation,
+        configureRoot(root) {
+            loaderRoot = root;
+            root.position.set(10, 0, -5);
+            root.rotation.y = 0.3;
+            root.scale.set(2, 1, 3);
+        }
+    });
+
+    view.runFrame(0.016);
+    expectVectorClose(
+        view.camera.getWorldPosition(new THREE.Vector3()),
+        loaderRoot.localToWorld(new THREE.Vector3(2, 1, 4))
+    );
+    view.runFrame(0.5);
+    expectVectorClose(
+        view.camera.getWorldPosition(new THREE.Vector3()),
+        loaderRoot.localToWorld(new THREE.Vector3(2 + Math.sqrt(0.02) * 3, 1.14, 4))
+    );
+
+    fireEvent.keyDown(window, { key: " ", code: "Space" });
+    expectVectorClose(
+        view.camera.getWorldPosition(new THREE.Vector3()),
+        loaderRoot.localToWorld(new THREE.Vector3(2, 1, 4))
     );
 });
 

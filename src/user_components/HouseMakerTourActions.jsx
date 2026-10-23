@@ -467,6 +467,10 @@ export function reconcileTourCircles(ownerId, desiredCircles) {
 function TourTextAction(props) {
     const { record, onFadeComplete } = props;
     const { action, position = [0, 0, 0], quaternion = [0, 0, 0, 1] } = record;
+    // Preserve exported scale and shear without decomposing the matrix.
+    const transform = record.worldMatrix?.isMatrix4
+        ? { matrix: record.worldMatrix, matrixAutoUpdate: false }
+        : { position, quaternion };
     const phase = record.phase === "outgoing" ? "outgoing" : "current";
     const materialRef = useRef();
     const fadeState = useRef({
@@ -530,7 +534,7 @@ function TourTextAction(props) {
     });
 
     return (
-        <group position={position} quaternion={quaternion}>
+        <group {...transform}>
             <Center cacheKey={`${action.id ?? "text"}-${action.text ?? ""}`}>
                 <Text3D
                     font={helvetikerFont}

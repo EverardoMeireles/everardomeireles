@@ -171,6 +171,28 @@ function parseTextAction(action, context, warn) {
         return undefined;
     }
 
+    // Preserve exported transforms without decomposing scale or shear.
+    let worldMatrix;
+    if (action.worldMatrix !== undefined) {
+        const values = action.worldMatrix;
+        if (
+            Array.isArray(values)
+            && values.length === 16
+            && values.every(isFiniteNumber)
+            && values[3] === 0
+            && values[7] === 0
+            && values[11] === 0
+            && values[15] === 1
+        ) {
+            const matrix = new THREE.Matrix4().fromArray(values);
+            const determinant = matrix.determinant();
+            if (Number.isFinite(determinant) && determinant !== 0) worldMatrix = matrix;
+        }
+        if (!worldMatrix) {
+            warnWith(warn, `HouseMaker ${context} has an invalid text3d worldMatrix; using legacy transforms.`);
+        }
+    }
+
     return {
         id: actionId,
         type: action.type,
@@ -183,7 +205,8 @@ function parseTextAction(action, context, warn) {
         fadeDurationMs,
         rotationDegrees: [...rotationDegrees],
         rotationOrder,
-        quaternion: new THREE.Quaternion()
+        quaternion: new THREE.Quaternion(),
+        worldMatrix
     };
 }
 
@@ -231,6 +254,7 @@ function parseWaitAction(action, context, warn) {
 // Parse wait-only idle camera actions.
 function parseIdleAction(action, context, warn) {
     const actionId = getActionIdentity(action, context, warn);
+    const offsetScale = action.offsetScale === undefined ? [1, 1, 1] : action.offsetScale;
 
     if (
         !actionId
@@ -239,6 +263,8 @@ function parseIdleAction(action, context, warn) {
         || action.radiusMeters < 0
         || !isFiniteNumber(action.cycleDurationSeconds)
         || action.cycleDurationSeconds <= 0
+        || !isVector3Array(offsetScale)
+        || offsetScale.some((component) => component === 0)
     ) {
         warnWith(warn, `HouseMaker ${context} has an invalid idleCameraAnimation action.`);
         return undefined;
@@ -249,7 +275,8 @@ function parseIdleAction(action, context, warn) {
         type: action.type,
         pivotPoint: new THREE.Vector3(...action.pivotPoint),
         radiusMeters: action.radiusMeters,
-        cycleDurationSeconds: action.cycleDurationSeconds
+        cycleDurationSeconds: action.cycleDurationSeconds,
+        offsetScale: new THREE.Vector3(...offsetScale)
     };
 }
 
@@ -426,6 +453,7 @@ function prepareTextOrientations(tour) {
     tour.steps.forEach((step) => {
         tour.curve.getPoint(step.progress, cameraPosition);
         step.textActions.forEach((action) => {
+            if (action.worldMatrix) return;
             getTextQuaternion(
                 action.position,
                 cameraPosition,
@@ -1067,17 +1095,20 @@ export function getIdleCameraPose(
     radiusMeters,
     cycleDurationSeconds,
     elapsedSeconds,
-    output = {}
+    output = {},
+    offsetScale
 ) {
     output.position ??= new THREE.Vector3();
     output.target ??= new THREE.Vector3();
     output.forward ??= new THREE.Vector3();
     output.right ??= new THREE.Vector3();
     output.up ??= new THREE.Vector3();
+    output.offset ??= new THREE.Vector3();
 
     output.position.copy(basePosition);
     output.target.copy(pivotPoint);
     output.forward.subVectors(pivotPoint, basePosition);
+    if (offsetScale) output.forward.divide(offsetScale);
 
     if (output.forward.lengthSq() <= PROGRESS_EPSILON) {
         output.forward.copy(FALLBACK_FORWARD);
@@ -1109,8 +1140,11 @@ export function getIdleCameraPose(
     const horizontalOffset = radiusMeters * Math.sin(phase);
     const verticalOffset = 0.35 * radiusMeters * Math.sin(phase * 2);
 
-    output.position.addScaledVector(output.right, horizontalOffset);
-    output.position.addScaledVector(output.up, verticalOffset);
+    // Derive offsets before scaling; exported poses are already scaled.
+    output.offset.copy(output.right).multiplyScalar(horizontalOffset);
+    output.offset.addScaledVector(output.up, verticalOffset);
+    if (offsetScale) output.offset.multiply(offsetScale);
+    output.position.add(output.offset);
     return output;
 }
 

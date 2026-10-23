@@ -61,7 +61,6 @@ export const SceneContainer = React.memo((props) => {
     const [forceHighResMaterial, setForceHighResMaterial] = useState(false);
 
     const [enableMaterialSwap, setEnableMaterialSwap] = useState(false);
-    const [ssaoEnabled, setSsaoEnabled] = useState(true);
 
     // ### Tour navigation ###
 
@@ -96,18 +95,6 @@ export const SceneContainer = React.memo((props) => {
         clearInterval(intervalId);
         };
     }, [setEnableMaterialSwap]);
-
-    // Toggle ambient occlusion while keeping FXAA active.
-    useEffect(() => {
-        const handleSsaoToggle = (event) => {
-            if (event.repeat || event.key?.toLowerCase() !== "a") return;
-            setSsaoEnabled((enabled) => !enabled);
-        };
-
-        window.addEventListener("keydown", handleSsaoToggle);
-
-        return () => window.removeEventListener("keydown", handleSsaoToggle);
-    }, []);
 
     // Force swap the scene's materials if graphical mode changes
     useEffect(() => {
@@ -318,20 +305,18 @@ export const SceneContainer = React.memo((props) => {
 
             {/* Apply SSAO before final edge anti-aliasing. */}
             <EffectComposer
-                enableNormalPass={ssaoEnabled}
+                enableNormalPass
                 multisampling={0}
                 resolutionScale={0.5}
             >
-                {ssaoEnabled &&
-                    <SSAO
-                        samples={17}
-                        rings={7}
-                        radius={0.15}
-                        intensity={1.25}
-                        luminanceInfluence={0.7}
-                        bias={0.025}
-                    />
-                }
+                <SSAO
+                    samples={17}
+                    rings={7}
+                    radius={0.15}
+                    intensity={1.25}
+                    luminanceInfluence={0.7}
+                    bias={0.025}
+                />
                 <FXAA />
             </EffectComposer>
 

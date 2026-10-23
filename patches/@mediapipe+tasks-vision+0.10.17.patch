@@ -1,0 +1,12 @@
+diff --git a/node_modules/@mediapipe/tasks-vision/vision_bundle.cjs b/node_modules/@mediapipe/tasks-vision/vision_bundle.cjs
+--- a/node_modules/@mediapipe/tasks-vision/vision_bundle.cjs
++++ b/node_modules/@mediapipe/tasks-vision/vision_bundle.cjs
+@@ -2 +2 @@
+-//# sourceMappingURL=vision_bundle_cjs.js.map
++//# sourceMappingURL=vision_bundle.cjs.map
+diff --git a/node_modules/@mediapipe/tasks-vision/vision_bundle.mjs b/node_modules/@mediapipe/tasks-vision/vision_bundle.mjs
+--- a/node_modules/@mediapipe/tasks-vision/vision_bundle.mjs
++++ b/node_modules/@mediapipe/tasks-vision/vision_bundle.mjs
+@@ -2 +2 @@
+-//# sourceMappingURL=vision_bundle_mjs.js.map
++//# sourceMappingURL=vision_bundle.mjs.map

@@ -8,6 +8,7 @@ import "@testing-library/jest-dom";
 import * as THREE from "three";
 import SystemStore from "../SystemStore";
 import {
+    TourTextActions,
     TourTooltipActions,
     createTourCircleRecord,
     getTextFadeOpacity,
@@ -108,6 +109,12 @@ function runFrame() {
     act(() => {
         [...mockFrameCallbacks].forEach((callback) => callback({}));
     });
+}
+
+// Read Three JSX props retained by React DOM test hosts.
+function readGroupProps(element) {
+    const propsKey = Object.keys(element).find((key) => key.startsWith("__reactProps$"));
+    return element[propsKey];
 }
 
 // Reset shared store and renderer state between cases.
@@ -509,6 +516,81 @@ describe("TourTooltipActions", () => {
 
         unmountSecond();
         expect(SystemStore.getState().circlesData).toHaveLength(0);
+    });
+});
+
+// ### Text transform tests ###
+
+describe("TourTextActions transforms", () => {
+    let consoleError;
+
+    beforeEach(() => {
+        consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        consoleError.mockRestore();
+    });
+
+    test("keeps the complete exported matrix through rendering and outgoing fades", () => {
+        const worldMatrix = new THREE.Matrix4().set(
+            2, 0.5, 0, 6,
+            0, 3, 0.25, 7,
+            0, 0, 4, -8,
+            0, 0, 0, 1
+        );
+        const record = {
+            key: "matrix-text",
+            action: { id: "text", text: "Scaled text" },
+            worldMatrix,
+            position: new THREE.Vector3(999, 999, 999),
+            quaternion: new THREE.Quaternion(),
+            phase: "current"
+        };
+        const view = render(<TourTextActions records={[record]} />);
+        const group = view.container.querySelector("group");
+        const groupProps = readGroupProps(group);
+
+        expect(groupProps.matrix).toBe(worldMatrix);
+        expect(groupProps.matrixAutoUpdate).toBe(false);
+        expect(groupProps.position).toBeUndefined();
+        expect(groupProps.quaternion).toBeUndefined();
+
+        const root = new THREE.Group();
+        root.position.set(1, 2, 3);
+        root.rotation.y = 0.4;
+        root.scale.set(2, 1, 3);
+        const text = new THREE.Group();
+        text.matrix.copy(groupProps.matrix);
+        text.matrixAutoUpdate = groupProps.matrixAutoUpdate;
+        root.add(text);
+        root.updateMatrixWorld(true);
+        expect(text.matrix.elements).toEqual(worldMatrix.elements);
+        expect(text.matrixWorld.elements).toEqual(
+            root.matrixWorld.clone().multiply(worldMatrix).elements
+        );
+
+        view.rerender(<TourTextActions records={[{ ...record, phase: "outgoing" }]} />);
+        expect(view.container.querySelector("group")).toBe(group);
+        expect(readGroupProps(group).matrix).toBe(worldMatrix);
+        expect(readGroupProps(group).matrixAutoUpdate).toBe(false);
+    });
+
+    test("retains legacy position and quaternion without an exported matrix", () => {
+        const position = new THREE.Vector3(2, 3, 4);
+        const quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0.5, 0));
+        const view = render(<TourTextActions records={[{
+            key: "legacy-text",
+            action: { id: "text", text: "Legacy text" },
+            position,
+            quaternion
+        }]} />);
+        const groupProps = readGroupProps(view.container.querySelector("group"));
+
+        expect(groupProps.position).toBe(position);
+        expect(groupProps.quaternion).toBe(quaternion);
+        expect(groupProps.matrix).toBeUndefined();
+        expect(groupProps.matrixAutoUpdate).toBeUndefined();
     });
 });
 

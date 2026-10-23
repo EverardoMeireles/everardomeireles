@@ -32,6 +32,7 @@
     "zustand": "^4.3.1"
   },
   "scripts": {
+    "postinstall": "patch-package",
     "start": "react-scripts start",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",

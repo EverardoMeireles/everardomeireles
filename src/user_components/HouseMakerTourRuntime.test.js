@@ -613,6 +613,93 @@ describe("HouseMaker wait input matching", () => {
 // ### Idle camera ###
 
 describe("HouseMaker idle camera pose", () => {
+    test("defaults missing offsetScale and preserves reflected scaling", () => {
+        const warn = jest.fn();
+        const tour = parseOne(makeTour("idle-scales", {
+            steps: [makeStep("step", 0, {
+                actions: [
+                    makeAction("default", "idleCameraAnimation"),
+                    makeAction("scaled", "idleCameraAnimation", { offsetScale: [-2, 3, 0.5] })
+                ]
+            })]
+        }), warn);
+
+        expect(tour.steps[0].actions[0].offsetScale.toArray()).toEqual([1, 1, 1]);
+        expect(tour.steps[0].actions[1].offsetScale.toArray()).toEqual([-2, 3, 0.5]);
+        expect(warn.mock.calls.filter(([message]) => message.includes("invalid"))).toEqual([]);
+    });
+
+    test.each([
+        null,
+        [1, 2],
+        [1, 2, 3, 4],
+        [1, 0, 1],
+        [1, Infinity, 1],
+        [1, NaN, 1],
+        [1, "2", 1]
+    ])("isolates invalid idle offsetScale %p", (offsetScale) => {
+        const warn = jest.fn();
+        const tour = parseOne(makeTour("invalid-idle-scale", {
+            steps: [makeStep("step", 0, {
+                actions: [
+                    makeAction("wait", "waitForKeyPress"),
+                    makeAction("idle", "idleCameraAnimation", { offsetScale }),
+                    makeAction("text", "text3d")
+                ]
+            })]
+        }), warn);
+
+        expect(tour.steps[0].actions.map((action) => action.id)).toEqual(["wait", "text"]);
+        expect(startTourPlayback(tour).activeIdle).toBeUndefined();
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("invalid idleCameraAnimation"));
+    });
+
+    test.each([
+        [2, 2, 2],
+        [1.8, 2.0064819647142973, 1.9],
+        [-2, 3, 0.5]
+    ])("matches exported scaling [%p, %p, %p] without double scaling", (x, y, z) => {
+        const base = new THREE.Vector3(4, -3, 9);
+        const pivot = new THREE.Vector3(1, 5, -7);
+        const scale = new THREE.Vector3(x, y, z);
+        const scaledBase = base.clone().multiply(scale);
+        const scaledPivot = pivot.clone().multiply(scale);
+        const output = {};
+
+        [0, 1, 2, 3, 8, 80.3].forEach((elapsedSeconds) => {
+            const expected = getIdleCameraPose(base, pivot, 0.08, 8, elapsedSeconds);
+            const actual = getIdleCameraPose(
+                scaledBase, scaledPivot, 0.08, 8, elapsedSeconds, output, scale
+            );
+
+            expect(actual.position.distanceTo(expected.position.multiply(scale))).toBeLessThan(1e-10);
+            expect(actual.target.toArray()).toEqual(scaledPivot.toArray());
+        });
+
+        expect(scaledBase.toArray()).toEqual([4 * x, -3 * y, 9 * z]);
+        expect(scale.toArray()).toEqual([x, y, z]);
+    });
+
+    test("reuses scaled output without accumulating offsets", () => {
+        const base = new THREE.Vector3(5, 6, 7);
+        const pivot = new THREE.Vector3(-1, 3, -9);
+        const scale = new THREE.Vector3(1.8, 2, 1.9);
+        const output = getIdleCameraPose(base, pivot, 0.08, 8, 1, {}, scale);
+        const firstPosition = output.position.clone();
+        const firstOffset = output.offset;
+        const firstForward = output.forward;
+
+        for (let frame = 0; frame < 120; frame += 1) {
+            expect(getIdleCameraPose(base, pivot, 0.08, 8, 1, output, scale)).toBe(output);
+        }
+
+        expect(output.position.toArray()).toEqual(firstPosition.toArray());
+        expect(output.offset).toBe(firstOffset);
+        expect(output.forward).toBe(firstForward);
+        expect(base.toArray()).toEqual([5, 6, 7]);
+        expect(pivot.toArray()).toEqual([-1, 3, -9]);
+    });
+
     test("derives offsets from the unchanged base pose", () => {
         const base = new THREE.Vector3(0, 0, 0);
         const pivot = new THREE.Vector3(0, 0, -1);
@@ -652,6 +739,64 @@ describe("HouseMaker idle camera pose", () => {
 // ### Text orientation and fades ###
 
 describe("HouseMaker text math", () => {
+    test("preserves exact authored worldMatrix including shear", () => {
+        const values = [
+            1.5, 0.2, 0, 0,
+            0.4, 2, 0.3, 0,
+            0.1, 0.5, -3, 0,
+            7, 8, 9, 1
+        ];
+        const warn = jest.fn();
+        const tour = parseOne(makeTour("matrix-text", {
+            steps: [makeStep("text-step", 0, {
+                actions: [makeAction("text", "text3d", {
+                    worldMatrix: values,
+                    position: [7, 8, 9],
+                    rotationDegrees: [34, 67, 12]
+                })]
+            })]
+        }), warn);
+        const action = tour.steps[0].textActions[0];
+
+        expect(action.worldMatrix).toBeInstanceOf(THREE.Matrix4);
+        expect(action.worldMatrix.elements).toEqual(values);
+        expect(action.worldMatrix.elements).not.toBe(values);
+        expect(action.position.toArray()).toEqual([7, 8, 9]);
+        expect(action.quaternion.toArray()).toEqual([0, 0, 0, 1]);
+        expect(warn).not.toHaveBeenCalled();
+    });
+
+    test.each([
+        null,
+        new THREE.Matrix4().toArray().slice(0, 15),
+        new THREE.Matrix4().makeScale(1, 0, 1).toArray(),
+        new THREE.Matrix4().setPosition(Infinity, 0, 0).toArray(),
+        [1, 0, 0, 0.5, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+    ])("falls back to legacy text transforms for invalid matrix %p", (worldMatrix) => {
+        const warn = jest.fn();
+        const tour = parseOne(makeTour("legacy-text-fallback", {
+            steps: [makeStep("text-step", 0, {
+                actions: [
+                    makeAction("text", "text3d", { worldMatrix, position: [0, 0, -2] }),
+                    makeAction("tooltip", "floatingTooltip")
+                ]
+            })]
+        }), warn);
+        const action = tour.steps[0].textActions[0];
+        const expectedQuaternion = getTextQuaternion(
+            action.position,
+            tour.curve.getPoint(0),
+            tour.steps[0].cameraTarget,
+            action.rotationDegrees,
+            action.rotationOrder
+        );
+
+        expect(tour.steps[0].actions.map((item) => item.id)).toEqual(["text", "tooltip"]);
+        expect(action.worldMatrix).toBeUndefined();
+        expect(action.quaternion.angleTo(expectedQuaternion)).toBeLessThan(1e-8);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("invalid text3d worldMatrix"));
+    });
+
     test("faces the authored camera before applying XYZ rotation", () => {
         const textPosition = new THREE.Vector3(0, 0, 0);
         const cameraPosition = new THREE.Vector3(0, 0, 5);

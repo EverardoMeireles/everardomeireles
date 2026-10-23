@@ -1,12 +1,43 @@
 // ### Imports ###
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { useLoader } from "@react-three/fiber";
+import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import config from "../config.js";
 import { HouseMakerTourPlayer } from "./HouseMakerTourPlayer.jsx";
+import { smoothStep } from "../Helper.js";
+
+// Identify objects while preserving surfaces and ambiguous atlas geometry.
+export function isHouseMakerHideableObject(object, defaultHideable = false) {
+    let node = object;
+    while (node) {
+        const data = node.userData ?? {};
+        if (data.housemaker_surface_id || data.housemaker_atlas_type === "surface") return false;
+        if (data.housemaker_atlas_type === "object") return true;
+
+        const atlasSources = data.housemaker_atlas_source_ids;
+        if (Array.isArray(atlasSources) && atlasSources.length > 0) {
+            return atlasSources.every((id) => (
+                typeof id === "string"
+                && id.length > 0
+                && !/^(surface[-:]|level:|stair:)/i.test(id)
+            ));
+        }
+
+        if (data.housemaker_object_id
+            || data.housemakerDoorBody || data.housemaker_door_body
+            || data.housemakerDoorComponent || data.housemaker_door_component) {
+            return true;
+        }
+
+        if (typeof data.housemakerHideable === "boolean") return data.housemakerHideable;
+        node = node.parent;
+    }
+
+    return defaultHideable;
+}
 
 // ### Door reconstruction helpers ###
 
@@ -419,6 +450,22 @@ export function reconstructHalfMeshes(scene, mirrorGroup, warning = console.warn
         const reflectionMatrix = getHalfMeshReflectionMatrix(sourceObject, "model", warning);
         if (!reflectionMatrix) return;
 
+        // Reflect before the export's baked global transform.
+        let scaleRoot = sourceObject.parent;
+        while (scaleRoot && scaleRoot.userData.housemakerGlobalScale !== true) {
+            scaleRoot = scaleRoot.parent;
+        }
+        if (scaleRoot) {
+            const scaleMatrix = scaleRoot.matrixWorld;
+            const determinant = scaleMatrix.determinant();
+            if (!scaleMatrix.elements.every(Number.isFinite)
+                || !Number.isFinite(determinant) || determinant === 0) {
+                warning(`[HALF] Model "${sourceObject.name}" has an invalid global scale transform.`);
+                return;
+            }
+            reflectionMatrix.premultiply(scaleMatrix).multiply(scaleMatrix.clone().invert());
+        }
+
         const doorBody = sourceObject.userData?.housemakerDoorBody;
         const runtimeMetadata = {
             sourceObjectId: doorBody?.bodyObjectId ?? sourceObject.uuid,
@@ -658,6 +705,9 @@ export function HouseMakerLoader(props) {
     const {toursEnabled = true} = props;
     const {navigationRef} = props;
     const rootRef = useRef();
+    const visibilityRef = useRef({ housemakerObjectsHidden: false });
+    const instanceMeshesRef = useRef(new Map());
+    const objectFadeRef = useRef({ progress: 1, cursor: 0, remaining: 0, records: [] });
 
     // Load export metadata before its referenced model.
     const manifestUrl = config.models_path + jsonFile;
@@ -826,6 +876,7 @@ export function HouseMakerLoader(props) {
                         sourceTransform,
                         castShadow: sourceMesh.castShadow,
                         receiveShadow: sourceMesh.receiveShadow,
+                        hideable: isHouseMakerHideableObject(sourceMesh, true),
                         ownsGeometry
                     });
                 });
@@ -834,6 +885,135 @@ export function HouseMakerLoader(props) {
 
         return { modelScene, mirroredModels, runtimeMirrors, instanceParts };
     }, [gltf, sceneData]);
+
+    // Prepare owned fade materials before the first rendered frame.
+    useLayoutEffect(() => {
+        const fade = objectFadeRef.current;
+        const materials = new Map();
+        const records = [];
+        const visited = new Set();
+        const roots = [
+            renderData.modelScene,
+            ...renderData.runtimeMirrors,
+            ...instanceMeshesRef.current.values()
+        ];
+
+        roots.forEach((root) => root.traverse((mesh) => {
+            if (!mesh.isMesh || visited.has(mesh)) return;
+            visited.add(mesh);
+            let ancestor = mesh;
+            while (ancestor) {
+                if (!ancestor.visible) return;
+                ancestor = ancestor.parent;
+            }
+
+            const atlasSources = mesh.userData.housemaker_atlas_source_ids;
+            if (process.env.NODE_ENV !== "production"
+                && !["object", "surface"].includes(mesh.userData.housemaker_atlas_type)
+                && Array.isArray(atlasSources)
+                && atlasSources.some((id) => typeof id === "string" && id.startsWith("surface-"))
+                && atlasSources.some((id) => typeof id === "string" && !id.startsWith("surface-"))) {
+                console.warn("HouseMaker: keeping a mixed surface/object atlas visible; export separate meshes to hide its objects.");
+            }
+            if (!isHouseMakerHideableObject(mesh)) return;
+
+            const originalMaterial = mesh.material;
+            const fadeMaterials = (Array.isArray(originalMaterial)
+                ? originalMaterial
+                : [originalMaterial]).map((material) => {
+                if (!materials.has(material)) {
+                    const copy = material.clone();
+                    // Keep shader variants stable throughout visibility transitions.
+                    copy.alphaHash = material.alphaHash || !material.transparent;
+                    materials.set(material, {
+                        material: copy,
+                        opacity: material.opacity,
+                        alphaTest: material.alphaTest
+                    });
+                }
+                return materials.get(material);
+            });
+
+            records.push({
+                mesh,
+                originalMaterial,
+                hideable: mesh.userData.housemakerHideable,
+                fadeMaterials
+            });
+            mesh.userData.housemakerHideable = true;
+            mesh.material = Array.isArray(originalMaterial)
+                ? fadeMaterials.map((entry) => entry.material)
+                : fadeMaterials[0].material;
+        }));
+
+        // Preserve authored visibility while collecting nested mesh children.
+        records.forEach(({ mesh }) => { mesh.visible = fade.progress > 0; });
+        materials.forEach((entry) => {
+            const opacity = smoothStep(fade.progress);
+            entry.material.opacity = entry.opacity * opacity;
+            entry.material.alphaTest = entry.alphaTest * Math.max(opacity, Number.EPSILON);
+        });
+        fade.records = records;
+        fade.cursor = 0;
+        fade.remaining = records.length;
+
+        return () => {
+            records.forEach(({ mesh, originalMaterial, hideable }) => {
+                mesh.material = originalMaterial;
+                mesh.visible = true;
+                if (hideable === undefined) delete mesh.userData.housemakerHideable;
+                else mesh.userData.housemakerHideable = hideable;
+            });
+            materials.forEach((entry) => entry.material.dispose());
+            fade.records = [];
+        };
+    }, [renderData, instancesEnabled]);
+
+    // Reserve A for object visibility outside editable controls.
+    useEffect(() => {
+        const handleVisibilityToggle = (event) => {
+            if (event.key?.toLowerCase() !== "a" || event.repeat
+                || event.ctrlKey || event.metaKey || event.altKey) return;
+            const target = event.target;
+            if (target?.isContentEditable
+                || target?.closest?.("input, textarea, select, [contenteditable]:not([contenteditable='false'])")) return;
+
+            event.preventDefault();
+            const visibility = visibilityRef.current;
+            visibility.housemakerObjectsHidden = !visibility.housemakerObjectsHidden;
+            objectFadeRef.current.remaining = objectFadeRef.current.records.length;
+        };
+
+        window.addEventListener("keydown", handleVisibilityToggle);
+        return () => window.removeEventListener("keydown", handleVisibilityToggle);
+    }, []);
+
+    // Spread fading work across frames without React rerenders.
+    useFrame((_, delta) => {
+        const fade = objectFadeRef.current;
+        const target = visibilityRef.current.housemakerObjectsHidden ? 0 : 1;
+        if (fade.progress !== target) {
+            fade.progress = target === 0
+                ? Math.max(0, fade.progress - delta / 0.45)
+                : Math.min(1, fade.progress + delta / 0.45);
+            fade.remaining = fade.records.length;
+        }
+        if (!fade.remaining) return;
+
+        const opacity = smoothStep(fade.progress);
+        const startedAt = performance.now();
+        do {
+            const record = fade.records[fade.cursor];
+            record.fadeMaterials.forEach((entry) => {
+                entry.material.opacity = entry.opacity * opacity;
+                // Scale cutout thresholds without switching compiled shader variants.
+                entry.material.alphaTest = entry.alphaTest * Math.max(opacity, Number.EPSILON);
+            });
+            record.mesh.visible = fade.progress > 0;
+            fade.cursor = (fade.cursor + 1) % fade.records.length;
+            fade.remaining -= 1;
+        } while (fade.remaining > 0 && performance.now() - startedAt < 1);
+    });
 
     // Restore Strict Mode mirrors and clean owned resources.
     useEffect(() => {
@@ -854,7 +1034,7 @@ export function HouseMakerLoader(props) {
     return (
         <>
             {/* Keep all exported transforms under one parent. */}
-            <group ref={rootRef} position={position}>
+            <group ref={rootRef} position={position} userData={visibilityRef.current}>
                 {directionalLights.map((directionalLight) => (
                     <HouseMakerDirectionalLight
                         key={directionalLight.id}
@@ -878,8 +1058,13 @@ export function HouseMakerLoader(props) {
                         receiveShadow={instancePart.receiveShadow}
                         frustumCulled={false}
                         dispose={null}
+                        userData={{ housemakerHideable: instancePart.hideable }}
                         ref={(instancedMesh) => {
-                            if (!instancedMesh) return;
+                            if (!instancedMesh) {
+                                instanceMeshesRef.current.delete(instancePart.key);
+                                return;
+                            }
+                            instanceMeshesRef.current.set(instancePart.key, instancedMesh);
 
                             // Apply exported transforms and source offsets.
                             const instanceMatrix = new THREE.Matrix4();

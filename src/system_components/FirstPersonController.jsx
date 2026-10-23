@@ -16,7 +16,7 @@ import SystemStore from "../SystemStore.js";
  * @param {Array<any>} [rotation] - Controller initial rotation.
  * @param {number} [eyeHeight] - Camera height above the controller base.
  * @param {boolean} [isMainCamera] - Whether this perspective camera becomes the default camera.
- * @param {boolean | "auto"} [azertyMode] - Uses ZQSD when true, WASD when false, or detects the layout automatically.
+ * @param {boolean | "auto"} [azertyMode] - Uses ZQSD when true, WQSD when false, or detects the layout automatically; A toggles object visibility.
  * @param {boolean} [collisionsEnabled] - Enables capsule collision checks against scene meshes.
  * @param {number} [maxStepHeight] - Maximum climbable stair height.
  * @param {number} [minStepHeight] - Minimum height that can trigger a stair climb.
@@ -66,8 +66,7 @@ export const FirstPersonController = React.memo((props) => {
     const pitchGroupRef = useRef();
     const cameraRef = useRef();
     const keysRef = useRef({ forward: false, backward: false, left: false, right: false });
-    const collisionOctreeRef = useRef();
-    const collisionMeshesRef = useRef([]);
+    const collisionGroupsRef = useRef([]);
     const capsuleRef = useRef(new Capsule());
     const velocityRef = useRef(new THREE.Vector3());
     const yawRef = useRef(rotation[1] ?? 0);
@@ -134,13 +133,23 @@ export const FirstPersonController = React.memo((props) => {
         );
     }
 
-    // Ignore empty or hidden intersections.
-    function getFirstHit(intersections) {
-        if (!Array.isArray(intersections) || intersections.length === 0) {
-            return null;
+    // Skip hidden object groups before expensive step raycasts.
+    function getCollisionHit(raycaster) {
+        let nearestHit = null;
+
+        for (const group of collisionGroupsRef.current) {
+            if (group.root?.userData.housemakerObjectsHidden === true) {
+                continue;
+            }
+
+            const hit = raycaster.intersectObjects(group.meshes, false)
+                .find((intersection) => intersection.object.visible);
+            if (hit && (!nearestHit || hit.distance < nearestHit.distance)) {
+                nearestHit = hit;
+            }
         }
 
-        return intersections.find((intersection) => intersection?.object?.visible) ?? null;
+        return nearestHit;
     }
 
     // Probe a climbable step in front of movement.
@@ -148,7 +157,7 @@ export const FirstPersonController = React.memo((props) => {
         if (
             !collisionsEnabled ||
             !controllerRef.current ||
-            collisionMeshesRef.current.length === 0 ||
+            collisionGroupsRef.current.length === 0 ||
             currentMoveDirection.lengthSq() === 0 ||
             maxStepHeight <= 0 ||
             minStepHeight > maxStepHeight
@@ -162,7 +171,7 @@ export const FirstPersonController = React.memo((props) => {
         forwardRaycaster.set(probeOrigin, currentMoveDirection);
         forwardRaycaster.far = probeDistance;
 
-        const lowerHit = getFirstHit(forwardRaycaster.intersectObjects(collisionMeshesRef.current, true));
+        const lowerHit = getCollisionHit(forwardRaycaster);
         if (!lowerHit) {
             stepProbeHeightRef.current = maxStepHeight;
             return null;
@@ -176,7 +185,7 @@ export const FirstPersonController = React.memo((props) => {
             forwardRaycaster.set(probeOrigin, currentMoveDirection);
             forwardRaycaster.far = probeDistance;
 
-            const forwardHit = getFirstHit(forwardRaycaster.intersectObjects(collisionMeshesRef.current, true));
+            const forwardHit = getCollisionHit(forwardRaycaster);
             if (!forwardHit) {
                 continue;
             }
@@ -190,9 +199,7 @@ export const FirstPersonController = React.memo((props) => {
             downwardRaycaster.set(downwardOrigin, downAxis);
             downwardRaycaster.far = maxStepHeight + 0.6;
 
-            const downwardHit = getFirstHit(
-                downwardRaycaster.intersectObjects(collisionMeshesRef.current, true)
-            );
+            const downwardHit = getCollisionHit(downwardRaycaster);
 
             if (!downwardHit) {
                 break;
@@ -215,7 +222,7 @@ export const FirstPersonController = React.memo((props) => {
         if (
             !collisionsEnabled ||
             !controllerRef.current ||
-            collisionMeshesRef.current.length === 0
+            collisionGroupsRef.current.length === 0
         ) {
             return;
         }
@@ -230,9 +237,7 @@ export const FirstPersonController = React.memo((props) => {
         downwardRaycaster.set(downwardOrigin, downAxis);
         downwardRaycaster.far = maxStepHeight + 0.6;
 
-        const downwardHit = getFirstHit(
-            downwardRaycaster.intersectObjects(collisionMeshesRef.current, true)
-        );
+        const downwardHit = getCollisionHit(downwardRaycaster);
 
         if (!downwardHit) {
             return;
@@ -490,8 +495,7 @@ export const FirstPersonController = React.memo((props) => {
 
     useEffect(() => {
         if (!collisionsEnabled) {
-            collisionOctreeRef.current = undefined;
-            collisionMeshesRef.current = [];
+            collisionGroupsRef.current = [];
             return;
         }
 
@@ -503,14 +507,13 @@ export const FirstPersonController = React.memo((props) => {
             if (cancelled) {
                 return;
             }
-            const meshes = [];
-            const octree = new Octree();
+            const groups = new Map();
             // Reuse matrices while expanding instanced collision geometry.
             const instanceMatrix = new THREE.Matrix4();
             const instanceWorldMatrix = new THREE.Matrix4();
 
             // Add one geometry copy using its world transform.
-            const addGeometryTriangles = (positionAttribute, worldMatrix) => {
+            const addGeometryTriangles = (positionAttribute, worldMatrix, octree) => {
                 for (let index = 0; index <= positionAttribute.count - 3; index += 3) {
                     const a = new THREE.Vector3()
                         .fromBufferAttribute(positionAttribute, index)
@@ -529,14 +532,25 @@ export const FirstPersonController = React.memo((props) => {
             scene.updateMatrixWorld(true);
 
             scene.traverse((object) => {
-                if (!object.isMesh || !object.visible || !object.geometry) {
+                if (!object.isMesh || !object.geometry) {
+                    return;
+                }
+                if (!object.visible && object.userData.housemakerHideable !== true) {
                     return;
                 }
 
+                let visibilityRoot = null;
                 let parent = object.parent;
                 while (parent) {
                     if (parent === controllerRef.current) {
                         return;
+                    }
+                    if (
+                        object.userData.housemakerHideable === true &&
+                        visibilityRoot === null &&
+                        typeof parent.userData.housemakerObjectsHidden === "boolean"
+                    ) {
+                        visibilityRoot = parent;
                     }
                     parent = parent.parent;
                 }
@@ -557,26 +571,39 @@ export const FirstPersonController = React.memo((props) => {
                     return;
                 }
 
+                // Partition once; toggling only skips the associated group.
+                if (!groups.has(visibilityRoot)) {
+                    groups.set(visibilityRoot, {
+                        root: visibilityRoot,
+                        meshes: [],
+                        octree: new Octree(),
+                        hidden: visibilityRoot?.userData.housemakerObjectsHidden === true,
+                    });
+                }
+                const group = groups.get(visibilityRoot);
+
                 if (object.isInstancedMesh) {
                     // Expand each instance only inside the collision octree.
                     for (let instanceIndex = 0; instanceIndex < object.count; instanceIndex += 1) {
                         object.getMatrixAt(instanceIndex, instanceMatrix);
                         instanceWorldMatrix.multiplyMatrices(object.matrixWorld, instanceMatrix);
-                        addGeometryTriangles(positionAttribute, instanceWorldMatrix);
+                        addGeometryTriangles(positionAttribute, instanceWorldMatrix, group.octree);
                     }
                 } else {
-                    addGeometryTriangles(positionAttribute, object.matrixWorld);
+                    addGeometryTriangles(positionAttribute, object.matrixWorld, group.octree);
                 }
 
                 if (tempGeometry) {
                     tempGeometry.dispose();
                 }
 
-                meshes.push(object);
+                group.meshes.push(object);
             });
 
-            collisionMeshesRef.current = meshes;
-            collisionOctreeRef.current = octree.triangles.length > 0 ? octree.build() : undefined;
+            collisionGroupsRef.current = [...groups.values()];
+            for (const group of collisionGroupsRef.current) {
+                group.octree = group.octree.triangles.length > 0 ? group.octree.build() : undefined;
+            }
         };
 
         // Rebuild when root scene content changes.
@@ -594,6 +621,7 @@ export const FirstPersonController = React.memo((props) => {
             cancelAnimationFrame(frameId);
             scene.removeEventListener("childadded", scheduleCollisionBuild);
             scene.removeEventListener("childremoved", scheduleCollisionBuild);
+            collisionGroupsRef.current = [];
         };
     }, [scene, collisionsEnabled]);
 
@@ -679,7 +707,7 @@ export const FirstPersonController = React.memo((props) => {
         const getMovementKeys = () => ({
             forward: resolvedAzertyMode ? ["ArrowUp", "Z"] : ["ArrowUp", "W"],
             backward: ["ArrowDown", "S"],
-            left: resolvedAzertyMode ? ["ArrowLeft", "Q"] : ["ArrowLeft", "A"],
+            left: ["ArrowLeft", "Q"],
             right: ["ArrowRight", "D"],
         });
 
@@ -809,6 +837,15 @@ export const FirstPersonController = React.memo((props) => {
 
         const frameDelta = Math.min(delta, 0.05);
 
+        // Cancel climbing when its supporting objects become hidden.
+        for (const group of collisionGroupsRef.current) {
+            const hidden = group.root?.userData.housemakerObjectsHidden === true;
+            if (hidden && !group.hidden) {
+                climbTargetRef.current = null;
+            }
+            group.hidden = hidden;
+        }
+
         // Update camera rig from latest look angles.
         yawGroupRef.current.rotation.y = yawRef.current;
         pitchGroupRef.current.position.set(0, eyeHeight, 0);
@@ -898,11 +935,18 @@ export const FirstPersonController = React.memo((props) => {
         syncCapsuleToController();
 
         onFloorRef.current = false;
-        if (collisionsEnabled && collisionOctreeRef.current) {
+        if (collisionsEnabled) {
             // Push the capsule out of scene collisions.
-            const collision = collisionOctreeRef.current.capsuleIntersect(capsuleRef.current);
+            for (const group of collisionGroupsRef.current) {
+                if (group.hidden || !group.octree) {
+                    continue;
+                }
 
-            if (collision) {
+                const collision = group.octree.capsuleIntersect(capsuleRef.current);
+                if (!collision) {
+                    continue;
+                }
+
                 const collisionOffset = collision.normal.clone().multiplyScalar(collision.depth);
                 capsuleRef.current.translate(collisionOffset);
                 syncControllerToCapsule();

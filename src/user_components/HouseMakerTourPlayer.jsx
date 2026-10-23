@@ -175,6 +175,7 @@ export function transitionTourActions(previous, group) {
         key: `${group.progress}-${group.steps[0].id}-${actionIndex}-${action.id}`,
         position: action.position,
         quaternion: action.quaternion,
+        worldMatrix: action.worldMatrix,
         phase: "current"
     }));
     const currentTooltips = group.tooltipActions.map((action, actionIndex) => ({
@@ -320,7 +321,8 @@ export function HouseMakerTourPlayer(props) {
                 idle.radiusMeters,
                 idle.cycleDurationSeconds,
                 activeTour.waitElapsed,
-                scratch.idlePose
+                scratch.idlePose,
+                idle.offsetScale
             );
             localPosition = scratch.idlePose.position;
             localTarget = scratch.idlePose.target;
