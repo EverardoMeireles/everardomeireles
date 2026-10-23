@@ -1,7 +1,7 @@
 // ### Imports ###
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -764,6 +764,9 @@ export function HouseMakerDirectionalLight(props) {
  * @param {boolean} [fallbackSunEnabled] - Add sunlight when exported lights are absent.
  * @param {number} [shadowMapSize] - Generated sunlight shadow-map resolution.
  * @param {boolean} [showBakedPvs] - Show baked visibility cells for debugging.
+ * @param {boolean} [anisotropicFilteringEnabled] - Sharpen model textures at grazing angles.
+ * @param {string} [hideObjectsKey] - Keyboard shortcut for object visibility.
+ * @param {boolean} [objectControlsEnabled] - Accept visibility controls after the tutorial.
  */
 export function HouseMakerLoader(props) {
     const {jsonFile = "housemaker_export.json"} = props;
@@ -773,6 +776,9 @@ export function HouseMakerLoader(props) {
     const {navigationRef} = props;
     const {shadowsEnabled = false, fallbackSunEnabled = false, shadowMapSize = 1024} = props;
     const {showBakedPvs = false} = props;
+    const {anisotropicFilteringEnabled = false} = props;
+    const {hideObjectsKey = "a", objectControlsEnabled = true} = props;
+    const renderer = useThree((state) => state.gl);
     const rootRef = useRef();
     const visibilityRef = useRef({ housemakerObjectsHidden: false });
     const instanceMeshesRef = useRef(new Map());
@@ -1187,6 +1193,38 @@ export function HouseMakerLoader(props) {
         };
     }, [renderData, instancesEnabled, shadowsEnabled]);
 
+    // Sharpen shared model maps without touching environment textures.
+    useLayoutEffect(() => {
+        if (!anisotropicFilteringEnabled) return;
+        const anisotropy = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy()));
+        const materials = new Set();
+        const textures = new Map();
+        [renderData.modelScene, renderData.mirroredModels].forEach((root) => root.traverse((mesh) => {
+            if (!mesh.isMesh) return;
+            (Array.isArray(mesh.material) ? mesh.material : [mesh.material])
+                .forEach((material) => materials.add(material));
+        }));
+        if (instancesEnabled) {
+            renderData.instanceParts.forEach((part) => {
+                (Array.isArray(part.material) ? part.material : [part.material])
+                    .forEach((material) => materials.add(material));
+            });
+        }
+        materials.forEach((material) => Object.entries(material ?? {}).forEach(([slot, texture]) => {
+            if (slot === "envMap" || !texture?.isTexture || texture.isCubeTexture || texture.isRenderTargetTexture
+                || texture.mapping !== THREE.UVMapping || textures.has(texture)
+                || texture.anisotropy === anisotropy) return;
+            textures.set(texture, texture.anisotropy);
+            texture.anisotropy = anisotropy;
+            texture.needsUpdate = true;
+        }));
+        return () => textures.forEach((originalAnisotropy, texture) => {
+            if (texture.anisotropy === originalAnisotropy) return;
+            texture.anisotropy = originalAnisotropy;
+            texture.needsUpdate = true;
+        });
+    }, [anisotropicFilteringEnabled, instancesEnabled, renderData, renderer]);
+
     // Verify baked visibility against already-cached GLB bytes.
     useEffect(() => {
         if (sceneData.visibility == null) return;
@@ -1417,24 +1455,37 @@ export function HouseMakerLoader(props) {
         runtime.pending.clear();
     }, -1000);
 
-    // Reserve A for object visibility outside editable controls.
+    // Share keyboard and HUD visibility controls after the tutorial.
     useEffect(() => {
+        if (!objectControlsEnabled) return;
+
+        const toggleObjects = () => {
+            const visibility = visibilityRef.current;
+            visibility.housemakerObjectsHidden = !visibility.housemakerObjectsHidden;
+            objectFadeRef.current.remaining = objectFadeRef.current.records.length;
+            window.dispatchEvent(new CustomEvent("housemaker-objects-visibility-change", {
+                detail: { hidden: visibility.housemakerObjectsHidden }
+            }));
+        };
+
         const handleVisibilityToggle = (event) => {
-            if (event.key?.toLowerCase() !== "a" || event.repeat
+            if (event.key?.toLowerCase() !== hideObjectsKey.toLowerCase() || event.repeat
                 || event.ctrlKey || event.metaKey || event.altKey) return;
             const target = event.target;
             if (target?.isContentEditable
                 || target?.closest?.("input, textarea, select, [contenteditable]:not([contenteditable='false'])")) return;
 
             event.preventDefault();
-            const visibility = visibilityRef.current;
-            visibility.housemakerObjectsHidden = !visibility.housemakerObjectsHidden;
-            objectFadeRef.current.remaining = objectFadeRef.current.records.length;
+            toggleObjects();
         };
 
         window.addEventListener("keydown", handleVisibilityToggle);
-        return () => window.removeEventListener("keydown", handleVisibilityToggle);
-    }, []);
+        window.addEventListener("housemaker-toggle-objects", toggleObjects);
+        return () => {
+            window.removeEventListener("keydown", handleVisibilityToggle);
+            window.removeEventListener("housemaker-toggle-objects", toggleObjects);
+        };
+    }, [hideObjectsKey, objectControlsEnabled]);
 
     // Spread fading work across frames without React rerenders.
     useFrame((_, delta) => {

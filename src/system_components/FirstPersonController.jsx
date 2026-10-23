@@ -16,7 +16,7 @@ import SystemStore from "../SystemStore.js";
  * @param {Array<any>} [rotation] - Controller initial rotation.
  * @param {number} [eyeHeight] - Camera height above the controller base.
  * @param {boolean} [isMainCamera] - Whether this perspective camera becomes the default camera.
- * @param {boolean | "auto"} [azertyMode] - Uses ZQSD when true, WQSD when false, or detects the layout automatically; A toggles object visibility.
+ * @param {boolean | "auto"} [azertyMode] - Uses ZQSD when true, WASD when false, or detects the layout automatically.
  * @param {boolean} [collisionsEnabled] - Enables capsule collision checks against scene meshes.
  * @param {number} [maxStepHeight] - Maximum climbable stair height.
  * @param {number} [minStepHeight] - Minimum height that can trigger a stair climb.
@@ -25,6 +25,7 @@ import SystemStore from "../SystemStore.js";
  * @param {number} [slowDownWhileFallingSpeedMultiplier] - Horizontal speed multiplier while descending.
  * @param {React.MutableRefObject} [navigationRef] - HouseMaker tour navigation API ref.
  * @param {boolean} [enabled] - Whether first-person input and movement are enabled.
+ * @param {boolean} [inputBlocked] - Pauses tutorial input without disabling gyroscope permissions.
  * @param {"dual_joystick" | "gyroscope"} [touchNavigationMode] - Mobile look controls; gyroscope uses full-screen movement when available.
  * @param {function} [onGyroscopeStatusChange] - Reports motion availability and permission changes.
  */
@@ -46,6 +47,7 @@ export const FirstPersonController = React.memo((props) => {
     const { slowDownWhileFallingSpeedMultiplier = 0.5 } = props;
     const { navigationRef = undefined } = props;
     const { enabled = true } = props;
+    const { inputBlocked = false } = props;
     const { touchNavigationMode = "dual_joystick" } = props;
     const { onGyroscopeStatusChange } = props;
 
@@ -92,6 +94,8 @@ export const FirstPersonController = React.memo((props) => {
     const previousCameraRotationRef = useRef(new THREE.Euler());
     const cameraStateInitializedRef = useRef(false);
     const suspendedRef = useRef(false);
+    const inputBlockedRef = useRef(inputBlocked);
+    inputBlockedRef.current = inputBlocked;
 
     const capsuleRadius = 0.35;
     const capsuleHeight = Math.max(eyeHeight + 0.35, (capsuleRadius * 2) + 0.4);
@@ -324,6 +328,25 @@ export const FirstPersonController = React.memo((props) => {
         stepProbeHeightRef.current = maxStepHeight;
     }
 
+    // Preserve user activation while safely requesting desktop pointer lock.
+    function requestPointerLock(onError) {
+        const canvas = gl.domElement;
+        if (!canvas || !enabled || suspendedRef.current || !controllerRef.current || !cameraRef.current) {
+            return false;
+        }
+        if (document.pointerLockElement === canvas) return true;
+        if (typeof canvas?.requestPointerLock !== "function") return false;
+
+        try {
+            const request = canvas.requestPointerLock();
+            request?.catch?.((error) => onError?.(error));
+            return true;
+        } catch (error) {
+            onError?.(error);
+            return false;
+        }
+    }
+
     // Read the exact player body position.
     function getPlayerPosition(output = new THREE.Vector3()) {
         if (!controllerRef.current || !output?.isVector3) {
@@ -477,6 +500,7 @@ export const FirstPersonController = React.memo((props) => {
         suspend: suspendNavigation,
         restore: restoreNavigation,
         complete: completeNavigation,
+        requestPointerLock,
         isSuspended: () => suspendedRef.current,
         enableGyroscope: () => gyroscopeRef.current.requestPermission?.(),
         recenterGyroscope: () => {
@@ -671,6 +695,17 @@ export const FirstPersonController = React.memo((props) => {
         };
     }, [scene, collisionsEnabled]);
 
+    // Clear held input while the tutorial covers the viewer.
+    useEffect(() => {
+        if (!inputBlocked) return;
+        clearNavigationMotion();
+        if (document.pointerLockElement === gl.domElement) {
+            document.exitPointerLock?.();
+        }
+        // Motion helpers read refs without changing the current pose.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [inputBlocked, gl]);
+
     // ### Gyroscope look and motion permission ###
 
     useEffect(() => {
@@ -712,6 +747,19 @@ export const FirstPersonController = React.memo((props) => {
 
             const screenAngle = window.screen?.orientation?.angle ?? window.orientation ?? 0;
             if (!Number.isFinite(screenAngle)) return;
+
+            if (!gyroscope.active) {
+                // Release old split-screen gestures before full-screen movement.
+                resetTouchControls();
+                gyroscope.active = true;
+                clearTimeout(sensorTimeout);
+                publishStatus("active");
+            }
+            if (inputBlockedRef.current) {
+                resetGyroscopeCalibration();
+                return;
+            }
+
             sensorEuler.set(
                 THREE.MathUtils.degToRad(event.beta),
                 THREE.MathUtils.degToRad(event.alpha),
@@ -745,14 +793,6 @@ export const FirstPersonController = React.memo((props) => {
             }
             gyroscope.lastYaw = sensorYaw;
             gyroscope.lastPitch = sensorPitch;
-
-            if (!gyroscope.active) {
-                // Release old split-screen gestures before full-screen movement.
-                resetTouchControls();
-                gyroscope.active = true;
-                clearTimeout(sensorTimeout);
-                publishStatus("active");
-            }
         };
 
         // Start once after permission, or automatically where permitted.
@@ -816,14 +856,34 @@ export const FirstPersonController = React.memo((props) => {
 
         const previousTouchAction = domElement.style.touchAction;
         domElement.style.touchAction = "none";
+        let pointerLockRetryTimer;
+        let pointerLockIntent = 0;
+        let pointerLockPending = false;
+        let disposed = false;
+
+        // Discard pending requests when the user's intent changes.
+        const cancelPointerLockRetry = () => {
+            pointerLockIntent += 1;
+            pointerLockPending = false;
+            clearTimeout(pointerLockRetryTimer);
+            pointerLockRetryTimer = undefined;
+        };
+
+        // Retry only while the original canvas gesture remains relevant.
+        const canRetryPointerLock = (intent) => (
+            !disposed && intent === pointerLockIntent && enabled &&
+            !inputBlockedRef.current && !suspendedRef.current && !document.hidden &&
+            document.hasFocus() && domElement.isConnected && !document.pointerLockElement
+        );
 
         // Gyroscope look frees either canvas half for movement.
         const handlePointerDown = (event) => {
-            if (!enabled || suspendedRef.current) {
+            if (!enabled || inputBlockedRef.current || suspendedRef.current) {
                 return;
             }
 
             if (event.pointerType === "touch") {
+                cancelPointerLockRetry();
                 const bounds = domElement.getBoundingClientRect();
                 if (bounds.width <= 0 || bounds.height <= 0) return;
                 const fullScreenMovement = touchNavigationMode === "gyroscope" && gyroscopeRef.current.active;
@@ -843,15 +903,51 @@ export const FirstPersonController = React.memo((props) => {
                 return;
             }
 
-            if (event.button !== 0) return;
-            if (document.pointerLockElement !== domElement) {
-                domElement.requestPointerLock?.();
-            }
+            if (event.button !== 0 || pointerLockPending) return;
+            const intent = ++pointerLockIntent;
+            pointerLockPending = true;
+            const requested = requestPointerLock((error) => {
+                if (disposed || intent !== pointerLockIntent) return;
+                pointerLockPending = false;
+                if (
+                    error?.name !== "SecurityError" ||
+                    error.message !== "Pointer lock cannot be acquired immediately after the user has exited the lock." ||
+                    !canRetryPointerLock(intent)
+                ) return;
+
+                // Chromium briefly rejects intentional relocking after Escape.
+                pointerLockPending = true;
+                pointerLockRetryTimer = setTimeout(() => {
+                    pointerLockRetryTimer = undefined;
+                    pointerLockPending = false;
+                    if (canRetryPointerLock(intent)) {
+                        pointerLockPending = requestPointerLock(() => {
+                            if (!disposed && intent === pointerLockIntent) pointerLockPending = false;
+                        });
+                    }
+                }, 1300);
+            });
+            if (!requested && pointerLockRetryTimer === undefined) pointerLockPending = false;
+        };
+
+        // Other controls or Escape cancel delayed canvas capture.
+        const handlePointerLockCancellation = (event) => {
+            if (event.type === "keydown" && event.key !== "Escape") return;
+            if (
+                event.type === "pointerdown" && event.target === domElement &&
+                event.button === 0 && event.pointerType !== "touch"
+            ) return;
+            cancelPointerLockRetry();
+        };
+
+        // Legacy APIs report errors without returning a promise.
+        const handlePointerLockError = () => {
+            if (pointerLockRetryTimer === undefined) pointerLockPending = false;
         };
 
         // Clamp analog deflection outside a small radial deadzone.
         const handleTouchMove = (event) => {
-            if (suspendedRef.current) return;
+            if (inputBlockedRef.current || suspendedRef.current) return;
             const { move, look } = touchControlsRef.current;
             const joystick = move.pointerId === event.pointerId ? move
                 : look.pointerId === event.pointerId ? look : undefined;
@@ -873,7 +969,10 @@ export const FirstPersonController = React.memo((props) => {
         };
 
         // Stop gestures when focus or viewport geometry changes.
-        const handleInputReset = () => clearNavigationMotion();
+        const handleInputReset = () => {
+            cancelPointerLockRetry();
+            clearNavigationMotion();
+        };
         const handleVisibilityChange = () => {
             if (document.hidden) handleInputReset();
         };
@@ -882,6 +981,7 @@ export const FirstPersonController = React.memo((props) => {
         const handleMouseMove = (event) => {
             if (
                 !enabled ||
+                inputBlockedRef.current ||
                 suspendedRef.current ||
                 document.pointerLockElement !== domElement ||
                 !controllerRef.current ||
@@ -900,6 +1000,10 @@ export const FirstPersonController = React.memo((props) => {
 
         domElement.addEventListener("pointerdown", handlePointerDown, { passive: false });
         domElement.addEventListener("lostpointercapture", handleTouchEnd);
+        window.addEventListener("pointerdown", handlePointerLockCancellation, true);
+        window.addEventListener("keydown", handlePointerLockCancellation);
+        document.addEventListener("pointerlockchange", handlePointerLockCancellation);
+        document.addEventListener("pointerlockerror", handlePointerLockError);
         window.addEventListener("pointermove", handleTouchMove, { passive: false });
         window.addEventListener("pointerup", handleTouchEnd);
         window.addEventListener("pointercancel", handleTouchEnd);
@@ -911,8 +1015,14 @@ export const FirstPersonController = React.memo((props) => {
         document.addEventListener("mousemove", handleMouseMove);
 
         return () => {
+            disposed = true;
+            cancelPointerLockRetry();
             domElement.removeEventListener("pointerdown", handlePointerDown);
             domElement.removeEventListener("lostpointercapture", handleTouchEnd);
+            window.removeEventListener("pointerdown", handlePointerLockCancellation, true);
+            window.removeEventListener("keydown", handlePointerLockCancellation);
+            document.removeEventListener("pointerlockchange", handlePointerLockCancellation);
+            document.removeEventListener("pointerlockerror", handlePointerLockError);
             window.removeEventListener("pointermove", handleTouchMove);
             window.removeEventListener("pointerup", handleTouchEnd);
             window.removeEventListener("pointercancel", handleTouchEnd);
@@ -964,7 +1074,7 @@ export const FirstPersonController = React.memo((props) => {
         const getMovementKeys = () => ({
             forward: resolvedAzertyMode ? ["ArrowUp", "Z"] : ["ArrowUp", "W"],
             backward: ["ArrowDown", "S"],
-            left: ["ArrowLeft", "Q"],
+            left: ["ArrowLeft", resolvedAzertyMode ? "Q" : "A"],
             right: ["ArrowRight", "D"],
         });
 
@@ -1023,7 +1133,7 @@ export const FirstPersonController = React.memo((props) => {
 
         // Map keyboard events to movement flags.
         const handleKeyDown = (event) => {
-            if (!enabled || suspendedRef.current) {
+            if (!enabled || inputBlockedRef.current || suspendedRef.current) {
                 return;
             }
 
@@ -1051,7 +1161,7 @@ export const FirstPersonController = React.memo((props) => {
         };
 
         const handleKeyUp = (event) => {
-            if (!enabled || suspendedRef.current) {
+            if (!enabled || inputBlockedRef.current || suspendedRef.current) {
                 updateKeyState(event.key, false);
                 return;
             }
@@ -1077,6 +1187,7 @@ export const FirstPersonController = React.memo((props) => {
 
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
+            keysRef.current = { forward: false, backward: false, left: false, right: false };
         };
     }, [azertyMode, enabled]);
 
@@ -1085,6 +1196,7 @@ export const FirstPersonController = React.memo((props) => {
     useFrame((_, delta) => {
         if (
             !enabled ||
+            inputBlockedRef.current ||
             suspendedRef.current ||
             !controllerRef.current ||
             !cameraRef.current

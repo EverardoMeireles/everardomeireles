@@ -5,7 +5,7 @@
 
 import React, { StrictMode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import {
     HouseMakerDirectionalLight,
@@ -29,7 +29,8 @@ import {
 // Keep pure helper tests independent from React Three rendering.
 jest.mock("@react-three/fiber", () => ({
     useLoader: jest.fn(),
-    useFrame: jest.fn()
+    useFrame: jest.fn(),
+    useThree: jest.fn(() => ({ capabilities: { getMaxAnisotropy: () => 1 } }))
 }));
 
 jest.mock("three/examples/jsm/loaders/GLTFLoader.js", () => ({
@@ -237,6 +238,158 @@ function makeLoaderFixtures(manifestOverrides = {}) {
 
     return { manifest, gltf, sourceScene };
 }
+
+// ### Model texture filtering ###
+
+/* eslint-disable testing-library/no-unnecessary-act -- Native R3F roots require act. */
+describe("HouseMaker anisotropic filtering", () => {
+    const nativeFiber = jest.requireActual("@react-three/fiber");
+    let root;
+    let fixtures;
+    let assets;
+    let renderer;
+    let store;
+
+    beforeEach(() => {
+        fixtures = makeLoaderFixtures();
+        assets = makeMeshAssets();
+        fixtures.sourceScene.add(new THREE.Mesh(assets.geometry, assets.material));
+        renderer = {
+            render: jest.fn(),
+            setPixelRatio: jest.fn(),
+            setSize: jest.fn(),
+            domElement: document.createElement("canvas"),
+            shadowMap: {},
+            capabilities: { getMaxAnisotropy: jest.fn(() => 16) }
+        };
+        useThree.mockReturnValue(renderer);
+        useLoader.mockImplementation((Loader, url) => String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf);
+        useFrame.mockClear();
+        jest.spyOn(console, "error").mockImplementation(() => {});
+        nativeFiber.extend(THREE);
+        root = nativeFiber.createRoot(renderer.domElement);
+        root.configure({ gl: renderer, frameloop: "never", size: { width: 800, height: 600, top: 0, left: 0 } });
+    });
+
+    afterEach(async () => {
+        await nativeFiber.act(async () => root.unmount());
+        useThree.mockImplementation(() => ({ capabilities: { getMaxAnisotropy: () => 1 } }));
+        useLoader.mockReset();
+        jest.restoreAllMocks();
+    });
+
+    // Mount real meshes without requiring a WebGL context.
+    async function mountLoader(props = {}, strict = false) {
+        await nativeFiber.act(async () => {
+            const loader = <HouseMakerLoader toursEnabled={false} {...props} />;
+            store = root.render(strict ? <StrictMode>{loader}</StrictMode> : loader);
+        });
+        return store.getState().scene.children[0];
+    }
+
+    test("preserves original filtering until enabled", async () => {
+        assets.texture.anisotropy = 2;
+        await mountLoader();
+        expect(assets.texture.anisotropy).toBe(2);
+        expect(assets.texture.version).toBe(0);
+        expect(renderer.capabilities.getMaxAnisotropy).not.toHaveBeenCalled();
+    });
+
+    test.each([[0, 1], [4, 4], [16, 8]])("clamps hardware maximum %s to %s", async (maximum, expected) => {
+        renderer.capabilities.getMaxAnisotropy.mockReturnValue(maximum);
+        await mountLoader({ anisotropicFilteringEnabled: true });
+        expect(assets.texture.anisotropy).toBe(expected);
+        expect(assets.texture.version).toBe(expected === 1 ? 0 : 1);
+        await mountLoader({ anisotropicFilteringEnabled: false });
+        expect(assets.texture.anisotropy).toBe(1);
+        expect(assets.texture.version).toBe(expected === 1 ? 0 : 2);
+    });
+
+    test("updates shared maps once and excludes environment targets", async () => {
+        const originalAnisotropy = 2;
+        assets.texture.anisotropy = originalAnisotropy;
+        assets.material.normalMap = assets.texture;
+        assets.material.roughnessMap = assets.texture;
+        const cube = new THREE.CubeTexture();
+        const environment = new THREE.Texture();
+        const equirectangular = new THREE.Texture();
+        equirectangular.mapping = THREE.EquirectangularReflectionMapping;
+        const target = new THREE.WebGLRenderTarget(8, 8);
+        assets.material.envMap = environment;
+        assets.material.emissiveMap = target.texture;
+        assets.material.metalnessMap = cube;
+        assets.material.lightMap = equirectangular;
+        const excludedTextures = [cube, environment, equirectangular, target.texture];
+        const originalVersions = excludedTextures.map((texture) => texture.version);
+        fixtures.sourceScene.add(new THREE.Mesh(assets.geometry, [assets.material, assets.material]));
+        const disposeTexture = jest.spyOn(assets.texture, "dispose");
+        const disposeMaterial = jest.spyOn(assets.material, "dispose");
+        const disposeGeometry = jest.spyOn(assets.geometry, "dispose");
+        await mountLoader({ anisotropicFilteringEnabled: true });
+        expect(assets.texture.anisotropy).toBe(8);
+        expect(assets.texture.version).toBe(1);
+        excludedTextures.forEach((texture, index) => {
+            expect(texture.anisotropy).toBe(1);
+            expect(texture.version).toBe(originalVersions[index]);
+        });
+        await nativeFiber.act(async () => root.unmount());
+        expect(assets.texture.anisotropy).toBe(originalAnisotropy);
+        expect(assets.texture.version).toBe(2);
+        expect(disposeTexture).not.toHaveBeenCalled();
+        expect(disposeMaterial).not.toHaveBeenCalled();
+        expect(disposeGeometry).not.toHaveBeenCalled();
+        target.dispose();
+    });
+
+    test("covers half mirrors and separate instance-source textures", async () => {
+        fixtures.sourceScene.children[0].userData.halfMesh = {
+            uvMode: "reuse", mirrorPlane: { point: [0, 0, 0], normal: [1, 0, 0] }
+        };
+        const instanceAssets = makeMeshAssets();
+        const source = new THREE.Mesh(instanceAssets.geometry, instanceAssets.material);
+        source.name = "Textured source";
+        const sourceScene = new THREE.Scene();
+        sourceScene.add(source);
+        fixtures.gltf.scenes.push(sourceScene);
+        fixtures.manifest.instanceGroups = [{
+            sourceNodeName: source.name,
+            instances: [{ worldMatrix: new THREE.Matrix4().makeTranslation(3, 0, 2).toArray() }]
+        }];
+        const sceneRoot = await mountLoader({ anisotropicFilteringEnabled: true });
+        const mirrors = sceneRoot.getObjectByName("HouseMaker mirrored models");
+        const instance = sceneRoot.children.find((node) => node.isInstancedMesh);
+        expect(mirrors.children[0].material.map).toBe(assets.texture);
+        expect(instance.material.map).toBe(instanceAssets.texture);
+        expect(assets.texture.anisotropy).toBe(8);
+        expect(instanceAssets.texture.anisotropy).toBe(8);
+        expect(assets.texture.version).toBe(1);
+        expect(instanceAssets.texture.version).toBe(1);
+        await mountLoader({ anisotropicFilteringEnabled: true, instancesEnabled: false });
+        expect(assets.texture.anisotropy).toBe(8);
+        expect(instanceAssets.texture.anisotropy).toBe(1);
+    });
+
+    test("survives Strict Mode, rerenders, GLB reloads, and unmount", async () => {
+        await mountLoader({ anisotropicFilteringEnabled: true }, true);
+        const initialVersion = assets.texture.version;
+        expect(assets.texture.anisotropy).toBe(8);
+        await mountLoader({ anisotropicFilteringEnabled: true, position: [2, 0, 0] }, true);
+        expect(assets.texture.version).toBe(initialVersion);
+        const originalTexture = assets.texture;
+        const originalGeometry = assets.geometry;
+        const disposeTexture = jest.spyOn(originalTexture, "dispose");
+        fixtures = makeLoaderFixtures({ asset: { glb: "replacement.glb" } });
+        assets = makeMeshAssets();
+        fixtures.sourceScene.add(new THREE.Mesh(assets.geometry, assets.material));
+        await mountLoader({ anisotropicFilteringEnabled: true, jsonFile: "replacement.json" }, true);
+        expect(originalTexture.anisotropy).toBe(1);
+        expect(assets.texture.anisotropy).toBe(8);
+        expect(fixtures.sourceScene.children[0].geometry).not.toBe(originalGeometry);
+        await nativeFiber.act(async () => root.unmount());
+        expect(assets.texture.anisotropy).toBe(1);
+        expect(disposeTexture).not.toHaveBeenCalled();
+    });
+});
 
 // ### Object visibility classification ###
 
@@ -750,6 +903,115 @@ describe("HouseMaker fading object visibility", () => {
 
         expect(loadedFurniture.visible).toBe(false);
         view.unmount();
+    });
+
+    test.each(["a", "q"])("uses the configured %s shortcut without remounting", (hideObjectsKey) => {
+        const fixtures = makeLoaderFixtures();
+        fixtures.sourceScene.add(makeBody().body);
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+        const view = render(<HouseMakerLoader toursEnabled={false} hideObjectsKey={hideObjectsKey} />);
+        const rootData = getRenderedProps(view.container.querySelector("group")).userData;
+        const loadCount = useLoader.mock.calls.length;
+
+        fireEvent.keyDown(window, { key: hideObjectsKey === "a" ? "q" : "a" });
+        expect(rootData.housemakerObjectsHidden).toBe(false);
+        fireEvent.keyDown(window, { key: hideObjectsKey.toUpperCase() });
+        expect(rootData.housemakerObjectsHidden).toBe(true);
+        expect(useLoader).toHaveBeenCalledTimes(loadCount);
+
+        view.rerender(<HouseMakerLoader toursEnabled={false} hideObjectsKey="t" />);
+        fireEvent.keyDown(window, { key: hideObjectsKey });
+        expect(rootData.housemakerObjectsHidden).toBe(true);
+        fireEvent.keyDown(window, { key: "t" });
+        expect(rootData.housemakerObjectsHidden).toBe(false);
+        view.unmount();
+    });
+
+    test("HUD actions share fading, collision flags, and keyboard notifications", () => {
+        const fixtures = makeLoaderFixtures();
+        fixtures.sourceScene.add(makeBody().body);
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+        const visibilityChange = jest.fn();
+        window.addEventListener("housemaker-objects-visibility-change", visibilityChange);
+        const view = render(<HouseMakerLoader toursEnabled={false} hideObjectsKey="q" />);
+        const rootData = getRenderedProps(view.container.querySelector("group")).userData;
+        const model = [...view.container.querySelectorAll("primitive")]
+            .map((element) => getRenderedProps(element).object)
+            .find((object) => object.isScene);
+        const loadedFurniture = model.children[0];
+        const frame = useFrame.mock.calls[useFrame.mock.calls.length - 1][0];
+
+        fireEvent(window, new CustomEvent("housemaker-toggle-objects"));
+        expect(rootData.housemakerObjectsHidden).toBe(true);
+        expect(loadedFurniture.visible).toBe(true);
+        expect(visibilityChange).toHaveBeenCalledTimes(1);
+        expect(visibilityChange.mock.calls[0][0].detail).toEqual({ hidden: true });
+        frame({}, 0.2);
+        expect(loadedFurniture.material.opacity).toBeGreaterThan(0);
+        expect(loadedFurniture.material.opacity).toBeLessThan(1);
+        frame({}, 1);
+        expect(loadedFurniture.visible).toBe(false);
+
+        fireEvent.keyDown(window, { key: "q" });
+        expect(rootData.housemakerObjectsHidden).toBe(false);
+        expect(visibilityChange).toHaveBeenCalledTimes(2);
+        expect(visibilityChange.mock.calls[1][0].detail).toEqual({ hidden: false });
+        frame({}, 1);
+        expect(loadedFurniture.visible).toBe(true);
+        expect(loadedFurniture.material.opacity).toBe(1);
+        view.unmount();
+        window.removeEventListener("housemaker-objects-visibility-change", visibilityChange);
+    });
+
+    test("ignores both visibility controls until the tutorial has closed", () => {
+        const fixtures = makeLoaderFixtures();
+        fixtures.sourceScene.add(makeBody().body);
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+        const view = render(<HouseMakerLoader toursEnabled={false} objectControlsEnabled={false} />);
+        const rootData = getRenderedProps(view.container.querySelector("group")).userData;
+
+        fireEvent.keyDown(window, { key: "a" });
+        fireEvent(window, new CustomEvent("housemaker-toggle-objects"));
+        expect(rootData.housemakerObjectsHidden).toBe(false);
+
+        view.rerender(<HouseMakerLoader toursEnabled={false} objectControlsEnabled />);
+        fireEvent(window, new CustomEvent("housemaker-toggle-objects"));
+        expect(rootData.housemakerObjectsHidden).toBe(true);
+        view.rerender(<HouseMakerLoader toursEnabled={false} objectControlsEnabled={false} />);
+        fireEvent.keyDown(window, { key: "a" });
+        fireEvent(window, new CustomEvent("housemaker-toggle-objects"));
+        expect(rootData.housemakerObjectsHidden).toBe(true);
+        view.unmount();
+    });
+
+    test("Strict Mode actions toggle each loader once and unsubscribe", () => {
+        const fixtures = makeLoaderFixtures();
+        fixtures.sourceScene.add(makeBody().body);
+        useLoader.mockImplementation((Loader, url) => (
+            String(url).endsWith(".json") ? fixtures.manifest : fixtures.gltf
+        ));
+        const view = render(<StrictMode>
+            <HouseMakerLoader toursEnabled={false} />
+            <HouseMakerLoader toursEnabled={false} />
+        </StrictMode>);
+        const roots = [...view.container.querySelectorAll("group")]
+            .map((element) => getRenderedProps(element).userData)
+            .filter((data) => typeof data?.housemakerObjectsHidden === "boolean");
+
+        expect(roots).toHaveLength(2);
+        fireEvent(window, new CustomEvent("housemaker-toggle-objects"));
+        expect(roots.every((root) => root.housemakerObjectsHidden)).toBe(true);
+        fireEvent(window, new CustomEvent("housemaker-toggle-objects"));
+        expect(roots.every((root) => !root.housemakerObjectsHidden)).toBe(true);
+        view.unmount();
+        fireEvent(window, new CustomEvent("housemaker-toggle-objects"));
+        expect(roots.every((root) => !root.housemakerObjectsHidden)).toBe(true);
     });
 
     test("Strict Mode disposes owned fade materials without disposing shared assets", () => {

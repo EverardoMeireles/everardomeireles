@@ -3,10 +3,11 @@ import { Canvas } from "@react-three/fiber";
 import { Perf } from "r3f-perf";
 import { SceneContainer } from "./SceneContainer";
 import { HudMenu } from "./user_components/HudMenu";
+import { Hud } from "./user_components/Hud.jsx";
+import { Tutorial } from "./user_components/Tutorial.jsx";
 import { Alert } from "./system_components/Alert";
 import { ToolTip } from "./system_components/ToolTip";
 import { Circle } from "./system_components/Circle";
-import { TutorialOverlay } from "./system_components/TutorialOverlay";
 import SystemStore from "./SystemStore";
 import UserStore from "./UserStore.js";
 import { ProgressBar } from "./user_components/ProgressBar.jsx";
@@ -23,7 +24,7 @@ Route
 
 /**
  * Purpose: Top-level 3D viewer shell with routing, overlays, and the Canvas.
- * Relationships: Mounts SceneContainer inside Canvas and coordinates HudMenu, ToolTip, Circle, TutorialOverlay, Alert, and ProgressBar with SystemStore.
+ * Relationships: Mounts SceneContainer inside Canvas and coordinates Tutorial, Hud, ToolTip, Circle, Alert, and ProgressBar with SystemStore.
  * Example:
  * <SceneViewer />
  */
@@ -47,7 +48,6 @@ function SceneViewer() {
   const showReturnButton = SystemStore((state) => state.showReturnButton);
   const cameraState = SystemStore((state) => state.cameraState);
   const triggers = SystemStore((state) => state.triggers);
-  const isCameraMoving = SystemStore((state) => state.isCameraMoving);
   const message = SystemStore((state) => state.message);
   const setMessage = SystemStore((state) => state.setMessage);
   const setProductInformationFromMessage = SystemStore((state) => state.setProductInformationFromMessage);
@@ -59,6 +59,12 @@ function SceneViewer() {
   const setRealTimeGiEnabled = SystemStore((state) => state.setRealTimeGiEnabled);
   const showBakedPvs = SystemStore((state) => state.showBakedPvs);
   const setShowBakedPvs = SystemStore((state) => state.setShowBakedPvs);
+  const anisotropicFilteringEnabled = SystemStore((state) => state.anisotropicFilteringEnabled);
+  const setAnisotropicFilteringEnabled = SystemStore((state) => state.setAnisotropicFilteringEnabled);
+  const viewerDpr = SystemStore((state) => state.viewerDpr);
+  const setViewerDpr = SystemStore((state) => state.setViewerDpr);
+  const tutorialClosed = SystemStore((state) => state.tutorialClosed);
+  const setTutorialClosed = SystemStore((state) => state.setTutorialClosed);
 
   const siteMode = UserStore((state) => state.siteMode);
 
@@ -66,7 +72,10 @@ function SceneViewer() {
   ////////// Local state ///////////////
   //////////////////////////////////////
 
-  const [enableTutorial, setEnableTutorial] = useState(false);
+  const [azertyMode, setAzertyMode] = useState(() => navigator.language?.toLowerCase().startsWith("fr") === true);
+  const [keyboardLayoutReady, setKeyboardLayoutReady] = useState(false);
+  const [touchNavigationMode, setTouchNavigationMode] = useState("gyroscope");
+  const [objectsHidden, setObjectsHidden] = useState(false);
   const [tooltipProps, setTooltipProps] = useState({
     active: false,
     html: undefined,
@@ -82,9 +91,10 @@ function SceneViewer() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenPending, setFullscreenPending] = useState(false);
   const [fullscreenError, setFullscreenError] = useState("");
+  const [pointerLockError, setPointerLockError] = useState("");
   const [gyroscopeStatus, setGyroscopeStatus] = useState("inactive");
   const firstPersonNavigationRef = useRef(null);
-  const cameraMovedOnce = useRef(false);
+  const desktopPointerLockRequested = useRef(false);
   const previousCircleData = useRef();
 
   //////////////////////////////////////
@@ -97,6 +107,9 @@ function SceneViewer() {
   // Keep fullscreen entry available for touch devices in either orientation.
   const isTouchDevice = navigator.maxTouchPoints > 0
     || window.matchMedia?.("(pointer: coarse)")?.matches === true;
+  const dprValues = [1, 1.25, 1.5, 2];
+  const hideObjectsKey = azertyMode ? "a" : "q";
+  const pointerLockFailureMessage = "Mouse control could not start. Click the scene to try again.";
 
   //////////////////////////////////////
   ////////// Viewer setup //////////////
@@ -106,6 +119,88 @@ function SceneViewer() {
   useEffect(() => {
     setCanvasReady(true);
   }, []);
+
+  // Share one keyboard layout across instructions and actual controls.
+  useLayoutEffect(() => {
+    if (isTouchDevice) return;
+    let cancelled = false;
+    let request = 0;
+    const updateKeyboardLayout = async () => {
+      const currentRequest = ++request;
+      if (typeof navigator.keyboard?.getLayoutMap !== "function") {
+        setKeyboardLayoutReady(true);
+        return;
+      }
+      setKeyboardLayoutReady(false);
+      try {
+        const layout = await navigator.keyboard.getLayoutMap();
+        if (cancelled || currentRequest !== request || !layout) return;
+        const keyW = layout.get("KeyW")?.toLowerCase();
+        const keyA = layout.get("KeyA")?.toLowerCase();
+        if (keyW === "z" && keyA === "q") setAzertyMode(true);
+        else if (keyW === "w" && keyA === "a") setAzertyMode(false);
+      } catch {
+        // Restricted browsers retain language and physical-key detection.
+      } finally {
+        if (!cancelled && currentRequest === request) setKeyboardLayoutReady(true);
+      }
+    };
+    const learnKeyboardLayout = (event) => {
+      const key = event.key?.toLowerCase();
+      if ((event.code === "KeyW" && key === "z") || (event.code === "KeyA" && key === "q")) {
+        request += 1;
+        setAzertyMode(true);
+        setKeyboardLayoutReady(true);
+      } else if ((event.code === "KeyW" && key === "w") || (event.code === "KeyA" && key === "a")) {
+        request += 1;
+        setAzertyMode(false);
+        setKeyboardLayoutReady(true);
+      }
+    };
+    updateKeyboardLayout();
+    navigator.keyboard?.addEventListener?.("layoutchange", updateKeyboardLayout);
+    window.addEventListener("keydown", learnKeyboardLayout, true);
+    return () => {
+      cancelled = true;
+      navigator.keyboard?.removeEventListener?.("layoutchange", updateKeyboardLayout);
+      window.removeEventListener("keydown", learnKeyboardLayout, true);
+    };
+  }, [isTouchDevice]);
+
+  // Reflect keyboard and chair actions in the shared HUD.
+  useEffect(() => {
+    const updateObjectVisibility = (event) => setObjectsHidden(event.detail?.hidden === true);
+    window.addEventListener("housemaker-objects-visibility-change", updateObjectVisibility);
+    return () => window.removeEventListener("housemaker-objects-visibility-change", updateObjectVisibility);
+  }, []);
+
+  // Keep failed pointer-lock requests recoverable without automatic retries.
+  useEffect(() => {
+    if (isTouchDevice) return;
+    const handlePointerLockChange = () => {
+      desktopPointerLockRequested.current = false;
+      setPointerLockError("");
+    };
+    const handlePointerLockError = () => {
+      if (!desktopPointerLockRequested.current) return;
+      desktopPointerLockRequested.current = false;
+      setPointerLockError(pointerLockFailureMessage);
+    };
+    const handleEscape = (event) => {
+      if (event.key !== "Escape") return;
+      const viewer = document.getElementById("viewer-root");
+      if (viewer?.contains(document.pointerLockElement)) document.exitPointerLock?.();
+    };
+    document.addEventListener("pointerlockchange", handlePointerLockChange);
+    document.addEventListener("pointerlockerror", handlePointerLockError);
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      desktopPointerLockRequested.current = false;
+      document.removeEventListener("pointerlockchange", handlePointerLockChange);
+      document.removeEventListener("pointerlockerror", handlePointerLockError);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isTouchDevice, pointerLockFailureMessage]);
 
   // Keep fullscreen controls and overlays aligned with the viewer.
   useLayoutEffect(() => {
@@ -181,21 +276,32 @@ function SceneViewer() {
     }
   };
 
+  // Keep browser permissions inside the mobile selection gesture.
+  const handleControlSelection = (mode) => {
+    setTouchNavigationMode(mode);
+    if (mode === "gyroscope") firstPersonNavigationRef.current?.enableGyroscope();
+    const viewer = document.getElementById("viewer-root");
+    if ((document.fullscreenElement || document.webkitFullscreenElement) !== viewer) {
+      handleFullscreenToggle();
+    }
+  };
+
+  // Capture the mouse before the desktop tutorial starts fading.
+  const handleDesktopStart = () => {
+    const navigation = firstPersonNavigationRef.current;
+    if (!navigation?.requestPointerLock) return false;
+    setPointerLockError("");
+    desktopPointerLockRequested.current = true;
+    if (!navigation.requestPointerLock()) {
+      desktopPointerLockRequested.current = false;
+      setPointerLockError(pointerLockFailureMessage);
+    }
+    return true;
+  };
+
   //////////////////////////////////////
   ////////// Overlay state /////////////
   //////////////////////////////////////
-
-  // Enable the tutorial after the first camera movement.
-  useEffect(() => {
-    if(isCameraMoving){
-      cameraMovedOnce.current = true;
-      return;
-    }
-
-    if(cameraMovedOnce.current){
-      setEnableTutorial(true)
-    }
-  }, [isCameraMoving]);
 
   // Update tooltip props from the currently hovered circle.
   useEffect(() => {
@@ -558,8 +664,23 @@ function SceneViewer() {
             {!forceDisableRender && (
               <>
               {/* 2D HTML overlays belong above the Canvas. */}
-              <div className="viewer-fullscreen-controls" data-viewer-control="true">
-                {(isTouchDevice || isFullscreen) && (
+              <div className="viewer-fullscreen-controls" data-viewer-control="true" inert={tutorialClosed ? undefined : ""}>
+                {canvasReady && canvasEnabled && tutorialClosed && (
+                  <Hud
+                    isTouchDevice={isTouchDevice}
+                    isFullscreen={isFullscreen}
+                    fullscreenPending={fullscreenPending}
+                    onExitFullscreen={handleFullscreenToggle}
+                    onExitControls={() => {
+                      const viewer = document.getElementById("viewer-root");
+                      if (viewer?.contains(document.pointerLockElement)) document.exitPointerLock?.();
+                    }}
+                    onToggleObjects={() => window.dispatchEvent(new Event("housemaker-toggle-objects"))}
+                    objectsHidden={objectsHidden}
+                    hideObjectsKey={hideObjectsKey}
+                  />
+                )}
+                {isTouchDevice && !isFullscreen && (
                   <>
                     <button
                       type="button"
@@ -569,12 +690,13 @@ function SceneViewer() {
                       title={fullscreenAvailable ? undefined : "Fullscreen is unavailable in this browser or embedded page."}
                     >
                       {fullscreenAvailable
-                        ? (isFullscreen ? "Exit fullscreen" : "Enter fullscreen")
+                        ? "Enter fullscreen"
                         : "Fullscreen unavailable"}
                     </button>
-                    {fullscreenError && <span role="status">{fullscreenError}</span>}
                   </>
                 )}
+                {fullscreenError && <span role="status">{fullscreenError}</span>}
+                {pointerLockError && <span role="status">{pointerLockError}</span>}
                 <button
                   type="button"
                   onClick={() => setRealTimeGiEnabled(!realTimeGiEnabled)}
@@ -590,6 +712,21 @@ function SceneViewer() {
                   title="Cyan: baked visibility cells. Green: current camera cells. Culling remains enabled."
                 >
                   {showBakedPvs ? "Hide baked pvs" : "Show baked pvs"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAnisotropicFilteringEnabled(!anisotropicFilteringEnabled)}
+                  aria-pressed={anisotropicFilteringEnabled}
+                  title="Sharpen angled model textures with up to 8x filtering, limited by your GPU."
+                >
+                  Anisotropic filtering: {anisotropicFilteringEnabled ? "On" : "Off"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewerDpr(dprValues[(dprValues.indexOf(viewerDpr) + 1) % dprValues.length])}
+                  title="Cycle rendering resolution: 1, 1.25, 1.5, 2. Higher values increase GPU load."
+                >
+                  DPR: {viewerDpr}
                 </button>
                 {canvasReady && canvasEnabled && gyroscopeStatus !== "inactive" && (
                   <>
@@ -646,7 +783,17 @@ function SceneViewer() {
                   ariaLabel={props.ariaLabel}
                 />
               ))}
-              <TutorialOverlay enable = {enableTutorial}/>
+              {!tutorialClosed && (
+                <Tutorial
+                  isTouchDevice={isTouchDevice}
+                  azertyMode={azertyMode}
+                  keyboardLayoutReady={keyboardLayoutReady}
+                  controlsReady={Boolean(firstPersonNavigationRef.current)}
+                  onDesktopStart={handleDesktopStart}
+                  onSelectControl={handleControlSelection}
+                  onClose={() => setTutorialClosed(true)}
+                />
+              )}
               {/* <HudMenu enabled={siteMode === "resume"} /> */}
               {(siteMode === "resume") &&
                 <ProgressBar
@@ -696,13 +843,17 @@ function SceneViewer() {
                     onPointerEnter={handleCanvasPointerEnter}
                     onPointerLeave={handleCanvasPointerLeave}
                     shadows
-                    dpr={1}
+                    dpr={viewerDpr}
                     gl={{ powerPreference: "high-performance", toneMappingExposure: 1 }}
                   >
                     {r3fPerfEnabled && <Perf />}
                     <SceneContainer
                       navigationRef={firstPersonNavigationRef}
                       onGyroscopeStatusChange={setGyroscopeStatus}
+                      azertyMode={azertyMode}
+                      hideObjectsKey={hideObjectsKey}
+                      touchNavigationMode={touchNavigationMode}
+                      inputBlocked={!tutorialClosed}
                     />
                     {/* <FPSLogger /> */}
                   </Canvas>

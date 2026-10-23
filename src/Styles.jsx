@@ -71,6 +71,114 @@ export const HudMenuStyles = {
     arrowStyle : arrowStyle
 }
 
+// Keep tutorial layouts consistent across viewport orientations.
+export const TutorialStyles = {
+    overlay: {
+        position: "absolute",
+        inset: 0,
+        zIndex: 100002,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+        overflow: "hidden",
+        background: "rgba(13, 18, 22, 0.97)",
+        color: "#f7f5ed",
+        fontFamily: "Arial, sans-serif",
+        transition: "opacity 300ms ease",
+        outline: "none",
+        touchAction: "pan-y"
+    },
+    panel: {
+        width: "100%",
+        maxWidth: "2160px",
+        maxHeight: "100%",
+        padding: "24px",
+        overflowY: "auto",
+        overscrollBehavior: "contain",
+        border: "1px solid #394349",
+        borderRadius: "20px",
+        background: "#1c252a",
+        boxShadow: "0 24px 80px rgba(0, 0, 0, 0.35)"
+    },
+    heading: { margin: "0 0 24px", fontSize: "37px", lineHeight: 1.15, textAlign: "center" },
+    grid: { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "16px" },
+    card: {
+        display: "flex",
+        flexDirection: "column",
+        minWidth: 0,
+        gap: "12px",
+        padding: "18px",
+        border: "1px solid #465257",
+        borderRadius: "12px",
+        background: "#273238",
+        color: "inherit",
+        textAlign: "center",
+        font: "inherit"
+    },
+    title: { display: "block", margin: 0, fontSize: "20px", fontWeight: 700, lineHeight: 1.2 },
+    text: { display: "block", margin: 0, color: "#d4dbda", fontSize: "15px", lineHeight: 1.45 },
+    images: { display: "flex", flexDirection: "column", gap: "8px", marginTop: "auto" },
+    image: { display: "block", width: "100%", maxHeight: "460px", objectFit: "contain", borderRadius: "8px" },
+    hint: { margin: "20px 0 0", color: "#b2bfbe", fontSize: "13px", textAlign: "center" },
+    mobileGrid: { position: "relative", "--tutorial-cue-duration": "8s", "--tutorial-cue-delay": "-1s" },
+    controlChoice: { position: "relative" },
+    controlCue: {
+        position: "absolute",
+        inset: 0,
+        gridColumn: "1 / -1",
+        gridRow: "1 / 2",
+        zIndex: 2,
+        overflow: "hidden",
+        pointerEvents: "none"
+    },
+    controlCueTrack: {
+        position: "absolute",
+        left: "37.5%",
+        top: "6px",
+        width: "25%",
+        animation: "housemaker-tutorial-finger-move var(--tutorial-cue-duration) ease-in-out infinite",
+        animationDelay: "var(--tutorial-cue-delay)",
+        willChange: "transform"
+    },
+    controlFinger: {
+        display: "block",
+        width: "96px",
+        height: "auto",
+        opacity: 0.5,
+        pointerEvents: "none",
+        transformOrigin: "25% 10%",
+        filter: "drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45))",
+        animation: "housemaker-tutorial-finger-press var(--tutorial-cue-duration) ease-in-out infinite",
+        animationDelay: "var(--tutorial-cue-delay)",
+        willChange: "transform"
+    },
+    portrait: {
+        overlay: { padding: "12px" },
+        panel: { padding: "14px", borderRadius: "16px" },
+        heading: { marginBottom: "16px", fontSize: "25px" },
+        grid: { gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px" },
+        card: { padding: "12px", gap: "10px" },
+        title: { fontSize: "16px" },
+        text: { fontSize: "13px" },
+        controlFinger: { width: "84px" },
+        gyroImage: { maxHeight: "220px" },
+        dualImage: { maxHeight: "440px" }
+    },
+    landscape: {
+        overlay: { padding: "10px" },
+        panel: { padding: "12px", maxWidth: "1880px", borderRadius: "14px" },
+        heading: { marginBottom: "12px", fontSize: "24px" },
+        grid: { gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "10px" },
+        card: { padding: "10px", gap: "6px" },
+        title: { fontSize: "16px" },
+        text: { fontSize: "12px" },
+        gyroImages: { flexDirection: "column" },
+        gyroImage: { maxHeight: "190px" },
+        dualImage: { maxHeight: "190px" }
+    }
+};
+
 //////////////////////////////////////////////////
 /////////////// Responsive values ////////////////
 //////////////////////////////////////////////////
@@ -332,7 +440,11 @@ export const useViewportSize = () => {
 
         const handleResize = () => setSize(getViewportSize());
         window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
+        window.addEventListener("orientationchange", handleResize);
+        return () => {
+            window.removeEventListener("resize", handleResize);
+            window.removeEventListener("orientationchange", handleResize);
+        };
     }, []);
 
     return size;

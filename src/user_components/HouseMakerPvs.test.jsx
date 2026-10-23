@@ -8,7 +8,11 @@ import * as THREE from "three";
 import { createPvsController } from "http://localhost/models/pvs-scene.pvs.mjs";
 import { HouseMakerLoader } from "./HouseMakerLoader.jsx";
 
-jest.mock("@react-three/fiber", () => ({ useFrame: jest.fn(), useLoader: jest.fn() }));
+jest.mock("@react-three/fiber", () => ({
+    useFrame: jest.fn(),
+    useLoader: jest.fn(),
+    useThree: jest.fn(() => ({ capabilities: { getMaxAnisotropy: () => 1 } }))
+}));
 jest.mock("three/examples/jsm/loaders/GLTFLoader.js", () => ({ GLTFLoader: function GLTFLoader() {} }));
 jest.mock("three/examples/jsm/utils/BufferGeometryUtils.js", () => ({ mergeGeometries: jest.fn() }));
 jest.mock("./HouseMakerTourPlayer.jsx", () => ({ HouseMakerTourPlayer: () => null }));

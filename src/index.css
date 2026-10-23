@@ -24,6 +24,7 @@ html, body, #root{
 /* Keep fullscreen controls reachable around mobile screen cutouts. */
 .viewer-fullscreen-controls {
   position: absolute;
+  pointer-events: none;
   top: max(12px, env(safe-area-inset-top));
   left: max(12px, env(safe-area-inset-left));
   z-index: 100001;
@@ -36,6 +37,7 @@ html, body, #root{
 }
 
 .viewer-fullscreen-controls button {
+  pointer-events: auto;
   min-height: 44px;
   padding: 8px 12px;
   border: 1px solid #999;
@@ -62,6 +64,77 @@ html, body, #root{
   padding: 8px;
   border-radius: 6px;
   background: #222;
+}
+
+/* Keep pulses composited during heavy scene initialization. */
+.tutorial-control-choice {
+  animation: housemaker-tutorial-gyro-pulse var(--tutorial-cue-duration) ease-in-out infinite;
+  animation-delay: var(--tutorial-cue-delay);
+  will-change: transform;
+}
+
+.tutorial-control-choice-joystick {
+  animation-name: housemaker-tutorial-joystick-pulse;
+}
+
+/* Paint neutral rings once, then animate only their opacity. */
+.tutorial-control-choice::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  animation: housemaker-tutorial-gyro-ring var(--tutorial-cue-duration) ease-in-out infinite;
+  animation-delay: var(--tutorial-cue-delay);
+  will-change: opacity;
+}
+
+.tutorial-control-choice-joystick::after {
+  animation-name: housemaker-tutorial-joystick-ring;
+}
+
+@keyframes housemaker-tutorial-finger-move {
+  0%, 21.875%, 100% { transform: translateX(0); }
+  50%, 71.875% { transform: translateX(100%); }
+}
+
+@keyframes housemaker-tutorial-finger-press {
+  0%, 10%, 21.875%, 60%, 71.875%, 100% { transform: translate(-25%, -10%) scale(1); }
+  12.5%, 18.75%, 62.5%, 68.75% { transform: translate(-25%, -10%) scale(0.86); }
+}
+
+@keyframes housemaker-tutorial-gyro-pulse {
+  0%, 12.5%, 18.75%, 100% { transform: scale(1); }
+  15.625% { transform: scale(1.015); }
+}
+
+@keyframes housemaker-tutorial-joystick-pulse {
+  0%, 62.5%, 68.75%, 100% { transform: scale(1); }
+  65.625% { transform: scale(1.015); }
+}
+
+@keyframes housemaker-tutorial-gyro-ring {
+  0%, 12.5%, 18.75%, 100% { opacity: 0; }
+  15.625% { opacity: 1; }
+}
+
+@keyframes housemaker-tutorial-joystick-ring {
+  0%, 62.5%, 68.75%, 100% { opacity: 0; }
+  65.625% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-control-cue {
+    display: none;
+  }
+
+  .tutorial-control-choice,
+  .tutorial-control-choice::after {
+    animation: none;
+    will-change: auto;
+  }
 }
 
 html,

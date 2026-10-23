@@ -255,19 +255,91 @@ test("surface and object capsule responses compose sequentially", () => {
     expect(mockController.position.z).toBe(2);
 });
 
-test("A is reserved while Q and ArrowLeft still strafe", () => {
-    render(<ControllerHarness collisionsEnabled={false} azertyMode={false} />);
-    fireEvent.keyDown(window, { key: "a" });
-    act(() => mockFrame({}, 0.016));
-    expect(mockController.position.x).toBe(0);
-    fireEvent.keyDown(window, { key: "q" });
-    act(() => mockFrame({}, 0.016));
-    expect(mockController.position.x).toBeLessThan(0);
-    fireEvent.keyUp(window, { key: "q" });
-    const previousX = mockController.position.x;
-    fireEvent.keyDown(window, { key: "ArrowLeft" });
-    act(() => mockFrame({}, 0.016));
-    expect(mockController.position.x).toBeLessThan(previousX);
+test.each([[false, "q", "a", "w"], [true, "a", "q", "z"]])(
+    "layout %s reserves %s while %s and ArrowLeft strafe",
+    (azertyMode, hideKey, leftKey, forwardKey) => {
+        render(<ControllerHarness collisionsEnabled={false} azertyMode={azertyMode} />);
+        fireEvent.keyDown(window, { key: hideKey });
+        act(() => mockFrame({}, 0.016));
+        expect(mockController.position.x).toBe(0);
+        fireEvent.keyDown(window, { key: leftKey });
+        act(() => mockFrame({}, 0.016));
+        expect(mockController.position.x).toBeLessThan(0);
+        fireEvent.keyUp(window, { key: leftKey });
+        const previousX = mockController.position.x;
+        fireEvent.keyDown(window, { key: "ArrowLeft" });
+        act(() => mockFrame({}, 0.016));
+        expect(mockController.position.x).toBeLessThan(previousX);
+        fireEvent.keyUp(window, { key: "ArrowLeft" });
+        fireEvent.keyDown(window, { key: forwardKey });
+        act(() => mockFrame({}, 0.016));
+        expect(mockController.position.z).toBeLessThan(0);
+    }
+);
+
+test("the tutorial blocks keys, mouse, touch, and gravity", () => {
+    const view = render(<ControllerHarness
+        collisionsEnabled={false} inputBlocked azertyMode={false} position={[1, 3, 2]}
+    />);
+    fireEvent.keyDown(window, { key: "w" });
+    dispatchPointer("pointerdown", 1, 200, 500);
+    dispatchPointer("pointermove", 1, 200, 440);
+    dispatchPointer("pointerdown", 2, 420, 500);
+    dispatchPointer("pointermove", 2, 480, 500);
+    dispatchPointer("pointerdown", 3, 200, 500, mockGl.domElement, "mouse");
+    const originalPointerLock = Object.getOwnPropertyDescriptor(document, "pointerLockElement");
+    Object.defineProperty(document, "pointerLockElement", { configurable: true, value: mockGl.domElement });
+    try {
+        const event = new MouseEvent("mousemove");
+        Object.defineProperties(event, { movementX: { value: 90 }, movementY: { value: 30 } });
+        fireEvent(document, event);
+        act(() => mockFrame({}, 0.02));
+    } finally {
+        if (originalPointerLock) Object.defineProperty(document, "pointerLockElement", originalPointerLock);
+        else Reflect.deleteProperty(document, "pointerLockElement");
+    }
+    expect(mockController.position.toArray()).toEqual([1, 3, 2]);
+    expect(readLookAngles().x).toBeCloseTo(0);
+    expect(readLookAngles().y).toBeCloseTo(0);
+    expect(mockGl.domElement.setPointerCapture).not.toHaveBeenCalled();
+    expect(mockGl.domElement.requestPointerLock).not.toHaveBeenCalled();
+
+    view.rerender(<ControllerHarness
+        collisionsEnabled={false} azertyMode={false} position={[1, 3, 2]}
+    />);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.x).toBe(1);
+    expect(mockController.position.z).toBe(2);
+    fireEvent.keyDown(window, { key: "w" });
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.z).toBeLessThan(2);
+});
+
+test("opening the tutorial clears held keys and joysticks without resetting pose", () => {
+    const view = render(<ControllerHarness collisionsEnabled={false} azertyMode={false} />);
+    fireEvent.keyDown(window, { key: "w" });
+    dispatchPointer("pointerdown", 1, 200, 500);
+    dispatchPointer("pointermove", 1, 200, 440);
+    dispatchPointer("pointerdown", 2, 420, 500);
+    dispatchPointer("pointermove", 2, 480, 500);
+    act(() => mockFrame({}, 0.02));
+    const position = mockController.position.clone();
+    const angles = readLookAngles();
+
+    view.rerender(<ControllerHarness collisionsEnabled={false} azertyMode={false} inputBlocked />);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.toArray()).toEqual(position.toArray());
+    expect(readLookAngles().y).toBeCloseTo(angles.y);
+    expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(1);
+    expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(2);
+
+    view.rerender(<ControllerHarness collisionsEnabled={false} azertyMode={false} />);
+    dispatchPointer("pointermove", 1, 200, 440);
+    dispatchPointer("pointermove", 2, 480, 500);
+    act(() => mockFrame({}, 0.02));
+    expect(mockController.position.x).toBe(position.x);
+    expect(mockController.position.z).toBe(position.z);
+    expect(readLookAngles().y).toBeCloseTo(angles.y);
 });
 
 test.each([[400, 800], [800, 400]])(
@@ -472,6 +544,356 @@ test("UI touches stay independent while mouse still requests pointer lock", () =
     expect(mockGl.domElement.setPointerCapture).not.toHaveBeenCalled();
 });
 
+describe("desktop tutorial pointer lock", () => {
+    let lockedCanvas;
+    let originalPointerLock;
+    let originalExitPointerLock;
+
+    beforeEach(() => {
+        lockedCanvas = null;
+        originalPointerLock = Object.getOwnPropertyDescriptor(document, "pointerLockElement");
+        originalExitPointerLock = Object.getOwnPropertyDescriptor(document, "exitPointerLock");
+        Object.defineProperty(document, "pointerLockElement", {
+            configurable: true, get: () => lockedCanvas,
+        });
+        Object.defineProperty(document, "exitPointerLock", {
+            configurable: true, value: jest.fn(() => { lockedCanvas = null; }),
+        });
+    });
+
+    afterEach(() => {
+        for (const [key, descriptor] of [
+            ["pointerLockElement", originalPointerLock], ["exitPointerLock", originalExitPointerLock],
+        ]) {
+            if (descriptor) Object.defineProperty(document, key, descriptor);
+            else Reflect.deleteProperty(document, key);
+        }
+    });
+
+    test("a gesture requests lock during fade before mouse control resumes", () => {
+        const navigationRef = React.createRef();
+        const props = {
+            navigationRef, collisionsEnabled: false,
+            position: [1, 3, 2], rotation: [0.2, 0.4, 0],
+        };
+        const view = render(<ControllerHarness {...props} inputBlocked />);
+        let gestureActive = true;
+        mockGl.domElement.requestPointerLock.mockImplementation(() => {
+            expect(gestureActive).toBe(true);
+            lockedCanvas = mockGl.domElement;
+        });
+        expect(navigationRef.current.requestPointerLock()).toBe(true);
+        gestureActive = false;
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+
+        const event = new MouseEvent("mousemove");
+        Object.defineProperties(event, { movementX: { value: 30 }, movementY: { value: 10 } });
+        fireEvent(document, event);
+        act(() => mockFrame({}, 0.02));
+        expect(mockController.position.toArray()).toEqual([1, 3, 2]);
+        expect(readLookAngles().x).toBeCloseTo(0.2);
+        expect(readLookAngles().y).toBeCloseTo(0.4);
+
+        view.rerender(<ControllerHarness {...props} />);
+        expect(mockController.position.toArray()).toEqual([1, 3, 2]);
+        fireEvent(document, event);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().x).toBeCloseTo(0.18);
+        expect(readLookAngles().y).toBeCloseTo(0.34);
+        expect(document.exitPointerLock).not.toHaveBeenCalled();
+        expect(navigationRef.current.requestPointerLock()).toBe(true);
+        dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+    });
+
+    test("disabled and suspended navigation cannot request lock", () => {
+        const navigationRef = React.createRef();
+        const props = { navigationRef, collisionsEnabled: false };
+        const view = render(<ControllerHarness {...props} enabled={false} />);
+        expect(navigationRef.current.requestPointerLock()).toBe(false);
+        expect(mockGl.domElement.requestPointerLock).not.toHaveBeenCalled();
+        view.rerender(<ControllerHarness {...props} />);
+        let snapshot;
+        act(() => { snapshot = navigationRef.current.suspend(); });
+        expect(navigationRef.current.requestPointerLock()).toBe(false);
+        expect(mockGl.domElement.requestPointerLock).not.toHaveBeenCalled();
+        act(() => navigationRef.current.restore(snapshot));
+        expect(navigationRef.current.requestPointerLock()).toBe(true);
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+    });
+
+    test("missing APIs and synchronous failures return false", () => {
+        const navigationRef = React.createRef();
+        render(<ControllerHarness navigationRef={navigationRef} collisionsEnabled={false} />);
+        const nativeRequest = mockGl.domElement.requestPointerLock;
+        mockGl.domElement.requestPointerLock = undefined;
+        expect(navigationRef.current.requestPointerLock()).toBe(false);
+        mockGl.domElement.requestPointerLock = nativeRequest;
+        nativeRequest.mockImplementation(() => { throw new Error("Not allowed"); });
+        expect(navigationRef.current.requestPointerLock()).toBe(false);
+        expect(() => dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse"))
+            .not.toThrow();
+    });
+
+    test("rejected native promises are handled without retrying", async () => {
+        const navigationRef = React.createRef();
+        render(<ControllerHarness navigationRef={navigationRef} collisionsEnabled={false} inputBlocked />);
+        const request = Promise.reject(new Error("User denied pointer lock"));
+        const catchRequest = jest.spyOn(request, "catch");
+        mockGl.domElement.requestPointerLock.mockReturnValue(request);
+        expect(navigationRef.current.requestPointerLock()).toBe(true);
+        expect(catchRequest).toHaveBeenCalledTimes(1);
+        await act(async () => { await Promise.resolve(); });
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        expect(lockedCanvas).toBe(null);
+    });
+
+    test("touch, Escape, rerenders, and Strict Mode never auto-lock", () => {
+        const navigationRef = React.createRef();
+        const view = render(<React.StrictMode>
+            <ControllerHarness navigationRef={navigationRef} collisionsEnabled={false} />
+        </React.StrictMode>);
+        dispatchPointer("pointerdown", 1, 200, 500);
+        dispatchPointer("pointermove", 1, 200, 440);
+        expect(mockGl.domElement.requestPointerLock).not.toHaveBeenCalled();
+        mockGl.domElement.requestPointerLock.mockImplementation(() => { lockedCanvas = mockGl.domElement; });
+        expect(navigationRef.current.requestPointerLock()).toBe(true);
+        lockedCanvas = null;
+        fireEvent(document, new Event("pointerlockchange"));
+        fireEvent.keyDown(window, { key: "Escape" });
+        act(() => mockFrame({}, 0.02));
+        view.rerender(<React.StrictMode>
+            <ControllerHarness navigationRef={navigationRef} collisionsEnabled={false} />
+        </React.StrictMode>);
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        view.unmount();
+        dispatchPointer("pointerdown", 2, 200, 500, mockGl.domElement, "mouse");
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        expect(navigationRef.current).toBe(null);
+    });
+});
+
+describe("canvas pointer-lock cooldown recovery", () => {
+    let pageHidden;
+    let pageFocused;
+    let cooldownError;
+
+    beforeEach(() => {
+        jest.useFakeTimers();
+        pageHidden = false;
+        pageFocused = true;
+        cooldownError = new DOMException(
+            "Pointer lock cannot be acquired immediately after the user has exited the lock.",
+            "SecurityError"
+        );
+        jest.spyOn(document, "hidden", "get").mockImplementation(() => pageHidden);
+        jest.spyOn(document, "hasFocus").mockImplementation(() => pageFocused);
+        // eslint-disable-next-line testing-library/no-node-access
+        document.body.appendChild(mockGl.domElement);
+    });
+
+    afterEach(() => {
+        mockGl.domElement.remove();
+        jest.useRealTimers();
+    });
+
+    test("one canvas click retries the specific cooldown once without polling", async () => {
+        render(<ControllerHarness collisionsEnabled={false} />);
+        mockGl.domElement.requestPointerLock
+            .mockRejectedValueOnce(cooldownError)
+            .mockRejectedValueOnce(cooldownError);
+        await act(async () => {
+            dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+        });
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        act(() => jest.advanceTimersByTime(1299));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        await act(async () => jest.advanceTimersByTime(1));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(2);
+        await act(async () => jest.advanceTimersByTime(10000));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(2);
+    });
+
+    test("additional canvas clicks neither duplicate nor postpone a pending retry", async () => {
+        render(<ControllerHarness collisionsEnabled={false} />);
+        mockGl.domElement.requestPointerLock.mockRejectedValueOnce(cooldownError);
+        await act(async () => {
+            dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+        });
+        act(() => jest.advanceTimersByTime(500));
+        dispatchPointer("pointerdown", 2, 200, 500, mockGl.domElement, "mouse");
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        act(() => jest.advanceTimersByTime(800));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(2);
+    });
+
+    test.each(["without error event", "event before promise", "event after promise"])(
+        "recovery rejection releases pending capture: %s",
+        async (ordering) => {
+            let rejectRecovery;
+            render(<ControllerHarness collisionsEnabled={false} />);
+            mockGl.domElement.requestPointerLock
+                .mockRejectedValueOnce(cooldownError)
+                .mockImplementationOnce(() => new Promise((resolve, reject) => { rejectRecovery = reject; }));
+            await act(async () => {
+                dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+            });
+            act(() => jest.advanceTimersByTime(1300));
+            dispatchPointer("pointerdown", 2, 200, 500, mockGl.domElement, "mouse");
+            expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(2);
+            if (ordering === "event before promise") fireEvent(document, new Event("pointerlockerror"));
+            await act(async () => { rejectRecovery(new DOMException("Permission denied", "SecurityError")); });
+            if (ordering === "event after promise") fireEvent(document, new Event("pointerlockerror"));
+            act(() => jest.advanceTimersByTime(5000));
+            expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(2);
+            dispatchPointer("pointerdown", 3, 200, 500, mockGl.domElement, "mouse");
+            expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(3);
+        }
+    );
+
+    test("legacy error events release the pending request for another click", () => {
+        render(<ControllerHarness collisionsEnabled={false} />);
+        dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        fireEvent(document, new Event("pointerlockerror"));
+        dispatchPointer("pointerdown", 2, 200, 500, mockGl.domElement, "mouse");
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(2);
+        act(() => jest.advanceTimersByTime(5000));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(2);
+    });
+
+    test("error events preserve a scheduled promise-based cooldown recovery", async () => {
+        render(<ControllerHarness collisionsEnabled={false} />);
+        mockGl.domElement.requestPointerLock.mockRejectedValueOnce(cooldownError);
+        await act(async () => {
+            dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+        });
+        fireEvent(document, new Event("pointerlockerror"));
+        dispatchPointer("pointerdown", 2, 200, 500, mockGl.domElement, "mouse");
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        act(() => jest.advanceTimersByTime(1300));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(2);
+    });
+
+    test("the specific synchronous cooldown failure also recovers once", () => {
+        render(<ControllerHarness collisionsEnabled={false} />);
+        mockGl.domElement.requestPointerLock.mockImplementationOnce(() => { throw cooldownError; });
+        dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        act(() => jest.advanceTimersByTime(1300));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(2);
+    });
+
+    test.each([
+        ["SecurityError", "Permission denied"],
+        ["NotAllowedError", "Pointer lock cannot be acquired immediately after the user has exited the lock."],
+        ["NotAllowedError", "Too many pointer lock requests in a short window of time."],
+    ])("%s: %s never schedules recovery", async (name, message) => {
+        render(<ControllerHarness collisionsEnabled={false} />);
+        mockGl.domElement.requestPointerLock.mockRejectedValue(new DOMException(message, name));
+        await act(async () => {
+            dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+        });
+        await act(async () => jest.advanceTimersByTime(10000));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+    });
+
+    test.each([
+        "Escape", "outside pointer", "blur", "hidden", "unmount", "mode change",
+        "blocked", "suspended", "disconnected", "lost focus", "touch", "secondary click", "disabled",
+    ])("%s cancels or invalidates scheduled capture", async (reason) => {
+        const navigationRef = React.createRef();
+        const props = { navigationRef, collisionsEnabled: false };
+        const view = render(<ControllerHarness {...props} />);
+        mockGl.domElement.requestPointerLock.mockRejectedValueOnce(cooldownError);
+        await act(async () => {
+            dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+        });
+        if (reason === "Escape") fireEvent.keyDown(window, { key: "Escape" });
+        if (reason === "outside pointer") fireEvent.pointerDown(document.body);
+        if (reason === "blur") fireEvent(window, new Event("blur"));
+        if (reason === "hidden") {
+            pageHidden = true;
+            fireEvent(document, new Event("visibilitychange"));
+        }
+        if (reason === "unmount") view.unmount();
+        if (reason === "mode change") view.rerender(<ControllerHarness {...props} touchNavigationMode="gyroscope" />);
+        if (reason === "disabled") view.rerender(<ControllerHarness {...props} enabled={false} />);
+        if (reason === "blocked") view.rerender(<ControllerHarness {...props} inputBlocked />);
+        if (reason === "suspended") act(() => navigationRef.current.suspend());
+        if (reason === "disconnected") mockGl.domElement.remove();
+        if (reason === "lost focus") pageFocused = false;
+        if (reason === "touch") dispatchPointer("pointerdown", 2, 200, 500);
+        if (reason === "secondary click") {
+            const event = new Event("pointerdown", { bubbles: true });
+            Object.defineProperties(event, { button: { value: 2 }, pointerType: { value: "mouse" } });
+            fireEvent(mockGl.domElement, event);
+        }
+        await act(async () => jest.advanceTimersByTime(5000));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+    });
+
+    test.each(["Escape", "outside pointer", "blur", "hidden", "unmount", "mode change"])(
+        "%s invalidates a rejection arriving after cancellation",
+        async (reason) => {
+            let rejectRequest;
+            const view = render(<ControllerHarness collisionsEnabled={false} />);
+            mockGl.domElement.requestPointerLock.mockImplementationOnce(() => new Promise((resolve, reject) => {
+                rejectRequest = reject;
+            }));
+            dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+            dispatchPointer("pointerdown", 2, 200, 500, mockGl.domElement, "mouse");
+            expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+            if (reason === "Escape") fireEvent.keyDown(window, { key: "Escape" });
+            if (reason === "outside pointer") fireEvent.pointerDown(document.body);
+            if (reason === "blur") fireEvent(window, new Event("blur"));
+            if (reason === "hidden") {
+                pageHidden = true;
+                fireEvent(document, new Event("visibilitychange"));
+            }
+            if (reason === "unmount") view.unmount();
+            if (reason === "mode change") view.rerender(<ControllerHarness collisionsEnabled={false} touchNavigationMode="gyroscope" />);
+            await act(async () => { rejectRequest(cooldownError); });
+            await act(async () => jest.advanceTimersByTime(5000));
+            expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        }
+    );
+
+    test("tutorial navigation, UI, touch, and Escape do not retry automatically", async () => {
+        const navigationRef = React.createRef();
+        const view = render(<ControllerHarness navigationRef={navigationRef} collisionsEnabled={false} inputBlocked />);
+        mockGl.domElement.requestPointerLock.mockRejectedValue(cooldownError);
+        fireEvent.keyDown(window, { key: "Escape" });
+        fireEvent.pointerDown(document.body);
+        dispatchPointer("pointerdown", 1, 200, 500);
+        dispatchPointer("pointerdown", 2, 200, 500, mockGl.domElement, "mouse");
+        await act(async () => jest.advanceTimersByTime(5000));
+        expect(mockGl.domElement.requestPointerLock).not.toHaveBeenCalled();
+        await act(async () => { navigationRef.current.requestPointerLock(); });
+        view.rerender(<ControllerHarness navigationRef={navigationRef} collisionsEnabled={false} />);
+        await act(async () => jest.advanceTimersByTime(5000));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+    });
+
+    test("Strict Mode cleanup cancels recovery and removes cancellation listeners", async () => {
+        const addListener = jest.spyOn(window, "addEventListener");
+        const removeListener = jest.spyOn(window, "removeEventListener");
+        const view = render(<React.StrictMode>
+            <ControllerHarness collisionsEnabled={false} />
+        </React.StrictMode>);
+        mockGl.domElement.requestPointerLock.mockRejectedValue(cooldownError);
+        await act(async () => {
+            dispatchPointer("pointerdown", 1, 200, 500, mockGl.domElement, "mouse");
+        });
+        view.unmount();
+        await act(async () => jest.advanceTimersByTime(5000));
+        expect(mockGl.domElement.requestPointerLock).toHaveBeenCalledTimes(1);
+        const attached = addListener.mock.calls.filter(([type, , capture]) => type === "pointerdown" && capture === true);
+        const detached = removeListener.mock.calls.filter(([type, , capture]) => type === "pointerdown" && capture === true);
+        expect(detached.map(([, handler]) => handler)).toEqual(attached.map(([, handler]) => handler));
+    });
+});
+
 test("Strict Mode does not duplicate touch input listeners", () => {
     render(
         <React.StrictMode>
@@ -516,6 +938,75 @@ describe("gyroscope navigation", () => {
             if (descriptor) Object.defineProperty(object, key, descriptor);
             else delete object[key];
         }
+    });
+
+    test("tutorial blocking preserves permission access and reanchors gyro after dismissal", async () => {
+        window.DeviceOrientationEvent.requestPermission = jest.fn().mockResolvedValue("granted");
+        const navigationRef = React.createRef();
+        const statusChanged = jest.fn();
+        const props = {
+            touchNavigationMode: "gyroscope", navigationRef,
+            onGyroscopeStatusChange: statusChanged,
+            collisionsEnabled: false, rotation: [0.2, 0.4, 0], position: [1, 3, 2],
+        };
+        const view = render(<ControllerHarness {...props} inputBlocked />);
+        expect(statusChanged).toHaveBeenLastCalledWith("permission_required");
+        await act(async () => {
+            const permission = navigationRef.current.enableGyroscope();
+            expect(window.DeviceOrientationEvent.requestPermission).toHaveBeenCalledTimes(1);
+            await permission;
+        });
+        expect(statusChanged).toHaveBeenLastCalledWith("waiting");
+        dispatchOrientation();
+        dispatchOrientation(90, 120, 0);
+        act(() => mockFrame({}, 0.02));
+        expect(statusChanged).toHaveBeenLastCalledWith("active");
+        expect(mockController.position.toArray()).toEqual([1, 3, 2]);
+        expect(readLookAngles().y).toBeCloseTo(0.4);
+        expect(readLookAngles().x).toBeCloseTo(0.2);
+
+        view.rerender(<ControllerHarness {...props} />);
+        dispatchOrientation(160, 120, 0);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(0.4);
+        expect(readLookAngles().x).toBeCloseTo(0.2);
+        dispatchOrientation(170, 130, 0);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeCloseTo(0.4 + Math.PI / 18);
+        expect(readLookAngles().x).toBeCloseTo(0.2 + Math.PI / 18);
+        expect(window.DeviceOrientationEvent.requestPermission).toHaveBeenCalledTimes(1);
+    });
+
+    test("switching tutorial controls clears old gestures without resetting pose", () => {
+        const props = {
+            collisionsEnabled: false, position: [1, 3, 2], rotation: [0.1, 0.3, 0],
+        };
+        const view = render(<ControllerHarness {...props} touchNavigationMode="gyroscope" />);
+        dispatchOrientation();
+        dispatchPointer("pointerdown", 1, 420, 500);
+        dispatchPointer("pointermove", 1, 420, 440);
+        act(() => mockFrame({}, 0.02));
+        const position = mockController.position.clone();
+        const angles = readLookAngles();
+
+        view.rerender(<ControllerHarness {...props} touchNavigationMode="dual_joystick" inputBlocked />);
+        dispatchOrientation(90, 120, 0);
+        act(() => mockFrame({}, 0.02));
+        expect(mockController.position.toArray()).toEqual(position.toArray());
+        expect(readLookAngles().y).toBeCloseTo(angles.y);
+        expect(readLookAngles().x).toBeCloseTo(angles.x);
+        expect(mockGl.domElement.releasePointerCapture).toHaveBeenCalledWith(1);
+
+        view.rerender(<ControllerHarness {...props} touchNavigationMode="dual_joystick" />);
+        dispatchPointer("pointermove", 1, 420, 380);
+        act(() => mockFrame({}, 0.02));
+        expect(mockController.position.x).toBe(position.x);
+        expect(mockController.position.z).toBe(position.z);
+        expect(readLookAngles().y).toBeCloseTo(angles.y);
+        dispatchPointer("pointerdown", 2, 420, 500);
+        dispatchPointer("pointermove", 2, 480, 500);
+        act(() => mockFrame({}, 0.02));
+        expect(readLookAngles().y).toBeLessThan(angles.y);
     });
 
     test("first sensor sample preserves pose before physical yaw and pitch changes", () => {

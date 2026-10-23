@@ -48,6 +48,12 @@ const SystemStore = create((set) => ({
   showBakedPvs: false,
   setShowBakedPvs: (visible) => set(() => ({ showBakedPvs: visible })),
 
+  // Keep image quality controls independent of lighting and navigation.
+  anisotropicFilteringEnabled: false,
+  setAnisotropicFilteringEnabled: (enabled) => set(() => ({ anisotropicFilteringEnabled: enabled })),
+  viewerDpr: 1,
+  setViewerDpr: (dpr) => set(() => ({ viewerDpr: dpr })),
+
   currentCameraMovements: { zoom: true, pan: true, rotate: true },
   setcurrentCameraMovements: (cameraMovements) => set(() => ({ currentCameraMovements: cameraMovements })),
 

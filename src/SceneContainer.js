@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo  } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo  } from "react";
 import { OrbitingPointLight } from './system_components/OrbitingPointLights.jsx';
 import { OrbitingMenu } from "./system_components/OrbitingMenu.jsx";
 import { FadingText } from "./system_components/FadingText.jsx";
@@ -53,6 +53,7 @@ export const SceneContainer = React.memo((props) => {
     const viewerMaterialName = SystemStore((state) => state.viewerMaterialName);
     const realTimeGiEnabled = SystemStore((state) => state.realTimeGiEnabled);
     const showBakedPvs = SystemStore((state) => state.showBakedPvs);
+    const anisotropicFilteringEnabled = SystemStore((state) => state.anisotropicFilteringEnabled);
 
     const animationTriggerState = UserStore((state) => state.animationTriggerState);
     const siteMode = UserStore((state) => state.siteMode);
@@ -92,6 +93,14 @@ export const SceneContainer = React.memo((props) => {
 
     // Share rendered depth, preserving instancing and object fades.
     const camera = useThree((state) => state.camera);
+    const renderDpr = useThree((state) => state.viewport.dpr);
+    const postProcessingRef = useRef(null);
+
+    // Resize post-processing buffers when only pixel density changes.
+    useLayoutEffect(() => {
+        postProcessingRef.current?.setSize();
+    }, [renderDpr]);
+
     const realTimeGiEffect = useMemo(() => {
         const lowQuality = sceneLayoutKey === "Mobile" || sceneLayoutKey === "Tablet" || currentGraphicalMode === "potato";
         const resolutionScale = lowQuality ? 0.75 : 1;
@@ -641,7 +650,9 @@ export const SceneContainer = React.memo((props) => {
                 position={[2.83, 0.1, 3]}
                 eyeHeight={eyeHeight}
                 navigationRef={houseMakerNavigationRef}
-                touchNavigationMode="gyroscope"
+                azertyMode={props.azertyMode ?? "auto"}
+                touchNavigationMode={props.touchNavigationMode ?? "gyroscope"}
+                inputBlocked={props.inputBlocked ?? false}
                 onGyroscopeStatusChange={props.onGyroscopeStatusChange}
             />
             {/* <ambientLight intensity = {1.0}></ambientLight> */}
@@ -655,12 +666,16 @@ export const SceneContainer = React.memo((props) => {
                 shadowMapSize={sceneLayoutKey === "Widescreen" ? 2048 : 1024}
                 instancesEnabled={siteMode === "resume"}
                 showBakedPvs={showBakedPvs}
+                anisotropicFilteringEnabled={anisotropicFilteringEnabled}
+                hideObjectsKey={props.hideObjectsKey ?? "a"}
+                objectControlsEnabled={!props.inputBlocked}
                 navigationRef={houseMakerNavigationRef}
                 toursEnabled={siteMode === "resume"}
             />
 
             {/* Add diffuse bounce before tone mapping and anti-aliasing. */}
             <EffectComposer
+                ref={postProcessingRef}
                 enableNormalPass
                 multisampling={0}
                 resolutionScale={0.5}

@@ -8,6 +8,7 @@ import { SceneContainer } from "./SceneContainer";
 import config from "./config.js";
 
 let mockCamera;
+let mockDpr;
 let mockTree;
 let mockLayoutKey;
 let mockState;
@@ -16,7 +17,7 @@ const mockUseLoader = jest.fn();
 
 // Inspect the real effect without mounting a WebGL canvas.
 jest.mock("@react-three/fiber", () => ({
-    useThree: (selector) => selector({ camera: mockCamera }),
+    useThree: (selector) => selector({ camera: mockCamera, viewport: { dpr: mockDpr } }),
     useLoader: (...args) => mockUseLoader(...args),
 }));
 jest.mock("@react-three/drei", () => ({ Environment: "environment" }));
@@ -53,8 +54,8 @@ jest.mock("./system_components/FirstPersonController.jsx", () => ({ FirstPersonC
 jest.mock("./user_components/HouseMakerLoader.jsx", () => ({ HouseMakerLoader: "houseMaker" }));
 
 // Keep component effects real while capturing declarative scene children.
-function SceneHarness() {
-    mockTree = SceneContainer.type({});
+function SceneHarness(props) {
+    mockTree = SceneContainer.type(props);
     return null;
 }
 
@@ -80,6 +81,7 @@ function makeRenderer() {
 
 beforeEach(() => {
     mockCamera = new THREE.PerspectiveCamera(60, 1.5, 0.1, 1000);
+    mockDpr = 1;
     mockLayoutKey = "Widescreen";
     mockManifest = {};
     mockUseLoader.mockReset();
@@ -90,6 +92,7 @@ beforeEach(() => {
         currentObjectClicked: "",
         realTimeGiEnabled: true,
         showBakedPvs: false,
+        anisotropicFilteringEnabled: false,
         setForcedCameraTarget: jest.fn(),
         setForcedCameraMovePathCurve: jest.fn(),
     };
@@ -110,6 +113,58 @@ test("lighting enables sun shadows and applies GI before tone mapping and FXAA",
     expect(findElements("firstPerson")[0].props.touchNavigationMode).toBe("gyroscope");
 });
 
+test("tutorial control defaults preserve independent loader behavior", () => {
+    render(<SceneHarness />);
+    const controller = findElements("firstPerson")[0].props;
+    const loader = findElements("houseMaker")[0].props;
+    expect(controller.azertyMode).toBe("auto");
+    expect(controller.touchNavigationMode).toBe("gyroscope");
+    expect(controller.inputBlocked).toBe(false);
+    expect(loader.hideObjectsKey).toBe("a");
+    expect(loader.objectControlsEnabled).toBe(true);
+    expect(controller.navigationRef).toBe(loader.navigationRef);
+});
+
+test("tutorial selections reach controls and loaders without rebuilding scene features", () => {
+    const onGyroscopeStatusChange = jest.fn();
+    const view = render(<SceneHarness
+        azertyMode={false} hideObjectsKey="q" inputBlocked
+        onGyroscopeStatusChange={onGyroscopeStatusChange}
+    />);
+    const controller = findElements("firstPerson")[0].props;
+    const loader = findElements("houseMaker")[0].props;
+    const effect = findElements("primitive")[0].props.object;
+    expect(controller.azertyMode).toBe(false);
+    expect(controller.touchNavigationMode).toBe("gyroscope");
+    expect(controller.inputBlocked).toBe(true);
+    expect(controller.onGyroscopeStatusChange).toBe(onGyroscopeStatusChange);
+    expect(loader.hideObjectsKey).toBe("q");
+    expect(loader.objectControlsEnabled).toBe(false);
+
+    view.rerender(<SceneHarness
+        azertyMode hideObjectsKey="a" touchNavigationMode="dual_joystick" inputBlocked
+        onGyroscopeStatusChange={onGyroscopeStatusChange}
+    />);
+    expect(findElements("firstPerson")[0].props.azertyMode).toBe(true);
+    expect(findElements("firstPerson")[0].props.touchNavigationMode).toBe("dual_joystick");
+    expect(findElements("firstPerson")[0].props.inputBlocked).toBe(true);
+    expect(findElements("houseMaker")[0].props.hideObjectsKey).toBe("a");
+    expect(findElements("houseMaker")[0].props.objectControlsEnabled).toBe(false);
+
+    view.rerender(<SceneHarness
+        azertyMode hideObjectsKey="a" touchNavigationMode="dual_joystick"
+        onGyroscopeStatusChange={onGyroscopeStatusChange}
+    />);
+    expect(findElements("firstPerson")[0].props.inputBlocked).toBe(false);
+    expect(findElements("houseMaker")[0].props.objectControlsEnabled).toBe(true);
+    expect(findElements("firstPerson")[0].props.position).toEqual(controller.position);
+    expect(findElements("firstPerson")[0].props.navigationRef).toBe(controller.navigationRef);
+    expect(findElements("houseMaker")[0].props.navigationRef).toBe(loader.navigationRef);
+    expect(findElements("houseMaker")[0].props.jsonFile).toBe(loader.jsonFile);
+    expect(findElements("primitive")[0].props.object).toBe(effect);
+    expect(findElements("ssao")).toHaveLength(1);
+});
+
 test("PVS debug state reaches the loader independently of lighting", () => {
     const view = render(<SceneHarness />);
     expect(findElements("houseMaker")[0].props.showBakedPvs).toBe(false);
@@ -118,6 +173,32 @@ test("PVS debug state reaches the loader independently of lighting", () => {
     expect(findElements("houseMaker")[0].props.showBakedPvs).toBe(true);
     expect(findElements("ssao")).toHaveLength(1);
     expect(findElements("primitive")).toHaveLength(1);
+});
+
+test("anisotropic filtering reaches the loader without recreating GI", () => {
+    const view = render(<SceneHarness />);
+    const effect = findElements("primitive")[0].props.object;
+    expect(findElements("houseMaker")[0].props.anisotropicFilteringEnabled).toBe(false);
+    mockState.anisotropicFilteringEnabled = true;
+    view.rerender(<SceneHarness />);
+    expect(findElements("houseMaker")[0].props.anisotropicFilteringEnabled).toBe(true);
+    expect(findElements("primitive")[0].props.object).toBe(effect);
+    expect(findElements("ssao")).toHaveLength(1);
+});
+
+test("DPR changes resize post-processing without rebuilding GI or loaders", () => {
+    const view = render(<SceneHarness />);
+    const composer = { setSize: jest.fn() };
+    findElements("effectComposer")[0].ref.current = composer;
+    const effect = findElements("primitive")[0].props.object;
+    mockDpr = 1.5;
+    view.rerender(<SceneHarness />);
+    expect(composer.setSize).toHaveBeenCalledTimes(1);
+    expect(composer.setSize).toHaveBeenCalledWith();
+    expect(findElements("primitive")[0].props.object).toBe(effect);
+    expect(findElements("houseMaker")[0].props.anisotropicFilteringEnabled).toBe(false);
+    view.rerender(<SceneHarness />);
+    expect(composer.setSize).toHaveBeenCalledTimes(1);
 });
 
 test("disabling GI preserves SSAO and releases owned resources only", () => {
