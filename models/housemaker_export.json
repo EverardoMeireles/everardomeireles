@@ -424,7 +424,7 @@
       ],
       "color": "#ffffff",
       "intensity": 0.7,
-      "castShadow": false
+      "castShadow": true
     }
   ],
   "globalScale": {
