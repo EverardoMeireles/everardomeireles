@@ -66,6 +66,45 @@ html, body, #root{
   background: #222;
 }
 
+/* Keep debug inputs separate from first-person scene gestures. */
+.viewer-debug-panel button {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #687680;
+  border-radius: 6px;
+  background: #303c45;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.viewer-debug-panel input[type="range"] {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  accent-color: #b9dcf3;
+  touch-action: none;
+}
+
+.viewer-debug-panel input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #b9dcf3;
+}
+
+.viewer-debug-panel output {
+  color: #c2e3f9;
+  font-variant-numeric: tabular-nums;
+}
+
+.viewer-debug-panel :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
 /* Keep pulses composited during heavy scene initialization. */
 .tutorial-control-choice {
   animation: housemaker-tutorial-gyro-pulse var(--tutorial-cue-duration) ease-in-out infinite;

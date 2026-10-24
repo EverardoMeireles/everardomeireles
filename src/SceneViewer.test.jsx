@@ -1,6 +1,7 @@
 /* eslint-disable testing-library/no-node-access */
 
 import React from "react";
+import { PCFShadowMap } from "three";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import SceneViewer from "./SceneViewer";
@@ -10,7 +11,9 @@ import UserStore from "./UserStore";
 
 // Keep browser fullscreen tests independent of WebGL and overlays.
 jest.mock("@react-three/fiber", () => ({
-    Canvas: ({ children, dpr }) => <div data-testid="viewer-canvas" data-dpr={dpr}>{children}</div>,
+    Canvas: ({ children, dpr, shadows }) => (
+        <div data-testid="viewer-canvas" data-dpr={dpr} data-shadows={String(shadows.enabled)} data-shadow-type={shadows.type}>{children}</div>
+    ),
     useFrame: jest.fn(),
 }));
 jest.mock("r3f-perf", () => ({ Perf: () => null }));
@@ -93,10 +96,26 @@ beforeEach(() => {
             circleProperties: { active: false },
             productInformationFromMessage: undefined,
             r3fPerfEnabled: false,
-            realTimeGiEnabled: true,
+            realTimeGiEnabled: false,
+            ssaoEnabled: true,
+            bloomEnabled: false,
+            shadowsEnabled: true,
             showBakedPvs: false,
-            anisotropicFilteringEnabled: false,
+            anisotropicFilteringEnabled: true,
             viewerDpr: 1,
+            viewerDebugSettings: {
+                giIntensity: 0.7, giResolutionScale: null,
+                ssaoIntensity: 2, ssaoRadius: 0.05, ssaoBias: 0.014, ssaoSamples: 49, ssaoResolutionScale: 0.5,
+                bloomIntensity: 0.5, bloomThreshold: 2, bloomSmoothing: 0.2, bloomRadius: 0.5, bloomResolutionScale: 0.5,
+                shadowBias: null, shadowNormalBias: null, shadowMapSize: null, shadowSoftness: 2, shadowCoverage: 100,
+                sunLightColor: null,
+                sunOrbitPaused: true, sunOrbitAngle: null, sunOrbitAngleRevision: 0,
+                dayNightDuration: 3, dayNightMaxElevation: 60, dayNightAzimuth: 0,
+                dayNightSunStrength: 1, dayNightDayBrightness: 0.35,
+                dayNightNightBrightness: 0.12, dayNightNightSkyBrightness: 0.15, dayNightProgress: 0,
+                dayNightAction: null, dayNightCommand: 0,
+                anisotropy: 8, pvsOpacity: 0.65,
+            },
             tutorialClosed: true,
         });
         UserStore.setState({ siteMode: "resume" });
@@ -261,22 +280,163 @@ test("Strict Mode cleans fullscreen listeners without duplicating requests", asy
     }
 });
 
-test("GI comparison toggles without replacing the canvas or disabling it", () => {
+test("fresh viewer defaults and SSAO reset preserve the chosen lighting settings", () => {
+    const defaults = SystemStore.getInitialState();
+    const ssaoDefaults = { ssaoIntensity: 2, ssaoRadius: 0.05, ssaoBias: 0.014, ssaoSamples: 49, ssaoResolutionScale: 0.5 };
+    expect(defaults).toMatchObject({ realTimeGiEnabled: false, ssaoEnabled: true, anisotropicFilteringEnabled: true,
+        viewerDebugSettings: { ...ssaoDefaults, anisotropy: 8, sunOrbitPaused: true } });
+    SystemStore.setState({ realTimeGiEnabled: defaults.realTimeGiEnabled, ssaoEnabled: defaults.ssaoEnabled,
+        anisotropicFilteringEnabled: defaults.anisotropicFilteringEnabled, viewerDebugSettings: { ...defaults.viewerDebugSettings } });
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    expect(screen.getByRole("button", { name: "Real-time GI: Off" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Anisotropic filtering: On" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "SSAO: On" }));
+    expect(screen.getByRole("checkbox", { name: "Enable SSAO" })).toBeChecked();
+    for (const [label, initial, changed] of [["SSAO strength", 2, 1], ["SSAO radius", 0.05, 0.2],
+        ["SSAO bias", 0.014, 0.02], ["SSAO samples", 49, 17], ["SSAO resolution", 0.5, 0.25]]) {
+        const slider = screen.getByRole("slider", { name: new RegExp(label) });
+        expect(slider).toHaveValue(String(initial));
+        fireEvent.change(slider, { target: { value: changed } });
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Reset values" }));
+    expect(SystemStore.getState().viewerDebugSettings).toMatchObject(ssaoDefaults);
+    expect(SystemStore.getState()).toMatchObject({ realTimeGiEnabled: false, ssaoEnabled: true, anisotropicFilteringEnabled: true });
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+});
+
+test("GI opens settings before toggling without replacing the canvas", () => {
+    SystemStore.setState({ realTimeGiEnabled: true, ssaoEnabled: false });
     renderViewer();
     const canvas = screen.getByTestId("viewer-canvas");
     const button = screen.getByRole("button", { name: "Real-time GI: On" });
-    expect(button).toHaveAttribute("aria-pressed", "true");
+    expect(button).toHaveAttribute("aria-expanded", "false");
     expect(button.closest('[data-viewer-control="true"]')).toBeInTheDocument();
     fireEvent.click(button);
+    expect(SystemStore.getState().realTimeGiEnabled).toBe(true);
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(screen.getByRole("checkbox", { name: "Enable Real-time GI" }));
     expect(SystemStore.getState().realTimeGiEnabled).toBe(false);
+    expect(SystemStore.getState().ssaoEnabled).toBe(false);
     expect(screen.getByRole("button", { name: "Real-time GI: Off" }))
-        .toHaveAttribute("aria-pressed", "false");
+        .toHaveAttribute("aria-expanded", "true");
     expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
     expect(SystemStore.getState().canvasEnabled).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "Real-time GI: Off" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Enable Real-time GI" }));
     expect(SystemStore.getState().realTimeGiEnabled).toBe(true);
+    expect(SystemStore.getState().ssaoEnabled).toBe(false);
     expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
 });
+
+test.each([false, true])("SSAO toggles independently when GI is %s without interrupting navigation", (giEnabled) => {
+    SystemStore.setState({ realTimeGiEnabled: giEnabled });
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const sceneProps = SceneContainer.mock.calls.at(-1)[0];
+    const navigation = { enableGyroscope: jest.fn(), recenterGyroscope: jest.fn() };
+    sceneProps.navigationRef.current = navigation;
+    const button = screen.getByRole("button", { name: "SSAO: On" });
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(button.closest('[data-viewer-control="true"]')).toBeInTheDocument();
+    fireEvent.click(button);
+
+    for (const next of [false, true]) {
+        fireEvent.click(screen.getByRole("checkbox", { name: "Enable SSAO" }));
+        expect(SystemStore.getState().ssaoEnabled).toBe(next);
+        expect(screen.getByRole("button", { name: `SSAO: ${next ? "On" : "Off"}` }))
+            .toHaveAttribute("aria-expanded", "true");
+        expect(screen.getByRole("checkbox", { name: "Enable SSAO" })).toHaveProperty("checked", next);
+        expect(SystemStore.getState().realTimeGiEnabled).toBe(giEnabled);
+        expect(SystemStore.getState().canvasEnabled).toBe(true);
+        expect(SystemStore.getState().forceDisableRender).toBe(false);
+        expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+        expect(SceneContainer.mock.calls.at(-1)[0].navigationRef).toBe(sceneProps.navigationRef);
+        expect(SceneContainer.mock.calls.at(-1)[0].navigationRef.current).toBe(navigation);
+        expect(SceneContainer.mock.calls.at(-1)[0].inputBlocked).toBe(false);
+    }
+    expect(navigation.enableGyroscope).not.toHaveBeenCalled();
+    expect(navigation.recenterGyroscope).not.toHaveBeenCalled();
+});
+
+test.each([[false, false], [false, true], [true, false], [true, true]])(
+    "bloom toggles independently when GI is %s and SSAO is %s",
+    (giEnabled, ssaoEnabled) => {
+        expect(SystemStore.getInitialState()).toMatchObject({
+            bloomEnabled: false,
+            viewerDebugSettings: { bloomIntensity: 0.5, bloomThreshold: 2, bloomSmoothing: 0.2,
+                bloomRadius: 0.5, bloomResolutionScale: 0.5 },
+        });
+        SystemStore.setState({ realTimeGiEnabled: giEnabled, ssaoEnabled });
+        renderViewer();
+        const canvas = screen.getByTestId("viewer-canvas");
+        const sceneProps = SceneContainer.mock.calls.at(-1)[0];
+        const navigation = { enableGyroscope: jest.fn(), recenterGyroscope: jest.fn() };
+        sceneProps.navigationRef.current = navigation;
+        const initialSettings = SystemStore.getState().viewerDebugSettings;
+        const button = screen.getByRole("button", { name: "Bloom: Off" });
+        expect(button).toHaveAttribute("aria-expanded", "false");
+        fireEvent.click(button);
+        expect(SystemStore.getState().bloomEnabled).toBe(false);
+        expect(button).toHaveAttribute("aria-expanded", "true");
+        expect(screen.getByRole("region", { name: "Bloom" })).toHaveTextContent("before tone mapping");
+
+        for (const next of [true, false]) {
+            fireEvent.click(screen.getByRole("checkbox", { name: "Enable Bloom" }));
+            expect(SystemStore.getState()).toMatchObject({
+                bloomEnabled: next, realTimeGiEnabled: giEnabled, ssaoEnabled,
+                shadowsEnabled: true, canvasEnabled: true, forceDisableRender: false,
+            });
+            expect(SystemStore.getState().viewerDebugSettings).toBe(initialSettings);
+            expect(screen.getByRole("button", { name: `Bloom: ${next ? "On" : "Off"}` }))
+                .toHaveAttribute("aria-expanded", "true");
+            expect(screen.getByRole("checkbox", { name: "Enable Bloom" })).toHaveProperty("checked", next);
+            expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+            expect(SceneContainer.mock.calls.at(-1)[0].navigationRef).toBe(sceneProps.navigationRef);
+            expect(SceneContainer.mock.calls.at(-1)[0].navigationRef.current).toBe(navigation);
+            expect(SceneContainer.mock.calls.at(-1)[0].inputBlocked).toBe(false);
+        }
+        expect(navigation.enableGyroscope).not.toHaveBeenCalled();
+        expect(navigation.recenterGyroscope).not.toHaveBeenCalled();
+    }
+);
+
+test.each([[false, false], [false, true], [true, false], [true, true]])(
+    "shadows toggle independently when GI is %s and SSAO is %s without interrupting navigation",
+    (giEnabled, ssaoEnabled) => {
+        SystemStore.setState({ realTimeGiEnabled: giEnabled, ssaoEnabled });
+        renderViewer();
+        const canvas = screen.getByTestId("viewer-canvas");
+        const sceneProps = SceneContainer.mock.calls.at(-1)[0];
+        const navigation = { enableGyroscope: jest.fn(), recenterGyroscope: jest.fn() };
+        sceneProps.navigationRef.current = navigation;
+        const button = screen.getByRole("button", { name: "Shadows: On" });
+        expect(button).toHaveAttribute("aria-expanded", "false");
+        expect(button.closest('[data-viewer-control="true"]')).toBeInTheDocument();
+        expect(canvas).toHaveAttribute("data-shadows", "true");
+        expect(canvas).toHaveAttribute("data-shadow-type", String(PCFShadowMap));
+        fireEvent.click(button);
+
+        for (const next of [false, true]) {
+            fireEvent.click(screen.getByRole("checkbox", { name: "Enable Shadows" }));
+            expect(SystemStore.getState().shadowsEnabled).toBe(next);
+            expect(screen.getByRole("button", { name: `Shadows: ${next ? "On" : "Off"}` }))
+                .toHaveAttribute("aria-expanded", "true");
+            expect(screen.getByRole("checkbox", { name: "Enable Shadows" })).toHaveProperty("checked", next);
+            expect(canvas).toHaveAttribute("data-shadows", String(next));
+            expect(canvas).toHaveAttribute("data-shadow-type", String(PCFShadowMap));
+            expect(SystemStore.getState().realTimeGiEnabled).toBe(giEnabled);
+            expect(SystemStore.getState().ssaoEnabled).toBe(ssaoEnabled);
+            expect(SystemStore.getState().canvasEnabled).toBe(true);
+            expect(SystemStore.getState().forceDisableRender).toBe(false);
+            expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+            expect(SceneContainer.mock.calls.at(-1)[0].navigationRef).toBe(sceneProps.navigationRef);
+            expect(SceneContainer.mock.calls.at(-1)[0].navigationRef.current).toBe(navigation);
+            expect(SceneContainer.mock.calls.at(-1)[0].inputBlocked).toBe(false);
+        }
+        expect(navigation.enableGyroscope).not.toHaveBeenCalled();
+        expect(navigation.recenterGyroscope).not.toHaveBeenCalled();
+    }
+);
 
 test("desktop rendering hides fullscreen entry and motion controls", () => {
     Object.defineProperty(navigator, "maxTouchPoints", { value: 0 });
@@ -293,7 +453,7 @@ test("desktop rendering hides fullscreen entry and motion controls", () => {
     expect(navigation.recenterGyroscope).not.toHaveBeenCalled();
     expect(screen.queryByRole("button", { name: "Enter fullscreen" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Exit fullscreen" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Real-time GI: On" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Real-time GI: Off" })).toBeEnabled();
     expect(viewerRoot.requestFullscreen).not.toHaveBeenCalled();
     const hint = screen.getByText("Hide objects");
     const icon = screen.getByRole("img", { name: "Object visibility keyboard shortcut" });
@@ -305,7 +465,7 @@ test("desktop rendering hides fullscreen entry and motion controls", () => {
     expect(screen.queryByText("Q")).not.toBeInTheDocument();
     expect(hint.closest("button")).toBeEnabled();
     expect(screen.getByRole("group", { name: "Viewer controls" }))
-        .toBe(screen.getByRole("button", { name: "Real-time GI: On" }).previousElementSibling);
+        .toBe(screen.getByRole("button", { name: "Real-time GI: Off" }).previousElementSibling);
 });
 
 test("coarse-pointer devices retain fullscreen entry without touch-point reporting", () => {
@@ -356,20 +516,28 @@ test("desktop native fullscreen and Escape never add an X control", () => {
     expect(document.exitFullscreen).not.toHaveBeenCalled();
 });
 
-test("PVS debug button follows GI and toggles without changing lighting or canvas", () => {
+test("PVS debug button follows shadows and toggles without changing lighting or canvas", () => {
     renderViewer();
     const canvas = screen.getByTestId("viewer-canvas");
-    const giButton = screen.getByRole("button", { name: "Real-time GI: On" });
+    const giButton = screen.getByRole("button", { name: "Real-time GI: Off" });
+    const ssaoButton = screen.getByRole("button", { name: "SSAO: On" });
+    const shadowsButton = screen.getByRole("button", { name: "Shadows: On" });
     const debugButton = screen.getByRole("button", { name: "Show baked pvs" });
-    expect(giButton.nextElementSibling).toBe(debugButton);
-    expect(debugButton).toHaveAttribute("aria-pressed", "false");
+    expect(giButton.nextElementSibling).toBe(ssaoButton);
+    expect(ssaoButton.nextElementSibling).toBe(shadowsButton);
+    expect(shadowsButton.nextElementSibling).toBe(debugButton);
+    expect(debugButton).toHaveAttribute("aria-expanded", "false");
     expect(debugButton.closest('[data-viewer-control="true"]')).toBeInTheDocument();
     fireEvent.click(debugButton);
+    expect(SystemStore.getState().showBakedPvs).toBe(false);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Enable Baked PVS" }));
     expect(SystemStore.getState().showBakedPvs).toBe(true);
-    expect(screen.getByRole("button", { name: "Hide baked pvs" })).toHaveAttribute("aria-pressed", "true");
-    expect(SystemStore.getState().realTimeGiEnabled).toBe(true);
+    expect(screen.getByRole("button", { name: "Hide baked pvs" })).toHaveAttribute("aria-expanded", "true");
+    expect(SystemStore.getState().realTimeGiEnabled).toBe(false);
+    expect(SystemStore.getState().ssaoEnabled).toBe(true);
+    expect(SystemStore.getState().shadowsEnabled).toBe(true);
     expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
-    fireEvent.click(screen.getByRole("button", { name: "Hide baked pvs" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Enable Baked PVS" }));
     expect(SystemStore.getState().showBakedPvs).toBe(false);
     expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
 });
@@ -377,36 +545,547 @@ test("PVS debug button follows GI and toggles without changing lighting or canva
 test("anisotropic filtering toggles without changing lighting, DPR, or canvas", () => {
     renderViewer();
     const canvas = screen.getByTestId("viewer-canvas");
-    const button = screen.getByRole("button", { name: "Anisotropic filtering: Off" });
-    expect(button).toHaveAttribute("aria-pressed", "false");
+    const button = screen.getByRole("button", { name: "Anisotropic filtering: On" });
+    expect(button).toHaveAttribute("aria-expanded", "false");
     expect(button.closest('[data-viewer-control="true"]')).toBeInTheDocument();
     fireEvent.click(button);
     expect(SystemStore.getState().anisotropicFilteringEnabled).toBe(true);
-    expect(screen.getByRole("button", { name: "Anisotropic filtering: On" })).toHaveAttribute("aria-pressed", "true");
-    expect(SystemStore.getState().realTimeGiEnabled).toBe(true);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Enable Anisotropic filtering" }));
+    expect(SystemStore.getState().anisotropicFilteringEnabled).toBe(false);
+    expect(screen.getByRole("button", { name: "Anisotropic filtering: Off" })).toHaveAttribute("aria-expanded", "true");
+    expect(SystemStore.getState().realTimeGiEnabled).toBe(false);
     expect(SystemStore.getState().viewerDpr).toBe(1);
     expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
-    fireEvent.click(screen.getByRole("button", { name: "Anisotropic filtering: On" }));
-    expect(SystemStore.getState().anisotropicFilteringEnabled).toBe(false);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Enable Anisotropic filtering" }));
+    expect(SystemStore.getState().anisotropicFilteringEnabled).toBe(true);
     expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
 });
 
-test("DPR cycles through quality levels without replacing the canvas", () => {
+test("DPR slider changes quality without replacing the canvas", () => {
     renderViewer();
     const canvas = screen.getByTestId("viewer-canvas");
     expect(canvas).toHaveAttribute("data-dpr", "1");
-    for (const [current, next] of [[1, 1.25], [1.25, 1.5], [1.5, 2], [2, 1]]) {
-        const button = screen.getByRole("button", { name: `DPR: ${current}` });
-        expect(button.closest('[data-viewer-control="true"]')).toBeInTheDocument();
-        fireEvent.click(button);
+    const button = screen.getByRole("button", { name: "DPR: 1" });
+    expect(button.closest('[data-viewer-control="true"]')).toBeInTheDocument();
+    fireEvent.click(button);
+    expect(SystemStore.getState().viewerDpr).toBe(1);
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    for (const next of [0.5, 1.25, 1.5, 2, 1]) {
+        fireEvent.change(screen.getByRole("slider", { name: /Pixel ratio/ }), { target: { value: next } });
         expect(SystemStore.getState().viewerDpr).toBe(next);
         expect(screen.getByRole("button", { name: `DPR: ${next}` })).toBeEnabled();
         expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
         expect(canvas).toHaveAttribute("data-dpr", String(next));
     }
-    expect(SystemStore.getState().realTimeGiEnabled).toBe(true);
-    expect(SystemStore.getState().anisotropicFilteringEnabled).toBe(false);
+    expect(SystemStore.getState().realTimeGiEnabled).toBe(false);
+    expect(SystemStore.getState().anisotropicFilteringEnabled).toBe(true);
     expect(SystemStore.getState().canvasEnabled).toBe(true);
+});
+
+test("sun light color opens a picker, preserves edits, and resets only its color", () => {
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const initialSettings = { ...SystemStore.getState().viewerDebugSettings };
+    const button = screen.getByRole("button", { name: "Sun light color" });
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(button.closest('[data-viewer-control="true"]')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Sun light color/, { selector: "input" })).not.toBeInTheDocument();
+    fireEvent.click(button);
+    expect(screen.getByRole("region", { name: "Sun light color" })).toBeInTheDocument();
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    const picker = screen.getByLabelText(/Sun light color/, { selector: "input" });
+    expect(picker).toHaveAttribute("type", "color");
+    expect(picker).toHaveValue("#ffffff");
+    expect(screen.getByText("Auto")).toBeInTheDocument();
+    fireEvent.change(picker, { target: { value: "#ff8844" } });
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, sunLightColor: "#ff8844" });
+    expect(picker).toHaveValue("#ff8844");
+    expect(screen.getByText("#ff8844")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Close debug settings" }));
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    fireEvent.click(button);
+    expect(screen.getByLabelText(/Sun light color/, { selector: "input" })).toHaveValue("#ff8844");
+    expect(screen.getByText(/Reset restores the exported sun color/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Reset values" }));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual(initialSettings);
+    expect(screen.getByLabelText(/Sun light color/, { selector: "input" })).toHaveValue("#ffffff");
+    expect(screen.getByText("Auto")).toBeInTheDocument();
+    expect(SystemStore.getState()).toMatchObject({
+        realTimeGiEnabled: false, ssaoEnabled: true, shadowsEnabled: true,
+        anisotropicFilteringEnabled: true, viewerDpr: 1, canvasEnabled: true,
+    });
+    expect(SceneContainer.mock.calls.at(-1)[0].inputBlocked).toBe(false);
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+});
+
+test("sun orbit pauses at a chosen angle and resets independently", () => {
+    expect(SystemStore.getInitialState().viewerDebugSettings).toMatchObject({ sunOrbitPaused: true, sunOrbitAngle: null, sunOrbitAngleRevision: 0 });
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const initialSettings = { ...SystemStore.getState().viewerDebugSettings };
+    fireEvent.click(screen.getByRole("button", { name: "Sun orbit" }));
+    const panel = screen.getByRole("region", { name: "Sun orbit" });
+    const animate = screen.getByRole("checkbox", { name: "Animate sun orbit" });
+    const slider = screen.getByRole("slider", { name: /Sun orbit angle/ });
+    expect(animate).not.toBeChecked();
+    expect(slider).toHaveAttribute("min", "0");
+    expect(slider).toHaveAttribute("max", "360");
+    expect(slider).toHaveAttribute("step", "1");
+    expect(slider).toHaveAttribute("aria-valuetext", "0°");
+    expect(panel).toHaveTextContent("Play uses the exported orbit speed");
+    expect(panel).toHaveTextContent("not whether it passes through walls");
+    fireEvent.click(animate);
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, sunOrbitPaused: false });
+    fireEvent.click(animate);
+    expect(SystemStore.getState().viewerDebugSettings).toEqual(initialSettings);
+    for (const [index, angle] of [180, 360, 0, 73].entries()) {
+        fireEvent.change(slider, { target: { value: angle } });
+        expect(animate).not.toBeChecked();
+        expect(slider).toHaveAttribute("aria-valuetext", `${angle}°`);
+        expect(SystemStore.getState().viewerDebugSettings).toEqual({
+            ...initialSettings, sunOrbitAngle: angle, sunOrbitPaused: true, sunOrbitAngleRevision: index + 1,
+        });
+    }
+    fireEvent.click(animate);
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, sunOrbitAngle: 73, sunOrbitPaused: false, sunOrbitAngleRevision: 4 });
+    fireEvent.click(screen.getByRole("button", { name: "Reset values" }));
+    expect(animate).not.toBeChecked();
+    expect(slider).toHaveAttribute("aria-valuetext", "0°");
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, sunOrbitAngleRevision: 5 });
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+    expect(SceneContainer.mock.calls.at(-1)[0].inputBlocked).toBe(false);
+});
+
+test("repeated sun angle commands and resets remain distinct after animation", () => {
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    fireEvent.click(screen.getByRole("button", { name: "Sun orbit" }));
+    const slider = screen.getByRole("slider", { name: /Sun orbit angle/ });
+    const onSunOrbitAngleChange = SceneContainer.mock.calls.at(-1)[0].onSunOrbitAngleChange;
+    fireEvent.change(slider, { target: { value: 90 } });
+    expect(SystemStore.getState().viewerDebugSettings).toMatchObject({
+        sunOrbitAngle: 90, sunOrbitPaused: true, sunOrbitAngleRevision: 1,
+    });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Animate sun orbit" }));
+    act(() => onSunOrbitAngleChange(135));
+    expect(SystemStore.getState().viewerDebugSettings).toMatchObject({
+        sunOrbitAngle: 90, sunOrbitPaused: false, sunOrbitAngleRevision: 1,
+    });
+    fireEvent.change(slider, { target: { value: 90 } });
+    expect(SystemStore.getState().viewerDebugSettings).toMatchObject({
+        sunOrbitAngle: 90, sunOrbitPaused: true, sunOrbitAngleRevision: 2,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Reset values" }));
+    expect(SystemStore.getState().viewerDebugSettings).toMatchObject({
+        sunOrbitAngle: null, sunOrbitPaused: true, sunOrbitAngleRevision: 3,
+    });
+    act(() => onSunOrbitAngleChange(120));
+    fireEvent.click(screen.getByRole("button", { name: "Reset values" }));
+    expect(SystemStore.getState().viewerDebugSettings).toMatchObject({
+        sunOrbitAngle: null, sunOrbitPaused: true, sunOrbitAngleRevision: 4,
+    });
+    expect(slider).toHaveAttribute("aria-valuetext", "0°");
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+});
+
+test("live sun angles update the readout without writing animation into settings", () => {
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const initialSettings = SystemStore.getState().viewerDebugSettings;
+    const onSunOrbitAngleChange = SceneContainer.mock.calls.at(-1)[0].onSunOrbitAngleChange;
+    fireEvent.click(screen.getByRole("button", { name: "Sun orbit" }));
+    const slider = screen.getByRole("slider", { name: /Sun orbit angle/ });
+    act(() => onSunOrbitAngleChange(42.567));
+    expect(slider).toHaveValue("42.567");
+    expect(slider).toHaveAttribute("aria-valuetext", "42.6°");
+    expect(SystemStore.getState().viewerDebugSettings).toBe(initialSettings);
+    expect(SceneContainer.mock.calls.at(-1)[0].onSunOrbitAngleChange).toBe(onSunOrbitAngleChange);
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+});
+
+test("sun ray guides are enabled only while the sun orbit panel is visible", () => {
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const button = screen.getByRole("button", { name: "Sun orbit" });
+    expect(SceneContainer.mock.calls.at(-1)[0].showSunRays).toBe(false);
+    fireEvent.click(button);
+    expect(SceneContainer.mock.calls.at(-1)[0].showSunRays).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Shadows: On" }));
+    expect(SceneContainer.mock.calls.at(-1)[0].showSunRays).toBe(false);
+    fireEvent.click(button);
+    fireEvent.keyDown(screen.getByRole("slider", { name: /Sun orbit angle/ }), { key: "Escape" });
+    expect(SceneContainer.mock.calls.at(-1)[0].showSunRays).toBe(false);
+    fireEvent.click(button);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(SceneContainer.mock.calls.at(-1)[0].showSunRays).toBe(false);
+    fireEvent.click(button);
+    fireEvent.click(screen.getByRole("button", { name: "Close debug settings" }));
+    expect(SceneContainer.mock.calls.at(-1)[0].showSunRays).toBe(false);
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(SceneContainer.mock.calls.at(-1)[0].showSunRays).toBe(false);
+    fireEvent.click(button);
+    act(() => SystemStore.setState({ tutorialClosed: false }));
+    expect(SceneContainer.mock.calls.at(-1)[0].showSunRays).toBe(false);
+    expect(screen.queryByRole("region", { name: "Sun orbit" })).not.toBeInTheDocument();
+    act(() => SystemStore.setState({ tutorialClosed: true }));
+    expect(SceneContainer.mock.calls.at(-1)[0].showSunRays).toBe(true);
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+});
+
+test("sun orbit controls isolate gameplay keys and pointer gestures", () => {
+    renderViewer();
+    fireEvent.click(screen.getByRole("button", { name: "Sun orbit" }));
+    const keyboard = jest.fn();
+    const pointer = jest.fn();
+    window.addEventListener("keydown", keyboard);
+    window.addEventListener("pointerdown", pointer);
+    const slider = screen.getByRole("slider", { name: /Sun orbit angle/ });
+    fireEvent.keyDown(slider, { key: "a", code: "KeyA" });
+    fireEvent.pointerDown(slider, { pointerId: 1 });
+    expect(keyboard).not.toHaveBeenCalled();
+    expect(pointer).not.toHaveBeenCalled();
+    expect(SystemStore.getState().isMouseDown).toBe(false);
+    fireEvent.keyDown(slider, { key: "Escape" });
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    window.removeEventListener("keydown", keyboard);
+    window.removeEventListener("pointerdown", pointer);
+});
+
+test("day night starts static and prepares environments only when opened", () => {
+    expect(SystemStore.getInitialState()).toMatchObject({
+        anisotropicFilteringEnabled: true,
+        viewerDebugSettings: { anisotropy: 8, sunOrbitPaused: true, dayNightDuration: 3, dayNightAction: null, dayNightCommand: 0 },
+    });
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const initialSettings = SystemStore.getState().viewerDebugSettings;
+    expect(SceneContainer.mock.calls.at(-1)[0].showDayNightSettings).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Day / night" }));
+    expect(SceneContainer.mock.calls.at(-1)[0]).toMatchObject({ showDayNightSettings: true, showSunRays: true });
+    expect(screen.getByRole("region", { name: "Day / night" })).toHaveTextContent("morning → noon → afternoon → sunset → dusk → evening → night");
+    expect(screen.getByRole("status", { name: "Day night status" })).toHaveTextContent("Preparing night environment");
+    expect(screen.getByRole("button", { name: "Play day to night" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Play night to day" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Resume" })).toBeDisabled();
+    expect(screen.getByRole("slider", { name: /Time of day/ })).toBeDisabled();
+    expect(SystemStore.getState().viewerDebugSettings).toBe(initialSettings);
+    expect(SceneContainer.mock.calls.at(-1)[0].inputBlocked).toBe(false);
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+});
+
+test("day night commands play, pause, resume and reset without remounting", () => {
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const initialSettings = SystemStore.getState().viewerDebugSettings;
+    const onDayNightStatusChange = SceneContainer.mock.calls.at(-1)[0].onDayNightStatusChange;
+    fireEvent.click(screen.getByRole("button", { name: "Day / night" }));
+    act(() => onDayNightStatusChange({ ready: true, active: false, playing: false, progress: 0, stage: "Exported lighting", error: null }));
+    expect(screen.getByRole("button", { name: "Play day to night" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Play day to night" }));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, dayNightAction: "play", dayNightCommand: 1 });
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: true, progress: 25, stage: "Noon", error: null }));
+    expect(screen.getByRole("status", { name: "Day night status" })).toHaveTextContent("Noon · 25%");
+    fireEvent.click(screen.getByRole("button", { name: "Pause" }));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, dayNightAction: "pause", dayNightCommand: 2 });
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: false, progress: 25, stage: "Noon", error: null }));
+    fireEvent.click(screen.getByRole("button", { name: "Resume" }));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, dayNightAction: "resume", dayNightCommand: 3 });
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: false, progress: 100, stage: "Night", error: null }));
+    expect(screen.getByRole("button", { name: "Resume" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Reset daylight" }));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, dayNightAction: "reset", dayNightCommand: 4 });
+    fireEvent.click(screen.getByRole("button", { name: "Reset daylight" }));
+    expect(SystemStore.getState().viewerDebugSettings.dayNightCommand).toBe(5);
+    expect(SceneContainer.mock.calls.at(-1)[0].onDayNightStatusChange).toBe(onDayNightStatusChange);
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+});
+
+test("day night direction changes continue from the current time", () => {
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const initialSettings = SystemStore.getState().viewerDebugSettings;
+    const onDayNightStatusChange = SceneContainer.mock.calls.at(-1)[0].onDayNightStatusChange;
+    fireEvent.click(screen.getByRole("button", { name: "Day / night" }));
+    act(() => onDayNightStatusChange({ ready: true, active: false, playing: false, progress: 0, playbackDirection: 1, stage: "Exported lighting", error: null }));
+    expect(screen.getByRole("button", { name: "Play night to day" })).toBeDisabled();
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: true, progress: 65, playbackDirection: 1, stage: "Sunset", error: null }));
+    fireEvent.click(screen.getByRole("button", { name: "Play night to day" }));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, dayNightAction: "reverse", dayNightCommand: 1 });
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: true, progress: 60, playbackDirection: -1, stage: "Afternoon", error: null }));
+    expect(screen.getByRole("slider", { name: /Time of day/ })).toHaveValue("60");
+    fireEvent.click(screen.getByRole("button", { name: "Pause" }));
+    expect(SystemStore.getState().viewerDebugSettings).toMatchObject({ dayNightAction: "pause", dayNightCommand: 2 });
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: false, progress: 60, playbackDirection: -1, stage: "Afternoon", error: null }));
+    fireEvent.click(screen.getByRole("button", { name: "Resume" }));
+    expect(SystemStore.getState().viewerDebugSettings).toMatchObject({ dayNightAction: "resume", dayNightCommand: 3 });
+    fireEvent.click(screen.getByRole("button", { name: "Play day to night" }));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, dayNightAction: "play", dayNightCommand: 4 });
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+});
+
+test("day night endpoint buttons respect the playback direction", () => {
+    renderViewer();
+    fireEvent.click(screen.getByRole("button", { name: "Day / night" }));
+    const onDayNightStatusChange = SceneContainer.mock.calls.at(-1)[0].onDayNightStatusChange;
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: false, progress: 100, playbackDirection: 1, stage: "Night", error: null }));
+    expect(screen.getByRole("button", { name: "Play day to night" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Play night to day" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Resume" })).toBeDisabled();
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: false, progress: 100, playbackDirection: -1, stage: "Night", error: null }));
+    expect(screen.getByRole("button", { name: "Resume" })).toBeEnabled();
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: false, progress: 0, playbackDirection: -1, stage: "Morning", error: null }));
+    expect(screen.getByRole("button", { name: "Play day to night" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Play night to day" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Resume" })).toBeDisabled();
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: false, progress: 0, playbackDirection: 1, stage: "Morning", error: null }));
+    expect(screen.getByRole("button", { name: "Resume" })).toBeEnabled();
+});
+
+test("day night progress scrubs immediately and receives live progress locally", () => {
+    renderViewer();
+    fireEvent.click(screen.getByRole("button", { name: "Day / night" }));
+    const onDayNightStatusChange = SceneContainer.mock.calls.at(-1)[0].onDayNightStatusChange;
+    act(() => onDayNightStatusChange({ ready: true, active: false, playing: false, progress: 0, stage: "Exported lighting", error: null }));
+    const slider = screen.getByRole("slider", { name: /Time of day/ });
+    expect(slider).toHaveAttribute("min", "0");
+    expect(slider).toHaveAttribute("max", "100");
+    fireEvent.change(slider, { target: { value: 75 } });
+    expect(slider).toHaveValue("75");
+    expect(SystemStore.getState().viewerDebugSettings).toMatchObject({ dayNightAction: "preview", dayNightProgress: 75, dayNightCommand: 1 });
+    const settings = SystemStore.getState().viewerDebugSettings;
+    act(() => onDayNightStatusChange({ ready: true, active: true, playing: true, progress: 85.5, stage: "Evening", error: null }));
+    expect(slider).toHaveValue("85.5");
+    expect(slider).toHaveAttribute("aria-valuetext", "86%");
+    expect(SystemStore.getState().viewerDebugSettings).toBe(settings);
+});
+
+test.each([
+    ["Transition duration", "dayNightDuration", 3, 12, 2, 30],
+    ["Maximum sun elevation", "dayNightMaxElevation", 60, 75, 10, 85],
+    ["Sun path azimuth", "dayNightAzimuth", 0, -45, -180, 180],
+    ["Sun strength", "dayNightSunStrength", 1, 1.5, 0, 3],
+    ["Day environment brightness", "dayNightDayBrightness", 0.35, 0.7, 0, 2],
+    ["Night environment brightness", "dayNightNightBrightness", 0.12, 0.2, 0, 1],
+    ["Night sky brightness", "dayNightNightSkyBrightness", 0.15, 0.3, 0, 1],
+])("day night %s configures without launching and resets independently", (label, key, initial, next, min, max) => {
+    renderViewer();
+    const initialSettings = SystemStore.getState().viewerDebugSettings;
+    fireEvent.click(screen.getByRole("button", { name: "Day / night" }));
+    const slider = screen.getByRole("slider", { name: new RegExp(label) });
+    expect(slider).toHaveValue(String(initial));
+    expect(slider).toHaveAttribute("min", String(min));
+    expect(slider).toHaveAttribute("max", String(max));
+    fireEvent.change(slider, { target: { value: next } });
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, [key]: next });
+    fireEvent.click(screen.getByRole("button", { name: "Reset values" }));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, dayNightAction: "reset", dayNightCommand: 1 });
+    fireEvent.click(screen.getByRole("button", { name: "Reset values" }));
+    expect(SystemStore.getState().viewerDebugSettings.dayNightCommand).toBe(2);
+});
+
+test("day night failure preserves fallback controls and closing disables guides", () => {
+    renderViewer();
+    fireEvent.click(screen.getByRole("button", { name: "Day / night" }));
+    const onDayNightStatusChange = SceneContainer.mock.calls.at(-1)[0].onDayNightStatusChange;
+    act(() => onDayNightStatusChange({ ready: false, active: false, playing: false, progress: 0, stage: "Exported lighting", error: "HDR download failed" }));
+    expect(screen.getByRole("status", { name: "Day night status" })).toHaveTextContent("Night environment unavailable: HDR download failed");
+    expect(screen.getByRole("button", { name: "Play day to night" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Reset daylight" })).toBeEnabled();
+    const keyboard = jest.fn();
+    const pointer = jest.fn();
+    window.addEventListener("keydown", keyboard);
+    window.addEventListener("pointerdown", pointer);
+    const slider = screen.getByRole("slider", { name: /Transition duration/ });
+    fireEvent.keyDown(slider, { key: "a", code: "KeyA" });
+    fireEvent.pointerDown(slider, { pointerId: 1 });
+    expect(keyboard).not.toHaveBeenCalled();
+    expect(pointer).not.toHaveBeenCalled();
+    fireEvent.keyDown(slider, { key: "Escape" });
+    expect(screen.queryByRole("region", { name: "Day / night" })).not.toBeInTheDocument();
+    expect(SceneContainer.mock.calls.at(-1)[0]).toMatchObject({ showSunRays: false, showDayNightSettings: false });
+    window.removeEventListener("keydown", keyboard);
+    window.removeEventListener("pointerdown", pointer);
+});
+
+test("day night panel waits for tutorial dismissal without issuing animation commands", () => {
+    renderViewer();
+    fireEvent.click(screen.getByRole("button", { name: "Day / night" }));
+    act(() => SystemStore.setState({ tutorialClosed: false }));
+    expect(SceneContainer.mock.calls.at(-1)[0]).toMatchObject({ showSunRays: false, showDayNightSettings: false });
+    expect(screen.queryByRole("region", { name: "Day / night" })).not.toBeInTheDocument();
+    expect(SystemStore.getState().viewerDebugSettings).toMatchObject({ dayNightAction: null, dayNightCommand: 0, sunOrbitPaused: true });
+});
+
+test("sun light color isolates gameplay keys and pointer gestures", () => {
+    renderViewer();
+    fireEvent.click(screen.getByRole("button", { name: "Sun light color" }));
+    const keyboard = jest.fn();
+    const pointer = jest.fn();
+    window.addEventListener("keydown", keyboard);
+    window.addEventListener("keyup", keyboard);
+    window.addEventListener("pointerdown", pointer);
+    const picker = screen.getByLabelText(/Sun light color/, { selector: "input" });
+    fireEvent.keyDown(picker, { key: "a", code: "KeyA" });
+    fireEvent.keyUp(picker, { key: "a", code: "KeyA" });
+    fireEvent.pointerDown(picker, { pointerId: 1 });
+    expect(keyboard).not.toHaveBeenCalled();
+    expect(pointer).not.toHaveBeenCalled();
+    expect(SystemStore.getState().isMouseDown).toBe(false);
+    fireEvent.keyDown(picker, { key: "Escape" });
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    window.removeEventListener("keydown", keyboard);
+    window.removeEventListener("keyup", keyboard);
+    window.removeEventListener("pointerdown", pointer);
+});
+
+test("only the selected debug menu opens and closing preserves values", () => {
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const gi = screen.getByRole("button", { name: "Real-time GI: Off" });
+    const ssao = screen.getByRole("button", { name: "SSAO: On" });
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    fireEvent.click(gi);
+    expect(screen.getByRole("region", { name: "Real-time GI" })).toHaveAttribute("id", gi.getAttribute("aria-controls"));
+    fireEvent.change(screen.getByRole("slider", { name: /GI strength/ }), { target: { value: 1.2 } });
+    fireEvent.click(ssao);
+    expect(screen.getAllByRole("region")).toHaveLength(1);
+    expect(screen.getByRole("region", { name: "SSAO" })).toBeInTheDocument();
+    expect(gi).toHaveAttribute("aria-expanded", "false");
+    expect(ssao).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(ssao);
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    fireEvent.click(gi);
+    expect(screen.getByRole("slider", { name: /GI strength/ })).toHaveValue("1.2");
+    fireEvent.click(screen.getByRole("button", { name: "Close debug settings" }));
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    fireEvent.click(gi);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    expect(SystemStore.getState().viewerDebugSettings.giIntensity).toBe(1.2);
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+    expect(SceneContainer.mock.calls.at(-1)[0].inputBlocked).toBe(false);
+});
+
+test.each([
+    ["Real-time GI: Off", "GI strength", "giIntensity", "1.25", 1.25, 0.7],
+    ["Real-time GI: Off", "GI resolution", "giResolutionScale", "0.5", 0.5, null],
+    ["SSAO: On", "SSAO strength", "ssaoIntensity", "1.2", 1.2, 2],
+    ["SSAO: On", "SSAO radius", "ssaoRadius", "0.3", 0.3, 0.05],
+    ["SSAO: On", "SSAO bias", "ssaoBias", "0.013", 0.013, 0.014],
+    ["SSAO: On", "SSAO samples", "ssaoSamples", "31", 31, 49],
+    ["SSAO: On", "SSAO resolution", "ssaoResolutionScale", "0.75", 0.75, 0.5],
+    ["Bloom: Off", "Bloom strength", "bloomIntensity", "1.5", 1.5, 0.5],
+    ["Bloom: Off", "Bloom threshold", "bloomThreshold", "1.25", 1.25, 2],
+    ["Bloom: Off", "Bloom smoothing", "bloomSmoothing", "0.4", 0.4, 0.2],
+    ["Bloom: Off", "Bloom radius", "bloomRadius", "0.8", 0.8, 0.5],
+    ["Bloom: Off", "Bloom resolution", "bloomResolutionScale", "0.75", 0.75, 0.5],
+    ["Shadows: On", "Shadow depth bias", "shadowBias", "-0.0005", -0.0005, null],
+    ["Shadows: On", "Shadow normal bias", "shadowNormalBias", "0.025", 0.025, null],
+    ["Shadows: On", "Shadow map resolution", "shadowMapSize", "3", 4096, null],
+    ["Shadows: On", "Shadow softness", "shadowSoftness", "4.5", 4.5, 2],
+    ["Shadows: On", "Sun shadow coverage", "shadowCoverage", "60", 60, 100],
+    ["Show baked pvs", "PVS debug opacity", "pvsOpacity", "0.3", 0.3, 0.65],
+    ["Anisotropic filtering: On", "Anisotropic samples", "anisotropy", "12", 12, 8],
+])("%s updates %s live and resets only that panel", (button, label, key, input, expected, reset) => {
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const initialSettings = { ...SystemStore.getState().viewerDebugSettings };
+    fireEvent.click(screen.getByRole("button", { name: button }));
+    const slider = screen.getByRole("slider", { name: new RegExp(label) });
+    expect(slider).toHaveAttribute("aria-valuetext", reset == null ? "Auto" : expect.stringContaining(String(reset)));
+    fireEvent.change(slider, { target: { value: input } });
+    expect(SystemStore.getState().viewerDebugSettings[key]).toBe(expected);
+    expect(slider).toHaveAttribute("aria-valuetext", expect.stringContaining(String(expected)));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, [key]: expected });
+    fireEvent.click(screen.getByRole("button", { name: "Reset values" }));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual(initialSettings);
+    expect(slider).toHaveAttribute("aria-valuetext", reset == null ? "Auto" : expect.stringContaining(String(reset)));
+    expect(SystemStore.getState().canvasEnabled).toBe(true);
+    expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+});
+
+test("shadow softness supports hard edges and wider penumbrae", () => {
+    expect(SystemStore.getInitialState().viewerDebugSettings.shadowSoftness).toBe(2);
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    fireEvent.click(screen.getByRole("button", { name: "Shadows: On" }));
+    const slider = screen.getByRole("slider", { name: /Shadow softness/ });
+    expect(slider).toHaveAttribute("min", "0");
+    expect(slider).toHaveAttribute("max", "8");
+    expect(slider).toHaveAttribute("step", "0.1");
+    expect(slider).toHaveAttribute("aria-valuetext", "2°");
+    for (const softness of [0, 8]) {
+        fireEvent.change(slider, { target: { value: softness } });
+        expect(SystemStore.getState().viewerDebugSettings.shadowSoftness).toBe(softness);
+        expect(SystemStore.getState().shadowsEnabled).toBe(true);
+        expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+        expect(canvas).toHaveAttribute("data-shadow-type", String(PCFShadowMap));
+    }
+});
+
+test("sun shadow coverage adjusts live without recreating the canvas", () => {
+    expect(SystemStore.getInitialState().viewerDebugSettings.shadowCoverage).toBe(100);
+    renderViewer();
+    const canvas = screen.getByTestId("viewer-canvas");
+    const initialSettings = { ...SystemStore.getState().viewerDebugSettings };
+    fireEvent.click(screen.getByRole("button", { name: "Shadows: On" }));
+    const panel = screen.getByRole("region", { name: "Shadows" });
+    const slider = screen.getByRole("slider", { name: /Sun shadow coverage/ });
+    expect(slider).toHaveAttribute("min", "10");
+    expect(slider).toHaveAttribute("max", "200");
+    expect(slider).toHaveAttribute("step", "5");
+    expect(slider).toHaveAttribute("aria-valuetext", "100%");
+    expect(panel).toHaveTextContent("Smaller coverage narrows the shadow camera's width and height");
+    for (const coverage of [10, 200]) {
+        fireEvent.change(slider, { target: { value: coverage } });
+        expect(SystemStore.getState().viewerDebugSettings).toEqual({ ...initialSettings, shadowCoverage: coverage });
+        expect(slider).toHaveAttribute("aria-valuetext", `${coverage}%`);
+        expect(SystemStore.getState().shadowsEnabled).toBe(true);
+        expect(screen.getByTestId("viewer-canvas")).toBe(canvas);
+        expect(canvas).toHaveAttribute("data-shadow-type", String(PCFShadowMap));
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Reset values" }));
+    expect(SystemStore.getState().viewerDebugSettings).toEqual(initialSettings);
+    expect(slider).toHaveAttribute("aria-valuetext", "100%");
+});
+
+test("DPR reset restores the original pixel ratio", () => {
+    renderViewer();
+    fireEvent.click(screen.getByRole("button", { name: "DPR: 1" }));
+    fireEvent.change(screen.getByRole("slider", { name: /Pixel ratio/ }), { target: { value: 2 } });
+    fireEvent.click(screen.getByRole("button", { name: "Reset values" }));
+    expect(SystemStore.getState().viewerDpr).toBe(1);
+    expect(screen.getByRole("slider", { name: /Pixel ratio/ })).toHaveValue("1");
+});
+
+test("debug sliders isolate gameplay keys and pointer gestures", () => {
+    renderViewer();
+    fireEvent.click(screen.getByRole("button", { name: "SSAO: On" }));
+    const keyboard = jest.fn();
+    const pointer = jest.fn();
+    window.addEventListener("keydown", keyboard);
+    window.addEventListener("keyup", keyboard);
+    window.addEventListener("pointerdown", pointer);
+    const slider = screen.getByRole("slider", { name: /SSAO radius/ });
+    slider.focus();
+    fireEvent.keyDown(slider, { key: "w", code: "KeyW" });
+    fireEvent.keyUp(slider, { key: "w", code: "KeyW" });
+    fireEvent.keyDown(slider, { key: "a", code: "KeyA" });
+    fireEvent.pointerDown(slider, { pointerId: 1 });
+    const arrow = new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true });
+    fireEvent(slider, arrow);
+    expect(arrow.defaultPrevented).toBe(false);
+    expect(keyboard).not.toHaveBeenCalled();
+    expect(pointer).not.toHaveBeenCalled();
+    expect(SystemStore.getState().isMouseDown).toBe(false);
+    expect(SceneContainer.mock.calls.at(-1)[0].inputBlocked).toBe(false);
+    fireEvent.keyDown(slider, { key: "Escape" });
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    window.removeEventListener("keydown", keyboard);
+    window.removeEventListener("keyup", keyboard);
+    window.removeEventListener("pointerdown", pointer);
 });
 
 test("motion permission is requested directly from its dedicated button", () => {
@@ -465,7 +1144,7 @@ test("page entry blocks scene controls until desktop dismissal finishes", () => 
         inputBlocked: true, azertyMode: false, hideObjectsKey: "q",
     });
     expect(screen.queryByRole("group", { name: "Viewer controls" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Real-time GI: On" }).parentElement)
+    expect(screen.getByRole("button", { name: "Real-time GI: Off" }).parentElement)
         .toHaveAttribute("inert");
     const sceneKeydown = jest.fn();
     window.addEventListener("keydown", sceneKeydown);

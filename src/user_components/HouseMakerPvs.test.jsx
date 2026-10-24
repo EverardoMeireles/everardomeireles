@@ -5,6 +5,7 @@ import React, { StrictMode } from "react";
 import { fireEvent } from "@testing-library/react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { createPvsController } from "http://localhost/models/pvs-scene.pvs.mjs";
 import { HouseMakerLoader } from "./HouseMakerLoader.jsx";
 
@@ -14,6 +15,7 @@ jest.mock("@react-three/fiber", () => ({
     useThree: jest.fn(() => ({ capabilities: { getMaxAnisotropy: () => 1 } }))
 }));
 jest.mock("three/examples/jsm/loaders/GLTFLoader.js", () => ({ GLTFLoader: function GLTFLoader() {} }));
+jest.mock("three/examples/jsm/loaders/KTX2Loader.js", () => ({ KTX2Loader: function KTX2Loader() {} }));
 jest.mock("three/examples/jsm/utils/BufferGeometryUtils.js", () => ({ mergeGeometries: jest.fn() }));
 jest.mock("./HouseMakerTourPlayer.jsx", () => ({ HouseMakerTourPlayer: () => null }));
 jest.mock("http://localhost/models/pvs-scene.pvs.mjs", () => ({
@@ -98,6 +100,26 @@ describe("HouseMaker baked visibility", () => {
 
     beforeEach(() => {
         fixtures = makeFixtures();
+        mergeGeometries.mockReset();
+        mergeGeometries.mockImplementation((geometries) => {
+            const merged = new THREE.BufferGeometry();
+            for (const name of Object.keys(geometries[0].attributes)) {
+                const attribute = geometries[0].getAttribute(name);
+                merged.setAttribute(name, new THREE.Float32BufferAttribute(
+                    geometries.flatMap((geometry) => Array.from(geometry.getAttribute(name).array)),
+                    attribute.itemSize
+                ));
+            }
+            const indices = [];
+            let vertexOffset = 0;
+            for (const geometry of geometries) {
+                const offset = vertexOffset;
+                indices.push(...Array.from(geometry.index.array, (index) => index + offset));
+                vertexOffset += geometry.attributes.position.count;
+            }
+            merged.setIndex(indices);
+            return merged;
+        });
         useFrame.mockClear();
         createPvsController.mockClear();
         createPvsController.mockImplementation((options) => (
@@ -154,11 +176,354 @@ describe("HouseMaker baked visibility", () => {
     // Execute actual callbacks around an observable camera draw.
     function cameraDraw(mesh) {
         renderer.info.render.frame += 1;
+        prepareCameraDraw();
         mesh.onBeforeRender(renderer, store.getState().scene, camera, mesh.geometry, mesh.material, null);
         const count = mesh.geometry.drawRange.count;
         mesh.onAfterRender(renderer, store.getState().scene, camera, mesh.geometry, mesh.material, null);
         return count;
     }
+
+    // Prepare visibility before Three uploads instance buffer attributes.
+    function prepareCameraDraw() {
+        const callbacks = [...useFrame.mock.calls].sort((first, second) => (first[1] ?? 0) - (second[1] ?? 0));
+        callbacks.forEach(([callback]) => callback({ camera }, 0));
+    }
+
+    // Share one prototype across listed and unlisted logical instances.
+    function addInstanceFixtures({ halfMesh = false, multipleParts = false } = {}) {
+        const prototype = new THREE.Group();
+        prototype.name = "chair-prototype";
+        for (let index = 0; index < (multipleParts ? 2 : 1); index += 1) {
+            const geometry = new THREE.BoxGeometry(1, 1, 1).translate(0.5, 0, 0);
+            const part = new THREE.Mesh(geometry, fixtures.material);
+            part.name = `chair-part-${index}`;
+            part.position.y = index * 0.25;
+            part.castShadow = true;
+            part.receiveShadow = true;
+            part.userData.housemaker_atlas_type = "object";
+            if (halfMesh) {
+                part.userData.halfMesh = {
+                    uvMode: "reuse",
+                    mirrorPlane: { point: [0, 0, 0], normal: [1, 0, 0] }
+                };
+            }
+            prototype.add(part);
+        }
+        const prototypeScene = new THREE.Scene();
+        prototypeScene.add(prototype);
+        fixtures.gltf.scenes.push(prototypeScene);
+        fixtures.manifest.instanceGroups = [{
+            sourceNodeName: prototype.name,
+            halfMesh,
+            instances: [
+                { id: "chair-a", worldMatrix: new THREE.Matrix4().makeTranslation(-2, 0, 0).toArray() },
+                { id: "chair-b", worldMatrix: new THREE.Matrix4().makeTranslation(2, 0, 0).toArray() },
+                { id: "chair-unlisted", worldMatrix: new THREE.Matrix4().makeTranslation(8, 0, 0).toArray() }
+            ]
+        }];
+        fixtures.manifest.visibility.clusters[0].instanceIds = ["chair-a"];
+        fixtures.manifest.visibility.clusters[1].instanceIds = ["chair-b"];
+        return prototype;
+    }
+
+    // Observe submitted instances, then restore their collision/shadow state.
+    function instanceDraw(mesh) {
+        renderer.info.render.frame += 1;
+        prepareCameraDraw();
+        mesh.onBeforeRender(renderer, store.getState().scene, camera, mesh.geometry, mesh.material, null);
+        const count = mesh.count;
+        const matrices = Array.from({ length: count }, (_, index) => {
+            const matrix = new THREE.Matrix4();
+            mesh.getMatrixAt(index, matrix);
+            return matrix.toArray();
+        });
+        mesh.onAfterRender(renderer, store.getState().scene, camera, mesh.geometry, mesh.material, null);
+        return { count, matrices };
+    }
+
+    test.each([false, true])("culls logical instances independently with halfMesh=%s", async (halfMesh) => {
+        addInstanceFixtures({ halfMesh, multipleParts: true });
+        const sceneRoot = await mountLoader();
+        const meshes = sceneRoot.children.filter((node) => node.isInstancedMesh);
+        expect(meshes).toHaveLength(2);
+        expect(createPvsController.mock.calls[0][0].setInstanceVisible).toEqual(expect.any(Function));
+        for (const mesh of meshes) {
+            const sourceAttribute = mesh.instanceMatrix;
+            const sourceMatrices = Array.from(sourceAttribute.array);
+            const version = sourceAttribute.version;
+            const material = mesh.material;
+            const uv = mesh.geometry.attributes.uv.array.slice();
+            expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([-2, 8]);
+            expect(mesh.instanceMatrix).toBe(sourceAttribute);
+            expect(Array.from(mesh.instanceMatrix.array)).toEqual(sourceMatrices);
+            expect(mesh.instanceMatrix.version).toBe(version);
+            expect(mesh.count).toBe(3);
+            expect(mesh.visible).toBe(true);
+            expect(mesh.castShadow).toBe(true);
+            expect(mesh.receiveShadow).toBe(true);
+            expect(mesh.material).toBe(material);
+            expect(mesh.geometry.attributes.uv.array).toEqual(uv);
+            mesh.geometry.computeBoundingBox();
+            expect(mesh.geometry.attributes.position.count).toBe(halfMesh ? 48 : 24);
+            expect(mesh.geometry.boundingBox.min.x).toBeCloseTo(halfMesh ? -1 : 0);
+            expect(mesh.geometry.boundingBox.max.x).toBeCloseTo(1);
+        }
+        camera.position.x = 2;
+        for (const mesh of meshes) {
+            expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([2, 8]);
+        }
+        camera.position.x = 0;
+        for (const mesh of meshes) expect(instanceDraw(mesh).count).toBe(3);
+        camera.position.x = 100;
+        for (const mesh of meshes) expect(instanceDraw(mesh).count).toBe(3);
+        expect(mergeGeometries).toHaveBeenCalledTimes(halfMesh ? 2 : 0);
+    });
+
+    test.each([false, true])("preserves logical IDs in mixed nighttime halfMesh=%s batches", async (halfMesh) => {
+        const prototype = addInstanceFixtures({ halfMesh, multipleParts: true });
+        const sourceDisposers = prototype.children.map((mesh) => jest.spyOn(mesh.geometry, "dispose"));
+        fixtures.manifest.objectLights = [{
+            id: "chair-a:light", objectId: "chair-a", type: "point", position: [-2, 1, 0],
+            color: "#ffffff", intensity: 2, rangeMeters: 8, castShadow: true
+        }];
+        fixtures.manifest.directionalLights = [{
+            id: "sun", position: [0, 12, 0], target: [2, 0, 0],
+            color: "#ffffff", intensity: 2.7, castShadow: true
+        }];
+        const environment = { current: { ready: true, prepare: jest.fn(), update: jest.fn(), reset: jest.fn() } };
+        const sceneRoot = await mountLoader({
+            shadowsEnabled: true, dayNightEnvironment: environment,
+            dayNightSettings: { dayNightAction: "preview", dayNightCommand: 1, dayNightProgress: 100 }
+        });
+        const meshes = sceneRoot.children.filter((node) => node.isInstancedMesh);
+        const lit = meshes.filter((mesh) => mesh.userData.housemakerKeepWhenLit);
+        const unlit = meshes.filter((mesh) => !mesh.userData.housemakerKeepWhenLit);
+        const mergedDisposers = mergeGeometries.mock.results.map(({value}) => jest.spyOn(value, "dispose"));
+        expect(meshes).toHaveLength(4);
+        expect(lit).toHaveLength(2);
+        expect(unlit).toHaveLength(2);
+        expect(sceneRoot.userData.housemakerNightFactor).toBe(1);
+        lit.forEach((mesh) => {
+            expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([-2]);
+            expect(mesh.count).toBe(1);
+        });
+        unlit.forEach((mesh) => {
+            expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([8]);
+            expect(mesh.count).toBe(2);
+        });
+        camera.position.x = 2;
+        lit.forEach((mesh) => expect(instanceDraw(mesh).count).toBe(0));
+        unlit.forEach((mesh) => expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([2, 8]));
+        const controller = createPvsController.mock.results[0].value;
+        controller.setEnabled(false);
+        lit.forEach((mesh) => expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([-2]));
+        unlit.forEach((mesh) => expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([2, 8]));
+        meshes.forEach((mesh) => {
+            expect(mesh.geometry.attributes.position.count).toBe(halfMesh ? 48 : 24);
+            expect(mesh.castShadow).toBe(true);
+            expect(mesh.receiveShadow).toBe(true);
+        });
+        await nativeFiber.act(async () => root.render(null));
+        expect(mergedDisposers).toHaveLength(halfMesh ? 2 : 0);
+        mergedDisposers.forEach((dispose) => expect(dispose).toHaveBeenCalledTimes(1));
+        sourceDisposers.forEach((dispose) => expect(dispose).not.toHaveBeenCalled());
+    });
+
+    test("instance culling preserves manual visibility and object hiding", async () => {
+        addInstanceFixtures();
+        const sceneRoot = await mountLoader();
+        const mesh = sceneRoot.children.find((node) => node.isInstancedMesh);
+        const matrixAttribute = mesh.instanceMatrix;
+        const matrices = Array.from(matrixAttribute.array);
+        expect(instanceDraw(mesh).count).toBe(2);
+        mesh.visible = false;
+        camera.position.x = 2;
+        instanceDraw(mesh);
+        expect(mesh.visible).toBe(false);
+        mesh.visible = true;
+        fireEvent.keyDown(window, { key: "a" });
+        const fade = useFrame.mock.calls[useFrame.mock.calls.length - 1][0];
+        fade({}, 1);
+        expect(mesh.visible).toBe(false);
+        camera.position.x = -2;
+        instanceDraw(mesh);
+        expect(mesh.visible).toBe(false);
+        fireEvent.keyDown(window, { key: "a" });
+        fade({}, 1);
+        expect(mesh.visible).toBe(true);
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([-2, 8]);
+        expect(mesh.instanceMatrix).toBe(matrixAttribute);
+        expect(Array.from(matrixAttribute.array)).toEqual(matrices);
+        expect(mesh.count).toBe(3);
+    });
+
+    test("skips a fully hidden batch without removing shadow or collision instances", async () => {
+        addInstanceFixtures();
+        fixtures.manifest.instanceGroups[0].instances.pop();
+        fixtures.manifest.visibility.cells.push({
+            id: "empty-room",
+            min: [10, 0, -5],
+            max: [15, 5, 5],
+            visibleClusterIds: []
+        });
+        const sceneRoot = await mountLoader();
+        const mesh = sceneRoot.children.find((node) => node.isInstancedMesh);
+        const matrixAttribute = mesh.instanceMatrix;
+        const matrices = Array.from(matrixAttribute.array);
+        camera.position.x = 12;
+        expect(instanceDraw(mesh).count).toBe(0);
+        expect(mesh.visible).toBe(true);
+        expect(mesh.castShadow).toBe(true);
+        expect(mesh.count).toBe(2);
+        expect(mesh.instanceMatrix).toBe(matrixAttribute);
+        expect(Array.from(matrixAttribute.array)).toEqual(matrices);
+        camera.position.x = -2;
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([-2]);
+    });
+
+    test("restores instance buffers when a draw is interrupted", async () => {
+        addInstanceFixtures({ halfMesh: true });
+        const sceneRoot = await mountLoader();
+        const mesh = sceneRoot.children.find((node) => node.isInstancedMesh);
+        const matrixAttribute = mesh.instanceMatrix;
+        const matrices = Array.from(matrixAttribute.array);
+        const beforeShadow = mesh.onBeforeShadow;
+        const afterShadow = mesh.onAfterShadow;
+        renderer.info.render.frame += 1;
+        prepareCameraDraw();
+        mesh.onBeforeRender(renderer, store.getState().scene, camera, mesh.geometry, mesh.material, null);
+        expect(mesh.count).toBe(2);
+        const restoreFrame = useFrame.mock.calls.find(([, priority]) => priority === -1000)[0];
+        restoreFrame();
+        expect(mesh.count).toBe(3);
+        expect(mesh.instanceMatrix).toBe(matrixAttribute);
+        expect(Array.from(mesh.instanceMatrix.array)).toEqual(matrices);
+        expect(mesh.onBeforeShadow).toBe(beforeShadow);
+        expect(mesh.onAfterShadow).toBe(afterShadow);
+    });
+
+    test("disabled and disposed PVS restores every logical instance", async () => {
+        addInstanceFixtures();
+        const sceneRoot = await mountLoader();
+        const mesh = sceneRoot.children.find((node) => node.isInstancedMesh);
+        const controller = createPvsController.mock.results[0].value;
+        expect(instanceDraw(mesh).count).toBe(2);
+        controller.setEnabled(false);
+        expect(instanceDraw(mesh).count).toBe(3);
+        controller.setEnabled(true);
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([-2, 8]);
+        camera.position.x = 2;
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([2, 8]);
+        controller.dispose();
+        expect(instanceDraw(mesh).count).toBe(3);
+        expect(mesh.count).toBe(3);
+    });
+
+    test("preserves explicit instance visibility when PVS is disabled and disposed", async () => {
+        addInstanceFixtures();
+        const sceneRoot = await mountLoader();
+        const mesh = sceneRoot.children.find((node) => node.isInstancedMesh);
+        const controller = createPvsController.mock.results[0].value;
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([-2, 8]);
+        controller.setInstanceVisible("chair-a", false);
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([8]);
+        camera.position.x = 2;
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([2, 8]);
+        camera.position.x = -2;
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([8]);
+        controller.setEnabled(false);
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([2, 8]);
+        controller.dispose();
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([2, 8]);
+        expect(mesh.visible).toBe(true);
+        expect(mesh.count).toBe(3);
+    });
+
+    test("releases only the owned instance wrapper during cleanup", async () => {
+        const prototype = addInstanceFixtures();
+        const sourceGeometry = prototype.children[0].geometry;
+        const sourceGeometryDispose = jest.spyOn(sourceGeometry, "dispose");
+        const sourceMaterialDispose = jest.spyOn(fixtures.material, "dispose");
+        const sceneRoot = await mountLoader();
+        const mesh = sceneRoot.children.find((node) => node.isInstancedMesh);
+        const wrapper = mesh.geometry;
+        const wrapperDispose = jest.spyOn(wrapper, "dispose");
+        const matrixAttribute = mesh.instanceMatrix;
+        expect(wrapper).not.toBe(sourceGeometry);
+        expect(wrapper.attributes.position).toBe(sourceGeometry.attributes.position);
+        expect(wrapper.attributes.uv).toBe(sourceGeometry.attributes.uv);
+        expect(wrapper.index).toBe(sourceGeometry.index);
+        expect(instanceDraw(mesh).count).toBe(2);
+        await nativeFiber.act(async () => root.render(null));
+        expect(mesh.geometry).toBe(sourceGeometry);
+        expect(mesh.instanceMatrix).toBe(matrixAttribute);
+        expect(mesh.count).toBe(3);
+        expect(wrapperDispose).toHaveBeenCalledTimes(1);
+        expect(sourceGeometryDispose).not.toHaveBeenCalled();
+        expect(sourceMaterialDispose).not.toHaveBeenCalled();
+    });
+
+    test("instance callbacks survive rerenders and detach on unmount", async () => {
+        addInstanceFixtures({ halfMesh: true, multipleParts: true });
+        const sceneRoot = await mountLoader({}, true);
+        const meshes = sceneRoot.children.filter((node) => node.isInstancedMesh);
+        const callbacks = meshes.map((mesh) => mesh.onBeforeRender);
+        for (const mesh of meshes) expect(instanceDraw(mesh).count).toBe(2);
+        await mountLoader({}, true);
+        expect(createPvsController).toHaveBeenCalledTimes(1);
+        meshes.forEach((mesh, index) => expect(mesh.onBeforeRender).toBe(callbacks[index]));
+        const attribute = meshes[0].instanceMatrix;
+        renderer.info.render.frame += 1;
+        meshes[0].onBeforeRender(renderer, store.getState().scene, camera, meshes[0].geometry, meshes[0].material, null);
+        expect(meshes[0].count).toBe(2);
+        await nativeFiber.act(async () => root.render(null));
+        expect(meshes[0].instanceMatrix).toBe(attribute);
+        for (const mesh of meshes) {
+            expect(mesh.count).toBe(3);
+            expect(mesh.onBeforeRender).toBe(THREE.Object3D.prototype.onBeforeRender);
+            expect(mesh.onAfterRender).toBe(THREE.Object3D.prototype.onAfterRender);
+        }
+    });
+
+    test("keeps instance visibility independent across loaders sharing prototypes", async () => {
+        addInstanceFixtures();
+        await nativeFiber.act(async () => {
+            store = root.render(<>
+                <HouseMakerLoader key="first" toursEnabled={false} />
+                <HouseMakerLoader key="second" toursEnabled={false} position={[20, 0, 0]} />
+            </>);
+        });
+        const [firstRoot, secondRoot] = store.getState().scene.children;
+        const first = firstRoot.children.find((node) => node.isInstancedMesh);
+        const second = secondRoot.children.find((node) => node.isInstancedMesh);
+        expect(first.geometry.attributes.position).toBe(second.geometry.attributes.position);
+        expect(first.geometry.index).toBe(second.geometry.index);
+        expect(first.instanceMatrix).not.toBe(second.instanceMatrix);
+        expect(instanceDraw(first).matrices.map((matrix) => matrix[12])).toEqual([-2, 8]);
+        expect(instanceDraw(second).count).toBe(3);
+        camera.position.x = 18;
+        expect(instanceDraw(first).count).toBe(3);
+        expect(instanceDraw(second).matrices.map((matrix) => matrix[12])).toEqual([-2, 8]);
+        await nativeFiber.act(async () => {
+            root.render(<HouseMakerLoader key="second" toursEnabled={false} position={[20, 0, 0]} />);
+        });
+        expect(first.onBeforeRender).toBe(THREE.Object3D.prototype.onBeforeRender);
+        expect(instanceDraw(second).count).toBe(2);
+        expect(second.count).toBe(3);
+    });
+
+    test.each(["missing", "invalid", "mismatched"])("keeps instances visible with %s PVS", async (kind) => {
+        addInstanceFixtures({ halfMesh: true });
+        if (kind === "missing") delete fixtures.manifest.visibility;
+        if (kind === "invalid") fixtures.manifest.visibility.clusters[1].instanceIds = ["chair-a"];
+        if (kind === "mismatched") fixtures.manifest.visibility.glbSha256 = "0".repeat(64);
+        const sceneRoot = await mountLoader();
+        const mesh = sceneRoot.children.find((node) => node.isInstancedMesh);
+        expect(instanceDraw(mesh).matrices.map((matrix) => matrix[12])).toEqual([-2, 2, 8]);
+        expect(mesh.visible).toBe(true);
+        expect(mesh.count).toBe(3);
+        expect(mesh.onBeforeRender).toBe(THREE.Object3D.prototype.onBeforeRender);
+    });
 
     test("verifies loaded bytes without another GLB fetch", async () => {
         const sceneRoot = await mountLoader();
@@ -389,6 +754,28 @@ describe("HouseMaker baked visibility", () => {
         expect(intersections).toEqual([]);
         expect(cameraDraw(sceneRoot.getObjectByName("cluster-b"))).toBe(0);
         expect(fixtures.sourceScene.children).toHaveLength(4);
+    });
+
+    test("tunes debug opacity without rebuilding geometry or culling", async () => {
+        const sceneRoot = await mountLoader({ showBakedPvs: true });
+        const lines = sceneRoot.getObjectByName("HouseMaker baked PVS");
+        const geometry = lines.geometry;
+        const material = lines.material;
+        const disposeGeometry = jest.spyOn(geometry, "dispose");
+        const controllerCount = createPvsController.mock.calls.length;
+        expect(material.opacity).toBe(0.65);
+        await mountLoader({ showBakedPvs: true, pvsDebugOpacity: 0.2 });
+        expect(sceneRoot.getObjectByName("HouseMaker baked PVS")).toBe(lines);
+        expect(lines.material).toBe(material);
+        expect(lines.geometry).toBe(geometry);
+        expect(material.opacity).toBe(0.2);
+        expect(disposeGeometry).not.toHaveBeenCalled();
+        expect(createPvsController).toHaveBeenCalledTimes(controllerCount);
+        expect(cameraDraw(sceneRoot.getObjectByName("cluster-b"))).toBe(0);
+        await mountLoader({ showBakedPvs: true, pvsDebugOpacity: 3 });
+        expect(material.opacity).toBe(1);
+        await mountLoader({ showBakedPvs: true });
+        expect(material.opacity).toBe(0.65);
     });
 
     test("highlights current debug cells and unions shared boundaries", async () => {

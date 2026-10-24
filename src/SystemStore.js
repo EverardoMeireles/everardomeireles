@@ -41,18 +41,70 @@ const SystemStore = create((set) => ({
   setR3fPerfEnabled: (enabled) => set(() => ({ r3fPerfEnabled: enabled })),
 
   // Compare live indirect lighting without disabling contact shading.
-  realTimeGiEnabled: true,
+  realTimeGiEnabled: false,
   setRealTimeGiEnabled: (enabled) => set(() => ({ realTimeGiEnabled: enabled })),
+
+  // Toggle contact shading independently of indirect lighting.
+  ssaoEnabled: true,
+  setSsaoEnabled: (enabled) => set(() => ({ ssaoEnabled: enabled })),
+
+  // Test emissive glow without changing authored material properties.
+  bloomEnabled: false,
+  setBloomEnabled: (enabled) => set(() => ({ bloomEnabled: enabled })),
+
+  // Compare shadow maps without changing authored shadow settings.
+  shadowsEnabled: true,
+  setShadowsEnabled: (enabled) => set(() => ({ shadowsEnabled: enabled })),
 
   // Visualize baked visibility cells without changing runtime culling.
   showBakedPvs: false,
   setShowBakedPvs: (visible) => set(() => ({ showBakedPvs: visible })),
 
   // Keep image quality controls independent of lighting and navigation.
-  anisotropicFilteringEnabled: false,
+  anisotropicFilteringEnabled: true,
   setAnisotropicFilteringEnabled: (enabled) => set(() => ({ anisotropicFilteringEnabled: enabled })),
   viewerDpr: 1,
   setViewerDpr: (dpr) => set(() => ({ viewerDpr: dpr })),
+
+  // Preserve automatic quality defaults until sliders override them.
+  viewerDebugSettings: {
+    giIntensity: 0.7,
+    giResolutionScale: null,
+    ssaoIntensity: 2,
+    ssaoRadius: 0.05,
+    ssaoBias: 0.014,
+    ssaoSamples: 49,
+    ssaoResolutionScale: 0.5,
+    bloomIntensity: 0.5,
+    bloomThreshold: 2,
+    bloomSmoothing: 0.2,
+    bloomRadius: 0.5,
+    bloomResolutionScale: 0.5,
+    shadowBias: null,
+    shadowNormalBias: null,
+    shadowMapSize: null,
+    shadowSoftness: 2,
+    shadowCoverage: 100,
+    sunLightColor: null,
+    sunOrbitPaused: true,
+    sunOrbitAngle: null,
+    sunOrbitAngleRevision: 0,
+    dayNightDuration: 3,
+    dayNightMaxElevation: 60,
+    dayNightAzimuth: 0,
+    dayNightSunStrength: 1,
+    dayNightDayBrightness: 0.35,
+    dayNightNightBrightness: 0.12,
+    dayNightNightSkyBrightness: 0.15,
+    dayNightProgress: 0,
+    dayNightAction: null,
+    dayNightCommand: 0,
+    anisotropy: 8,
+    pvsOpacity: 0.65,
+  },
+  setViewerDebugSettings: (settings) => set((state) => ({
+    viewerDebugSettings: { ...state.viewerDebugSettings, ...settings },
+  })),
 
   currentCameraMovements: { zoom: true, pan: true, rotate: true },
   setcurrentCameraMovements: (cameraMovements) => set(() => ({ currentCameraMovements: cameraMovements })),

@@ -40,8 +40,8 @@ export const FirstPersonController = React.memo((props) => {
     // Usage: true, false, or "auto"
     const { azertyMode = "auto" } = props;
     const { collisionsEnabled = true } = props;
-    const { maxStepHeight = 5.65 } = props;
-    const { minStepHeight = 0.1 } = props;
+    const { maxStepHeight = 1.65 } = props;
+    const { minStepHeight = 0.5 } = props;
     const { climbHeightOffset = 0 } = props;
     const { slowDownWhileFalling = true } = props;
     const { slowDownWhileFallingSpeedMultiplier = 0.5 } = props;
@@ -83,6 +83,7 @@ export const FirstPersonController = React.memo((props) => {
     const gyroscopeStatusCallbackRef = useRef(onGyroscopeStatusChange);
     gyroscopeStatusCallbackRef.current = onGyroscopeStatusChange;
     const collisionGroupsRef = useRef([]);
+    const collisionReadyRef = useRef(false);
     const capsuleRef = useRef(new Capsule());
     const velocityRef = useRef(new THREE.Vector3());
     const yawRef = useRef(rotation[1] ?? 0);
@@ -157,7 +158,8 @@ export const FirstPersonController = React.memo((props) => {
         let nearestHit = null;
 
         for (const group of collisionGroupsRef.current) {
-            if (group.root?.userData.housemakerObjectsHidden === true) {
+            if (group.root?.userData.housemakerObjectsHidden === true
+                && !(group.keepWhenLit && group.root.userData.housemakerNightFactor > 0)) {
                 continue;
             }
 
@@ -566,121 +568,198 @@ export const FirstPersonController = React.memo((props) => {
     useEffect(() => {
         if (!collisionsEnabled) {
             collisionGroupsRef.current = [];
+            collisionReadyRef.current = true;
             return;
         }
 
         let cancelled = false;
         let frameId = 0;
+        let taskId = 0;
+        let build = null;
+        let pendingSnapshot = null;
+        let completedSnapshot = null;
+        collisionReadyRef.current = false;
 
-        // Build a triangle octree from visible scene meshes.
-        const buildCollisionWorld = () => {
-            if (cancelled) {
-                return;
-            }
-            const groups = new Map();
-            // Reuse matrices while expanding instanced collision geometry.
-            const instanceMatrix = new THREE.Matrix4();
-            const instanceWorldMatrix = new THREE.Matrix4();
-
-            // Add one geometry copy using its world transform.
-            const addGeometryTriangles = (positionAttribute, worldMatrix, octree) => {
-                for (let index = 0; index <= positionAttribute.count - 3; index += 3) {
-                    const a = new THREE.Vector3()
-                        .fromBufferAttribute(positionAttribute, index)
-                        .applyMatrix4(worldMatrix);
-                    const b = new THREE.Vector3()
-                        .fromBufferAttribute(positionAttribute, index + 1)
-                        .applyMatrix4(worldMatrix);
-                    const c = new THREE.Vector3()
-                        .fromBufferAttribute(positionAttribute, index + 2)
-                        .applyMatrix4(worldMatrix);
-
-                    octree.addTriangle(new THREE.Triangle(a, b, c));
-                }
-            };
-
+        // Snapshot collider topology, ignoring lights, materials, and camera churn.
+        function collectCollisionMeshes() {
+            const meshes = [];
             scene.updateMatrixWorld(true);
-
             scene.traverse((object) => {
-                if (!object.isMesh || !object.geometry) {
-                    return;
-                }
-                if (!object.visible && object.userData.housemakerHideable !== true) {
-                    return;
-                }
-
+                if (!object.isMesh || !object.geometry) return;
+                if (!object.visible && object.userData.housemakerHideable !== true) return;
                 let visibilityRoot = null;
                 let parent = object.parent;
                 while (parent) {
-                    if (parent === controllerRef.current) {
-                        return;
-                    }
-                    if (
-                        object.userData.housemakerHideable === true &&
-                        visibilityRoot === null &&
-                        typeof parent.userData.housemakerObjectsHidden === "boolean"
-                    ) {
+                    if (parent === controllerRef.current) return;
+                    if (object.userData.housemakerHideable === true && visibilityRoot === null
+                        && typeof parent.userData.housemakerObjectsHidden === "boolean") {
                         visibilityRoot = parent;
                     }
                     parent = parent.parent;
                 }
+                const geometry = object.geometry;
+                const position = geometry.getAttribute?.("position");
+                if (!position || position.count < 3) return;
+                meshes.push({
+                    object, geometry, position, index: geometry.index, root: visibilityRoot,
+                    keepWhenLit: object.userData.housemakerKeepWhenLit === true,
+                    positionVersion: position.data?.version ?? position.version,
+                    positionCount: position.count,
+                    indexVersion: geometry.index?.version,
+                    indexCount: geometry.index?.count,
+                    instanceAttribute: object.instanceMatrix,
+                    instanceVersion: object.instanceMatrix?.version,
+                    count: object.isInstancedMesh ? object.count : 1,
+                    matrix: object.matrixWorld.clone(),
+                });
+            });
+            return meshes;
+        }
 
-                let geometry = object.geometry;
-                let tempGeometry = null;
+        // Reuse completed worlds when only non-collider scene content changes.
+        function sameCollisionMeshes(first, second) {
+            return first?.length === second?.length && first.every((entry, index) => {
+                const other = second[index];
+                return entry.object === other.object && entry.geometry === other.geometry
+                    && entry.position === other.position && entry.index === other.index
+                    && entry.root === other.root && entry.keepWhenLit === other.keepWhenLit
+                    && entry.positionVersion === other.positionVersion
+                    && entry.positionCount === other.positionCount && entry.indexVersion === other.indexVersion
+                    && entry.indexCount === other.indexCount && entry.count === other.count
+                    && entry.instanceAttribute === other.instanceAttribute
+                    && entry.instanceVersion === other.instanceVersion && entry.matrix.equals(other.matrix);
+            });
+        }
 
-                if (geometry.index) {
-                    tempGeometry = geometry.toNonIndexed();
-                    geometry = tempGeometry;
-                }
-
-                const positionAttribute = geometry.getAttribute?.("position");
-                if (!positionAttribute || positionAttribute.count < 3) {
-                    if (tempGeometry) {
-                        tempGeometry.dispose();
-                    }
-                    return;
-                }
-
-                // Partition once; toggling only skips the associated group.
-                if (!groups.has(visibilityRoot)) {
-                    groups.set(visibilityRoot, {
+        // Yield during extraction and subdivision, not just between meshes.
+        function* buildCollisionWorld(meshes) {
+            const groups = new Map();
+            const fixtureGroups = new Map();
+            const instanceMatrix = new THREE.Matrix4();
+            const worldMatrix = new THREE.Matrix4();
+            let trianglesAdded = 0;
+            for (const mesh of meshes) {
+                const { object, position, index, root: visibilityRoot, keepWhenLit } = mesh;
+                // Keep illuminated fixtures independent of hidden neighboring objects.
+                const visibilityGroups = keepWhenLit ? fixtureGroups : groups;
+                if (!visibilityGroups.has(visibilityRoot)) {
+                    visibilityGroups.set(visibilityRoot, {
                         root: visibilityRoot,
+                        keepWhenLit,
                         meshes: [],
                         octree: new Octree(),
-                        hidden: visibilityRoot?.userData.housemakerObjectsHidden === true,
+                        hidden: visibilityRoot?.userData.housemakerObjectsHidden === true
+                            && !(keepWhenLit && visibilityRoot.userData.housemakerNightFactor > 0),
                     });
                 }
-                const group = groups.get(visibilityRoot);
-
-                if (object.isInstancedMesh) {
-                    // Expand each instance only inside the collision octree.
-                    for (let instanceIndex = 0; instanceIndex < object.count; instanceIndex += 1) {
+                const group = visibilityGroups.get(visibilityRoot);
+                const count = index?.count ?? position.count;
+                for (let instanceIndex = 0; instanceIndex < mesh.count; instanceIndex += 1) {
+                    if (object.isInstancedMesh) {
                         object.getMatrixAt(instanceIndex, instanceMatrix);
-                        instanceWorldMatrix.multiplyMatrices(object.matrixWorld, instanceMatrix);
-                        addGeometryTriangles(positionAttribute, instanceWorldMatrix, group.octree);
+                        worldMatrix.multiplyMatrices(mesh.matrix, instanceMatrix);
+                    } else {
+                        worldMatrix.copy(mesh.matrix);
                     }
-                } else {
-                    addGeometryTriangles(positionAttribute, object.matrixWorld, group.octree);
+                    for (let offset = 0; offset <= count - 3; offset += 3) {
+                        const a = new THREE.Vector3().fromBufferAttribute(position, index ? index.getX(offset) : offset).applyMatrix4(worldMatrix);
+                        const b = new THREE.Vector3().fromBufferAttribute(position, index ? index.getX(offset + 1) : offset + 1).applyMatrix4(worldMatrix);
+                        const c = new THREE.Vector3().fromBufferAttribute(position, index ? index.getX(offset + 2) : offset + 2).applyMatrix4(worldMatrix);
+                        group.octree.addTriangle(new THREE.Triangle(a, b, c));
+                        if (++trianglesAdded % 128 === 0) yield;
+                    }
                 }
-
-                if (tempGeometry) {
-                    tempGeometry.dispose();
-                }
-
                 group.meshes.push(object);
-            });
-
-            collisionGroupsRef.current = [...groups.values()];
-            for (const group of collisionGroupsRef.current) {
-                group.octree = group.octree.triangles.length > 0 ? group.octree.build() : undefined;
             }
-        };
 
-        // Rebuild when root scene content changes.
-        const scheduleCollisionBuild = () => {
+            // Bound the broad phase; leaf collisions still use exact triangles.
+            const halfSize = new THREE.Vector3();
+            const offset = new THREE.Vector3();
+            let trianglesSplit = 0;
+            const collisionGroups = [...groups.values(), ...fixtureGroups.values()];
+            for (const group of collisionGroups) {
+                const octree = group.octree;
+                if (octree.triangles.length === 0) {
+                    group.octree = undefined;
+                    continue;
+                }
+                octree.calcBox();
+                const nodes = [{ tree: octree, depth: 0 }];
+                while (nodes.length > 0) {
+                    const { tree, depth } = nodes.pop();
+                    halfSize.copy(tree.box.max).sub(tree.box.min).multiplyScalar(0.5);
+                    if (depth > 0 && (tree.triangles.length <= 32 || depth >= 8
+                        || Math.max(halfSize.x, halfSize.y, halfSize.z) * 2 <= capsuleRadius)) continue;
+                    const children = [];
+                    for (let x = 0; x < 2; x += 1) {
+                        for (let y = 0; y < 2; y += 1) {
+                            for (let z = 0; z < 2; z += 1) {
+                                const box = new THREE.Box3();
+                                box.min.copy(tree.box.min).add(offset.set(x, y, z).multiply(halfSize));
+                                box.max.copy(box.min).add(halfSize);
+                                children.push(new Octree(box));
+                            }
+                        }
+                    }
+                    while (tree.triangles.length > 0) {
+                        const triangle = tree.triangles.pop();
+                        children.forEach((child) => {
+                            if (child.box.intersectsTriangle(triangle)) child.triangles.push(triangle);
+                        });
+                        if (++trianglesSplit % 32 === 0) yield;
+                    }
+                    tree.subTrees = children.filter((child) => child.triangles.length > 0);
+                    for (let index = tree.subTrees.length - 1; index >= 0; index -= 1) {
+                        nodes.push({ tree: tree.subTrees[index], depth: depth + 1 });
+                    }
+                    yield;
+                }
+            }
+            return collisionGroups;
+        }
+
+        // Publish complete worlds atomically while retaining previous collisions.
+        function runBuildSlice() {
+            taskId = 0;
+            if (cancelled || !build) return;
+            const startedAt = performance.now();
+            let steps = 0;
+            do {
+                const result = build.next();
+                if (result.done) {
+                    if (!sameCollisionMeshes(pendingSnapshot, collectCollisionMeshes())) {
+                        build = null;
+                        pendingSnapshot = null;
+                        scheduleCollisionBuild();
+                        return;
+                    }
+                    collisionGroupsRef.current = result.value;
+                    collisionReadyRef.current = true;
+                    completedSnapshot = pendingSnapshot;
+                    pendingSnapshot = null;
+                    build = null;
+                    return;
+                }
+                steps += 1;
+            } while (steps < 32 && performance.now() - startedAt < 3);
+            taskId = setTimeout(runBuildSlice, 0);
+        }
+
+        // Debounce scene events and skip unchanged collider snapshots.
+        function scheduleCollisionBuild() {
             cancelAnimationFrame(frameId);
-            frameId = requestAnimationFrame(buildCollisionWorld);
-        };
+            frameId = requestAnimationFrame(() => {
+                frameId = 0;
+                if (cancelled) return;
+                const meshes = collectCollisionMeshes();
+                if (sameCollisionMeshes(meshes, pendingSnapshot ?? completedSnapshot)) return;
+                clearTimeout(taskId);
+                pendingSnapshot = meshes;
+                build = buildCollisionWorld(meshes);
+                if (collisionGroupsRef.current.length === 0) collisionReadyRef.current = false;
+                taskId = setTimeout(runBuildSlice, 0);
+            });
+        }
 
         scene.addEventListener("childadded", scheduleCollisionBuild);
         scene.addEventListener("childremoved", scheduleCollisionBuild);
@@ -689,9 +768,12 @@ export const FirstPersonController = React.memo((props) => {
         return () => {
             cancelled = true;
             cancelAnimationFrame(frameId);
+            clearTimeout(taskId);
+            build = null;
             scene.removeEventListener("childadded", scheduleCollisionBuild);
             scene.removeEventListener("childremoved", scheduleCollisionBuild);
             collisionGroupsRef.current = [];
+            collisionReadyRef.current = false;
         };
     }, [scene, collisionsEnabled]);
 
@@ -1215,7 +1297,8 @@ export const FirstPersonController = React.memo((props) => {
 
         // Cancel climbing when its supporting objects become hidden.
         for (const group of collisionGroupsRef.current) {
-            const hidden = group.root?.userData.housemakerObjectsHidden === true;
+            const hidden = group.root?.userData.housemakerObjectsHidden === true
+                && !(group.keepWhenLit && group.root.userData.housemakerNightFactor > 0);
             if (hidden && !group.hidden) {
                 climbTargetRef.current = null;
             }
@@ -1227,6 +1310,12 @@ export const FirstPersonController = React.memo((props) => {
         pitchGroupRef.current.position.set(0, eyeHeight, 0);
         pitchGroupRef.current.rotation.x = pitchRef.current;
         cameraRef.current.up.copy(upAxis);
+
+        // Keep looking responsive while the first collision world prepares.
+        if (collisionsEnabled && !collisionReadyRef.current) {
+            velocityRef.current.set(0, 0, 0);
+            return;
+        }
 
         // Build world-space movement directions from yaw.
         forwardDirection.set(0, 0, -1).applyQuaternion(yawGroupRef.current.quaternion);

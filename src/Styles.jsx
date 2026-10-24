@@ -71,6 +71,35 @@ export const HudMenuStyles = {
     arrowStyle : arrowStyle
 }
 
+// Fit debug controls within either viewport orientation.
+export const ViewerDebugStyles = {
+    panel: {
+        position: "absolute",
+        bottom: "max(12px, env(safe-area-inset-bottom))",
+        left: "max(12px, env(safe-area-inset-left))",
+        zIndex: 100001,
+        width: "min(340px, calc(100% - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)))",
+        maxHeight: "min(62%, calc(100% - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)))",
+        padding: "16px",
+        overflowY: "auto",
+        overscrollBehavior: "contain",
+        border: "1px solid #687680",
+        borderRadius: "10px",
+        background: "rgba(24, 31, 36, 0.97)",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.35)",
+        color: "#fff",
+        fontFamily: "Arial, sans-serif",
+        fontSize: "14px",
+        touchAction: "pan-y",
+    },
+    header: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", marginBottom: "12px" },
+    title: { margin: 0, fontSize: "18px", lineHeight: 1.3 },
+    enable: { display: "flex", alignItems: "center", gap: "8px", minHeight: "36px", marginBottom: "10px" },
+    control: { marginBottom: "14px" },
+    label: { display: "flex", justifyContent: "space-between", gap: "12px", marginBottom: "6px" },
+    hint: { color: "#bdc9d0", fontSize: "12px", lineHeight: 1.5 },
+};
+
 // Keep tutorial layouts consistent across viewport orientations.
 export const TutorialStyles = {
     overlay: {

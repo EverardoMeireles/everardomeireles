@@ -1,0 +1,4323 @@
+{
+  "format": "housemaker-standard-benchmark-route",
+  "version": 1,
+  "id": "l2-ground-v1",
+  "levelIndex": 2,
+  "coordinateSystem": "gltf-y-up",
+  "positionSpace": "floor",
+  "floorY": 0.6019445894142892,
+  "eyeHeightMeters": 1.7,
+  "source": {
+    "manifest": "public/models/housemaker_export.json",
+    "glb": "public/models/housemaker_export.glb",
+    "manifestSha256": "0d437925532bb1b3ab817f2bf42e19dd77ae6af35b13e54e27dc7781c6910b45",
+    "glbSha256": "ff892f07b4362b297b69b9e083e487548de325e17877110082e581e3315525bc"
+  },
+  "policy": {
+    "speedMetersPerSecond": 1.5,
+    "panoramaSecondsPerRoom": 4,
+    "gridSizeMeters": 0.2,
+    "validationSweepStepMeters": 0.05,
+    "capsuleRadiusMeters": 0.35,
+    "capsuleHeightMeters": 2.05,
+    "maximumCoverageDistanceMeters": 4,
+    "interComponentRelocation": "teleport; exclude relocation and stabilization frames from timing"
+  },
+  "summary": {
+    "exportedRoomCount": 15,
+    "benchmarkedRoomCount": 15,
+    "componentCount": 9,
+    "checkpointCount": 59,
+    "pathDistanceMeters": 337.1565484948976,
+    "estimatedTimedDurationSeconds": 284.7710323299317,
+    "walkableSampleCount": 14179,
+    "benchmarkedSampleCount": 13338,
+    "excludedSampleCount": 841,
+    "exactTriangleCount": 53064,
+    "capsuleRelevantTriangleCount": 12440,
+    "validatedSegmentSampleCount": 6894,
+    "maximumGraphDistanceToRouteMeters": 3.8627416997969526
+  },
+  "limitations": [
+    "The route measures deterministic camera traversal, not first-person controller physics.",
+    "Seven exported rooms are disconnected from the authored start at this capsule size; independent subroutes do not imply a walkable connection.",
+    "Unassigned disconnected floor slivers and isolated pockets smaller than 0.96 square meters are excluded, not assumed accessible.",
+    "Walkability is sampled at 0.2 meters; every movement segment is rechecked against exact collision triangles at intervals no larger than 0.05 meters.",
+    "The decorative Book.glb instances at world Y=75 are outside the ground-floor capsule and do not affect route validation."
+  ],
+  "excludedRegions": [
+    {
+      "id": "excluded-1",
+      "sampledAreaSquareMeters": 4.440000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          15.4,
+          0.6019445894142892,
+          0.7999999999999972
+        ],
+        "max": [
+          16,
+          0.6019445894142892,
+          6.399999999999999
+        ]
+      }
+    },
+    {
+      "id": "excluded-2",
+      "sampledAreaSquareMeters": 3.8400000000000007,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -3,
+          0.6019445894142892,
+          -9.200000000000003
+        ],
+        "max": [
+          -2.1999999999999993,
+          0.6019445894142892,
+          -5.400000000000002
+        ]
+      }
+    },
+    {
+      "id": "excluded-3",
+      "sampledAreaSquareMeters": 2.6400000000000006,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          2.200000000000001,
+          0.6019445894142892,
+          15.8
+        ],
+        "max": [
+          5.6,
+          0.6019445894142892,
+          16.400000000000002
+        ]
+      }
+    },
+    {
+      "id": "excluded-4",
+      "sampledAreaSquareMeters": 2.2800000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -1.799999999999999,
+          0.6019445894142892,
+          -6.000000000000002
+        ],
+        "max": [
+          1.799999999999999,
+          0.6019445894142892,
+          -5.600000000000001
+        ]
+      }
+    },
+    {
+      "id": "excluded-5",
+      "sampledAreaSquareMeters": 2.2000000000000006,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          6.000000000000002,
+          0.6019445894142892,
+          5.800000000000001
+        ],
+        "max": [
+          11.6,
+          0.6019445894142892,
+          6
+        ]
+      }
+    },
+    {
+      "id": "excluded-6",
+      "sampledAreaSquareMeters": 2.1200000000000006,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          12.000000000000002,
+          0.6019445894142892,
+          6.599999999999998
+        ],
+        "max": [
+          12.6,
+          0.6019445894142892,
+          9.2
+        ]
+      }
+    },
+    {
+      "id": "excluded-7",
+      "sampledAreaSquareMeters": 1.6000000000000003,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -0.1999999999999993,
+          0.6019445894142892,
+          15.8
+        ],
+        "max": [
+          1.5999999999999996,
+          0.6019445894142892,
+          16.400000000000002
+        ]
+      }
+    },
+    {
+      "id": "excluded-8",
+      "sampledAreaSquareMeters": 1.4000000000000004,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          3.8000000000000025,
+          0.6019445894142892,
+          -6.000000000000002
+        ],
+        "max": [
+          6.200000000000001,
+          0.6019445894142892,
+          -5.600000000000001
+        ]
+      }
+    },
+    {
+      "id": "excluded-9",
+      "sampledAreaSquareMeters": 1.3600000000000003,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -7,
+          0.6019445894142892,
+          6.199999999999999
+        ],
+        "max": [
+          -7,
+          0.6019445894142892,
+          12.8
+        ]
+      }
+    },
+    {
+      "id": "excluded-10",
+      "sampledAreaSquareMeters": 1.2000000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          12.000000000000002,
+          0.6019445894142892,
+          5.800000000000001
+        ],
+        "max": [
+          14.800000000000002,
+          0.6019445894142892,
+          6
+        ]
+      }
+    },
+    {
+      "id": "excluded-11",
+      "sampledAreaSquareMeters": 1.1600000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          6.200000000000001,
+          0.6019445894142892,
+          -0.40000000000000213
+        ],
+        "max": [
+          6.200000000000001,
+          0.6019445894142892,
+          5.199999999999999
+        ]
+      }
+    },
+    {
+      "id": "excluded-12",
+      "sampledAreaSquareMeters": 1.0000000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -3,
+          0.6019445894142892,
+          -2.8000000000000007
+        ],
+        "max": [
+          -2.4000000000000004,
+          0.6019445894142892,
+          -1.4000000000000021
+        ]
+      }
+    },
+    {
+      "id": "excluded-13",
+      "sampledAreaSquareMeters": 0.9600000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          3.8000000000000025,
+          0.6019445894142892,
+          10.8
+        ],
+        "max": [
+          3.8000000000000025,
+          0.6019445894142892,
+          15.399999999999999
+        ]
+      }
+    },
+    {
+      "id": "excluded-14",
+      "sampledAreaSquareMeters": 0.7600000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -2.5999999999999996,
+          0.6019445894142892,
+          9.2
+        ],
+        "max": [
+          -2.5999999999999996,
+          0.6019445894142892,
+          12.8
+        ]
+      }
+    },
+    {
+      "id": "excluded-15",
+      "sampledAreaSquareMeters": 0.7200000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -3,
+          0.6019445894142892,
+          -1.0000000000000018
+        ],
+        "max": [
+          -2.5999999999999996,
+          0.6019445894142892,
+          0
+        ]
+      }
+    },
+    {
+      "id": "excluded-16",
+      "sampledAreaSquareMeters": 0.6400000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          3.8000000000000025,
+          0.6019445894142892,
+          6.599999999999998
+        ],
+        "max": [
+          3.8000000000000025,
+          0.6019445894142892,
+          9.599999999999998
+        ]
+      }
+    },
+    {
+      "id": "excluded-17",
+      "sampledAreaSquareMeters": 0.4000000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          1.4000000000000004,
+          0.6019445894142892,
+          6.399999999999999
+        ],
+        "max": [
+          1.4000000000000004,
+          0.6019445894142892,
+          8.2
+        ]
+      }
+    },
+    {
+      "id": "excluded-18",
+      "sampledAreaSquareMeters": 0.3600000000000001,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          2.5999999999999996,
+          0.6019445894142892,
+          0.5999999999999979
+        ],
+        "max": [
+          2.5999999999999996,
+          0.6019445894142892,
+          2.1999999999999993
+        ]
+      }
+    },
+    {
+      "id": "excluded-19",
+      "sampledAreaSquareMeters": 0.3600000000000001,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          3.0000000000000018,
+          0.6019445894142892,
+          0.5999999999999979
+        ],
+        "max": [
+          3.0000000000000018,
+          0.6019445894142892,
+          2.1999999999999993
+        ]
+      }
+    },
+    {
+      "id": "excluded-20",
+      "sampledAreaSquareMeters": 0.3600000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -2.5999999999999996,
+          0.6019445894142892,
+          6.599999999999998
+        ],
+        "max": [
+          -2.5999999999999996,
+          0.6019445894142892,
+          8.2
+        ]
+      }
+    },
+    {
+      "id": "excluded-21",
+      "sampledAreaSquareMeters": 0.32000000000000006,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          6.200000000000001,
+          0.6019445894142892,
+          -5.000000000000002
+        ],
+        "max": [
+          6.200000000000001,
+          0.6019445894142892,
+          -3.6000000000000014
+        ]
+      }
+    },
+    {
+      "id": "excluded-22",
+      "sampledAreaSquareMeters": 0.32000000000000006,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -4.6,
+          0.6019445894142892,
+          5.800000000000001
+        ],
+        "max": [
+          -3.1999999999999993,
+          0.6019445894142892,
+          5.800000000000001
+        ]
+      }
+    },
+    {
+      "id": "excluded-23",
+      "sampledAreaSquareMeters": 0.32000000000000006,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -2.1999999999999993,
+          0.6019445894142892,
+          5.800000000000001
+        ],
+        "max": [
+          -1.4000000000000004,
+          0.6019445894142892,
+          6
+        ]
+      }
+    },
+    {
+      "id": "excluded-24",
+      "sampledAreaSquareMeters": 0.32000000000000006,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          2.0000000000000018,
+          0.6019445894142892,
+          10.2
+        ],
+        "max": [
+          3.4000000000000004,
+          0.6019445894142892,
+          10.2
+        ]
+      }
+    },
+    {
+      "id": "excluded-25",
+      "sampledAreaSquareMeters": 0.24000000000000005,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          -1.5999999999999996,
+          0.6019445894142892,
+          1.1999999999999993
+        ],
+        "max": [
+          -0.7999999999999989,
+          0.6019445894142892,
+          1.7999999999999972
+        ]
+      }
+    },
+    {
+      "id": "excluded-26",
+      "sampledAreaSquareMeters": 0.24000000000000005,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          1.799999999999999,
+          0.6019445894142892,
+          1.3999999999999986
+        ],
+        "max": [
+          2.0000000000000018,
+          0.6019445894142892,
+          2.1999999999999993
+        ]
+      }
+    },
+    {
+      "id": "excluded-27",
+      "sampledAreaSquareMeters": 0.16000000000000003,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          -1.1999999999999993,
+          0.6019445894142892,
+          1.5999999999999979
+        ],
+        "max": [
+          -0.5999999999999996,
+          0.6019445894142892,
+          2.1999999999999993
+        ]
+      }
+    },
+    {
+      "id": "excluded-28",
+      "sampledAreaSquareMeters": 0.16000000000000003,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          0.5999999999999996,
+          0.6019445894142892,
+          1.5999999999999979
+        ],
+        "max": [
+          1.0000000000000018,
+          0.6019445894142892,
+          2.1999999999999993
+        ]
+      }
+    },
+    {
+      "id": "excluded-29",
+      "sampledAreaSquareMeters": 0.16000000000000003,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          1.200000000000001,
+          0.6019445894142892,
+          1.7999999999999972
+        ],
+        "max": [
+          1.4000000000000004,
+          0.6019445894142892,
+          2.1999999999999993
+        ]
+      }
+    },
+    {
+      "id": "excluded-30",
+      "sampledAreaSquareMeters": 0.16000000000000003,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -7,
+          0.6019445894142892,
+          2.3999999999999986
+        ],
+        "max": [
+          -7,
+          0.6019445894142892,
+          3
+        ]
+      }
+    },
+    {
+      "id": "excluded-31",
+      "sampledAreaSquareMeters": 0.12000000000000002,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          -0.5999999999999996,
+          0.6019445894142892,
+          1.7999999999999972
+        ],
+        "max": [
+          -0.1999999999999993,
+          0.6019445894142892,
+          2.1999999999999993
+        ]
+      }
+    },
+    {
+      "id": "excluded-32",
+      "sampledAreaSquareMeters": 0.12000000000000002,
+      "roomIds": [
+        "room:2:60c66ee07fb3821a"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          -2.4000000000000004,
+          0.6019445894142892,
+          2.8000000000000007
+        ],
+        "max": [
+          -2.1999999999999993,
+          0.6019445894142892,
+          3
+        ]
+      }
+    },
+    {
+      "id": "excluded-33",
+      "sampledAreaSquareMeters": 0.12000000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -2,
+          0.6019445894142892,
+          8.599999999999998
+        ],
+        "max": [
+          -1.5999999999999996,
+          0.6019445894142892,
+          8.599999999999998
+        ]
+      }
+    },
+    {
+      "id": "excluded-34",
+      "sampledAreaSquareMeters": 0.12000000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          1.4000000000000004,
+          0.6019445894142892,
+          9.2
+        ],
+        "max": [
+          1.4000000000000004,
+          0.6019445894142892,
+          9.599999999999998
+        ]
+      }
+    },
+    {
+      "id": "excluded-35",
+      "sampledAreaSquareMeters": 0.08000000000000002,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          0,
+          0.6019445894142892,
+          2
+        ],
+        "max": [
+          0.20000000000000107,
+          0.6019445894142892,
+          2.1999999999999993
+        ]
+      }
+    },
+    {
+      "id": "excluded-36",
+      "sampledAreaSquareMeters": 0.08000000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -7,
+          0.6019445894142892,
+          5
+        ],
+        "max": [
+          -7,
+          0.6019445894142892,
+          5.199999999999999
+        ]
+      }
+    },
+    {
+      "id": "excluded-37",
+      "sampledAreaSquareMeters": 0.08000000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -6.4,
+          0.6019445894142892,
+          5.800000000000001
+        ],
+        "max": [
+          -6.199999999999999,
+          0.6019445894142892,
+          5.800000000000001
+        ]
+      }
+    },
+    {
+      "id": "excluded-38",
+      "sampledAreaSquareMeters": 0.08000000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -1,
+          0.6019445894142892,
+          5.800000000000001
+        ],
+        "max": [
+          -1,
+          0.6019445894142892,
+          6
+        ]
+      }
+    },
+    {
+      "id": "excluded-39",
+      "sampledAreaSquareMeters": 0.08000000000000002,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          1.4000000000000004,
+          0.6019445894142892,
+          5.800000000000001
+        ],
+        "max": [
+          1.4000000000000004,
+          0.6019445894142892,
+          6
+        ]
+      }
+    },
+    {
+      "id": "excluded-40",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [
+        "room:2:1bf381cdf354e155"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          11.4,
+          0.6019445894142892,
+          -15.000000000000002
+        ],
+        "max": [
+          11.4,
+          0.6019445894142892,
+          -15.000000000000002
+        ]
+      }
+    },
+    {
+      "id": "excluded-41",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          1.4000000000000004,
+          0.6019445894142892,
+          0.7999999999999972
+        ],
+        "max": [
+          1.4000000000000004,
+          0.6019445894142892,
+          0.7999999999999972
+        ]
+      }
+    },
+    {
+      "id": "excluded-42",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          1.200000000000001,
+          0.6019445894142892,
+          1.1999999999999993
+        ],
+        "max": [
+          1.200000000000001,
+          0.6019445894142892,
+          1.1999999999999993
+        ]
+      }
+    },
+    {
+      "id": "excluded-43",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          0.5999999999999996,
+          0.6019445894142892,
+          1.3999999999999986
+        ],
+        "max": [
+          0.5999999999999996,
+          0.6019445894142892,
+          1.3999999999999986
+        ]
+      }
+    },
+    {
+      "id": "excluded-44",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1"
+      ],
+      "reason": "Isolated capsule-clear pocket smaller than 0.96 square meters.",
+      "bounds": {
+        "min": [
+          1.5999999999999996,
+          0.6019445894142892,
+          1.3999999999999986
+        ],
+        "max": [
+          1.5999999999999996,
+          0.6019445894142892,
+          1.3999999999999986
+        ]
+      }
+    },
+    {
+      "id": "excluded-45",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -7,
+          0.6019445894142892,
+          5.800000000000001
+        ],
+        "max": [
+          -7,
+          0.6019445894142892,
+          5.800000000000001
+        ]
+      }
+    },
+    {
+      "id": "excluded-46",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -2.5999999999999996,
+          0.6019445894142892,
+          5.800000000000001
+        ],
+        "max": [
+          -2.5999999999999996,
+          0.6019445894142892,
+          5.800000000000001
+        ]
+      }
+    },
+    {
+      "id": "excluded-47",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          1.799999999999999,
+          0.6019445894142892,
+          5.800000000000001
+        ],
+        "max": [
+          1.799999999999999,
+          0.6019445894142892,
+          5.800000000000001
+        ]
+      }
+    },
+    {
+      "id": "excluded-48",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -1,
+          0.6019445894142892,
+          6.599999999999998
+        ],
+        "max": [
+          -1,
+          0.6019445894142892,
+          6.599999999999998
+        ]
+      }
+    },
+    {
+      "id": "excluded-49",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -2.5999999999999996,
+          0.6019445894142892,
+          8.599999999999998
+        ],
+        "max": [
+          -2.5999999999999996,
+          0.6019445894142892,
+          8.599999999999998
+        ]
+      }
+    },
+    {
+      "id": "excluded-50",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          -1,
+          0.6019445894142892,
+          8.599999999999998
+        ],
+        "max": [
+          -1,
+          0.6019445894142892,
+          8.599999999999998
+        ]
+      }
+    },
+    {
+      "id": "excluded-51",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          1.4000000000000004,
+          0.6019445894142892,
+          8.599999999999998
+        ],
+        "max": [
+          1.4000000000000004,
+          0.6019445894142892,
+          8.599999999999998
+        ]
+      }
+    },
+    {
+      "id": "excluded-52",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          1.4000000000000004,
+          0.6019445894142892,
+          10.2
+        ],
+        "max": [
+          1.4000000000000004,
+          0.6019445894142892,
+          10.2
+        ]
+      }
+    },
+    {
+      "id": "excluded-53",
+      "sampledAreaSquareMeters": 0.04000000000000001,
+      "roomIds": [],
+      "reason": "Disconnected floor footprint without an exported room; accessibility uncertain.",
+      "bounds": {
+        "min": [
+          3.8000000000000025,
+          0.6019445894142892,
+          10.2
+        ],
+        "max": [
+          3.8000000000000025,
+          0.6019445894142892,
+          10.2
+        ]
+      }
+    }
+  ],
+  "rooms": [
+    {
+      "id": "room:2:07aebe4bc9db947e",
+      "name": "L2 — Room 1",
+      "floorOutline": [
+        [
+          -2.5299011384099996,
+          0.6019445894142892,
+          8.7490833972
+        ],
+        [
+          -0.6627540524860825,
+          0.6019445894142892,
+          8.7490833972
+        ],
+        [
+          0.9261618941769115,
+          0.6019445894142892,
+          8.7490833972
+        ],
+        [
+          1.3473419855899997,
+          0.6019445894142892,
+          8.7490833972
+        ],
+        [
+          1.3473419855899997,
+          0.6019445894142892,
+          10.266265489199997
+        ],
+        [
+          3.7706189380899993,
+          0.6019445894142892,
+          10.266265489199997
+        ],
+        [
+          3.7706189380899993,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          1.691313004944991,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          -0.23103049337992237,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -2.5299011384099996,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -2.5299011384099996,
+          0.6019445894142892,
+          8.7490833972
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:1320aa2737dfc824",
+      "name": "L2 — Room 2",
+      "floorOutline": [
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          12.691664344553644
+        ],
+        [
+          12.668891907669998,
+          0.6019445894142892,
+          12.691664344553644
+        ],
+        [
+          12.668891907669998,
+          0.6019445894142892,
+          16.577742991919997
+        ],
+        [
+          9.285145995021697,
+          0.6019445894142892,
+          16.577742991919997
+        ],
+        [
+          9.285145995021697,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          15.768579209519997
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:139720b81b3387a9",
+      "name": "L2 — Room 3",
+      "floorOutline": [
+        [
+          5.906119059363542,
+          0.6019445894142892,
+          -16.21361928984
+        ],
+        [
+          5.906119059363542,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          5.312008626933855,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          5.312008626933855,
+          0.6019445894142892,
+          -14.894022549795487
+        ],
+        [
+          0.19005132870793393,
+          0.6019445894142892,
+          -14.894022549795487
+        ],
+        [
+          0.19005132870793393,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -13.126580511232397
+        ],
+        [
+          -3.0339427445299996,
+          0.6019445894142892,
+          -13.126580511232397
+        ],
+        [
+          -3.0339427445299996,
+          0.6019445894142892,
+          -16.21361928984
+        ],
+        [
+          5.906119059363542,
+          0.6019445894142892,
+          -16.21361928984
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "floorOutline": [
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -6.018155631599999
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -9.730944050210597
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -13.126580511232397
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          0.19005132870793393,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          0.19005132870793393,
+          0.6019445894142892,
+          -14.894022549795487
+        ],
+        [
+          5.312008626933855,
+          0.6019445894142892,
+          -14.894022549795487
+        ],
+        [
+          5.312008626933855,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          5.906119059363542,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          9.035863255641813,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          -5.532657362159999
+        ],
+        [
+          15.305417231989999,
+          0.6019445894142892,
+          -5.532657362159999
+        ],
+        [
+          15.305417231989999,
+          0.6019445894142892,
+          -2.4376058944799994
+        ],
+        [
+          15.305417231989999,
+          0.6019445894142892,
+          0.6574455732
+        ],
+        [
+          15.305417231989999,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          6.2908269686899985,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          6.2908269686899985,
+          0.6019445894142892,
+          -0.45515462759999986
+        ],
+        [
+          6.2908269686899985,
+          0.6019445894142892,
+          -3.57043518984
+        ],
+        [
+          6.2908269686899985,
+          0.6019445894142892,
+          -6.018155631599999
+        ],
+        [
+          3.67368785999,
+          0.6019445894142892,
+          -6.018155631599999
+        ],
+        [
+          1.8126111604699997,
+          0.6019445894142892,
+          -6.018155631599999
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -6.018155631599999
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:2f88b892796965aa",
+      "name": "L2 — Room 5",
+      "floorOutline": [
+        [
+          -6.853027221669999,
+          0.6019445894142892,
+          5.856322875119999
+        ],
+        [
+          -6.1357372437299995,
+          0.6019445894142892,
+          5.856322875119999
+        ],
+        [
+          -4.701157287849998,
+          0.6019445894142892,
+          5.856322875119999
+        ],
+        [
+          -2.7043770789899995,
+          0.6019445894142892,
+          5.856322875119999
+        ],
+        [
+          -2.7043770789899995,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -4.08079838801,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -6.18510782074369,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -6.853027221669999,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -6.853027221669999,
+          0.6019445894142892,
+          5.856322875119999
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:40a5cdb892d72e67",
+      "name": "L2 — Room 6",
+      "floorOutline": [
+        [
+          -14.433037529089997,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -14.433037529089997,
+          0.6019445894142892,
+          6.026026851624256
+        ],
+        [
+          -15.227872369509997,
+          0.6019445894142892,
+          6.026026851624256
+        ],
+        [
+          -15.227872369509997,
+          0.6019445894142892,
+          1.1834020317599998
+        ],
+        [
+          -5.325458399926898,
+          0.6019445894142892,
+          1.1834020317599998
+        ],
+        [
+          -5.325458399926898,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -6.853027221669999,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -7.027503162249999,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -14.433037529089997,
+          0.6019445894142892,
+          2.0330240032799995
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:54cf01ebaf4c5c8c",
+      "name": "L2 — Room 7",
+      "floorOutline": [
+        [
+          12.649505692049997,
+          0.6019445894142892,
+          -16.21361928984
+        ],
+        [
+          12.649505692049997,
+          0.6019445894142892,
+          -6.422737522799999
+        ],
+        [
+          16.100252072409997,
+          0.6019445894142892,
+          -6.422737522799999
+        ],
+        [
+          16.100252072409997,
+          0.6019445894142892,
+          -2.4376058944799994
+        ],
+        [
+          15.305417231989999,
+          0.6019445894142892,
+          -2.4376058944799994
+        ],
+        [
+          15.305417231989999,
+          0.6019445894142892,
+          -5.532657362159999
+        ],
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          -5.532657362159999
+        ],
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          9.035863255641813,
+          0.6019445894142892,
+          -15.363997318320001
+        ],
+        [
+          9.035863255641813,
+          0.6019445894142892,
+          -16.21361928984
+        ],
+        [
+          12.649505692049997,
+          0.6019445894142892,
+          -16.21361928984
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:606714784e2c93f2",
+      "name": "L2 — Room 8",
+      "floorOutline": [
+        [
+          -2.5299011384099996,
+          0.6019445894142892,
+          6.089960361056345
+        ],
+        [
+          -1.13409361377,
+          0.6019445894142892,
+          6.089960361056345
+        ],
+        [
+          -1.13409361377,
+          0.6019445894142892,
+          6.6452575629599995
+        ],
+        [
+          -1.13409361377,
+          0.6019445894142892,
+          8.390318210487214
+        ],
+        [
+          -1.13409361377,
+          0.6019445894142892,
+          8.56702154616
+        ],
+        [
+          -2.5299011384099996,
+          0.6019445894142892,
+          8.56702154616
+        ],
+        [
+          -2.5299011384099996,
+          0.6019445894142892,
+          6.089960361056345
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:60c66ee07fb3821a",
+      "name": "L2 — Room 9",
+      "floorOutline": [
+        [
+          -3.0339427445299996,
+          0.6019445894142892,
+          0.17411193792474225
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          0.17411193792474225
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          2.7208132183199996
+        ],
+        [
+          3.715255084400488,
+          0.6019445894142892,
+          2.7208132183199996
+        ],
+        [
+          3.715255084400488,
+          0.6019445894142892,
+          2.5484593172959342
+        ],
+        [
+          3.8213463544021247,
+          0.6019445894142892,
+          2.5484593172959342
+        ],
+        [
+          3.8213463544021247,
+          0.6019445894142892,
+          3.0040205421599997
+        ],
+        [
+          -2.4329700603099997,
+          0.6019445894142892,
+          3.0040205421599997
+        ],
+        [
+          -2.4329700603099997,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -4.174551034425083,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -4.174551034425083,
+          0.6019445894142892,
+          1.1834020317599998
+        ],
+        [
+          -3.0339427445299996,
+          0.6019445894142892,
+          1.1834020317599998
+        ],
+        [
+          -3.0339427445299996,
+          0.6019445894142892,
+          0.17411193792474225
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:6f09456933315a67",
+      "name": "L2 — Room 10",
+      "floorOutline": [
+        [
+          3.964481094289999,
+          0.6019445894142892,
+          6.058613820719999
+        ],
+        [
+          4.274660544209999,
+          0.6019445894142892,
+          6.058613820719999
+        ],
+        [
+          5.883716440669999,
+          0.6019445894142892,
+          6.058613820719999
+        ],
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          6.058613820719999
+        ],
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          9.361971004372455
+        ],
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          12.691664344553644
+        ],
+        [
+          11.854670851629999,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          9.285145995021697,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          6.096964812489999,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          3.964481094289999,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          3.964481094289999,
+          0.6019445894142892,
+          6.058613820719999
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:864706e4f805483c",
+      "name": "L2 — Room 11",
+      "floorOutline": [
+        [
+          -4.08079838801,
+          0.6019445894142892,
+          14.028877077359997
+        ],
+        [
+          -4.08079838801,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -2.7043770789899995,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -2.5299011384099996,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          -0.23103049337992237,
+          0.6019445894142892,
+          15.768579209519997
+        ],
+        [
+          -0.23103049337992237,
+          0.6019445894142892,
+          16.577742991919997
+        ],
+        [
+          -2.9681379780980017,
+          0.6019445894142892,
+          16.577742991919997
+        ],
+        [
+          -2.9681379780980017,
+          0.6019445894142892,
+          14.028877077359997
+        ],
+        [
+          -4.08079838801,
+          0.6019445894142892,
+          14.028877077359997
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:a76f81694a5c9cce",
+      "name": "L2 — Room 12",
+      "floorOutline": [
+        [
+          1.4830454949299998,
+          0.6019445894142892,
+          6.058613820719999
+        ],
+        [
+          1.8126111604699997,
+          0.6019445894142892,
+          6.058613820719999
+        ],
+        [
+          3.4410532725499996,
+          0.6019445894142892,
+          6.058613820719999
+        ],
+        [
+          3.7706189380899993,
+          0.6019445894142892,
+          6.058613820719999
+        ],
+        [
+          3.7706189380899993,
+          0.6019445894142892,
+          10.063974543599999
+        ],
+        [
+          1.4830454949299998,
+          0.6019445894142892,
+          10.063974543599999
+        ],
+        [
+          1.4830454949299998,
+          0.6019445894142892,
+          6.058613820719999
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:aff9b5bc6c105fb9",
+      "name": "L2 — Room 13",
+      "floorOutline": [
+        [
+          -7.027503162249999,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -7.027503162249999,
+          0.6019445894142892,
+          3.06470782584
+        ],
+        [
+          -7.027503162249999,
+          0.6019445894142892,
+          4.78418086344
+        ],
+        [
+          -7.027503162249999,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -14.433037529089997,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -14.433037529089997,
+          0.6019445894142892,
+          9.437864819588865
+        ],
+        [
+          -14.433037529089997,
+          0.6019445894142892,
+          6.026026851624256
+        ],
+        [
+          -14.433037529089997,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -7.027503162249999,
+          0.6019445894142892,
+          2.0330240032799995
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:be052318f7a4cdf1",
+      "name": "L2 — Room 14",
+      "floorOutline": [
+        [
+          -6.853027221669999,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -5.325458399926898,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -4.174551034425083,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -2.4329700603099997,
+          0.6019445894142892,
+          2.0330240032799995
+        ],
+        [
+          -2.4329700603099997,
+          0.6019445894142892,
+          3.0040205421599997
+        ],
+        [
+          3.8213463544021247,
+          0.6019445894142892,
+          3.0040205421599997
+        ],
+        [
+          3.8213463544021247,
+          0.6019445894142892,
+          2.5484593172959342
+        ],
+        [
+          3.715255084400488,
+          0.6019445894142892,
+          2.5484593172959342
+        ],
+        [
+          3.715255084400488,
+          0.6019445894142892,
+          2.7208132183199996
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          2.7208132183199996
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          0.17411193792474225
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -1.014449525325644
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -2.9635623530399995
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -5.35059551112
+        ],
+        [
+          -2.1809492572499996,
+          0.6019445894142892,
+          -5.532657362159999
+        ],
+        [
+          1.8126111604699997,
+          0.6019445894142892,
+          -5.532657362159999
+        ],
+        [
+          3.67368785999,
+          0.6019445894142892,
+          -5.532657362159999
+        ],
+        [
+          6.096964812489999,
+          0.6019445894142892,
+          -5.532657362159999
+        ],
+        [
+          6.096964812489999,
+          0.6019445894142892,
+          -3.57043518984
+        ],
+        [
+          6.096964812489999,
+          0.6019445894142892,
+          -0.45515462759999986
+        ],
+        [
+          6.096964812489999,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          5.883716440669999,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          4.274660544209999,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          3.964481094289999,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          3.4410532725499996,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          1.8126111604699997,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          1.3473419855899997,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          1.3473419855899997,
+          0.6019445894142892,
+          8.56702154616
+        ],
+        [
+          0.9261618941769115,
+          0.6019445894142892,
+          8.56702154616
+        ],
+        [
+          -0.6627540524860825,
+          0.6019445894142892,
+          8.56702154616
+        ],
+        [
+          -0.9208452419499997,
+          0.6019445894142892,
+          8.56702154616
+        ],
+        [
+          -0.9208452419499997,
+          0.6019445894142892,
+          8.390318210487214
+        ],
+        [
+          -0.9208452419499997,
+          0.6019445894142892,
+          6.6452575629599995
+        ],
+        [
+          -0.9208452419499997,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          -4.701157287849998,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          -6.1357372437299995,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          -6.853027221669999,
+          0.6019445894142892,
+          5.633802834959999
+        ],
+        [
+          -6.853027221669999,
+          0.6019445894142892,
+          4.78418086344
+        ],
+        [
+          -6.853027221669999,
+          0.6019445894142892,
+          3.06470782584
+        ],
+        [
+          -6.853027221669999,
+          0.6019445894142892,
+          2.0330240032799995
+        ]
+      ],
+      "floorHoles": []
+    },
+    {
+      "id": "room:2:d17413a9c4159276",
+      "name": "L2 — Room 15",
+      "floorOutline": [
+        [
+          -15.227872369509997,
+          0.6019445894142892,
+          14.028877077359997
+        ],
+        [
+          -15.227872369509997,
+          0.6019445894142892,
+          9.437864819588865
+        ],
+        [
+          -14.433037529089997,
+          0.6019445894142892,
+          9.437864819588865
+        ],
+        [
+          -14.433037529089997,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -7.027503162249999,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -6.853027221669999,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -6.18510782074369,
+          0.6019445894142892,
+          13.199484200399997
+        ],
+        [
+          -6.18510782074369,
+          0.6019445894142892,
+          14.028877077359997
+        ],
+        [
+          -15.227872369509997,
+          0.6019445894142892,
+          14.028877077359997
+        ]
+      ],
+      "floorHoles": []
+    }
+  ],
+  "components": [
+    {
+      "id": "l2-component-01",
+      "startsAtAuthoredCamera": true,
+      "teleportBefore": false,
+      "sampledAreaSquareMeters": 472.6000000000001,
+      "roomIds": [
+        "room:2:be052318f7a4cdf1",
+        "room:2:1bf381cdf354e155",
+        "room:2:6f09456933315a67",
+        "room:2:a76f81694a5c9cce",
+        "room:2:606714784e2c93f2",
+        "room:2:07aebe4bc9db947e",
+        "room:2:2f88b892796965aa",
+        "room:2:aff9b5bc6c105fb9"
+      ],
+      "pathStartIndex": 0,
+      "pathEndIndex": 65,
+      "maximumGraphDistanceToRouteMeters": 3.8627416997969526
+    },
+    {
+      "id": "l2-component-02",
+      "startsAtAuthoredCamera": false,
+      "teleportBefore": true,
+      "sampledAreaSquareMeters": 14.520000000000003,
+      "roomIds": [
+        "room:2:54cf01ebaf4c5c8c"
+      ],
+      "pathStartIndex": 66,
+      "pathEndIndex": 77,
+      "maximumGraphDistanceToRouteMeters": 0.8485281374238578
+    },
+    {
+      "id": "l2-component-03",
+      "startsAtAuthoredCamera": false,
+      "teleportBefore": true,
+      "sampledAreaSquareMeters": 12.040000000000003,
+      "roomIds": [
+        "room:2:139720b81b3387a9"
+      ],
+      "pathStartIndex": 78,
+      "pathEndIndex": 82,
+      "maximumGraphDistanceToRouteMeters": 1.2828427124746193
+    },
+    {
+      "id": "l2-component-04",
+      "startsAtAuthoredCamera": false,
+      "teleportBefore": true,
+      "sampledAreaSquareMeters": 12.040000000000003,
+      "roomIds": [
+        "room:2:40a5cdb892d72e67"
+      ],
+      "pathStartIndex": 83,
+      "pathEndIndex": 90,
+      "maximumGraphDistanceToRouteMeters": 0.6000000000000014
+    },
+    {
+      "id": "l2-component-05",
+      "startsAtAuthoredCamera": false,
+      "teleportBefore": true,
+      "sampledAreaSquareMeters": 11.080000000000002,
+      "roomIds": [
+        "room:2:d17413a9c4159276"
+      ],
+      "pathStartIndex": 91,
+      "pathEndIndex": 96,
+      "maximumGraphDistanceToRouteMeters": 0.8000000000000007
+    },
+    {
+      "id": "l2-component-06",
+      "startsAtAuthoredCamera": false,
+      "teleportBefore": true,
+      "sampledAreaSquareMeters": 4.6000000000000005,
+      "roomIds": [
+        "room:2:1320aa2737dfc824"
+      ],
+      "pathStartIndex": 97,
+      "pathEndIndex": 100,
+      "maximumGraphDistanceToRouteMeters": 1.3656854249492356
+    },
+    {
+      "id": "l2-component-07",
+      "startsAtAuthoredCamera": false,
+      "teleportBefore": true,
+      "sampledAreaSquareMeters": 4.120000000000001,
+      "roomIds": [
+        "room:2:864706e4f805483c"
+      ],
+      "pathStartIndex": 101,
+      "pathEndIndex": 106,
+      "maximumGraphDistanceToRouteMeters": 0.9656854249492371
+    },
+    {
+      "id": "l2-component-08",
+      "startsAtAuthoredCamera": false,
+      "teleportBefore": true,
+      "sampledAreaSquareMeters": 1.5200000000000002,
+      "roomIds": [
+        "room:2:60c66ee07fb3821a"
+      ],
+      "pathStartIndex": 107,
+      "pathEndIndex": 107,
+      "maximumGraphDistanceToRouteMeters": 1.2485281374238575
+    },
+    {
+      "id": "l2-component-09",
+      "startsAtAuthoredCamera": false,
+      "teleportBefore": true,
+      "sampledAreaSquareMeters": 1.0000000000000002,
+      "roomIds": [
+        "room:2:60c66ee07fb3821a"
+      ],
+      "pathStartIndex": 108,
+      "pathEndIndex": 108,
+      "maximumGraphDistanceToRouteMeters": 3.200000000000001
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "l2-checkpoint-01",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "name": "L2 — Room 14",
+      "position": [
+        -1.4000000000000004,
+        0.6019445894142892,
+        -4.400000000000002
+      ],
+      "lookAt": [
+        -0.40000000000000036,
+        2.301944589414289,
+        -4.400000000000002
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-02",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "name": "L2 — Room 14",
+      "position": [
+        4.200000000000001,
+        0.6019445894142892,
+        -5.000000000000002
+      ],
+      "lookAt": [
+        5.200000000000001,
+        2.301944589414289,
+        -5.000000000000002
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-03",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        7.000000000000002,
+        0.6019445894142892,
+        -5.600000000000001
+      ],
+      "lookAt": [
+        8.000000000000002,
+        2.301944589414289,
+        -5.600000000000001
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-04",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        10.4,
+        0.6019445894142892,
+        -9.000000000000002
+      ],
+      "lookAt": [
+        11.4,
+        2.301944589414289,
+        -9.000000000000002
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-05",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        6.200000000000001,
+        0.6019445894142892,
+        -10.600000000000001
+      ],
+      "lookAt": [
+        7.200000000000001,
+        2.301944589414289,
+        -10.600000000000001
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-06",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        3.8000000000000025,
+        0.6019445894142892,
+        -14.400000000000002
+      ],
+      "lookAt": [
+        4.8000000000000025,
+        2.301944589414289,
+        -14.400000000000002
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-07",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        1.0000000000000018,
+        0.6019445894142892,
+        -10.8
+      ],
+      "lookAt": [
+        2.0000000000000018,
+        2.301944589414289,
+        -10.8
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-08",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        -1.799999999999999,
+        0.6019445894142892,
+        -15.000000000000002
+      ],
+      "lookAt": [
+        -0.7999999999999989,
+        2.301944589414289,
+        -15.000000000000002
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-09",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        -1.5999999999999996,
+        0.6019445894142892,
+        -6.400000000000002
+      ],
+      "lookAt": [
+        -0.5999999999999996,
+        2.301944589414289,
+        -6.400000000000002
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-10",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "name": "L2 — Room 14",
+      "position": [
+        1.799999999999999,
+        0.6019445894142892,
+        0.1999999999999993
+      ],
+      "lookAt": [
+        2.799999999999999,
+        2.301944589414289,
+        0.1999999999999993
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-11",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        6.8000000000000025,
+        0.6019445894142892,
+        -0.20000000000000284
+      ],
+      "lookAt": [
+        7.8000000000000025,
+        2.301944589414289,
+        -0.20000000000000284
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-12",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        12.200000000000001,
+        0.6019445894142892,
+        0.5999999999999979
+      ],
+      "lookAt": [
+        13.200000000000001,
+        2.301944589414289,
+        0.5999999999999979
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-13",
+      "componentId": "l2-component-01",
+      "roomId": null,
+      "name": "Doorway threshold",
+      "position": [
+        16,
+        0.6019445894142892,
+        -0.6000000000000014
+      ],
+      "lookAt": [
+        17,
+        2.301944589414289,
+        -0.6000000000000014
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-14",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        13.200000000000001,
+        0.6019445894142892,
+        -3.8000000000000007
+      ],
+      "lookAt": [
+        14.200000000000001,
+        2.301944589414289,
+        -3.8000000000000007
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-15",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        14.800000000000002,
+        0.6019445894142892,
+        5.199999999999999
+      ],
+      "lookAt": [
+        15.800000000000002,
+        2.301944589414289,
+        5.199999999999999
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-16",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        8.6,
+        0.6019445894142892,
+        5.199999999999999
+      ],
+      "lookAt": [
+        9.6,
+        2.301944589414289,
+        5.199999999999999
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-17",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        12.200000000000001,
+        0.6019445894142892,
+        -5.000000000000002
+      ],
+      "lookAt": [
+        13.200000000000001,
+        2.301944589414289,
+        -5.000000000000002
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-18",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "name": "L2 — Room 4",
+      "position": [
+        10.4,
+        0.6019445894142892,
+        -14.000000000000002
+      ],
+      "lookAt": [
+        11.4,
+        2.301944589414289,
+        -14.000000000000002
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-19",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "name": "L2 — Room 14",
+      "position": [
+        5.6,
+        0.6019445894142892,
+        3.8000000000000007
+      ],
+      "lookAt": [
+        6.6,
+        2.301944589414289,
+        3.8000000000000007
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-20",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67",
+      "name": "L2 — Room 10",
+      "position": [
+        4.4,
+        0.6019445894142892,
+        8.2
+      ],
+      "lookAt": [
+        5.4,
+        2.301944589414289,
+        8.2
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-21",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67",
+      "name": "L2 — Room 10",
+      "position": [
+        8.200000000000001,
+        0.6019445894142892,
+        11
+      ],
+      "lookAt": [
+        9.200000000000001,
+        2.301944589414289,
+        11
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-22",
+      "componentId": "l2-component-01",
+      "roomId": null,
+      "name": "Doorway threshold",
+      "position": [
+        12.6,
+        0.6019445894142892,
+        10.599999999999998
+      ],
+      "lookAt": [
+        13.6,
+        2.301944589414289,
+        10.599999999999998
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-23",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67",
+      "name": "L2 — Room 10",
+      "position": [
+        11.4,
+        0.6019445894142892,
+        6.599999999999998
+      ],
+      "lookAt": [
+        12.4,
+        2.301944589414289,
+        6.599999999999998
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-24",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67",
+      "name": "L2 — Room 10",
+      "position": [
+        11.4,
+        0.6019445894142892,
+        15.399999999999999
+      ],
+      "lookAt": [
+        12.4,
+        2.301944589414289,
+        15.399999999999999
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-25",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67",
+      "name": "L2 — Room 10",
+      "position": [
+        4.4,
+        0.6019445894142892,
+        15.399999999999999
+      ],
+      "lookAt": [
+        5.4,
+        2.301944589414289,
+        15.399999999999999
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-26",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:a76f81694a5c9cce",
+      "name": "L2 — Room 12",
+      "position": [
+        2.799999999999999,
+        0.6019445894142892,
+        8
+      ],
+      "lookAt": [
+        3.799999999999999,
+        2.301944589414289,
+        8
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-27",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "name": "L2 — Room 14",
+      "position": [
+        0.5999999999999996,
+        0.6019445894142892,
+        3.3999999999999986
+      ],
+      "lookAt": [
+        1.5999999999999996,
+        2.301944589414289,
+        3.3999999999999986
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-28",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:606714784e2c93f2",
+      "name": "L2 — Room 8",
+      "position": [
+        -1.4000000000000004,
+        0.6019445894142892,
+        7.599999999999998
+      ],
+      "lookAt": [
+        -0.40000000000000036,
+        2.301944589414289,
+        7.599999999999998
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-29",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:07aebe4bc9db947e",
+      "name": "L2 — Room 1",
+      "position": [
+        -2,
+        0.6019445894142892,
+        9.8
+      ],
+      "lookAt": [
+        -1,
+        2.301944589414289,
+        9.8
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-30",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:07aebe4bc9db947e",
+      "name": "L2 — Room 1",
+      "position": [
+        0.5999999999999996,
+        0.6019445894142892,
+        13
+      ],
+      "lookAt": [
+        1.5999999999999996,
+        2.301944589414289,
+        13
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-31",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "name": "L2 — Room 14",
+      "position": [
+        -4.4,
+        0.6019445894142892,
+        2.3999999999999986
+      ],
+      "lookAt": [
+        -3.4000000000000004,
+        2.301944589414289,
+        2.3999999999999986
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-32",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:2f88b892796965aa",
+      "name": "L2 — Room 5",
+      "position": [
+        -5.799999999999999,
+        0.6019445894142892,
+        6
+      ],
+      "lookAt": [
+        -4.799999999999999,
+        2.301944589414289,
+        6
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-33",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:2f88b892796965aa",
+      "name": "L2 — Room 5",
+      "position": [
+        -4.799999999999999,
+        0.6019445894142892,
+        9.599999999999998
+      ],
+      "lookAt": [
+        -3.799999999999999,
+        2.301944589414289,
+        9.599999999999998
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-34",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:aff9b5bc6c105fb9",
+      "name": "L2 — Room 13",
+      "position": [
+        -8.8,
+        0.6019445894142892,
+        2.599999999999998
+      ],
+      "lookAt": [
+        -7.800000000000001,
+        2.301944589414289,
+        2.599999999999998
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-35",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:aff9b5bc6c105fb9",
+      "name": "L2 — Room 13",
+      "position": [
+        -14,
+        0.6019445894142892,
+        2.3999999999999986
+      ],
+      "lookAt": [
+        -13,
+        2.301944589414289,
+        2.3999999999999986
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-36",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:aff9b5bc6c105fb9",
+      "name": "L2 — Room 13",
+      "position": [
+        -10.8,
+        0.6019445894142892,
+        7.599999999999998
+      ],
+      "lookAt": [
+        -9.8,
+        2.301944589414289,
+        7.599999999999998
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-37",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:aff9b5bc6c105fb9",
+      "name": "L2 — Room 13",
+      "position": [
+        -14,
+        0.6019445894142892,
+        12.8
+      ],
+      "lookAt": [
+        -13,
+        2.301944589414289,
+        12.8
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-38",
+      "componentId": "l2-component-01",
+      "roomId": "room:2:aff9b5bc6c105fb9",
+      "name": "L2 — Room 13",
+      "position": [
+        -7.4,
+        0.6019445894142892,
+        12.8
+      ],
+      "lookAt": [
+        -6.4,
+        2.301944589414289,
+        12.8
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-39",
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c",
+      "name": "L2 — Room 7",
+      "position": [
+        13.6,
+        0.6019445894142892,
+        -6.000000000000002
+      ],
+      "lookAt": [
+        14.6,
+        2.301944589414289,
+        -6.000000000000002
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-40",
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c",
+      "name": "L2 — Room 7",
+      "position": [
+        15.4,
+        0.6019445894142892,
+        -2.6000000000000014
+      ],
+      "lookAt": [
+        16.4,
+        2.301944589414289,
+        -2.6000000000000014
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-41",
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c",
+      "name": "L2 — Room 7",
+      "position": [
+        12.6,
+        0.6019445894142892,
+        -11.600000000000001
+      ],
+      "lookAt": [
+        13.6,
+        2.301944589414289,
+        -11.600000000000001
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-42",
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c",
+      "name": "L2 — Room 7",
+      "position": [
+        9.4,
+        0.6019445894142892,
+        -16.200000000000003
+      ],
+      "lookAt": [
+        10.4,
+        2.301944589414289,
+        -16.200000000000003
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-43",
+      "componentId": "l2-component-03",
+      "roomId": "room:2:139720b81b3387a9",
+      "name": "L2 — Room 3",
+      "position": [
+        1.4000000000000004,
+        0.6019445894142892,
+        -15.600000000000001
+      ],
+      "lookAt": [
+        2.4000000000000004,
+        2.301944589414289,
+        -15.600000000000001
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-44",
+      "componentId": "l2-component-03",
+      "roomId": "room:2:139720b81b3387a9",
+      "name": "L2 — Room 3",
+      "position": [
+        5.4,
+        0.6019445894142892,
+        -16.200000000000003
+      ],
+      "lookAt": [
+        6.4,
+        2.301944589414289,
+        -16.200000000000003
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-45",
+      "componentId": "l2-component-03",
+      "roomId": "room:2:139720b81b3387a9",
+      "name": "L2 — Room 3",
+      "position": [
+        -3,
+        0.6019445894142892,
+        -13.600000000000001
+      ],
+      "lookAt": [
+        -2,
+        2.301944589414289,
+        -13.600000000000001
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-46",
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67",
+      "name": "L2 — Room 6",
+      "position": [
+        -10.2,
+        0.6019445894142892,
+        1.5999999999999979
+      ],
+      "lookAt": [
+        -9.2,
+        2.301944589414289,
+        1.5999999999999979
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-47",
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67",
+      "name": "L2 — Room 6",
+      "position": [
+        -14.6,
+        0.6019445894142892,
+        1.1999999999999993
+      ],
+      "lookAt": [
+        -13.6,
+        2.301944589414289,
+        1.1999999999999993
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-48",
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67",
+      "name": "L2 — Room 6",
+      "position": [
+        -15.200000000000001,
+        0.6019445894142892,
+        5.599999999999998
+      ],
+      "lookAt": [
+        -14.200000000000001,
+        2.301944589414289,
+        5.599999999999998
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-49",
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67",
+      "name": "L2 — Room 6",
+      "position": [
+        -5.799999999999999,
+        0.6019445894142892,
+        2
+      ],
+      "lookAt": [
+        -4.799999999999999,
+        2.301944589414289,
+        2
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-50",
+      "componentId": "l2-component-05",
+      "roomId": "room:2:d17413a9c4159276",
+      "name": "L2 — Room 15",
+      "position": [
+        -10.8,
+        0.6019445894142892,
+        13.599999999999998
+      ],
+      "lookAt": [
+        -9.8,
+        2.301944589414289,
+        13.599999999999998
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-51",
+      "componentId": "l2-component-05",
+      "roomId": "room:2:d17413a9c4159276",
+      "name": "L2 — Room 15",
+      "position": [
+        -15,
+        0.6019445894142892,
+        14
+      ],
+      "lookAt": [
+        -14,
+        2.301944589414289,
+        14
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-52",
+      "componentId": "l2-component-05",
+      "roomId": "room:2:d17413a9c4159276",
+      "name": "L2 — Room 15",
+      "position": [
+        -15.200000000000001,
+        0.6019445894142892,
+        9.8
+      ],
+      "lookAt": [
+        -14.200000000000001,
+        2.301944589414289,
+        9.8
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-53",
+      "componentId": "l2-component-05",
+      "roomId": "room:2:d17413a9c4159276",
+      "name": "L2 — Room 15",
+      "position": [
+        -6.6,
+        0.6019445894142892,
+        14
+      ],
+      "lookAt": [
+        -5.6,
+        2.301944589414289,
+        14
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-54",
+      "componentId": "l2-component-06",
+      "roomId": "room:2:1320aa2737dfc824",
+      "name": "L2 — Room 2",
+      "position": [
+        11.000000000000002,
+        0.6019445894142892,
+        16.2
+      ],
+      "lookAt": [
+        12.000000000000002,
+        2.301944589414289,
+        16.2
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-55",
+      "componentId": "l2-component-06",
+      "roomId": "room:2:1320aa2737dfc824",
+      "name": "L2 — Room 2",
+      "position": [
+        12.000000000000002,
+        0.6019445894142892,
+        12.8
+      ],
+      "lookAt": [
+        13.000000000000002,
+        2.301944589414289,
+        12.8
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-56",
+      "componentId": "l2-component-07",
+      "roomId": "room:2:864706e4f805483c",
+      "name": "L2 — Room 11",
+      "position": [
+        -1.4000000000000004,
+        0.6019445894142892,
+        16.2
+      ],
+      "lookAt": [
+        -0.40000000000000036,
+        2.301944589414289,
+        16.2
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-57",
+      "componentId": "l2-component-07",
+      "roomId": "room:2:864706e4f805483c",
+      "name": "L2 — Room 11",
+      "position": [
+        -3.5999999999999996,
+        0.6019445894142892,
+        14
+      ],
+      "lookAt": [
+        -2.5999999999999996,
+        2.301944589414289,
+        14
+      ],
+      "panoramaSeconds": 0,
+      "kind": "coverage"
+    },
+    {
+      "id": "l2-checkpoint-58",
+      "componentId": "l2-component-08",
+      "roomId": "room:2:60c66ee07fb3821a",
+      "name": "L2 — Room 9",
+      "position": [
+        -2.799999999999999,
+        0.6019445894142892,
+        1.3999999999999986
+      ],
+      "lookAt": [
+        -1.799999999999999,
+        2.301944589414289,
+        1.3999999999999986
+      ],
+      "panoramaSeconds": 4,
+      "kind": "room"
+    },
+    {
+      "id": "l2-checkpoint-59",
+      "componentId": "l2-component-09",
+      "roomId": "room:2:60c66ee07fb3821a",
+      "name": "L2 — Room 9",
+      "position": [
+        -0.1999999999999993,
+        0.6019445894142892,
+        3
+      ],
+      "lookAt": [
+        0.8000000000000007,
+        2.301944589414289,
+        3
+      ],
+      "panoramaSeconds": 0,
+      "kind": "disconnected-pocket"
+    }
+  ],
+  "path": [
+    {
+      "position": [
+        -1.4234626491289517,
+        0.6019445894142892,
+        -4.331219684529118
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "teleportBefore": false
+    },
+    {
+      "position": [
+        -1.4000000000000004,
+        0.6019445894142892,
+        -4.400000000000002
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "checkpointId": "l2-checkpoint-01"
+    },
+    {
+      "position": [
+        4.200000000000001,
+        0.6019445894142892,
+        -5.000000000000002
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "checkpointId": "l2-checkpoint-02"
+    },
+    {
+      "position": [
+        5.8000000000000025,
+        0.6019445894142892,
+        -3.200000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        6.6,
+        0.6019445894142892,
+        -3.200000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        6.8000000000000025,
+        0.6019445894142892,
+        -4.800000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        7.000000000000002,
+        0.6019445894142892,
+        -5.600000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-03"
+    },
+    {
+      "position": [
+        10.4,
+        0.6019445894142892,
+        -9.000000000000002
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-04"
+    },
+    {
+      "position": [
+        6.200000000000001,
+        0.6019445894142892,
+        -10.600000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-05"
+    },
+    {
+      "position": [
+        3.8000000000000025,
+        0.6019445894142892,
+        -14.400000000000002
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-06"
+    },
+    {
+      "position": [
+        1.0000000000000018,
+        0.6019445894142892,
+        -10.8
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-07"
+    },
+    {
+      "position": [
+        -1.799999999999999,
+        0.6019445894142892,
+        -15.000000000000002
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-08"
+    },
+    {
+      "position": [
+        -1.5999999999999996,
+        0.6019445894142892,
+        -6.400000000000002
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-09"
+    },
+    {
+      "position": [
+        2.0000000000000018,
+        0.6019445894142892,
+        -6.400000000000002
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        2.200000000000001,
+        0.6019445894142892,
+        -6.200000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        2.0000000000000018,
+        0.6019445894142892,
+        0
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        1.799999999999999,
+        0.6019445894142892,
+        0.1999999999999993
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "checkpointId": "l2-checkpoint-10"
+    },
+    {
+      "position": [
+        6.4,
+        0.6019445894142892,
+        -1.0000000000000018
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        6.8000000000000025,
+        0.6019445894142892,
+        -0.40000000000000213
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        6.8000000000000025,
+        0.6019445894142892,
+        -0.20000000000000284
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-11"
+    },
+    {
+      "position": [
+        12.200000000000001,
+        0.6019445894142892,
+        0.5999999999999979
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-12"
+    },
+    {
+      "position": [
+        16,
+        0.6019445894142892,
+        -0.6000000000000014
+      ],
+      "componentId": "l2-component-01",
+      "roomId": null,
+      "checkpointId": "l2-checkpoint-13"
+    },
+    {
+      "position": [
+        13.800000000000002,
+        0.6019445894142892,
+        -3.200000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        13.200000000000001,
+        0.6019445894142892,
+        -3.8000000000000007
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-14"
+    },
+    {
+      "position": [
+        14.4,
+        0.6019445894142892,
+        -2.6000000000000014
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        14.800000000000002,
+        0.6019445894142892,
+        5.199999999999999
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-15"
+    },
+    {
+      "position": [
+        8.6,
+        0.6019445894142892,
+        5.199999999999999
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-16"
+    },
+    {
+      "position": [
+        10.200000000000001,
+        0.6019445894142892,
+        -3.8000000000000007
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        12.200000000000001,
+        0.6019445894142892,
+        -5.000000000000002
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-17"
+    },
+    {
+      "position": [
+        11.6,
+        0.6019445894142892,
+        -5.200000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        11.4,
+        0.6019445894142892,
+        -5.600000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        10.200000000000001,
+        0.6019445894142892,
+        -7.200000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155"
+    },
+    {
+      "position": [
+        10.4,
+        0.6019445894142892,
+        -14.000000000000002
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:1bf381cdf354e155",
+      "checkpointId": "l2-checkpoint-18"
+    },
+    {
+      "position": [
+        5.6,
+        0.6019445894142892,
+        -0.20000000000000284
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        5.6,
+        0.6019445894142892,
+        3.8000000000000007
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "checkpointId": "l2-checkpoint-19"
+    },
+    {
+      "position": [
+        4.4,
+        0.6019445894142892,
+        8.2
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67",
+      "checkpointId": "l2-checkpoint-20"
+    },
+    {
+      "position": [
+        8.200000000000001,
+        0.6019445894142892,
+        11
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67",
+      "checkpointId": "l2-checkpoint-21"
+    },
+    {
+      "position": [
+        12.6,
+        0.6019445894142892,
+        10.599999999999998
+      ],
+      "componentId": "l2-component-01",
+      "roomId": null,
+      "checkpointId": "l2-checkpoint-22"
+    },
+    {
+      "position": [
+        11.4,
+        0.6019445894142892,
+        9.599999999999998
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67"
+    },
+    {
+      "position": [
+        11.4,
+        0.6019445894142892,
+        6.599999999999998
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67",
+      "checkpointId": "l2-checkpoint-23"
+    },
+    {
+      "position": [
+        11.4,
+        0.6019445894142892,
+        15.399999999999999
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67",
+      "checkpointId": "l2-checkpoint-24"
+    },
+    {
+      "position": [
+        4.4,
+        0.6019445894142892,
+        15.399999999999999
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:6f09456933315a67",
+      "checkpointId": "l2-checkpoint-25"
+    },
+    {
+      "position": [
+        4.8000000000000025,
+        0.6019445894142892,
+        5.599999999999998
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        4.4,
+        0.6019445894142892,
+        5.199999999999999
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        3.200000000000001,
+        0.6019445894142892,
+        5.199999999999999
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        3.0000000000000018,
+        0.6019445894142892,
+        5.800000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": null
+    },
+    {
+      "position": [
+        2.799999999999999,
+        0.6019445894142892,
+        8
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:a76f81694a5c9cce",
+      "checkpointId": "l2-checkpoint-26"
+    },
+    {
+      "position": [
+        2.0000000000000018,
+        0.6019445894142892,
+        4.800000000000001
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        0.5999999999999996,
+        0.6019445894142892,
+        3.3999999999999986
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "checkpointId": "l2-checkpoint-27"
+    },
+    {
+      "position": [
+        -0.5999999999999996,
+        0.6019445894142892,
+        7
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        -1.4000000000000004,
+        0.6019445894142892,
+        7.599999999999998
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:606714784e2c93f2",
+      "checkpointId": "l2-checkpoint-28"
+    },
+    {
+      "position": [
+        -0.1999999999999993,
+        0.6019445894142892,
+        8.399999999999999
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        -0.1999999999999993,
+        0.6019445894142892,
+        8.8
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:07aebe4bc9db947e"
+    },
+    {
+      "position": [
+        -0.5999999999999996,
+        0.6019445894142892,
+        9.2
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:07aebe4bc9db947e"
+    },
+    {
+      "position": [
+        -2,
+        0.6019445894142892,
+        9.8
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:07aebe4bc9db947e",
+      "checkpointId": "l2-checkpoint-29"
+    },
+    {
+      "position": [
+        0.5999999999999996,
+        0.6019445894142892,
+        13
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:07aebe4bc9db947e",
+      "checkpointId": "l2-checkpoint-30"
+    },
+    {
+      "position": [
+        -0.5999999999999996,
+        0.6019445894142892,
+        5.399999999999999
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        -4.4,
+        0.6019445894142892,
+        2.3999999999999986
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1",
+      "checkpointId": "l2-checkpoint-31"
+    },
+    {
+      "position": [
+        -5.799999999999999,
+        0.6019445894142892,
+        6
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:2f88b892796965aa",
+      "checkpointId": "l2-checkpoint-32"
+    },
+    {
+      "position": [
+        -4.799999999999999,
+        0.6019445894142892,
+        9.599999999999998
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:2f88b892796965aa",
+      "checkpointId": "l2-checkpoint-33"
+    },
+    {
+      "position": [
+        -5.799999999999999,
+        0.6019445894142892,
+        5.199999999999999
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:be052318f7a4cdf1"
+    },
+    {
+      "position": [
+        -8.8,
+        0.6019445894142892,
+        2.599999999999998
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:aff9b5bc6c105fb9",
+      "checkpointId": "l2-checkpoint-34"
+    },
+    {
+      "position": [
+        -14,
+        0.6019445894142892,
+        2.3999999999999986
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:aff9b5bc6c105fb9",
+      "checkpointId": "l2-checkpoint-35"
+    },
+    {
+      "position": [
+        -10.8,
+        0.6019445894142892,
+        7.599999999999998
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:aff9b5bc6c105fb9",
+      "checkpointId": "l2-checkpoint-36"
+    },
+    {
+      "position": [
+        -14,
+        0.6019445894142892,
+        12.8
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:aff9b5bc6c105fb9",
+      "checkpointId": "l2-checkpoint-37"
+    },
+    {
+      "position": [
+        -7.4,
+        0.6019445894142892,
+        12.8
+      ],
+      "componentId": "l2-component-01",
+      "roomId": "room:2:aff9b5bc6c105fb9",
+      "checkpointId": "l2-checkpoint-38"
+    },
+    {
+      "position": [
+        13.6,
+        0.6019445894142892,
+        -6.000000000000002
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c",
+      "teleportBefore": true,
+      "checkpointId": "l2-checkpoint-39"
+    },
+    {
+      "position": [
+        15.200000000000001,
+        0.6019445894142892,
+        -6.000000000000002
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c"
+    },
+    {
+      "position": [
+        15.800000000000002,
+        0.6019445894142892,
+        -5.400000000000002
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c"
+    },
+    {
+      "position": [
+        15.4,
+        0.6019445894142892,
+        -2.6000000000000014
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c",
+      "checkpointId": "l2-checkpoint-40"
+    },
+    {
+      "position": [
+        15.800000000000002,
+        0.6019445894142892,
+        -5.400000000000002
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c"
+    },
+    {
+      "position": [
+        15.200000000000001,
+        0.6019445894142892,
+        -6.000000000000002
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c"
+    },
+    {
+      "position": [
+        12.6,
+        0.6019445894142892,
+        -6.000000000000002
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c"
+    },
+    {
+      "position": [
+        12.200000000000001,
+        0.6019445894142892,
+        -6.400000000000002
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c"
+    },
+    {
+      "position": [
+        12.6,
+        0.6019445894142892,
+        -11.600000000000001
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c",
+      "checkpointId": "l2-checkpoint-41"
+    },
+    {
+      "position": [
+        12.200000000000001,
+        0.6019445894142892,
+        -15.400000000000002
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c"
+    },
+    {
+      "position": [
+        11.800000000000002,
+        0.6019445894142892,
+        -15.800000000000002
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c"
+    },
+    {
+      "position": [
+        9.4,
+        0.6019445894142892,
+        -16.200000000000003
+      ],
+      "componentId": "l2-component-02",
+      "roomId": "room:2:54cf01ebaf4c5c8c",
+      "checkpointId": "l2-checkpoint-42"
+    },
+    {
+      "position": [
+        1.4000000000000004,
+        0.6019445894142892,
+        -15.600000000000001
+      ],
+      "componentId": "l2-component-03",
+      "roomId": "room:2:139720b81b3387a9",
+      "teleportBefore": true,
+      "checkpointId": "l2-checkpoint-43"
+    },
+    {
+      "position": [
+        5.4,
+        0.6019445894142892,
+        -16.200000000000003
+      ],
+      "componentId": "l2-component-03",
+      "roomId": "room:2:139720b81b3387a9",
+      "checkpointId": "l2-checkpoint-44"
+    },
+    {
+      "position": [
+        -2.1999999999999993,
+        0.6019445894142892,
+        -15.800000000000002
+      ],
+      "componentId": "l2-component-03",
+      "roomId": "room:2:139720b81b3387a9"
+    },
+    {
+      "position": [
+        -2.5999999999999996,
+        0.6019445894142892,
+        -15.400000000000002
+      ],
+      "componentId": "l2-component-03",
+      "roomId": "room:2:139720b81b3387a9"
+    },
+    {
+      "position": [
+        -3,
+        0.6019445894142892,
+        -13.600000000000001
+      ],
+      "componentId": "l2-component-03",
+      "roomId": "room:2:139720b81b3387a9",
+      "checkpointId": "l2-checkpoint-45"
+    },
+    {
+      "position": [
+        -10.2,
+        0.6019445894142892,
+        1.5999999999999979
+      ],
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67",
+      "teleportBefore": true,
+      "checkpointId": "l2-checkpoint-46"
+    },
+    {
+      "position": [
+        -14.6,
+        0.6019445894142892,
+        1.1999999999999993
+      ],
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67",
+      "checkpointId": "l2-checkpoint-47"
+    },
+    {
+      "position": [
+        -14.8,
+        0.6019445894142892,
+        2
+      ],
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67"
+    },
+    {
+      "position": [
+        -15.200000000000001,
+        0.6019445894142892,
+        5.599999999999998
+      ],
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67",
+      "checkpointId": "l2-checkpoint-48"
+    },
+    {
+      "position": [
+        -14.8,
+        0.6019445894142892,
+        2
+      ],
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67"
+    },
+    {
+      "position": [
+        -14.4,
+        0.6019445894142892,
+        1.5999999999999979
+      ],
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67"
+    },
+    {
+      "position": [
+        -6.4,
+        0.6019445894142892,
+        1.5999999999999979
+      ],
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67"
+    },
+    {
+      "position": [
+        -5.799999999999999,
+        0.6019445894142892,
+        2
+      ],
+      "componentId": "l2-component-04",
+      "roomId": "room:2:40a5cdb892d72e67",
+      "checkpointId": "l2-checkpoint-49"
+    },
+    {
+      "position": [
+        -10.8,
+        0.6019445894142892,
+        13.599999999999998
+      ],
+      "componentId": "l2-component-05",
+      "roomId": "room:2:d17413a9c4159276",
+      "teleportBefore": true,
+      "checkpointId": "l2-checkpoint-50"
+    },
+    {
+      "position": [
+        -15,
+        0.6019445894142892,
+        14
+      ],
+      "componentId": "l2-component-05",
+      "roomId": "room:2:d17413a9c4159276",
+      "checkpointId": "l2-checkpoint-51"
+    },
+    {
+      "position": [
+        -15.200000000000001,
+        0.6019445894142892,
+        9.8
+      ],
+      "componentId": "l2-component-05",
+      "roomId": "room:2:d17413a9c4159276",
+      "checkpointId": "l2-checkpoint-52"
+    },
+    {
+      "position": [
+        -14.8,
+        0.6019445894142892,
+        13.2
+      ],
+      "componentId": "l2-component-05",
+      "roomId": "room:2:d17413a9c4159276"
+    },
+    {
+      "position": [
+        -14.4,
+        0.6019445894142892,
+        13.599999999999998
+      ],
+      "componentId": "l2-component-05",
+      "roomId": "room:2:d17413a9c4159276"
+    },
+    {
+      "position": [
+        -6.6,
+        0.6019445894142892,
+        14
+      ],
+      "componentId": "l2-component-05",
+      "roomId": "room:2:d17413a9c4159276",
+      "checkpointId": "l2-checkpoint-53"
+    },
+    {
+      "position": [
+        11.000000000000002,
+        0.6019445894142892,
+        16.2
+      ],
+      "componentId": "l2-component-06",
+      "roomId": "room:2:1320aa2737dfc824",
+      "teleportBefore": true,
+      "checkpointId": "l2-checkpoint-54"
+    },
+    {
+      "position": [
+        11.800000000000002,
+        0.6019445894142892,
+        16.2
+      ],
+      "componentId": "l2-component-06",
+      "roomId": "room:2:1320aa2737dfc824"
+    },
+    {
+      "position": [
+        12.4,
+        0.6019445894142892,
+        15.599999999999998
+      ],
+      "componentId": "l2-component-06",
+      "roomId": "room:2:1320aa2737dfc824"
+    },
+    {
+      "position": [
+        12.000000000000002,
+        0.6019445894142892,
+        12.8
+      ],
+      "componentId": "l2-component-06",
+      "roomId": "room:2:1320aa2737dfc824",
+      "checkpointId": "l2-checkpoint-55"
+    },
+    {
+      "position": [
+        -1.4000000000000004,
+        0.6019445894142892,
+        16.2
+      ],
+      "componentId": "l2-component-07",
+      "roomId": "room:2:864706e4f805483c",
+      "teleportBefore": true,
+      "checkpointId": "l2-checkpoint-56"
+    },
+    {
+      "position": [
+        -2.1999999999999993,
+        0.6019445894142892,
+        16.2
+      ],
+      "componentId": "l2-component-07",
+      "roomId": "room:2:864706e4f805483c"
+    },
+    {
+      "position": [
+        -2.5999999999999996,
+        0.6019445894142892,
+        15.8
+      ],
+      "componentId": "l2-component-07",
+      "roomId": "room:2:864706e4f805483c"
+    },
+    {
+      "position": [
+        -2.5999999999999996,
+        0.6019445894142892,
+        14
+      ],
+      "componentId": "l2-component-07",
+      "roomId": "room:2:864706e4f805483c"
+    },
+    {
+      "position": [
+        -3,
+        0.6019445894142892,
+        13.599999999999998
+      ],
+      "componentId": "l2-component-07",
+      "roomId": "room:2:864706e4f805483c"
+    },
+    {
+      "position": [
+        -3.5999999999999996,
+        0.6019445894142892,
+        14
+      ],
+      "componentId": "l2-component-07",
+      "roomId": "room:2:864706e4f805483c",
+      "checkpointId": "l2-checkpoint-57"
+    },
+    {
+      "position": [
+        -2.799999999999999,
+        0.6019445894142892,
+        1.3999999999999986
+      ],
+      "componentId": "l2-component-08",
+      "roomId": "room:2:60c66ee07fb3821a",
+      "teleportBefore": true,
+      "checkpointId": "l2-checkpoint-58"
+    },
+    {
+      "position": [
+        -0.1999999999999993,
+        0.6019445894142892,
+        3
+      ],
+      "componentId": "l2-component-09",
+      "roomId": "room:2:60c66ee07fb3821a",
+      "teleportBefore": true,
+      "checkpointId": "l2-checkpoint-59"
+    }
+  ]
+}

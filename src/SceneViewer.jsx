@@ -15,6 +15,7 @@ import * as THREE from "three";
 import { useFrame } from '@react-three/fiber'
 import config from "./config.js";
 import { TwoDSplashScreen } from "./system_components/TwoDSplashScreen.jsx";
+import { ViewerDebugStyles } from "./Styles.jsx";
 
 import {
   BrowserRouter as Router,
@@ -57,12 +58,20 @@ function SceneViewer() {
   const r3fPerfEnabled = SystemStore((state) => state.r3fPerfEnabled);
   const realTimeGiEnabled = SystemStore((state) => state.realTimeGiEnabled);
   const setRealTimeGiEnabled = SystemStore((state) => state.setRealTimeGiEnabled);
+  const ssaoEnabled = SystemStore((state) => state.ssaoEnabled);
+  const setSsaoEnabled = SystemStore((state) => state.setSsaoEnabled);
+  const bloomEnabled = SystemStore((state) => state.bloomEnabled);
+  const setBloomEnabled = SystemStore((state) => state.setBloomEnabled);
+  const shadowsEnabled = SystemStore((state) => state.shadowsEnabled);
+  const setShadowsEnabled = SystemStore((state) => state.setShadowsEnabled);
   const showBakedPvs = SystemStore((state) => state.showBakedPvs);
   const setShowBakedPvs = SystemStore((state) => state.setShowBakedPvs);
   const anisotropicFilteringEnabled = SystemStore((state) => state.anisotropicFilteringEnabled);
   const setAnisotropicFilteringEnabled = SystemStore((state) => state.setAnisotropicFilteringEnabled);
   const viewerDpr = SystemStore((state) => state.viewerDpr);
   const setViewerDpr = SystemStore((state) => state.setViewerDpr);
+  const viewerDebugSettings = SystemStore((state) => state.viewerDebugSettings);
+  const setViewerDebugSettings = SystemStore((state) => state.setViewerDebugSettings);
   const tutorialClosed = SystemStore((state) => state.tutorialClosed);
   const setTutorialClosed = SystemStore((state) => state.setTutorialClosed);
 
@@ -93,6 +102,12 @@ function SceneViewer() {
   const [fullscreenError, setFullscreenError] = useState("");
   const [pointerLockError, setPointerLockError] = useState("");
   const [gyroscopeStatus, setGyroscopeStatus] = useState("inactive");
+  const [selectedDebugPanel, setSelectedDebugPanel] = useState(null);
+  const [sunOrbitDisplayAngle, setSunOrbitDisplayAngle] = useState(0);
+  const [dayNightStatus, setDayNightStatus] = useState({
+    ready: false, playing: false, active: false, progress: 0,
+    playbackDirection: 1, stage: "Exported lighting", error: null,
+  });
   const firstPersonNavigationRef = useRef(null);
   const desktopPointerLockRequested = useRef(false);
   const previousCircleData = useRef();
@@ -107,9 +122,122 @@ function SceneViewer() {
   // Keep fullscreen entry available for touch devices in either orientation.
   const isTouchDevice = navigator.maxTouchPoints > 0
     || window.matchMedia?.("(pointer: coarse)")?.matches === true;
-  const dprValues = [1, 1.25, 1.5, 2];
   const hideObjectsKey = azertyMode ? "a" : "q";
   const pointerLockFailureMessage = "Mouse control could not start. Click the scene to try again.";
+
+  // Keep debug sliders and their reset values together.
+  const debugPanels = {
+    gi: {
+      title: "Real-time GI", label: `Real-time GI: ${realTimeGiEnabled ? "On" : "Off"}`,
+      enabled: realTimeGiEnabled, setEnabled: setRealTimeGiEnabled,
+      hint: "Experimental screen-space bounce lighting. Higher resolution increases GPU load.",
+      defaults: { giIntensity: 0.7, giResolutionScale: null },
+      sliders: [
+        { key: "giIntensity", label: "GI strength", min: 0, max: 2, step: 0.05 },
+        { key: "giResolutionScale", label: "GI resolution", min: 0.25, max: 1, step: 0.25, fallback: isTouchDevice ? 0.75 : 1 },
+      ],
+    },
+    ssao: {
+      title: "SSAO", label: `SSAO: ${ssaoEnabled ? "On" : "Off"}`,
+      enabled: ssaoEnabled, setEnabled: setSsaoEnabled,
+      hint: "Screen-space ambient occlusion. More samples increase GPU load.",
+      defaults: { ssaoIntensity: 2, ssaoRadius: 0.05, ssaoBias: 0.014, ssaoSamples: 49, ssaoResolutionScale: 0.5 },
+      sliders: [
+        { key: "ssaoIntensity", label: "SSAO strength", min: 0, max: 2, step: 0.05 },
+        { key: "ssaoRadius", label: "SSAO radius", min: 0.01, max: 1, step: 0.01 },
+        { key: "ssaoBias", label: "SSAO bias", min: 0, max: 0.1, step: 0.001 },
+        { key: "ssaoSamples", label: "SSAO samples", min: 9, max: 49, step: 2 },
+        { key: "ssaoResolutionScale", label: "SSAO resolution", min: 0.25, max: 1, step: 0.25 },
+      ],
+    },
+    shadows: {
+      title: "Shadows", label: `Shadows: ${shadowsEnabled ? "On" : "Off"}`,
+      enabled: shadowsEnabled, setEnabled: setShadowsEnabled,
+      hint: "100% coverage automatically fits the whole house. Smaller coverage narrows the shadow camera's width and height, concentrating detail but potentially clipping distant shadows; it does not change darkness. Softness adjusts the sun's apparent diameter in degrees; zero keeps hard edges. Auto preserves exported bias and resolution settings.",
+      defaults: { shadowBias: null, shadowNormalBias: null, shadowMapSize: null, shadowSoftness: 2, shadowCoverage: 100 },
+      sliders: [
+        { key: "shadowCoverage", label: "Sun shadow coverage", min: 10, max: 200, step: 5, fallback: 100, suffix: "%" },
+        { key: "shadowSoftness", label: "Shadow softness (°)", min: 0, max: 8, step: 0.1, fallback: 2, suffix: "°" },
+        { key: "shadowBias", label: "Shadow depth bias", min: -0.005, max: 0.005, step: 0.00001, fallback: 0 },
+        { key: "shadowNormalBias", label: "Shadow normal bias", min: 0, max: 0.2, step: 0.001, fallback: 0 },
+        { key: "shadowMapSize", label: "Shadow map resolution", min: 0, max: 3, step: 1, fallback: 512, options: [512, 1024, 2048, 4096], suffix: " px" },
+      ],
+    },
+    pvs: {
+      title: "Baked PVS", label: showBakedPvs ? "Hide baked pvs" : "Show baked pvs",
+      enabled: showBakedPvs, setEnabled: setShowBakedPvs,
+      hint: "Cyan: baked visibility cells. Green: current camera cells. This changes debug visibility only, not culling.",
+      defaults: { pvsOpacity: 0.65 },
+      sliders: [{ key: "pvsOpacity", label: "PVS debug opacity", min: 0.05, max: 1, step: 0.05 }],
+    },
+    anisotropy: {
+      title: "Anisotropic filtering", label: `Anisotropic filtering: ${anisotropicFilteringEnabled ? "On" : "Off"}`,
+      enabled: anisotropicFilteringEnabled, setEnabled: setAnisotropicFilteringEnabled,
+      hint: "Sharpens angled textures. The requested sample count is limited by your GPU.",
+      defaults: { anisotropy: 8 },
+      sliders: [{ key: "anisotropy", label: "Anisotropic samples", min: 1, max: 16, step: 1, suffix: "×" }],
+    },
+    dpr: {
+      title: "DPR", label: `DPR: ${viewerDpr}`,
+      hint: "Rendering resolution. Higher values increase GPU load.",
+      sliders: [{ key: "viewerDpr", label: "Pixel ratio", min: 0.5, max: 2, step: 0.25 }],
+    },
+    sunColor: {
+      title: "Sun light color", label: "Sun light color",
+      hint: "Adjusts the sun light only. Reset restores the exported sun color.",
+      defaults: { sunLightColor: null },
+      sliders: [],
+    },
+    sunOrbit: {
+      title: "Sun orbit", label: "Sun orbit",
+      hint: "Pause or choose an angle relative to the exported sun pose. Play uses the exported orbit speed. Ray guides show incoming sunlight, not whether it passes through walls.",
+      defaults: { sunOrbitAngle: null, sunOrbitPaused: true },
+      sliders: [{ key: "sunOrbitAngle", label: "Sun orbit angle", min: 0, max: 360, step: 1, suffix: "°" }],
+    },
+    dayNight: {
+      title: "Day / night", label: "Day / night",
+      hint: "Play either way: morning → noon → afternoon → sunset → dusk → evening → night. Changing direction continues from the current time. Duration covers the full transition. Reset restores exported lighting.",
+      defaults: {
+        dayNightDuration: 3, dayNightMaxElevation: 60, dayNightAzimuth: 0,
+        dayNightSunStrength: 1, dayNightDayBrightness: 0.35,
+        dayNightNightBrightness: 0.12, dayNightNightSkyBrightness: 0.15, dayNightProgress: 0,
+      },
+      sliders: [
+        { key: "dayNightDuration", label: "Transition duration", min: 2, max: 30, step: 1, suffix: " s" },
+        { key: "dayNightMaxElevation", label: "Maximum sun elevation", min: 10, max: 85, step: 1, suffix: "°" },
+        { key: "dayNightAzimuth", label: "Sun path azimuth", min: -180, max: 180, step: 1, suffix: "°" },
+        { key: "dayNightSunStrength", label: "Sun strength", min: 0, max: 3, step: 0.1, suffix: "×" },
+        { key: "dayNightDayBrightness", label: "Day environment brightness", min: 0, max: 2, step: 0.05 },
+        { key: "dayNightNightBrightness", label: "Night environment brightness", min: 0, max: 1, step: 0.01 },
+        { key: "dayNightNightSkyBrightness", label: "Night sky brightness", min: 0, max: 1, step: 0.01 },
+        { key: "dayNightProgress", label: "Time of day", min: 0, max: 100, step: 1, suffix: "%" },
+      ],
+    },
+    bloom: {
+      title: "Bloom", label: `Bloom: ${bloomEnabled ? "On" : "Off"}`,
+      enabled: bloomEnabled, setEnabled: setBloomEnabled,
+      hint: "HDR glow is applied before tone mapping. A threshold of 1 or higher favors bright emissive materials; lower values also bloom ordinary highlights. Higher resolution increases GPU load.",
+      defaults: { bloomIntensity: 0.5, bloomThreshold: 2, bloomSmoothing: 0.2, bloomRadius: 0.5, bloomResolutionScale: 0.5 },
+      sliders: [
+        { key: "bloomIntensity", label: "Bloom strength", min: 0, max: 3, step: 0.05 },
+        { key: "bloomThreshold", label: "Bloom threshold", min: 0, max: 3, step: 0.05 },
+        { key: "bloomSmoothing", label: "Bloom smoothing", min: 0, max: 1, step: 0.01 },
+        { key: "bloomRadius", label: "Bloom radius", min: 0, max: 1, step: 0.01 },
+        { key: "bloomResolutionScale", label: "Bloom resolution", min: 0.25, max: 1, step: 0.25 },
+      ],
+    },
+  };
+  const activeDebugPanel = debugPanels[selectedDebugPanel];
+
+  // Close debug controls without resetting their settings.
+  useEffect(() => {
+    if (!selectedDebugPanel) return undefined;
+    const handleDebugEscape = (event) => {
+      if (event.key === "Escape") setSelectedDebugPanel(null);
+    };
+    window.addEventListener("keydown", handleDebugEscape);
+    return () => window.removeEventListener("keydown", handleDebugEscape);
+  }, [selectedDebugPanel]);
 
   //////////////////////////////////////
   ////////// Viewer setup //////////////
@@ -697,37 +825,18 @@ function SceneViewer() {
                 )}
                 {fullscreenError && <span role="status">{fullscreenError}</span>}
                 {pointerLockError && <span role="status">{pointerLockError}</span>}
-                <button
-                  type="button"
-                  onClick={() => setRealTimeGiEnabled(!realTimeGiEnabled)}
-                  aria-pressed={realTimeGiEnabled}
-                  title="Compare experimental screen-space bounce lighting. SSAO stays enabled."
-                >
-                  Real-time GI: {realTimeGiEnabled ? "On" : "Off"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowBakedPvs(!showBakedPvs)}
-                  aria-pressed={showBakedPvs}
-                  title="Cyan: baked visibility cells. Green: current camera cells. Culling remains enabled."
-                >
-                  {showBakedPvs ? "Hide baked pvs" : "Show baked pvs"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAnisotropicFilteringEnabled(!anisotropicFilteringEnabled)}
-                  aria-pressed={anisotropicFilteringEnabled}
-                  title="Sharpen angled model textures with up to 8x filtering, limited by your GPU."
-                >
-                  Anisotropic filtering: {anisotropicFilteringEnabled ? "On" : "Off"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewerDpr(dprValues[(dprValues.indexOf(viewerDpr) + 1) % dprValues.length])}
-                  title="Cycle rendering resolution: 1, 1.25, 1.5, 2. Higher values increase GPU load."
-                >
-                  DPR: {viewerDpr}
-                </button>
+                {Object.entries(debugPanels).map(([key, panel]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedDebugPanel(selectedDebugPanel === key ? null : key)}
+                    aria-expanded={selectedDebugPanel === key}
+                    aria-controls="viewer-debug-panel"
+                    title={`Adjust ${panel.title} settings.`}
+                  >
+                    {panel.label}
+                  </button>
+                ))}
                 {canvasReady && canvasEnabled && gyroscopeStatus !== "inactive" && (
                   <>
                     {gyroscopeStatus !== "unavailable" && (
@@ -758,6 +867,182 @@ function SceneViewer() {
                   </>
                 )}
               </div>
+              {activeDebugPanel && tutorialClosed && (
+                <section
+                  id="viewer-debug-panel"
+                  className="viewer-debug-panel"
+                  style={ViewerDebugStyles.panel}
+                  aria-labelledby="viewer-debug-title"
+                  data-viewer-control="true"
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => {
+                    event.stopPropagation();
+                    if (event.key === "Escape") setSelectedDebugPanel(null);
+                  }}
+                  onKeyUp={(event) => event.stopPropagation()}
+                >
+                  <div style={ViewerDebugStyles.header}>
+                    <h2 id="viewer-debug-title" style={ViewerDebugStyles.title}>{activeDebugPanel.title}</h2>
+                    <button type="button" aria-label="Close debug settings" onClick={() => setSelectedDebugPanel(null)}>Close</button>
+                  </div>
+                  {activeDebugPanel.setEnabled && (
+                    <label style={ViewerDebugStyles.enable}>
+                      <input
+                        type="checkbox"
+                        checked={activeDebugPanel.enabled}
+                        onChange={(event) => activeDebugPanel.setEnabled(event.target.checked)}
+                      />
+                      Enable {activeDebugPanel.title}
+                    </label>
+                  )}
+                  {selectedDebugPanel === "sunColor" && (
+                    <div style={ViewerDebugStyles.control}>
+                      <label htmlFor="viewer-debug-sunLightColor" style={ViewerDebugStyles.label}>
+                        Sun light color
+                        <output htmlFor="viewer-debug-sunLightColor">{viewerDebugSettings.sunLightColor ?? "Auto"}</output>
+                      </label>
+                      <input
+                        id="viewer-debug-sunLightColor"
+                        type="color"
+                        value={viewerDebugSettings.sunLightColor ?? "#ffffff"}
+                        onChange={(event) => setViewerDebugSettings({ sunLightColor: event.target.value })}
+                      />
+                    </div>
+                  )}
+                  {selectedDebugPanel === "sunOrbit" && (
+                    <label style={ViewerDebugStyles.enable}>
+                      <input
+                        type="checkbox"
+                        checked={!viewerDebugSettings.sunOrbitPaused}
+                        onChange={(event) => setViewerDebugSettings({ sunOrbitPaused: !event.target.checked })}
+                      />
+                      Animate sun orbit
+                    </label>
+                  )}
+                  {selectedDebugPanel === "dayNight" && (
+                    <>
+                      <p role="status" aria-label="Day night status" style={ViewerDebugStyles.hint}>
+                        {dayNightStatus.error
+                          ? `Night environment unavailable: ${dayNightStatus.error}`
+                          : !dayNightStatus.ready
+                            ? "Preparing night environment…"
+                            : `${dayNightStatus.stage}${dayNightStatus.active ? ` · ${Math.round(dayNightStatus.progress)}%` : ""}`}
+                      </p>
+                      <div style={{ ...ViewerDebugStyles.header, flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          disabled={!dayNightStatus.ready || (dayNightStatus.active && dayNightStatus.progress >= 100)}
+                          onClick={() => setViewerDebugSettings({
+                            dayNightAction: "play",
+                            dayNightCommand: (viewerDebugSettings.dayNightCommand ?? 0) + 1,
+                          })}
+                        >
+                          Play day to night
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!dayNightStatus.ready || !dayNightStatus.active || dayNightStatus.progress <= 0}
+                          onClick={() => setViewerDebugSettings({
+                            dayNightAction: "reverse",
+                            dayNightCommand: (viewerDebugSettings.dayNightCommand ?? 0) + 1,
+                          })}
+                        >
+                          Play night to day
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!dayNightStatus.ready || !dayNightStatus.active
+                            || (dayNightStatus.playbackDirection === -1 ? dayNightStatus.progress <= 0 : dayNightStatus.progress >= 100)}
+                          onClick={() => setViewerDebugSettings({
+                            dayNightAction: dayNightStatus.playing ? "pause" : "resume",
+                            dayNightCommand: (viewerDebugSettings.dayNightCommand ?? 0) + 1,
+                          })}
+                        >
+                          {dayNightStatus.playing ? "Pause" : "Resume"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setViewerDebugSettings({
+                            dayNightAction: "reset",
+                            dayNightCommand: (viewerDebugSettings.dayNightCommand ?? 0) + 1,
+                          })}
+                        >
+                          Reset daylight
+                        </button>
+                      </div>
+                    </>
+                  )}
+                  {activeDebugPanel.sliders.map((slider) => {
+                    const value = slider.key === "sunOrbitAngle" ? sunOrbitDisplayAngle
+                      : slider.key === "dayNightProgress" ? (dayNightStatus.active ? dayNightStatus.progress : 0)
+                      : slider.key === "viewerDpr" ? viewerDpr : viewerDebugSettings[slider.key];
+                    const resolvedValue = value ?? slider.fallback;
+                    const sliderValue = slider.options ? slider.options.indexOf(resolvedValue) : resolvedValue;
+                    const displayValue = value == null ? "Auto"
+                      : `${slider.key === "sunOrbitAngle" ? Math.round(value * 10) / 10
+                        : slider.key === "dayNightProgress" ? Math.round(value) : value}${slider.suffix ?? ""}`;
+                    return (
+                      <div key={slider.key} style={ViewerDebugStyles.control}>
+                        <label htmlFor={`viewer-debug-${slider.key}`} style={ViewerDebugStyles.label}>
+                          {slider.label}
+                          <output htmlFor={`viewer-debug-${slider.key}`}>{displayValue}</output>
+                        </label>
+                        <input
+                          id={`viewer-debug-${slider.key}`}
+                          type="range"
+                          min={slider.min}
+                          max={slider.max}
+                          step={slider.step}
+                          value={sliderValue}
+                          aria-valuetext={displayValue}
+                          disabled={slider.key === "dayNightProgress" && !dayNightStatus.ready}
+                          onChange={(event) => {
+                            const nextValue = slider.options?.[Number(event.target.value)] ?? Number(event.target.value);
+                            if (slider.key === "viewerDpr") setViewerDpr(nextValue);
+                            else if (slider.key === "sunOrbitAngle") {
+                              setSunOrbitDisplayAngle(nextValue);
+                              setViewerDebugSettings({
+                                sunOrbitAngle: nextValue, sunOrbitPaused: true,
+                                sunOrbitAngleRevision: (viewerDebugSettings.sunOrbitAngleRevision ?? 0) + 1,
+                              });
+                            }
+                            else if (slider.key === "dayNightProgress") {
+                              setDayNightStatus((status) => ({ ...status, active: true, playing: false, progress: nextValue }));
+                              setViewerDebugSettings({
+                                dayNightAction: "preview", dayNightProgress: nextValue,
+                                dayNightCommand: (viewerDebugSettings.dayNightCommand ?? 0) + 1,
+                              });
+                            }
+                            else setViewerDebugSettings({ [slider.key]: nextValue });
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                  <p style={ViewerDebugStyles.hint}>{activeDebugPanel.hint}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedDebugPanel === "dpr") setViewerDpr(1);
+                      else if (selectedDebugPanel === "sunOrbit") {
+                        setSunOrbitDisplayAngle(0);
+                        setViewerDebugSettings({
+                          ...activeDebugPanel.defaults,
+                          sunOrbitAngleRevision: (viewerDebugSettings.sunOrbitAngleRevision ?? 0) + 1,
+                        });
+                      } else if (selectedDebugPanel === "dayNight") {
+                        setViewerDebugSettings({
+                          ...activeDebugPanel.defaults, dayNightAction: "reset",
+                          dayNightCommand: (viewerDebugSettings.dayNightCommand ?? 0) + 1,
+                        });
+                      } else setViewerDebugSettings(activeDebugPanel.defaults);
+                    }}
+                  >
+                    Reset values
+                  </button>
+                </section>
+              )}
               <Alert />
               <ToolTip
                 active={tooltipProps.active}
@@ -842,7 +1127,7 @@ function SceneViewer() {
                     onPointerDown={handleCanvasPointerDown}
                     onPointerEnter={handleCanvasPointerEnter}
                     onPointerLeave={handleCanvasPointerLeave}
-                    shadows
+                    shadows={{ enabled: shadowsEnabled, type: THREE.PCFShadowMap }}
                     dpr={viewerDpr}
                     gl={{ powerPreference: "high-performance", toneMappingExposure: 1 }}
                   >
@@ -854,6 +1139,10 @@ function SceneViewer() {
                       hideObjectsKey={hideObjectsKey}
                       touchNavigationMode={touchNavigationMode}
                       inputBlocked={!tutorialClosed}
+                      showSunRays={(selectedDebugPanel === "sunOrbit" || selectedDebugPanel === "dayNight") && tutorialClosed}
+                      onSunOrbitAngleChange={setSunOrbitDisplayAngle}
+                      showDayNightSettings={selectedDebugPanel === "dayNight" && tutorialClosed}
+                      onDayNightStatusChange={setDayNightStatus}
                     />
                     {/* <FPSLogger /> */}
                   </Canvas>

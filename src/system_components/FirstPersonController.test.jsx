@@ -10,6 +10,7 @@ let mockFrame;
 let mockOctrees;
 let mockController;
 let mockAnimationFrames;
+let mockCollisionTasks;
 
 jest.mock("@react-three/fiber", () => ({
     useThree: () => ({ scene: mockScene, gl: mockGl }),
@@ -46,19 +47,36 @@ jest.mock("three/examples/jsm/math/Capsule.js", () => {
     };
 });
 
-jest.mock("three/examples/jsm/math/Octree.js", () => ({
-    Octree: class {
-        constructor() {
-            this.triangles = [];
-            this.build = jest.fn(() => this);
-            this.capsuleIntersect = jest.fn(() => false);
-            mockOctrees.push(this);
-        }
-        addTriangle(triangle) {
-            this.triangles.push(triangle);
-        }
-    },
-}));
+jest.mock("three/examples/jsm/math/Octree.js", () => {
+    const { Box3 } = jest.requireActual("three");
+    return {
+        Octree: class {
+            constructor(box) {
+                this.box = box;
+                this.bounds = new Box3();
+                this.subTrees = [];
+                this.triangles = [];
+                this.sourceTriangles = [];
+                this.build = jest.fn(() => this);
+                this.capsuleIntersect = jest.fn(() => false);
+                mockOctrees.push(this);
+            }
+            addTriangle(triangle) {
+                this.triangles.push(triangle);
+                this.sourceTriangles.push(triangle);
+                this.bounds.expandByPoint(triangle.a);
+                this.bounds.expandByPoint(triangle.b);
+                this.bounds.expandByPoint(triangle.c);
+                return this;
+            }
+            calcBox() {
+                this.box = this.bounds.clone();
+                this.box.min.addScalar(-0.01);
+                return this;
+            }
+        },
+    };
+});
 
 // Attach real Three transforms to the controller's returned refs.
 function ControllerHarness(props) {
@@ -104,9 +122,14 @@ function addCollider(parent, x, hideable = false, instanced = false) {
 
 // Run only scheduled builds, never browser animation timing.
 function flushCollisionBuilds() {
-    const callbacks = [...mockAnimationFrames.values()];
-    mockAnimationFrames.clear();
-    act(() => callbacks.forEach((callback) => callback()));
+    let iterations = 0;
+    while (mockAnimationFrames.size || mockCollisionTasks?.size) {
+        if (iterations++ > 10000) throw new Error("Collision build never completed");
+        const callbacks = [...mockAnimationFrames.values(), ...mockCollisionTasks.values()];
+        mockAnimationFrames.clear();
+        mockCollisionTasks.clear();
+        act(() => callbacks.forEach((callback) => callback()));
+    }
 }
 
 // Dispatch touch pointers without jsdom PointerEvent support.
@@ -158,6 +181,7 @@ beforeEach(() => {
     mockGl.domElement.hasPointerCapture = jest.fn(() => true);
     mockOctrees = [];
     mockAnimationFrames = new Map();
+    mockCollisionTasks = new Map();
     let nextFrame = 0;
     jest.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
         nextFrame += 1;
@@ -171,88 +195,421 @@ beforeEach(() => {
 
 afterEach(() => jest.restoreAllMocks());
 
-test("hiding objects skips capsule and ground checks without rebuilding", () => {
-    const root = new THREE.Group();
-    root.userData.housemakerObjectsHidden = false;
-    mockScene.add(root);
-    const surface = addCollider(root, 0);
-    const furniture = addCollider(root, 10, true);
-    const raycast = jest.spyOn(THREE.Raycaster.prototype, "intersectObjects")
-        .mockReturnValue([]);
-    render(<ControllerHarness position={[0, 3, 0]} />);
-    flushCollisionBuilds();
-
-    const surfaceOctree = mockOctrees.find((octree) => octree.triangles[0].a.x === 0);
-    const furnitureOctree = mockOctrees.find((octree) => octree.triangles[0].a.x === 10);
-    act(() => mockFrame({}, 0.016));
-    expect(surfaceOctree.capsuleIntersect).toHaveBeenCalledTimes(1);
-    expect(furnitureOctree.capsuleIntersect).toHaveBeenCalledTimes(1);
-
-    root.userData.housemakerObjectsHidden = true;
-    raycast.mockClear();
-    act(() => mockFrame({}, 0.016));
-    expect(surfaceOctree.capsuleIntersect).toHaveBeenCalledTimes(2);
-    expect(furnitureOctree.capsuleIntersect).toHaveBeenCalledTimes(1);
-    expect(raycast).toHaveBeenCalledWith([surface], false);
-    expect(raycast).not.toHaveBeenCalledWith([furniture], false);
-
-    root.userData.housemakerObjectsHidden = false;
-    act(() => mockFrame({}, 0.016));
-    expect(furnitureOctree.capsuleIntersect).toHaveBeenCalledTimes(2);
-    expect(mockOctrees).toHaveLength(2);
-    expect(surfaceOctree.build).toHaveBeenCalledTimes(1);
-    expect(furnitureOctree.build).toHaveBeenCalledTimes(1);
-    expect(mockAnimationFrames.size).toBe(0);
-});
-
-test("independent loaders and hidden instances retain separate colliders", () => {
-    const rootA = new THREE.Group();
-    rootA.userData.housemakerObjectsHidden = true;
-    const rootB = new THREE.Group();
-    rootB.userData.housemakerObjectsHidden = false;
-    mockScene.add(rootA, rootB);
-    const furnitureA = addCollider(rootA, 10, true, true);
-    furnitureA.visible = false;
-    addCollider(rootB, 20, true);
-    addCollider(rootA, 30);
-    render(<ControllerHarness position={[0, 3, 0]} />);
-    flushCollisionBuilds();
-
-    const treeA = mockOctrees.find((octree) => octree.triangles[0].a.x === 10);
-    const treeB = mockOctrees.find((octree) => octree.triangles[0].a.x === 20);
-    const surfaceTree = mockOctrees.find((octree) => octree.triangles[0].a.x === 30);
-    expect(treeA.triangles.map((triangle) => triangle.a.x)).toEqual([10, 12]);
-    act(() => mockFrame({}, 0.016));
-    expect(treeA.capsuleIntersect).not.toHaveBeenCalled();
-    expect(treeB.capsuleIntersect).toHaveBeenCalledTimes(1);
-    expect(surfaceTree.capsuleIntersect).toHaveBeenCalledTimes(1);
-
-    rootA.userData.housemakerObjectsHidden = false;
-    furnitureA.visible = true;
-    act(() => mockFrame({}, 0.016));
-    expect(treeA.capsuleIntersect).toHaveBeenCalledTimes(1);
-    expect(mockOctrees).toHaveLength(3);
-});
-
-test("surface and object capsule responses compose sequentially", () => {
-    const root = new THREE.Group();
-    root.userData.housemakerObjectsHidden = false;
-    mockScene.add(root);
-    addCollider(root, 0);
-    addCollider(root, 10, true);
-    render(<ControllerHarness position={[0, 3, 0]} />);
-    flushCollisionBuilds();
-    mockOctrees[0].capsuleIntersect.mockReturnValue({
-        normal: new THREE.Vector3(1, 0, 0), depth: 1,
-    });
-    mockOctrees[1].capsuleIntersect.mockImplementation((capsule) => {
-        expect(capsule.start.x).toBe(1);
-        return { normal: new THREE.Vector3(0, 0, 1), depth: 2 };
+describe("collision world construction", () => {
+    beforeEach(() => {
+        const nativeSetTimeout = window.setTimeout;
+        const nativeClearTimeout = window.clearTimeout;
+        let nextTask = 0;
+        jest.spyOn(window, "setTimeout").mockImplementation((callback, delay, ...args) => {
+            if (delay !== 0) return nativeSetTimeout(callback, delay, ...args);
+            const id = `collision-${++nextTask}`;
+            mockCollisionTasks.set(id, () => callback(...args));
+            return id;
+        });
+        jest.spyOn(window, "clearTimeout").mockImplementation((id) => {
+            if (mockCollisionTasks.has(id)) mockCollisionTasks.delete(id);
+            else nativeClearTimeout(id);
+        });
     });
 
-    act(() => mockFrame({}, 0.016));
-    expect(mockController.position.x).toBe(1);
-    expect(mockController.position.z).toBe(2);
+    test("hiding objects skips capsule and ground checks without rebuilding", () => {
+        const root = new THREE.Group();
+        root.userData.housemakerObjectsHidden = false;
+        mockScene.add(root);
+        const surface = addCollider(root, 0);
+        const furniture = addCollider(root, 10, true);
+        const raycast = jest.spyOn(THREE.Raycaster.prototype, "intersectObjects")
+            .mockReturnValue([]);
+        render(<ControllerHarness position={[0, 3, 0]} />);
+        flushCollisionBuilds();
+
+        const surfaceOctree = mockOctrees.find((octree) => octree.sourceTriangles[0]?.a.x === 0);
+        const furnitureOctree = mockOctrees.find((octree) => octree.sourceTriangles[0]?.a.x === 10);
+        act(() => mockFrame({}, 0.016));
+        expect(surfaceOctree.capsuleIntersect).toHaveBeenCalledTimes(1);
+        expect(furnitureOctree.capsuleIntersect).toHaveBeenCalledTimes(1);
+
+        root.userData.housemakerObjectsHidden = true;
+        raycast.mockClear();
+        act(() => mockFrame({}, 0.016));
+        expect(surfaceOctree.capsuleIntersect).toHaveBeenCalledTimes(2);
+        expect(furnitureOctree.capsuleIntersect).toHaveBeenCalledTimes(1);
+        expect(raycast).toHaveBeenCalledWith([surface], false);
+        expect(raycast).not.toHaveBeenCalledWith([furniture], false);
+
+        root.userData.housemakerObjectsHidden = false;
+        act(() => mockFrame({}, 0.016));
+        expect(furnitureOctree.capsuleIntersect).toHaveBeenCalledTimes(2);
+        expect(mockOctrees.filter((octree) => octree.sourceTriangles.length)).toHaveLength(2);
+        expect(surfaceOctree.build).not.toHaveBeenCalled();
+        expect(furnitureOctree.build).not.toHaveBeenCalled();
+        expect(mockAnimationFrames.size).toBe(0);
+    });
+
+    test("independent loaders and hidden instances retain separate colliders", () => {
+        const rootA = new THREE.Group();
+        rootA.userData.housemakerObjectsHidden = true;
+        const rootB = new THREE.Group();
+        rootB.userData.housemakerObjectsHidden = false;
+        mockScene.add(rootA, rootB);
+        const furnitureA = addCollider(rootA, 10, true, true);
+        furnitureA.visible = false;
+        addCollider(rootB, 20, true);
+        addCollider(rootA, 30);
+        render(<ControllerHarness position={[0, 3, 0]} />);
+        flushCollisionBuilds();
+
+        const treeA = mockOctrees.find((octree) => octree.sourceTriangles[0]?.a.x === 10);
+        const treeB = mockOctrees.find((octree) => octree.sourceTriangles[0]?.a.x === 20);
+        const surfaceTree = mockOctrees.find((octree) => octree.sourceTriangles[0]?.a.x === 30);
+        expect(treeA.sourceTriangles.map((triangle) => triangle.a.x)).toEqual([10, 12]);
+        act(() => mockFrame({}, 0.016));
+        expect(treeA.capsuleIntersect).not.toHaveBeenCalled();
+        expect(treeB.capsuleIntersect).toHaveBeenCalledTimes(1);
+        expect(surfaceTree.capsuleIntersect).toHaveBeenCalledTimes(1);
+
+        rootA.userData.housemakerObjectsHidden = false;
+        furnitureA.visible = true;
+        act(() => mockFrame({}, 0.016));
+        expect(treeA.capsuleIntersect).toHaveBeenCalledTimes(1);
+        expect(mockOctrees.filter((octree) => octree.sourceTriangles.length)).toHaveLength(3);
+    });
+
+    test.each([false, true])("night fixtures retain collisions without rebuilding: instanced=%s", (instanced) => {
+        const root = new THREE.Group();
+        root.userData.housemakerObjectsHidden = false;
+        root.userData.housemakerNightFactor = 0;
+        mockScene.add(root);
+        const surface = addCollider(root, 0);
+        const furniture = addCollider(root, 10, true);
+        const fixture = addCollider(root, 20, true, instanced);
+        const mirroredFixture = addCollider(root, 30, true, instanced);
+        fixture.userData.housemakerKeepWhenLit = true;
+        mirroredFixture.userData.housemakerKeepWhenLit = true;
+        const raycast = jest.spyOn(THREE.Raycaster.prototype, "intersectObjects").mockReturnValue([]);
+        render(<ControllerHarness position={[0, 3, 0]} />);
+        flushCollisionBuilds();
+        const trees = mockOctrees.filter((octree) => octree.sourceTriangles.length);
+        const surfaceTree = trees.find((octree) => octree.sourceTriangles[0].a.x === 0);
+        const furnitureTree = trees.find((octree) => octree.sourceTriangles[0].a.x === 10);
+        const fixtureTree = trees.find((octree) => octree.sourceTriangles[0].a.x === 20);
+        const treeCount = mockOctrees.length;
+        expect(trees).toHaveLength(3);
+        expect(fixtureTree.sourceTriangles.map((triangle) => triangle.a.x))
+            .toEqual(instanced ? [20, 22, 30, 32] : [20, 30]);
+        act(() => mockFrame({}, 0.016));
+        expect(surfaceTree.capsuleIntersect).toHaveBeenCalledTimes(1);
+        expect(furnitureTree.capsuleIntersect).toHaveBeenCalledTimes(1);
+        expect(fixtureTree.capsuleIntersect).toHaveBeenCalledTimes(1);
+
+        root.userData.housemakerObjectsHidden = true;
+        raycast.mockClear();
+        act(() => mockFrame({}, 0.016));
+        expect(furnitureTree.capsuleIntersect).toHaveBeenCalledTimes(1);
+        expect(fixtureTree.capsuleIntersect).toHaveBeenCalledTimes(1);
+        expect(raycast).toHaveBeenCalledWith([surface], false);
+        expect(raycast).not.toHaveBeenCalledWith([furniture], false);
+        expect(raycast).not.toHaveBeenCalledWith([fixture, mirroredFixture], false);
+
+        const advanceFrame = mockFrame;
+        for (const factor of [0.01, 1]) {
+            root.userData.housemakerNightFactor = factor;
+            mockScene.dispatchEvent({ type: "childadded", child: root });
+            flushCollisionBuilds();
+            raycast.mockClear();
+            act(() => advanceFrame({}, 0.016));
+            expect(raycast).toHaveBeenCalledWith([fixture, mirroredFixture], false);
+            expect(raycast).not.toHaveBeenCalledWith([furniture], false);
+            expect(mockOctrees).toHaveLength(treeCount);
+        }
+        expect(fixtureTree.capsuleIntersect).toHaveBeenCalledTimes(3);
+        expect(furnitureTree.capsuleIntersect).toHaveBeenCalledTimes(1);
+
+        root.userData.housemakerNightFactor = 0;
+        raycast.mockClear();
+        act(() => mockFrame({}, 0.016));
+        expect(fixtureTree.capsuleIntersect).toHaveBeenCalledTimes(3);
+        expect(raycast).not.toHaveBeenCalledWith([fixture, mirroredFixture], false);
+        root.userData.housemakerObjectsHidden = false;
+        act(() => mockFrame({}, 0.016));
+        expect(furnitureTree.capsuleIntersect).toHaveBeenCalledTimes(2);
+        expect(fixtureTree.capsuleIntersect).toHaveBeenCalledTimes(4);
+        expect(surfaceTree.capsuleIntersect).toHaveBeenCalledTimes(6);
+        expect(mockOctrees).toHaveLength(treeCount);
+        expect(mockAnimationFrames.size).toBe(0);
+        expect(mockCollisionTasks.size).toBe(0);
+    });
+
+    test("fixture collisions use only their loader's night factor", () => {
+        const dayRoot = new THREE.Group();
+        const nightRoot = new THREE.Group();
+        dayRoot.userData.housemakerObjectsHidden = true;
+        nightRoot.userData.housemakerObjectsHidden = true;
+        dayRoot.userData.housemakerNightFactor = 0;
+        nightRoot.userData.housemakerNightFactor = 1;
+        mockScene.add(dayRoot, nightRoot);
+        const dayFixture = addCollider(dayRoot, 10, true);
+        const nightFixture = addCollider(nightRoot, 20, true);
+        dayFixture.userData.housemakerKeepWhenLit = true;
+        nightFixture.userData.housemakerKeepWhenLit = true;
+        render(<ControllerHarness position={[0, 3, 0]} />);
+        flushCollisionBuilds();
+        const dayTree = mockOctrees.find((octree) => octree.sourceTriangles[0]?.a.x === 10);
+        const nightTree = mockOctrees.find((octree) => octree.sourceTriangles[0]?.a.x === 20);
+        act(() => mockFrame({}, 0.016));
+        expect(dayTree.capsuleIntersect).not.toHaveBeenCalled();
+        expect(nightTree.capsuleIntersect).toHaveBeenCalledTimes(1);
+        expect(mockOctrees.filter((octree) => octree.sourceTriangles.length)).toHaveLength(2);
+    });
+
+    test("surface and object capsule responses compose sequentially", () => {
+        const root = new THREE.Group();
+        root.userData.housemakerObjectsHidden = false;
+        mockScene.add(root);
+        addCollider(root, 0);
+        addCollider(root, 10, true);
+        render(<ControllerHarness position={[0, 3, 0]} />);
+        flushCollisionBuilds();
+        const [surfaceTree, objectTree] = mockOctrees.filter((octree) => octree.sourceTriangles.length);
+        surfaceTree.capsuleIntersect.mockReturnValue({
+            normal: new THREE.Vector3(1, 0, 0), depth: 1,
+        });
+        objectTree.capsuleIntersect.mockImplementation((capsule) => {
+            expect(capsule.start.x).toBe(1);
+            return { normal: new THREE.Vector3(0, 0, 1), depth: 2 };
+        });
+
+        act(() => mockFrame({}, 0.016));
+        expect(mockController.position.x).toBe(1);
+        expect(mockController.position.z).toBe(2);
+    });
+
+    test("initial collision preparation blocks falling and walking but not looking", () => {
+        addCollider(mockScene, 0);
+        render(<ControllerHarness position={[1, 3, 2]} azertyMode={false} />);
+        fireEvent.keyDown(window, { key: "w" });
+        dispatchPointer("pointerdown", 1, 420, 500);
+        dispatchPointer("pointermove", 1, 480, 500);
+
+        act(() => mockFrame({}, 0.05));
+        expect(mockController.position.toArray()).toEqual([1, 3, 2]);
+        expect(readLookAngles().y).toBeLessThan(0);
+
+        flushCollisionBuilds();
+        act(() => mockFrame({}, 0.05));
+        expect(mockController.position.z).toBeLessThan(2);
+        expect(mockController.position.y).toBeLessThan(3);
+    });
+
+    test("indexed interleaved geometry keeps its original buffers and world transform", () => {
+        const root = new THREE.Group();
+        root.position.set(7, 2, -3);
+        root.scale.set(2, 3, 4);
+        mockScene.add(root);
+        const mesh = addCollider(root, 1);
+        const geometry = mesh.geometry;
+        const buffer = new THREE.InterleavedBuffer(new Float32Array([
+            9, 0, 0, 0, 9, 1, 0, 0, 9, 0, 1, 0,
+        ]), 4);
+        const position = new THREE.InterleavedBufferAttribute(buffer, 3, 1);
+        geometry.setAttribute("position", position);
+        geometry.setIndex([2, 0, 1]);
+        const index = geometry.index;
+        const toNonIndexed = jest.spyOn(geometry, "toNonIndexed");
+        const dispose = jest.spyOn(geometry, "dispose");
+
+        render(<ControllerHarness />);
+        flushCollisionBuilds();
+        const tree = mockOctrees.find((octree) => octree.sourceTriangles.length);
+        const triangle = tree.sourceTriangles[0];
+        expect(triangle.a.toArray()).toEqual([9, 5, -3]);
+        expect(triangle.b.toArray()).toEqual([9, 2, -3]);
+        expect(triangle.c.toArray()).toEqual([11, 2, -3]);
+        expect(geometry.getAttribute("position")).toBe(position);
+        expect(geometry.index).toBe(index);
+        expect(toNonIndexed).not.toHaveBeenCalled();
+        expect(dispose).not.toHaveBeenCalled();
+    });
+
+    test("large collision worlds prepare in bounded slices instead of one animation frame", () => {
+        const mesh = addCollider(mockScene, 0);
+        const triangleCount = 2048;
+        const positions = new Float32Array(triangleCount * 9);
+        for (let index = 0; index < triangleCount; index += 1) {
+            positions.set([0, 0, 0, 1, 0, 0, 0, 1, 0], index * 9);
+        }
+        mesh.geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        let clock = 0;
+        jest.spyOn(performance, "now").mockImplementation(() => ++clock);
+        render(<ControllerHarness />);
+        const [snapshot] = mockAnimationFrames.values();
+        mockAnimationFrames.clear();
+        act(() => snapshot());
+        expect(mockOctrees).toHaveLength(0);
+        expect(mockCollisionTasks.size).toBe(1);
+
+        const [[taskId, task]] = mockCollisionTasks;
+        mockCollisionTasks.delete(taskId);
+        act(() => task());
+        const tree = mockOctrees.find((octree) => octree.sourceTriangles.length);
+        expect(tree.sourceTriangles.length).toBeGreaterThan(0);
+        expect(tree.sourceTriangles.length).toBeLessThan(triangleCount);
+        expect(mockCollisionTasks.size).toBe(1);
+
+        flushCollisionBuilds();
+        expect(tree.sourceTriangles).toHaveLength(triangleCount);
+        expect(mockOctrees.length).toBeLessThan(1000);
+        expect(mockOctrees.every((octree) => octree.build.mock.calls.length === 0)).toBe(true);
+        expect(mockCollisionTasks.size).toBe(0);
+        expect(mockAnimationFrames.size).toBe(0);
+    });
+
+    test("camera, light, material, and visibility changes do not rebuild unchanged colliders", () => {
+        const root = new THREE.Group();
+        root.userData.housemakerObjectsHidden = false;
+        mockScene.add(root);
+        const mesh = addCollider(root, 10, true);
+        render(<ControllerHarness />);
+        flushCollisionBuilds();
+        const tree = mockOctrees.find((octree) => octree.sourceTriangles.length);
+        const count = mockOctrees.length;
+
+        const camera = new THREE.PerspectiveCamera();
+        const light = new THREE.DirectionalLight();
+        mockScene.add(camera, light, light.target);
+        flushCollisionBuilds();
+        mockScene.remove(camera, light, light.target);
+        mesh.material = new THREE.MeshStandardMaterial({ transparent: true });
+        mesh.visible = false;
+        root.userData.housemakerObjectsHidden = true;
+        mockScene.dispatchEvent({ type: "childadded", child: root });
+        flushCollisionBuilds();
+        expect(mockOctrees).toHaveLength(count);
+
+        root.userData.housemakerObjectsHidden = false;
+        act(() => mockFrame({}, 0.016));
+        expect(tree.capsuleIntersect).toHaveBeenCalledTimes(1);
+    });
+
+    test.each([
+        ["position buffer", [3, 0, 0], 2],
+        ["index buffer", [0, 1, 0], 2],
+        ["instance transform", [3, 0, 0], 2],
+        ["instance count", [0, 0, 0], 1],
+    ])(
+        "%s changes rebuild the collision snapshot", (change, firstPoint, triangleCount) => {
+            const mesh = addCollider(mockScene, 0, false, true);
+            mesh.geometry.setIndex([0, 1, 2]);
+            render(<ControllerHarness />);
+            flushCollisionBuilds();
+            const initialRoots = mockOctrees.filter((octree) => octree.sourceTriangles.length);
+            expect(initialRoots).toHaveLength(1);
+
+            if (change === "position buffer") {
+                mesh.geometry.attributes.position.setX(0, 3);
+                mesh.geometry.attributes.position.needsUpdate = true;
+            } else if (change === "index buffer") {
+                mesh.geometry.index.setX(0, 2);
+                mesh.geometry.index.needsUpdate = true;
+            } else if (change === "instance transform") {
+                mesh.setMatrixAt(0, new THREE.Matrix4().makeTranslation(3, 0, 0));
+                mesh.instanceMatrix.needsUpdate = true;
+            } else {
+                mesh.count = 1;
+            }
+            mockScene.dispatchEvent({ type: "childadded", child: mesh });
+            flushCollisionBuilds();
+            const roots = mockOctrees.filter((octree) => octree.sourceTriangles.length);
+            expect(roots).toHaveLength(2);
+            const rebuiltTriangles = roots[1].sourceTriangles;
+            expect(rebuiltTriangles[0].a.toArray()).toEqual(firstPoint);
+            expect(rebuiltTriangles).toHaveLength(triangleCount);
+        }
+    );
+
+    test("collider changes install a replacement world atomically", () => {
+        const mesh = addCollider(mockScene, 0);
+        render(<ControllerHarness position={[0, 3, 0]} />);
+        flushCollisionBuilds();
+        const originalTree = mockOctrees.find((octree) => octree.sourceTriangles.length);
+        mesh.position.x = 5;
+        mockScene.dispatchEvent({ type: "childadded", child: mesh });
+        const [snapshot] = mockAnimationFrames.values();
+        mockAnimationFrames.clear();
+        act(() => snapshot());
+
+        act(() => mockFrame({}, 0.016));
+        expect(originalTree.capsuleIntersect).toHaveBeenCalledTimes(1);
+        flushCollisionBuilds();
+        const replacement = mockOctrees.find((octree) => octree.sourceTriangles[0]?.a.x === 5);
+        expect(replacement).toBeDefined();
+        act(() => mockFrame({}, 0.016));
+        expect(originalTree.capsuleIntersect).toHaveBeenCalledTimes(1);
+        expect(replacement.capsuleIntersect).toHaveBeenCalledTimes(1);
+    });
+
+    test("disabling collisions cancels queued preparation without freezing navigation", () => {
+        addCollider(mockScene, 0);
+        const view = render(<ControllerHarness position={[0, 3, 0]} azertyMode={false} />);
+        view.rerender(<ControllerHarness
+            position={[0, 3, 0]} azertyMode={false} collisionsEnabled={false}
+        />);
+        flushCollisionBuilds();
+        expect(mockOctrees).toHaveLength(0);
+        fireEvent.keyDown(window, { key: "w" });
+        act(() => mockFrame({}, 0.05));
+        expect(mockController.position.z).toBeLessThan(0);
+        expect(mockController.position.y).toBeLessThan(3);
+        expect(mockCollisionTasks.size).toBe(0);
+        expect(mockAnimationFrames.size).toBe(0);
+    });
+
+    test.each([false, true])("unmount cancels collision preparation after work starts: %s", (started) => {
+        const mesh = addCollider(mockScene, 0);
+        mesh.geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(384 * 9), 3));
+        let clock = 0;
+        jest.spyOn(performance, "now").mockImplementation(() => ++clock);
+        const view = render(<ControllerHarness />);
+        const [snapshot] = mockAnimationFrames.values();
+        mockAnimationFrames.clear();
+        act(() => snapshot());
+        if (started) {
+            const [[taskId, task]] = mockCollisionTasks;
+            mockCollisionTasks.delete(taskId);
+            act(() => task());
+        }
+        const staleCallbacks = [...mockCollisionTasks.values()];
+        view.unmount();
+        expect(mockCollisionTasks.size).toBe(0);
+        const count = mockOctrees.length;
+        act(() => staleCallbacks.forEach((callback) => callback()));
+        expect(mockOctrees).toHaveLength(count);
+        expect(mockCollisionTasks.size).toBe(0);
+        expect(mockAnimationFrames.size).toBe(0);
+    });
+
+    test("colliders changed during preparation are re-snapshotted before publication", () => {
+        const mesh = addCollider(mockScene, 0);
+        mesh.geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(384 * 9), 3));
+        let clock = 0;
+        jest.spyOn(performance, "now").mockImplementation(() => ++clock);
+        render(<ControllerHarness position={[0, 3, 0]} />);
+        const [snapshot] = mockAnimationFrames.values();
+        mockAnimationFrames.clear();
+        act(() => snapshot());
+        const [[taskId, task]] = mockCollisionTasks;
+        mockCollisionTasks.delete(taskId);
+        act(() => task());
+        const staleTree = mockOctrees.find((octree) => octree.sourceTriangles.length);
+        mesh.position.x = 9;
+
+        flushCollisionBuilds();
+        const replacement = mockOctrees.find((octree) => octree.sourceTriangles[0]?.a.x === 9);
+        act(() => mockFrame({}, 0.016));
+        expect(staleTree.capsuleIntersect).not.toHaveBeenCalled();
+        expect(replacement.capsuleIntersect).toHaveBeenCalledTimes(1);
+    });
+
 });
 
 test.each([[false, "q", "a", "w"], [true, "a", "q", "z"]])(

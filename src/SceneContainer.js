@@ -19,11 +19,15 @@ import { Camera } from "./system_components/Camera.jsx";
 import { Raycaster } from "./system_components/Raycaster.jsx";
 import { FirstPersonController } from "./system_components/FirstPersonController.jsx";
 import { Environment } from "@react-three/drei";
-import { useLoader, useThree } from "@react-three/fiber";
-import { EffectComposer, FXAA, SSAO, ToneMapping } from "@react-three/postprocessing";
-import { BlendFunction, Effect, EffectAttribute, ToneMappingMode } from "postprocessing";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
+import {
+    BlendFunction, BloomEffect, DepthDownsamplingPass, Effect, EffectAttribute, EffectComposer,
+    EffectPass, FXAAEffect, NormalPass, RenderPass, SSAOEffect,
+    ToneMappingEffect, ToneMappingMode
+} from "postprocessing";
 import { ThreeDom } from "@react-three-dom/core";
 import { HouseMakerLoader } from "./user_components/HouseMakerLoader.jsx";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 
 import * as THREE from 'three';
 
@@ -52,8 +56,24 @@ export const SceneContainer = React.memo((props) => {
     const viewerConfigFile = SystemStore((state) => state.viewerConfigFile);
     const viewerMaterialName = SystemStore((state) => state.viewerMaterialName);
     const realTimeGiEnabled = SystemStore((state) => state.realTimeGiEnabled);
+    const ssaoEnabled = SystemStore((state) => state.ssaoEnabled);
+    const bloomEnabled = SystemStore((state) => state.bloomEnabled) ?? false;
+    const shadowsEnabled = SystemStore((state) => state.shadowsEnabled);
     const showBakedPvs = SystemStore((state) => state.showBakedPvs);
     const anisotropicFilteringEnabled = SystemStore((state) => state.anisotropicFilteringEnabled);
+    const debugSettings = SystemStore((state) => state.viewerDebugSettings);
+    const giResolutionScale = debugSettings?.giResolutionScale;
+    const giIntensity = debugSettings?.giIntensity ?? 0.7;
+    const ssaoIntensity = debugSettings?.ssaoIntensity ?? 2;
+    const ssaoRadius = debugSettings?.ssaoRadius ?? 0.05;
+    const ssaoBias = debugSettings?.ssaoBias ?? 0.014;
+    const ssaoSamples = debugSettings?.ssaoSamples ?? 49;
+    const ssaoResolutionScale = debugSettings?.ssaoResolutionScale ?? 0.5;
+    const bloomIntensity = debugSettings?.bloomIntensity ?? 0.5;
+    const bloomThreshold = debugSettings?.bloomThreshold ?? 2;
+    const bloomSmoothing = debugSettings?.bloomSmoothing ?? 0.2;
+    const bloomRadius = debugSettings?.bloomRadius ?? 0.5;
+    const bloomResolutionScale = debugSettings?.bloomResolutionScale ?? 0.5;
 
     const animationTriggerState = UserStore((state) => state.animationTriggerState);
     const siteMode = UserStore((state) => state.siteMode);
@@ -82,7 +102,37 @@ export const SceneContainer = React.memo((props) => {
         ? exportedEyeHeight
         : 1.5;
 
-    const filesToLoadBeforeEnablingMaterialSwap = ["/materials/low_512.glb", "/materials/high_4096_NOPBR.glb", "/materials/high_4096_PBR.glb"]; 
+    // Keep streamed materials independent of the legacy material swap.
+    const materialStreamingEnabled = houseMakerSceneData.materialStreaming?.enabled === true
+        && Array.isArray(houseMakerSceneData.roomAssets?.materials);
+
+    // Prefer the streamed bootstrap pose without converting exported coordinates.
+    const exportedCameras = [
+        houseMakerSceneData.materialStreaming?.enabled === true
+            ? houseMakerSceneData.materialStreaming.initialCamera
+            : undefined,
+        houseMakerSceneData.firstPersonCamera
+    ];
+    const isFiniteVector = (value) => Array.isArray(value) && value.length === 3 && value.every(Number.isFinite);
+    // Convert exported eye positions into controller floor positions.
+    let firstPersonPosition = [2.83, 0.1, 3];
+    for (const entry of exportedCameras) {
+        if (isFiniteVector(entry?.floorPosition)) {
+            firstPersonPosition = entry.floorPosition;
+            break;
+        }
+        if (isFiniteVector(entry?.position) && Number.isFinite(entry.position[1] - eyeHeight)) {
+            firstPersonPosition = [entry.position[0], entry.position[1] - eyeHeight, entry.position[2]];
+            break;
+        }
+    }
+    const lookDirection = exportedCameras.find((entry) => isFiniteVector(entry?.lookDirection)
+        && Math.hypot(...entry.lookDirection) > 0)?.lookDirection;
+    const firstPersonRotation = lookDirection
+        ? [Math.atan2(lookDirection[1], Math.hypot(lookDirection[0], lookDirection[2])), Math.atan2(-lookDirection[0], -lookDirection[2]), 0]
+        : [0, 0, 0];
+    const exportedFov = exportedCameras.map((entry) => entry?.fovDegrees)
+        .find((value) => Number.isFinite(value) && value > 0 && value < 180);
 
     const { layout, key: sceneLayoutKey } = useResponsive("scene");
     const initialCameraPosition = {
@@ -94,16 +144,271 @@ export const SceneContainer = React.memo((props) => {
     // Share rendered depth, preserving instancing and object fades.
     const camera = useThree((state) => state.camera);
     const renderDpr = useThree((state) => state.viewport.dpr);
+    const size = useThree((state) => state.size);
+    const renderer = useThree((state) => state.gl);
+    const scene = useThree((state) => state.scene);
+    const invalidate = useThree((state) => state.invalidate);
     const postProcessingRef = useRef(null);
+    const postProcessingPassesRef = useRef(null);
+    const dayNightEnvironmentRef = useRef(null);
 
-    // Resize post-processing buffers when only pixel density changes.
+    // Blend prefiltered radiance without reprocessing environments every frame.
+    useEffect(() => {
+        let disposed = false;
+        let pending = null;
+        let original = null;
+        let nightTexture = null;
+        let generator = null;
+        let geometry = null;
+        let material = null;
+        let quadScene = null;
+        let dayAtlas = null;
+        let nightAtlas = null;
+        let blendTarget = null;
+        let lastBlend = -1;
+        const targets = new Set();
+        const tint = new THREE.Color();
+        const previousTint = new THREE.Color(-1, -1, -1);
+        const viewport = new THREE.Vector4();
+        const scissor = new THREE.Vector4();
+        const flatCamera = new THREE.Camera();
+
+        // Restore renderer state after preparation and atlas updates.
+        const renderOffscreen = (operation) => {
+            const target = renderer.getRenderTarget();
+            const cubeFace = renderer.getActiveCubeFace();
+            const mipLevel = renderer.getActiveMipmapLevel();
+            const xrEnabled = renderer.xr.enabled;
+            const autoClear = renderer.autoClear;
+            const toneMapping = renderer.toneMapping;
+            const scissorTest = renderer.getScissorTest();
+            renderer.getViewport(viewport);
+            renderer.getScissor(scissor);
+            renderer.xr.enabled = false;
+            renderer.autoClear = true;
+            renderer.toneMapping = THREE.NoToneMapping;
+            renderer.setScissorTest(false);
+            try {
+                return operation();
+            } finally {
+                renderer.setRenderTarget(target, cubeFace, mipLevel);
+                renderer.setViewport(viewport);
+                renderer.setScissor(scissor);
+                renderer.setScissorTest(scissorTest);
+                renderer.xr.enabled = xrEnabled;
+                renderer.autoClear = autoClear;
+                renderer.toneMapping = toneMapping;
+            }
+        };
+
+        // Release only this viewer's generated environment resources.
+        const release = () => {
+            targets.forEach((target) => target.dispose());
+            targets.clear();
+            generator?.dispose();
+            generator = null;
+            nightTexture?.dispose();
+            nightTexture = null;
+            geometry?.dispose();
+            material?.dispose();
+            geometry = null;
+            material = null;
+            quadScene = null;
+            dayAtlas = null;
+            nightAtlas = null;
+            blendTarget = null;
+        };
+
+        const runtime = {
+            ready: false,
+            loading: false,
+            error: null,
+            prepare() {
+                if (disposed) return Promise.resolve(false);
+                if (runtime.ready) return Promise.resolve(true);
+                if (pending) return pending;
+                const dayTexture = scene.environment;
+                if (!dayTexture?.isTexture || !dayTexture.image?.width) {
+                    runtime.error = "Daytime environment is not ready yet.";
+                    return Promise.resolve(false);
+                }
+                runtime.loading = true;
+                runtime.error = null;
+                pending = new RGBELoader().loadAsync(`${config.resource_path}/textures/rogland_clear_night_4k.hdr`)
+                    .then((texture) => {
+                        if (disposed) {
+                            texture.dispose();
+                            return false;
+                        }
+                        nightTexture = texture;
+                        original = {
+                            environment: scene.environment,
+                            background: scene.background,
+                            environmentIntensity: scene.environmentIntensity,
+                            backgroundIntensity: scene.backgroundIntensity,
+                            environmentRotation: scene.environmentRotation.clone(),
+                            backgroundRotation: scene.backgroundRotation.clone(),
+                        };
+                        geometry = new THREE.BufferGeometry();
+                        geometry.setAttribute("position", new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3));
+                        material = new THREE.ShaderMaterial({
+                            name: "HouseMaker day/night radiance blend",
+                            depthTest: false,
+                            depthWrite: false,
+                            blending: THREE.NoBlending,
+                            toneMapped: false,
+                            uniforms: {
+                                dayTexture: new THREE.Uniform(dayTexture),
+                                nightTexture: new THREE.Uniform(dayTexture),
+                                blend: new THREE.Uniform(0),
+                                tint: new THREE.Uniform(new THREE.Color()),
+                            },
+                            vertexShader: `
+                                varying vec2 vUv;
+                                void main() {
+                                    vUv = position.xy * 0.5 + 0.5;
+                                    gl_Position = vec4(position.xy, 0.0, 1.0);
+                                }
+                            `,
+                            fragmentShader: `
+                                uniform sampler2D dayTexture;
+                                uniform sampler2D nightTexture;
+                                uniform float blend;
+                                uniform vec3 tint;
+                                varying vec2 vUv;
+                                void main() {
+                                    vec3 day = texture2D(dayTexture, vUv).rgb;
+                                    vec3 night = texture2D(nightTexture, vUv).rgb;
+                                    gl_FragColor = vec4(mix(day, night, blend) * tint, 1.0);
+                                }
+                            `,
+                        });
+                        quadScene = new THREE.Scene();
+                        quadScene.add(new THREE.Mesh(geometry, material));
+                        generator = new THREE.PMREMGenerator(renderer);
+                        renderOffscreen(() => {
+                            // Equal dimensions keep both prefiltered atlases compatible.
+                            const resampled = new THREE.WebGLRenderTarget(1024, 512, {
+                                type: THREE.HalfFloatType,
+                                depthBuffer: false,
+                                generateMipmaps: false,
+                                colorSpace: THREE.LinearSRGBColorSpace,
+                            });
+                            resampled.texture.mapping = THREE.EquirectangularReflectionMapping;
+                            targets.add(resampled);
+                            for (const source of [dayTexture, nightTexture]) {
+                                material.uniforms.dayTexture.value = source;
+                                material.uniforms.nightTexture.value = source;
+                                renderer.setRenderTarget(resampled);
+                                renderer.render(quadScene, flatCamera);
+                                const atlas = generator.fromEquirectangular(resampled.texture);
+                                targets.add(atlas);
+                                if (source === dayTexture) dayAtlas = atlas;
+                                else nightAtlas = atlas;
+                            }
+                            resampled.dispose();
+                            targets.delete(resampled);
+                            blendTarget = dayAtlas.clone();
+                            blendTarget.texture.name = "HouseMaker day/night environment";
+                            blendTarget.texture.mapping = THREE.CubeUVReflectionMapping;
+                            targets.add(blendTarget);
+                        });
+                        material.uniforms.dayTexture.value = dayAtlas.texture;
+                        material.uniforms.nightTexture.value = nightAtlas.texture;
+                        generator.dispose();
+                        generator = null;
+                        nightTexture.dispose();
+                        nightTexture = null;
+                        runtime.ready = true;
+                        invalidate();
+                        return true;
+                    })
+                    .catch((error) => {
+                        release();
+                        runtime.error = `Night environment could not load: ${error.message || error}`;
+                        return false;
+                    })
+                    .finally(() => {
+                        runtime.loading = false;
+                        pending = null;
+                    });
+                return pending;
+            },
+            update({ blend = 0, tint: color = "#ffffff", environmentIntensity = 0.35, backgroundIntensity = 1 } = {}) {
+                if (!runtime.ready || disposed) return false;
+                const amount = THREE.MathUtils.clamp(Number.isFinite(blend) ? blend : 0, 0, 1);
+                tint.set(color);
+                if (amount !== lastBlend || !tint.equals(previousTint)) {
+                    material.uniforms.blend.value = amount;
+                    material.uniforms.tint.value.copy(tint);
+                    renderOffscreen(() => {
+                        renderer.setRenderTarget(blendTarget);
+                        renderer.render(quadScene, flatCamera);
+                    });
+                    lastBlend = amount;
+                    previousTint.copy(tint);
+                }
+                scene.environment = blendTarget.texture;
+                scene.background = blendTarget.texture;
+                scene.environmentIntensity = environmentIntensity;
+                scene.backgroundIntensity = backgroundIntensity;
+                return true;
+            },
+            reset() {
+                if (!original) return;
+                scene.environment = original.environment;
+                scene.background = original.background;
+                scene.environmentIntensity = original.environmentIntensity;
+                scene.backgroundIntensity = original.backgroundIntensity;
+                scene.environmentRotation.copy(original.environmentRotation);
+                scene.backgroundRotation.copy(original.backgroundRotation);
+                invalidate();
+            },
+        };
+        dayNightEnvironmentRef.current = runtime;
+        return () => {
+            disposed = true;
+            runtime.reset();
+            runtime.ready = false;
+            release();
+            if (dayNightEnvironmentRef.current === runtime) dayNightEnvironmentRef.current = null;
+        };
+    }, [renderer, scene, invalidate]);
+
+    // Prepare the optional night asset without blocking house startup.
+    useEffect(() => {
+        if (props.showDayNightSettings) dayNightEnvironmentRef.current?.prepare();
+    }, [props.showDayNightSettings, renderer, scene, invalidate]);
+
+    // Refresh cached shaders when renderer shadows change.
     useLayoutEffect(() => {
-        postProcessingRef.current?.setSize();
-    }, [renderDpr]);
+        renderer.shadowMap.enabled = shadowsEnabled;
+        renderer.shadowMap.needsUpdate = true;
+        const materials = new Set();
+        scene.traverse((object) => {
+            if (!object.isMesh) return;
+            const entries = Array.isArray(object.material) ? object.material : [object.material];
+            entries.forEach((material) => { if (material) materials.add(material); });
+        });
+        materials.forEach((material) => { material.needsUpdate = true; });
+        invalidate();
+    }, [renderer, scene, invalidate, shadowsEnabled]);
+
+    // Apply exported FOV without changing the controller's camera implementation.
+    useLayoutEffect(() => {
+        if (!camera.isPerspectiveCamera || exportedFov === undefined) return undefined;
+        const previousFov = camera.fov;
+        camera.fov = exportedFov;
+        camera.updateProjectionMatrix();
+        return () => {
+            camera.fov = previousFov;
+            camera.updateProjectionMatrix();
+        };
+    }, [camera, exportedFov]);
 
     const realTimeGiEffect = useMemo(() => {
         const lowQuality = sceneLayoutKey === "Mobile" || sceneLayoutKey === "Tablet" || currentGraphicalMode === "potato";
-        const resolutionScale = lowQuality ? 0.75 : 1;
+        const resolutionScale = giResolutionScale ?? (lowQuality ? 0.75 : 1);
         const rayCount = lowQuality ? 8 : 16;
         const stepCount = lowQuality ? 8 : 12;
         const projection = new THREE.Uniform(new THREE.Matrix4());
@@ -119,11 +424,12 @@ export const SceneContainer = React.memo((props) => {
         let denoiseScene = null;
         let depthPacking = THREE.BasicDepthPacking;
 
-        // Upsample indirect light without bleeding across depth boundaries.
+        // Explicit level-zero sampling avoids derivatives inside divergent loops.
         const effect = new Effect("HouseMakerScreenSpaceGI", `
             uniform sampler2D giBuffer;
             uniform vec2 giSize;
             uniform mat4 giInverseProjection;
+            uniform float giStrength;
 
             float giViewDepth(vec2 uv, float depth) {
                 vec4 position = giInverseProjection * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
@@ -143,7 +449,7 @@ export const SceneContainer = React.memo((props) => {
                     for (int x = 0; x < 2; x++) {
                         vec2 offset = vec2(float(x), float(y));
                         vec2 sampleUv = (base + offset + 0.5) / giSize;
-                        vec4 sampleLight = texture2D(giBuffer, sampleUv);
+                        vec4 sampleLight = textureLod(giBuffer, sampleUv, 0.0);
                         vec2 interpolation = mix(vec2(1.0) - fraction, fraction, offset);
                         float weight = interpolation.x * interpolation.y;
                         weight *= exp(-abs(viewDepth - sampleLight.a) / max(0.035, viewDepth * 0.0075));
@@ -155,7 +461,7 @@ export const SceneContainer = React.memo((props) => {
                 if (totalWeight > 0.0001) {
                     float brightest = max(max(inputColor.r, inputColor.g), inputColor.b);
                     vec3 receiverTint = clamp(inputColor.rgb / max(brightest, 0.02), vec3(0.06), vec3(0.9));
-                    outputColor.rgb += (indirect / totalWeight) * receiverTint * 0.7;
+                    outputColor.rgb += (indirect / totalWeight) * receiverTint * giStrength;
                 }
             }
         `, {
@@ -165,6 +471,7 @@ export const SceneContainer = React.memo((props) => {
                 ["giBuffer", new THREE.Uniform(null)],
                 ["giSize", giSize],
                 ["giInverseProjection", inverseProjection],
+                ["giStrength", new THREE.Uniform(0.7)],
             ]),
         });
 
@@ -213,9 +520,9 @@ export const SceneContainer = React.memo((props) => {
 
                         float readGiDepth(vec2 uv) {
                             #if DEPTH_PACKING == 3201
-                                return unpackRGBAToDepth(texture2D(sceneDepth, uv));
+                                return unpackRGBAToDepth(textureLod(sceneDepth, uv, 0.0));
                             #else
-                                return texture2D(sceneDepth, uv).r;
+                                return textureLod(sceneDepth, uv, 0.0).r;
                             #endif
                         }
 
@@ -305,7 +612,7 @@ export const SceneContainer = React.memo((props) => {
                                         float emitterFacing = max(dot(hitNormal, -direction), 0.0);
                                         float edgeDistance = min(min(sampleUv.x, sampleUv.y), min(1.0 - sampleUv.x, 1.0 - sampleUv.y));
                                         float edgeFade = smoothstep(0.0, 0.08, edgeDistance);
-                                        vec3 radiance = clamp(texture2D(sceneColor, sampleUv).rgb, vec3(0.0), vec3(4.0));
+                                        vec3 radiance = clamp(textureLod(sceneColor, sampleUv, 0.0).rgb, vec3(0.0), vec3(4.0));
                                         indirect += radiance * emitterFacing * edgeFade * (1.0 - upperDistance / 2.5);
                                     }
                                     break;
@@ -341,7 +648,7 @@ export const SceneContainer = React.memo((props) => {
                         varying vec2 vUv;
 
                         void main() {
-                            vec4 center = texture2D(giTrace, vUv);
+                            vec4 center = textureLod(giTrace, vUv, 0.0);
                             if (center.a <= 0.0) {
                                 gl_FragColor = vec4(0.0);
                                 return;
@@ -351,7 +658,7 @@ export const SceneContainer = React.memo((props) => {
                             for (int y = -1; y <= 1; y++) {
                                 for (int x = -1; x <= 1; x++) {
                                     vec2 offset = vec2(float(x), float(y));
-                                    vec4 neighbor = texture2D(giTrace, vUv + offset * sampleStep / giSize);
+                                    vec4 neighbor = textureLod(giTrace, vUv + offset * sampleStep / giSize, 0.0);
                                     float spatialWeight = exp(-dot(offset, offset) * 0.5);
                                     float depthWeight = exp(-abs(center.a - neighbor.a) / max(0.045, center.a * 0.0075));
                                     float weight = spatialWeight * depthWeight * step(0.0001, neighbor.a);
@@ -437,15 +744,133 @@ export const SceneContainer = React.memo((props) => {
             effect.uniforms.get("giBuffer").value = null;
         };
         return effect;
-    }, [camera, sceneLayoutKey, currentGraphicalMode]);
+    }, [camera, sceneLayoutKey, currentGraphicalMode, giResolutionScale]);
 
-    // Disabling GI releases buffers without disabling SSAO.
-    useEffect(() => () => realTimeGiEffect.dispose(), [realTimeGiEffect, realTimeGiEnabled]);
+    // Build explicit passes; toggle history cannot reorder them.
+    useLayoutEffect(() => {
+        const previousToneMapping = renderer.toneMapping;
+        const previousAutoClear = renderer.autoClear;
+        renderer.toneMapping = THREE.NoToneMapping;
+        const composer = new EffectComposer(renderer, {
+            multisampling: 0,
+            frameBufferType: THREE.HalfFloatType,
+        });
+        const normal = new NormalPass(scene, camera);
+        const downsampling = new DepthDownsamplingPass({ normalBuffer: normal.texture, resolutionScale: 0.5 });
+        const ssao = new SSAOEffect(camera, null, {
+            normalDepthBuffer: downsampling.texture,
+            blendFunction: BlendFunction.MULTIPLY,
+            distanceThreshold: 1,
+            distanceFalloff: 0,
+            rangeThreshold: 0.5,
+            rangeFalloff: 0.1,
+            luminanceInfluence: 0.7,
+            rings: 7,
+            samples: 49,
+            radius: 0.05,
+            intensity: 2,
+            bias: 0.014,
+            resolutionScale: 0.5,
+        });
+        const ssaoPass = new EffectPass(camera, ssao);
+        const giPass = new EffectPass(camera, realTimeGiEffect);
+        const bloom = new BloomEffect({
+            blendFunction: BlendFunction.ADD,
+            intensity: 0.5,
+            luminanceThreshold: 2,
+            luminanceSmoothing: 0.2,
+            mipmapBlur: true,
+            radius: 0.5,
+        });
+        const bloomPass = new EffectPass(camera, bloom);
+        const toneMappingPass = new EffectPass(camera, new ToneMappingEffect({ mode: ToneMappingMode.AGX }));
+        const fxaaPass = new EffectPass(camera, new FXAAEffect());
+        [new RenderPass(scene, camera), normal, downsampling, ssaoPass, giPass, bloomPass, toneMappingPass, fxaaPass]
+            .forEach((pass) => composer.addPass(pass));
+        renderer.autoClear = previousAutoClear;
+        postProcessingRef.current = composer;
+        postProcessingPassesRef.current = { normal, downsampling, ssao, ssaoPass, giPass, bloom, bloomPass };
+
+        return () => {
+            giPass.setEffects([]);
+            composer.dispose();
+            renderer.toneMapping = previousToneMapping;
+            renderer.autoClear = previousAutoClear;
+            if (postProcessingRef.current === composer) {
+                postProcessingRef.current = null;
+                postProcessingPassesRef.current = null;
+            }
+        };
+    }, [renderer, scene, camera, realTimeGiEffect]);
+
+    // Resize existing targets for viewport and pixel-density changes.
+    useLayoutEffect(() => {
+        postProcessingRef.current?.setSize(size.width, size.height);
+    }, [size.width, size.height, renderDpr, renderer, scene, camera, realTimeGiEffect]);
+
+    // Update fixed passes without recreating effects or changing order.
+    useLayoutEffect(() => {
+        const passes = postProcessingPassesRef.current;
+        if (!passes) return;
+        passes.normal.enabled = ssaoEnabled;
+        passes.downsampling.enabled = ssaoEnabled;
+        passes.ssaoPass.enabled = ssaoEnabled;
+        passes.giPass.enabled = realTimeGiEnabled;
+        passes.bloomPass.enabled = bloomEnabled;
+        passes.ssao.intensity = ssaoIntensity;
+        passes.ssao.ssaoMaterial.radius = ssaoRadius;
+        passes.ssao.ssaoMaterial.bias = ssaoBias;
+        passes.ssao.ssaoMaterial.samples = ssaoSamples;
+        passes.ssao.resolution.scale = ssaoResolutionScale;
+        passes.downsampling.resolution.scale = ssaoResolutionScale;
+        passes.bloom.intensity = bloomIntensity;
+        passes.bloom.luminanceMaterial.threshold = bloomThreshold;
+        passes.bloom.luminanceMaterial.smoothing = bloomSmoothing;
+        passes.bloom.mipmapBlurPass.radius = bloomRadius;
+        realTimeGiEffect.uniforms.get("giStrength").value = giIntensity;
+        if (!realTimeGiEnabled) realTimeGiEffect.dispose();
+        invalidate();
+    }, [renderer, scene, camera, realTimeGiEffect, realTimeGiEnabled, giIntensity,
+        ssaoEnabled, ssaoIntensity, ssaoRadius, ssaoBias, ssaoSamples, ssaoResolutionScale,
+        bloomEnabled, bloomIntensity, bloomThreshold, bloomSmoothing, bloomRadius, invalidate]);
+
+    // Mipmap bloom requires explicit luminance and blur target sizing.
+    useLayoutEffect(() => {
+        const bloom = postProcessingPassesRef.current?.bloom;
+        if (!bloom) return;
+        const drawingSize = renderer.getDrawingBufferSize(new THREE.Vector2());
+        bloom.resolution.scale = bloomResolutionScale;
+        bloom.luminancePass.resolution.scale = bloomResolutionScale;
+        bloom.mipmapBlurPass.setSize(
+            Math.max(1, Math.round(drawingSize.width * bloomResolutionScale)),
+            Math.max(1, Math.round(drawingSize.height * bloomResolutionScale))
+        );
+        invalidate();
+    }, [renderer, scene, camera, realTimeGiEffect, size.width, size.height, renderDpr,
+        bloomResolutionScale, invalidate]);
+
+    // Release GI buffers independently of the composer's owned effects.
+    useEffect(() => () => realTimeGiEffect.dispose(), [realTimeGiEffect]);
+
+    // Render enabled passes in their fixed order every frame.
+    useFrame((_, delta) => {
+        const composer = postProcessingRef.current;
+        if (!composer) return;
+        const previousAutoClear = renderer.autoClear;
+        renderer.autoClear = true;
+        try {
+            composer.render(delta);
+        } finally {
+            renderer.autoClear = previousAutoClear;
+        }
+    }, 1);
 
     // ### Asset effects ###
 
-    // Block forcing the scene's materials to change until the materials are properly loaded
+    // Skip legacy material polling for room-streamed exports.
     useEffect(() => {
+        if (materialStreamingEnabled) return undefined;
+        const filesToLoadBeforeEnablingMaterialSwap = ["/materials/low_512.glb", "/materials/high_4096_NOPBR.glb", "/materials/high_4096_PBR.glb"];
         let cancelled = false;
         const intervalId = setInterval(() => {
         if (!cancelled) {
@@ -461,11 +886,11 @@ export const SceneContainer = React.memo((props) => {
         cancelled = true;
         clearInterval(intervalId);
         };
-    }, [setEnableMaterialSwap]);
+    }, [materialStreamingEnabled]);
 
     // Force swap the scene's materials if graphical mode changes
     useEffect(() => {
-        if(enableMaterialSwap){
+        if(!materialStreamingEnabled && enableMaterialSwap){
             setForceLowresMaterial(false);
             setForceMidresMaterial(false);
             setForceHighResMaterial(false);
@@ -482,7 +907,7 @@ export const SceneContainer = React.memo((props) => {
             }
         }
         
-    },[currentGraphicalMode])
+    },[currentGraphicalMode, enableMaterialSwap, materialStreamingEnabled])
 
     // ### Interaction effects ###
 
@@ -647,7 +1072,8 @@ export const SceneContainer = React.memo((props) => {
                 distanceBetweenInstances={3} />
 
             <FirstPersonController
-                position={[2.83, 0.1, 3]}
+                position={firstPersonPosition}
+                rotation={firstPersonRotation}
                 eyeHeight={eyeHeight}
                 navigationRef={houseMakerNavigationRef}
                 azertyMode={props.azertyMode ?? "auto"}
@@ -661,37 +1087,37 @@ export const SceneContainer = React.memo((props) => {
             <HouseMakerLoader
                 jsonFile="housemaker_export.json"
                 position={[0, 0, 0]}
+                environmentScene={scene}
                 shadowsEnabled
                 fallbackSunEnabled
                 shadowMapSize={sceneLayoutKey === "Widescreen" ? 2048 : 1024}
+                shadowBias={debugSettings?.shadowBias ?? undefined}
+                shadowNormalBias={debugSettings?.shadowNormalBias ?? undefined}
+                shadowMapSizeOverride={debugSettings?.shadowMapSize ?? undefined}
+                shadowSoftness={debugSettings?.shadowSoftness ?? 2}
+                shadowCoverage={debugSettings?.shadowCoverage ?? 100}
+                sunLightColor={debugSettings?.sunLightColor ?? undefined}
+                sunOrbitPaused={debugSettings?.sunOrbitPaused ?? true}
+                sunOrbitAngle={debugSettings?.sunOrbitAngle ?? undefined}
+                sunOrbitAngleRevision={debugSettings?.sunOrbitAngleRevision ?? 0}
+                showSunRays={props.showSunRays ?? false}
+                onSunOrbitAngleChange={props.onSunOrbitAngleChange}
+                dayNightSettings={debugSettings}
+                dayNightEnvironment={dayNightEnvironmentRef}
+                dayNightPanelOpen={props.showDayNightSettings ?? false}
+                onDayNightStatusChange={props.onDayNightStatusChange}
                 instancesEnabled={siteMode === "resume"}
                 showBakedPvs={showBakedPvs}
+                pvsDebugOpacity={debugSettings?.pvsOpacity ?? 0.65}
                 anisotropicFilteringEnabled={anisotropicFilteringEnabled}
+                anisotropy={debugSettings?.anisotropy ?? 8}
+                materialStreamingOffscreen
                 hideObjectsKey={props.hideObjectsKey ?? "a"}
                 objectControlsEnabled={!props.inputBlocked}
                 navigationRef={houseMakerNavigationRef}
                 toursEnabled={siteMode === "resume"}
             />
 
-            {/* Add diffuse bounce before tone mapping and anti-aliasing. */}
-            <EffectComposer
-                ref={postProcessingRef}
-                enableNormalPass
-                multisampling={0}
-                resolutionScale={0.5}
-            >
-                <SSAO
-                    samples={17}
-                    rings={7}
-                    radius={0.12}
-                    intensity={0.65}
-                    luminanceInfluence={0.7}
-                    bias={0.025}
-                />
-                {realTimeGiEnabled && <primitive object={realTimeGiEffect} />}
-                <ToneMapping mode={ToneMappingMode.AGX} />
-                <FXAA />
-            </EffectComposer>
 
 
 

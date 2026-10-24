@@ -23,3 +23,6 @@ yarn-debug.log*
 yarn-error.log*
 
 /public/models/benchmark_scene.glb
+
+# local performance artifacts
+/performance-benchmarks/runs/
